@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import AuthSheet from "@/components/AuthSheet";
 import { useUser } from "@/lib/auth";
@@ -10,10 +10,17 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 const Navigation = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user } = useUser();
   const [authOpen, setAuthOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    track('auth_signout');
+    navigate('/auth');
+  };
 
   const links = [
     { to: "/", label: "اليوم" },
@@ -67,10 +74,7 @@ const Navigation = () => {
                   </span>
                   <button 
                     className="px-4 py-2 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors text-sm" 
-                    onClick={async () => { 
-                      await supabase.auth.signOut(); 
-                      track('auth_signout'); 
-                    }}
+                    onClick={handleSignOut}
                   >
                     خروج
                   </button>
@@ -125,10 +129,9 @@ const Navigation = () => {
                     </div>
                     <button 
                       className="w-full px-4 py-3 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors text-sm" 
-                      onClick={async () => { 
-                        await supabase.auth.signOut(); 
-                        track('auth_signout');
+                      onClick={() => {
                         setMobileMenuOpen(false);
+                        handleSignOut();
                       }}
                     >
                       خروج
