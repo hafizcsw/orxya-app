@@ -6,6 +6,8 @@ import { useUser } from '@/lib/auth'
 import { Toast } from '@/components/Toast'
 import { track } from '@/lib/telemetry'
 import { SessionBanner } from '@/components/SessionBanner'
+import { LocalNotifications } from '@capacitor/local-notifications'
+import { ensureNotificationPerms } from '@/lib/notify'
 
 const Today = () => {
   const { user } = useUser()
@@ -55,8 +57,29 @@ const Today = () => {
       )}
 
       <section className="space-y-2">
-        <h2 className="text-xl font-semibold">التقرير اليومي</h2>
-        <div className="p-4 rounded-2xl border bg-white">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold">التقرير اليومي</h2>
+          <button 
+            className="px-3 py-1 text-sm rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors" 
+            onClick={async () => {
+              await ensureNotificationPerms();
+              const now = new Date(); 
+              now.setMinutes(now.getMinutes() + 1);
+              await LocalNotifications.schedule({
+                notifications: [{
+                  id: 999001,
+                  title: 'اختبار Oryxa',
+                  body: 'إشعار بعد دقيقة',
+                  schedule: { at: now }
+                }]
+              });
+              setToast('تم جدولة إشعار اختبار بعد دقيقة ⏰');
+            }}
+          >
+            اختبار إشعار
+          </button>
+        </div>
+        <div className="p-4 rounded-2xl border bg-card">
           {loading ? 'جار التحميل…' : report ? (
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
               <div>التاريخ: <b>{report.date}</b></div>

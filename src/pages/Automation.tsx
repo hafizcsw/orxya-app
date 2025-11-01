@@ -5,6 +5,7 @@ import { useUser } from '@/lib/auth'
 import { Toast } from '@/components/Toast'
 import { track } from '@/lib/telemetry'
 import { SessionBanner } from '@/components/SessionBanner'
+import { ensureNotificationPerms, rescheduleAllFromDB } from '@/lib/notify'
 
 const Automation = () => {
   const { user } = useUser()
@@ -21,7 +22,10 @@ const Automation = () => {
     if (!error) setRows(data ?? [])
   }
 
-  useEffect(() => { load() }, [user?.id])
+  useEffect(() => { 
+    void ensureNotificationPerms();
+    load().then(() => void rescheduleAllFromDB());
+  }, [user?.id])
 
   async function saveDefaults() {
     try {
@@ -32,8 +36,10 @@ const Automation = () => {
       })
       await supabase.functions.invoke('commands', { body: body('Morning Plan', '08:00') })
       await supabase.functions.invoke('commands', { body: body('Daily Check-in', '21:30') })
+      await rescheduleAllFromDB();
       setToast('تم الحفظ ✅')
       track('automation_saved_defaults', { count: 2 })
+      track('automation_rescheduled_after_save', { count: 2 })
       load()
     } catch {
       setToast('تعذّر الحفظ الآن — جرّب لاحقًا')
