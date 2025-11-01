@@ -1,471 +1,186 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useUser } from '@/lib/auth';
-import { track } from '@/lib/telemetry';
-import QuickAdd from '@/components/QuickAdd';
-import EmptyState from '@/components/EmptyState';
-import {
-  startOfWeek,
-  endOfWeek,
-  minuteOfDay,
-  snapAwayFromPrayers,
-  formatDateRange,
-  getDaysInRange,
-  startOfDay,
-  endOfDay,
-} from '@/lib/time';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from "react";
+import CalendarHeader from "@/components/calendar/CalendarHeader";
+import MonthGrid from "@/components/calendar/MonthGrid";
+import WeekView from "@/components/calendar/WeekView";
+import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, toISODate } from "@/lib/dates";
+import { supabase } from "@/integrations/supabase/client";
+import { aiAsk } from "@/lib/ai";
+import LoadingButton from "@/components/ui/LoadingButton";
+import Badge from "@/components/ui/Badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useUser } from "@/lib/auth";
+import { useNotify } from "@/lib/notify-utils";
 
-interface Event {
-  id: string;
-  title: string;
-  starts_at: string;
-  ends_at: string;
-  source_id?: string;
-  tags?: string[];
-  duration_min?: number;
-}
+type DbEvent = { 
+  id: string; 
+  title: string; 
+  starts_at: string; 
+  ends_at: string; 
+  owner_id: string; 
+  source?: string 
+};
 
-interface Task {
-  id: string;
-  title: string;
-  status: string;
-  due_date?: string;
-}
+type PT = { 
+  fajr?: string; 
+  dhuhr?: string; 
+  asr?: string; 
+  maghrib?: string; 
+  isha?: string 
+};
 
-interface PrayerTimes {
-  fajr?: string;
-  dhuhr?: string;
-  asr?: string;
-  maghrib?: string;
-  isha?: string;
-}
-
-interface Conflict {
-  id: string;
-  event_id?: string;
-  prayer_name: string;
-  severity: string;
-}
-
-export default function Calendar() {
+export default function CalendarPage() {
   const { user } = useUser();
-  const { toast } = useToast();
-  const [view, setView] = useState<'week'>('week');
-  const [cursor, setCursor] = useState<Date>(new Date());
-  const [events, setEvents] = useState<Event[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [prayers, setPrayers] = useState<Record<string, PrayerTimes>>({});
-  const [conflicts, setConflicts] = useState<Conflict[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [dragging, setDragging] = useState<{ eventId: string; startY: number } | null>(null);
-  const [showQuickAdd, setShowQuickAdd] = useState(false);
-  const [activeTags, setActiveTags] = useState<string[]>([]);
-  const tzRef = useRef<string>('Asia/Dubai');
+  const notify = useNotify();
+  const [mode, setMode] = useState<"month"|"week">("month");
+  const [anchor, setAnchor] = useState(new Date());
+  const [loading, setLoading] = useState(false);
+  const [eventsByDate, setEventsByDate] = useState<Record<string, DbEvent[]>>({});
+  const [prayersByDate, setPrayersByDate] = useState<Record<string, PT>>({});
 
-  const weekStart = useMemo(() => startOfWeek(cursor, tzRef.current), [cursor]);
-  const weekEnd = useMemo(() => endOfWeek(cursor, tzRef.current), [cursor]);
-  const days = useMemo(() => getDaysInRange(weekStart, weekEnd), [weekStart, weekEnd]);
+  function periodRange() {
+    if (mode==="month") return { from: startOfMonth(anchor), to: endOfMonth(anchor) };
+    return { from: startOfWeek(anchor), to: endOfWeek(anchor) };
+  }
 
-  const allTags = useMemo(() => {
-    const a = new Set<string>();
-    events.forEach(ev => (ev.tags || []).forEach(t => a.add(t)));
-    return Array.from(a).sort();
-  }, [events]);
-
-  const filteredEvents = useMemo(() => {
-    if (!activeTags.length) return events;
-    return events.filter(ev => (ev.tags || []).some(t => activeTags.includes(t)));
-  }, [events, activeTags]);
-
-  async function loadAll() {
+  async function load() {
     if (!user) return;
-    setIsLoading(true);
-
+    setLoading(true);
     try {
-      const start = startOfDay(weekStart);
-      const end = endOfDay(weekEnd);
+      const { from, to } = periodRange();
+      const fromISO = toISODate(from);
+      const toISO = toISODate(to);
 
-      const [{ data: prof }, { data: ev }, { data: tks }, { data: conf }] = await Promise.all([
-        supabase.from('profiles').select('timezone').eq('id', user.id).maybeSingle(),
-        supabase
-          .from('events')
-          .select('*')
-          .eq('owner_id', user.id)
-          .gte('starts_at', start.toISOString())
-          .lte('starts_at', end.toISOString())
-          .order('starts_at'),
-        supabase
-          .from('tasks')
-          .select('*')
-          .eq('owner_id', user.id)
-          .gte('due_date', start.toISOString().slice(0, 10))
-          .lte('due_date', end.toISOString().slice(0, 10)),
-        supabase
-          .from('conflicts')
-          .select('*')
-          .eq('owner_id', user.id)
-          .gte('date_iso', start.toISOString().slice(0, 10))
-          .lte('date_iso', end.toISOString().slice(0, 10)),
-      ]);
-
-      tzRef.current = prof?.timezone ?? 'Asia/Dubai';
-      setEvents((ev ?? []) as Event[]);
-      setTasks((tks ?? []) as Task[]);
-      setConflicts((conf ?? []) as Conflict[]);
-
-      // Load prayer times
-      const dayStrings = days.map((d) => d.toISOString().slice(0, 10));
-      const { data: pts } = await supabase
-        .from('prayer_times')
-        .select('date_iso, fajr, dhuhr, asr, maghrib, isha')
-        .eq('owner_id', user.id)
-        .in('date_iso', dayStrings);
-
-      const map: Record<string, PrayerTimes> = {};
-      (pts ?? []).forEach((row: any) => {
-        map[row.date_iso] = {
-          fajr: row.fajr,
-          dhuhr: row.dhuhr,
-          asr: row.asr,
-          maghrib: row.maghrib,
-          isha: row.isha,
-        };
+      const ev = await supabase.from("events")
+        .select("*")
+        .eq("owner_id", user.id)
+        .gte("starts_at", from.toISOString())
+        .lte("ends_at", new Date(to.getTime()+24*60*60*1000-1).toISOString());
+      
+      const ebd: Record<string, DbEvent[]> = {};
+      (ev.data ?? []).forEach((e: any) => {
+        const key = toISODate(new Date(e.starts_at));
+        (ebd[key] ||= []).push(e);
       });
-      setPrayers(map);
+      setEventsByDate(ebd);
+
+      const pr = await supabase.from("prayer_times")
+        .select("date_iso,fajr,dhuhr,asr,maghrib,isha")
+        .eq("owner_id", user.id)
+        .gte("date_iso", fromISO)
+        .lte("date_iso", toISO);
+      
+      const pbd: Record<string, PT> = {};
+      (pr.data ?? []).forEach((r: any) => { pbd[r.date_iso] = r; });
+      setPrayersByDate(pbd);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   }
 
-  useEffect(() => {
-    loadAll();
-    track('calendar_open_week');
-  }, [user?.id, cursor]);
+  useEffect(()=>{ load(); }, [user?.id, mode, anchor]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const meta = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k';
-      if (meta) {
-        e.preventDefault();
-        setShowQuickAdd(s => !s);
+      if (["INPUT","TEXTAREA"].includes(document.activeElement?.tagName ?? "")) return;
+      if (e.key==="ArrowRight") { 
+        e.preventDefault(); 
+        setAnchor(prev => new Date(prev.getFullYear(), prev.getMonth() + (mode==="month"?1:0), prev.getDate() + (mode==="week"?7:0))); 
       }
+      if (e.key==="ArrowLeft")  { 
+        e.preventDefault(); 
+        setAnchor(prev => new Date(prev.getFullYear(), prev.getMonth() - (mode==="month"?1:0), prev.getDate() - (mode==="week"?7:0))); 
+      }
+      if (e.key==="t" || e.key==="T") { setAnchor(new Date()); }
+      if (e.key==="s" || e.key==="S") { smartPlanWeek(); }
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mode]);
 
-  function goToToday() {
-    setCursor(new Date());
-  }
-
-  function goToPrev() {
-    const d = new Date(cursor);
-    d.setDate(d.getDate() - 7);
-    setCursor(d);
-  }
-
-  function goToNext() {
-    const d = new Date(cursor);
-    d.setDate(d.getDate() + 7);
-    setCursor(d);
-  }
-
-  async function moveEvent(eventId: string, newStart: Date) {
-    const event = events.find((e) => e.id === eventId);
-    if (!event) return;
-
-    const duration = new Date(event.ends_at).getTime() - new Date(event.starts_at).getTime();
-    const newEnd = new Date(newStart.getTime() + duration);
-
-    // Snap away from prayers
-    const dayISO = newStart.toISOString().slice(0, 10);
-    const snappedStart = snapAwayFromPrayers(newStart, prayers[dayISO]);
-    const snappedEnd = snapAwayFromPrayers(newEnd, prayers[dayISO]);
-
-    // Optimistic update
-    const snapshot = [...events];
-    setEvents((prev) =>
-      prev.map((e) =>
-        e.id === eventId
-          ? { ...e, starts_at: snappedStart.toISOString(), ends_at: snappedEnd.toISOString() }
-          : e
-      )
-    );
-
+  async function smartPlanWeek() {
+    if (!user) return;
+    notify.info("🤖 جاري التخطيط الذكي للأسبوع...");
     try {
-      const { error } = await supabase.functions.invoke('commands', {
-        body: {
-          command: 'move_event',
-          idempotency_key: crypto.randomUUID(),
-          payload: {
-            event_id: eventId,
-            starts_at: snappedStart.toISOString(),
-            ends_at: snappedEnd.toISOString(),
-          },
-        },
-      });
+      const tasks = await supabase.from("tasks")
+        .select("id,title")
+        .eq("owner_id", user.id)
+        .in("status", ["todo","doing"])
+        .is("due_date", null)
+        .limit(50);
 
-      if (error) throw error;
+      const { from, to } = { from: startOfWeek(anchor), to: endOfWeek(anchor) };
+      const prompt = `اقترح جدولة أسبوعية للمهام التالية ضمن ساعات العمل 9:00-18:00. أعِد JSON فقط بصيغة:
+[{"task_id":"uuid","day":"YYYY-MM-DD","start":"HH:MM","end":"HH:MM"}]
 
-      track('calendar_move_event', { eventId });
-      toast({
-        title: 'تم نقل الحدث',
-        description: 'تم تحديث موعد الحدث بنجاح',
-      });
-    } catch (error) {
-      console.error('Move event failed:', error);
-      setEvents(snapshot);
-      toast({
-        title: 'فشل نقل الحدث',
-        description: 'حدث خطأ أثناء التحديث',
-        variant: 'destructive',
-      });
+الأسبوع: ${toISODate(from)} إلى ${toISODate(to)}
+المهام: ${JSON.stringify((tasks.data ?? []).map(t => ({ id: t.id, title: t.title })))}`;
+
+      const ai = await aiAsk(prompt);
+      let plan: Array<{task_id:string; day:string; start:string; end:string}> = [];
+      try { 
+        const reply = ai.reply || "";
+        const jsonMatch = reply.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          plan = JSON.parse(jsonMatch[0]); 
+        }
+      } catch {}
+
+      for (const p of plan) {
+        const startISO = `${p.day}T${p.start}:00`;
+        const endISO = `${p.day}T${p.end}:00`;
+        const task = tasks.data?.find(t=>t.id===p.task_id);
+        await supabase.from("events").insert({
+          owner_id: user.id,
+          title: `${task?.title ?? "Task"}`,
+          starts_at: startISO,
+          ends_at: endISO,
+          source: "ai"
+        });
+      }
+      notify.success("تم التخطيط الذكي ✅");
+      await load();
+    } catch {
+      notify.error("تعذّر التخطيط الآن");
     }
   }
 
-  function getEventsForDay(day: Date): Event[] {
-    const dayStr = day.toISOString().slice(0, 10);
-    return events.filter((e) => e.starts_at.startsWith(dayStr));
-  }
-
-  function getTasksForDay(day: Date): Task[] {
-    const dayStr = day.toISOString().slice(0, 10);
-    return tasks.filter((t) => t.due_date === dayStr);
-  }
-
-  function getConflictsForDay(day: Date): Conflict[] {
-    const dayStr = day.toISOString().slice(0, 10);
-    return conflicts.filter((c) => c.event_id && events.some((e) => e.id === c.event_id && e.starts_at.startsWith(dayStr)));
-  }
-
-  // Calculate event position in day
-  function getEventStyle(event: Event) {
-    const start = new Date(event.starts_at);
-    const end = new Date(event.ends_at);
-    
-    const startMin = minuteOfDay(start);
-    const endMin = minuteOfDay(end);
-    
-    const dayMinutes = 18 * 60; // 6am to 12am
-    const top = ((startMin - 6 * 60) / dayMinutes) * 100;
-    const height = ((endMin - startMin) / dayMinutes) * 100;
-    
-    return {
-      top: `${Math.max(0, top)}%`,
-      height: `${Math.max(2, height)}%`,
-    };
-  }
-
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] max-w-[1400px] mx-auto p-4 gap-4">
-      {/* Header */}
-      <div className="flex items-center justify-between bg-card p-4 rounded-xl shadow-md border">
-        <div className="flex items-center gap-2">
-          <CalendarIcon className="w-6 h-6 text-primary" />
-          <h1 className="text-2xl font-bold">التقويم</h1>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button onClick={goToToday} variant="outline" size="sm">
-            اليوم
-          </Button>
-          
-          <div className="flex items-center gap-1">
-            <Button onClick={goToPrev} variant="ghost" size="icon">
-              <ChevronRight className="w-5 h-5" />
-            </Button>
-            <Button onClick={goToNext} variant="ghost" size="icon">
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-          </div>
-
-          <div className="text-sm font-medium min-w-[200px] text-center">
-            {formatDateRange(weekStart, weekEnd)}
-          </div>
-
-          <Button 
-            onClick={() => setShowQuickAdd(true)} 
-            variant="outline" 
-            size="sm"
-            className="no-print"
-          >
-            + سريع (⌘K)
-          </Button>
-
-          <Button 
-            onClick={() => window.print()} 
-            variant="outline" 
-            size="sm"
-            className="no-print"
-          >
-            طباعة PDF
-          </Button>
-        </div>
-
-        {isLoading && <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />}
-      </div>
-
-      {/* Tags Filter */}
-      {allTags.length > 0 && (
-        <div className="flex flex-wrap gap-2 bg-card p-3 rounded-xl border no-print">
-          {allTags.map(tag => {
-            const on = activeTags.includes(tag);
-            return (
-              <button
-                key={tag}
-                onClick={() => {
-                  setActiveTags(s => on ? s.filter(x => x !== tag) : [...s, tag]);
-                  track('calendar_filter_tags', { tag, active: !on });
-                }}
-                className={`px-2 py-1 rounded-full text-xs border transition-colors ${
-                  on 
-                    ? 'bg-primary text-primary-foreground border-primary' 
-                    : 'bg-secondary hover:bg-secondary/80 border-border'
-                }`}
-              >
-                #{tag}
-              </button>
-            );
-          })}
-          {activeTags.length > 0 && (
-            <button 
-              onClick={() => setActiveTags([])} 
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              مسح الوسوم
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Week Grid */}
-      <div className="flex-1 overflow-auto bg-card rounded-xl shadow-md border">
-        <div className="min-w-[800px] h-full">
-          {/* Day Headers */}
-          <div className="grid grid-cols-8 border-b sticky top-0 bg-card z-10">
-            <div className="p-2 text-sm font-medium text-muted-foreground border-l">الوقت</div>
-            {days.map((day) => {
-              const dayEvents = getEventsForDay(day);
-              const dayTasks = getTasksForDay(day);
-              const dayConflicts = getConflictsForDay(day);
-              
-              return (
-                <div key={day.toISOString()} className="p-2 text-center border-l">
-                  <div className="text-sm font-medium">
-                    {day.toLocaleDateString('ar-SA', { weekday: 'short' })}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {day.toLocaleDateString('ar-SA', { day: 'numeric', month: 'short' })}
-                  </div>
-                  <div className="flex gap-1 justify-center mt-1 text-xs">
-                    {dayEvents.length > 0 && (
-                      <span className="px-1.5 py-0.5 bg-primary/20 rounded">
-                        {dayEvents.length} حدث
-                      </span>
-                    )}
-                    {dayTasks.length > 0 && (
-                      <span className="px-1.5 py-0.5 bg-accent rounded">
-                        {dayTasks.length} مهمة
-                      </span>
-                    )}
-                    {dayConflicts.length > 0 && (
-                      <span className="px-1.5 py-0.5 bg-destructive/20 rounded">
-                        ⚠️
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Time Grid */}
-          <div className="relative">
-            {/* Hours */}
-            {Array.from({ length: 18 }, (_, i) => i + 6).map((hour) => (
-              <div key={hour} className="grid grid-cols-8 border-b h-16">
-                <div className="p-2 text-xs text-muted-foreground border-l">
-                  {hour.toString().padStart(2, '0')}:00
-                </div>
-                {days.map((day) => (
-                  <div
-                    key={`${day.toISOString()}-${hour}`}
-                    className="border-l relative hover:bg-accent/5 transition-colors"
-                  />
-                ))}
-              </div>
-            ))}
-
-            {/* Events Overlay */}
-            {days.map((day, dayIndex) => {
-              const dayEvents = getEventsForDay(day).filter(ev => 
-                activeTags.length === 0 || (ev.tags || []).some(t => activeTags.includes(t))
-              );
-              return (
-                <div key={day.toISOString()}>
-                  {dayEvents.map((event) => {
-                    const style = getEventStyle(event);
-                    return (
-                      <div
-                        key={event.id}
-                        className="absolute rounded-lg px-2 py-1 text-xs cursor-move hover:shadow-lg transition-shadow"
-                        style={{
-                          ...style,
-                          left: `${((dayIndex + 1) / 8) * 100}%`,
-                          width: `${100 / 8 - 1}%`,
-                          zIndex: 10,
-                          backgroundColor: event.source_id === 'ai' ? 'hsl(var(--primary) / 0.2)' : 'hsl(var(--accent))',
-                          border: '1px solid hsl(var(--border))',
-                        }}
-                      >
-                        <div className="font-medium truncate">{event.title}</div>
-                        <div className="text-[10px] text-muted-foreground">
-                          {new Date(event.starts_at).toLocaleTimeString('ar-SA', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Tasks Sidebar */}
-      <div className="absolute left-4 top-32 w-64 bg-card rounded-xl shadow-md border p-4 max-h-[60vh] overflow-auto">
-        <h3 className="font-bold mb-3 flex items-center gap-2">
-          <span>مهام الأسبوع</span>
-          <span className="text-xs bg-accent px-2 py-0.5 rounded">{tasks.length}</span>
-        </h3>
-        <div className="space-y-2">
-          {tasks.map((task) => (
-            <div
-              key={task.id}
-              className="p-2 rounded-lg bg-accent/50 hover:bg-accent cursor-pointer text-sm"
-              draggable
-            >
-              <div className="font-medium truncate">{task.title}</div>
-              <div className="text-xs text-muted-foreground">
-                {task.due_date && new Date(task.due_date).toLocaleDateString('ar-SA')}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <QuickAdd 
-        open={showQuickAdd} 
-        onClose={() => setShowQuickAdd(false)} 
-        defaultProjectId={null}
-        onSuccess={loadAll}
+    <div className="p-4 space-y-3 max-w-[1400px] mx-auto">
+      <CalendarHeader
+        mode={mode}
+        date={anchor}
+        onPrev={()=> setAnchor(new Date(anchor.getFullYear(), anchor.getMonth() - (mode==="month"?1:0), anchor.getDate() - (mode==="week"?7:0)))}
+        onNext={()=> setAnchor(new Date(anchor.getFullYear(), anchor.getMonth() + (mode==="month"?1:0), anchor.getDate() + (mode==="week"?7:0)))}
+        onToday={()=> setAnchor(new Date())}
+        onMode={setMode}
       />
+
+      <div className="flex items-center gap-2 flex-wrap">
+        <LoadingButton onClick={smartPlanWeek} className="border bg-background hover:bg-secondary">
+          🤖 تخطيط الأسبوع (AI)
+        </LoadingButton>
+        <Badge tone="info">اختصارات: ←/→ ، T (اليوم) ، S (تخطيط)</Badge>
+      </div>
+
+      {loading ? (
+        <div className="space-y-2">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-[60vh] w-full" />
+        </div>
+      ) : mode==="month" ? (
+        <MonthGrid 
+          anchor={anchor} 
+          eventsByDate={eventsByDate} 
+          onDayClick={(iso)=>{ notify.info(`اليوم: ${iso}`); }} 
+        />
+      ) : (
+        <WeekView 
+          anchor={anchor} 
+          eventsByDate={eventsByDate} 
+          prayersByDate={prayersByDate} 
+          onEventClick={(id)=>{ notify.info(`حدث: ${id}`); }} 
+        />
+      )}
     </div>
   );
 }

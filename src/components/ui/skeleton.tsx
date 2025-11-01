@@ -1,10 +1,9 @@
 import { cn } from "@/lib/utils";
 
 function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("skeleton", className)} {...props} />;
+  return <div className={cn("skeleton animate-pulse rounded-lg bg-muted", className)} role="status" aria-live="polite" {...props} />;
 }
 
-/* Ready-made skeletons */
 function CardSkeleton() {
   return (
     <div className="card border border-border p-4 space-y-3">
@@ -16,3 +15,5 @@ function CardSkeleton() {
 }
 
 export { Skeleton, CardSkeleton };
+export default Skeleton;
+
