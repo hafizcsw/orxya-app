@@ -155,29 +155,41 @@ export type Database = {
       prayer_times: {
         Row: {
           asr: string | null
-          day: string
+          created_at: string | null
+          date_iso: string
           dhuhr: string | null
           fajr: string | null
           isha: string | null
           maghrib: string | null
+          method: string | null
+          owner_id: string
+          source: string | null
           sunrise: string | null
         }
         Insert: {
           asr?: string | null
-          day: string
+          created_at?: string | null
+          date_iso?: string
           dhuhr?: string | null
           fajr?: string | null
           isha?: string | null
           maghrib?: string | null
+          method?: string | null
+          owner_id?: string
+          source?: string | null
           sunrise?: string | null
         }
         Update: {
           asr?: string | null
-          day?: string
+          created_at?: string | null
+          date_iso?: string
           dhuhr?: string | null
           fajr?: string | null
           isha?: string | null
           maghrib?: string | null
+          method?: string | null
+          owner_id?: string
+          source?: string | null
           sunrise?: string | null
         }
         Relationships: []
@@ -188,6 +200,9 @@ export type Database = {
           currency: string | null
           full_name: string | null
           id: string
+          latitude: number | null
+          longitude: number | null
+          prayer_method: string | null
           telemetry_enabled: boolean | null
           timezone: string | null
           tz: string | null
@@ -197,6 +212,9 @@ export type Database = {
           currency?: string | null
           full_name?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
+          prayer_method?: string | null
           telemetry_enabled?: boolean | null
           timezone?: string | null
           tz?: string | null
@@ -206,6 +224,9 @@ export type Database = {
           currency?: string | null
           full_name?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
+          prayer_method?: string | null
           telemetry_enabled?: boolean | null
           timezone?: string | null
           tz?: string | null

@@ -13,6 +13,7 @@ const Diagnostics = () => {
   const [ping, setPing] = useState<'ok' | 'fail' | 'idle'>('idle')
   const [syncing, setSyncing] = useState(false)
   const [syncResult, setSyncResult] = useState<string | null>(null)
+  const [prayerCount, setPrayerCount] = useState(0)
 
   async function loadData() {
     // Test DB connection
@@ -41,6 +42,17 @@ const Diagnostics = () => {
     // Load offline queue
     const queued = await getQueued()
     setQueuedItems(queued)
+
+    // Load prayer times count for today
+    if (user) {
+      const today = new Date().toISOString().slice(0, 10)
+      const { count } = await supabase
+        .from('prayer_times')
+        .select('*', { count: 'exact', head: true })
+        .eq('owner_id', user.id)
+        .eq('date_iso', today)
+      setPrayerCount(count ?? 0)
+    }
   }
 
   useEffect(() => {
@@ -129,6 +141,15 @@ const Diagnostics = () => {
               navigator.onLine ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
             }`}>
               {navigator.onLine ? '✅ yes' : '❌ offline'}
+            </code>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">مواقيت اليوم:</span>
+            <code className={`text-xs px-2 py-1 rounded ${
+              prayerCount > 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100'
+            }`}>
+              {prayerCount > 0 ? `✅ ${prayerCount} سجل` : '—'}
             </code>
           </div>
         </div>

@@ -6,6 +6,8 @@ import { Toast } from '@/components/Toast'
 import { track } from '@/lib/telemetry'
 import { SessionBanner } from '@/components/SessionBanner'
 import { ensureNotificationPerms, rescheduleAllFromDB } from '@/lib/notify'
+import { getDeviceLocation } from '@/native/geo'
+import { LocalNotifications } from '@capacitor/local-notifications'
 
 const Automation = () => {
   const { user } = useUser()
@@ -46,6 +48,82 @@ const Automation = () => {
     }
   }
 
+  async function scheduleTodayPrayers() {
+    const { data: sess } = await supabase.auth.getSession();
+    const uid = sess?.session?.user?.id;
+    if (!uid) return;
+
+    const today = new Date().toISOString().slice(0, 10);
+    const { data, error } = await supabase
+      .from('prayer_times')
+      .select('date_iso,fajr,dhuhr,asr,maghrib,isha')
+      .eq('owner_id', uid)
+      .eq('date_iso', today)
+      .maybeSingle();
+    
+    if (error || !data) return;
+
+    const granted = await ensureNotificationPerms();
+    if (!granted) return;
+
+    const toDate = (hhmm: string) => {
+      const [hh, mm] = hhmm.split(':').map(x => parseInt(x, 10));
+      const d = new Date();
+      d.setHours(hh, mm, 0, 0);
+      if (d.getTime() <= Date.now()) d.setDate(d.getDate() + 1);
+      return d;
+    };
+
+    const items = [
+      { label: 'الفجر', time: data.fajr },
+      { label: 'الظهر', time: data.dhuhr },
+      { label: 'العصر', time: data.asr },
+      { label: 'المغرب', time: data.maghrib },
+      { label: 'العشاء', time: data.isha },
+    ].filter(x => !!x.time);
+
+    const notifications = items.map((x, i) => ({
+      id: 210000 + i,
+      title: x.label,
+      body: `موعد ${x.label} الآن`,
+      schedule: { at: toDate(String(x.time)) },
+      smallIcon: 'ic_stat_icon'
+    }));
+
+    if (notifications.length) {
+      await LocalNotifications.schedule({ notifications });
+    }
+  }
+
+  async function syncAndSchedulePrayers(days: number = 1) {
+    try {
+      let lat = null, lon = null;
+      const loc = await getDeviceLocation();
+      if (loc) { lat = loc.lat; lon = loc.lon; }
+      
+      const { data: sess } = await supabase.auth.getSession();
+      const uid = sess?.session?.user?.id;
+      if (uid && lat && lon) {
+        await supabase.from('profiles').update({ latitude: lat, longitude: lon }).eq('id', uid);
+      }
+
+      await supabase.functions.invoke('prayer-sync', {
+        body: { days, ...(lat && lon ? { lat, lon } : {}) }
+      });
+
+      if (days === 1) {
+        await scheduleTodayPrayers();
+        setToast('تمت مزامنة مواقيت اليوم وجدولة التنبيهات ⏰');
+        track('prayers_synced_and_scheduled');
+      } else {
+        setToast(`تمت مزامنة مواقيت ${days} أيام ✅`);
+        track('prayers_synced_range', { days });
+      }
+    } catch (e: any) {
+      setToast(`خطأ: ${e.message}`);
+    }
+  }
+
   return (
     <div className="p-4 space-y-4 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">الأتمتة والتذكيرات</h1>
@@ -73,6 +151,24 @@ const Automation = () => {
             ))}
           </ul>
         )}
+      </div>
+
+      <div className="rounded-2xl border p-4 bg-white/70 space-y-3">
+        <div className="text-sm opacity-70 font-semibold">مواقيت الصلاة</div>
+        <div className="flex gap-2 flex-wrap">
+          <button 
+            className="btn" 
+            onClick={() => syncAndSchedulePrayers(1)}
+          >
+            مزامنة مواقيت اليوم + جدولة
+          </button>
+          <button 
+            className="btn" 
+            onClick={() => syncAndSchedulePrayers(7)}
+          >
+            مزامنة 7 أيام
+          </button>
+        </div>
       </div>
       
       {toast && <Toast msg={toast} />}
