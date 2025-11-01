@@ -35,10 +35,25 @@ export default function Auth() {
 
   async function signInGoogle() {
     setErr(null); setMsg(null)
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo },
-    })
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { 
+          redirectTo,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      })
+      if (error) throw error
+      if (!data?.url) {
+        throw new Error('لم يتم إعداد Google OAuth. يرجى إعداده في لوحة التحكم')
+      }
+    } catch (e: any) {
+      console.error('Google OAuth error:', e)
+      setErr(e?.message ?? 'تعذر تسجيل الدخول عبر Google')
+    }
   }
 
   return (
