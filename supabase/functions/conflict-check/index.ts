@@ -41,7 +41,8 @@ serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
-    const day = (typeof body.date === "string" ? body.date : new Date().toISOString().slice(0, 10));
+    const { probe_event, date_from, date_to } = body;
+    const day = date_from || (typeof body.date === "string" ? body.date : new Date().toISOString().slice(0, 10));
 
     // Fetch prayer times for the day
     const { data: times } = await sb
@@ -57,16 +58,27 @@ serve(async (req) => {
       return json({ ok: true, conflicts: 0, note: "NO_PRAYER_RECORDS" });
     }
 
-    // Fetch events for the day
-    const { data: evs } = await sb
-      .from("events")
-      .select("id,title,starts_at,ends_at")
-      .eq("owner_id", user.id)
-      .gte("starts_at", `${day}T00:00:00`)
-      .lte("starts_at", `${day}T23:59:59`)
-      .order("starts_at");
-
-    const list = (evs ?? []) as Array<{ id: string; starts_at: string; ends_at: string; title: string }>;
+    // Gather events to check
+    const list: Array<{ id: string; starts_at: string; ends_at: string; title: string }> = [];
+    
+    if (probe_event) {
+      list.push({
+        id: probe_event.id || "probe",
+        title: probe_event.title || "(Event)",
+        starts_at: probe_event.starts_at,
+        ends_at: probe_event.ends_at
+      });
+    } else {
+      const { data: evs } = await sb
+        .from("events")
+        .select("id,title,starts_at,ends_at")
+        .eq("owner_id", user.id)
+        .gte("starts_at", `${day}T00:00:00`)
+        .lte("starts_at", `${day}T23:59:59`)
+        .order("starts_at");
+      
+      list.push(...((evs ?? []) as typeof list));
+    }
 
     // Build prayer time windows (±10 minutes)
     function toDate(hhmm: string) {
@@ -86,6 +98,8 @@ serve(async (req) => {
     ].filter((x): x is [string, string] => !!x[1]);
 
     let inserted = 0;
+    const conflicts: any[] = [];
+    const suggestions: any[] = [];
     
     for (const [prayerName, hhmm] of prayers) {
       const center = toDate(hhmm);
@@ -115,6 +129,29 @@ serve(async (req) => {
           (Math.min(ee, to.getTime()) - Math.max(es, from.getTime())) / 60000
         );
 
+        // Create conflict record
+        conflicts.push({
+          event_id: e.id,
+          event_title: e.title,
+          event_start: e.starts_at,
+          event_end: e.ends_at,
+          prayer_name: prayerName,
+          prayer_date: day,
+          window_from: from.toISOString(),
+          window_to: to.toISOString()
+        });
+
+        // Create suggestion
+        const duration = ee - es;
+        const sugFrom = new Date(Math.max(to.getTime(), es));
+        const sugTo = new Date(sugFrom.getTime() + duration);
+        
+        suggestions.push({
+          event_id: e.id,
+          move_to: { from: sugFrom.toISOString(), to: sugTo.toISOString() },
+          message: `يتعارض مع ${prayerName}. اقترح نقله بعد نافذة الصلاة.`
+        });
+
         const ins = await sb
           .from("conflicts")
           .insert({
@@ -124,7 +161,7 @@ serve(async (req) => {
             prayer_start: from.toISOString(),
             prayer_end: to.toISOString(),
             object_kind: "event",
-            object_id: e.id,
+            object_id: e.id === "probe" ? null : e.id,
             overlap_min: overlapMin,
             status: "open",
             severity: overlapMin > 5 ? "hard" : "soft"
@@ -138,7 +175,7 @@ serve(async (req) => {
 
     console.log(`Conflict check for ${day}: ${inserted} new conflicts found`);
 
-    return json({ ok: true, conflicts: inserted, date: day });
+    return json({ ok: true, conflicts, suggestions, inserted, date: day });
   } catch (e: any) {
     console.error("conflict-check error:", e);
     return json({ ok: false, error: "SERVER_ERROR", details: String(e) }, 500);

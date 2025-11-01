@@ -34,10 +34,49 @@ serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { lat, lon, accuracy, provider } = body;
+    const { latitude, longitude, accuracy_m, sampled_at } = body;
 
-    if (typeof lat !== "number" || typeof lon !== "number") {
+    if (typeof latitude !== "number" || typeof longitude !== "number") {
       return json({ ok: false, error: "INVALID_COORDS" }, 400);
+    }
+
+    // Get last sample for rate limiting
+    const { data: lastSample } = await supabase
+      .from("location_samples")
+      .select("sampled_at, latitude, longitude, accuracy_m")
+      .eq("owner_id", user.id)
+      .order("sampled_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    let distance = null;
+    let shouldSave = true;
+
+    if (lastSample) {
+      // Haversine distance
+      const R = 6371000;
+      const toRad = (x: number) => x * Math.PI / 180;
+      const dLat = toRad(latitude - lastSample.latitude);
+      const dLon = toRad(longitude - lastSample.longitude);
+      const a = Math.sin(dLat / 2) ** 2 + 
+                Math.cos(toRad(lastSample.latitude)) * Math.cos(toRad(latitude)) * 
+                Math.sin(dLon / 2) ** 2;
+      distance = 2 * R * Math.asin(Math.sqrt(a));
+
+      const minutesSince = (Date.now() - new Date(lastSample.sampled_at).getTime()) / 60000;
+      const betterAccuracy = accuracy_m && lastSample.accuracy_m && 
+                             accuracy_m < lastSample.accuracy_m * 0.75;
+      
+      shouldSave = minutesSince > 10 || distance > 300 || betterAccuracy;
+    }
+
+    if (!shouldSave) {
+      return json({ 
+        ok: true, 
+        saved: false, 
+        skipped_reason: "RATE_LIMIT",
+        last_distance_m: distance 
+      });
     }
 
     // Insert location sample
@@ -45,10 +84,11 @@ serve(async (req) => {
       .from("location_samples")
       .insert({
         owner_id: user.id,
-        latitude: lat,
-        longitude: lon,
-        accuracy_m: accuracy ?? null,
-        source: provider ?? "device"
+        latitude,
+        longitude,
+        accuracy_m: accuracy_m ?? null,
+        sampled_at: sampled_at || new Date().toISOString(),
+        source: "device"
       })
       .select("id")
       .single();
@@ -62,8 +102,8 @@ serve(async (req) => {
     await supabase
       .from("profiles")
       .update({ 
-        latitude: lat, 
-        longitude: lon,
+        latitude, 
+        longitude,
         location_updated_at: new Date().toISOString()
       })
       .eq("id", user.id);
@@ -74,9 +114,9 @@ serve(async (req) => {
       body: { date: today }
     });
 
-    console.log(`Location updated for user ${user.id}: ${lat}, ${lon}`);
+    console.log(`Location updated for user ${user.id}: ${latitude}, ${longitude}`);
 
-    return json({ ok: true, saved_id: sample.id });
+    return json({ ok: true, saved: true, saved_id: sample.id, last_distance_m: distance });
   } catch (e: any) {
     console.error("location-update error:", e);
     return json({ ok: false, error: "SERVER_ERROR", details: String(e) }, 500);
