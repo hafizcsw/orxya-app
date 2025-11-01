@@ -46,6 +46,10 @@ export default function Reports() {
   const [error, setError] = useState<string | null>(null);
 
   async function loadSingle() {
+    if (!user) {
+      setError('الرجاء تسجيل الدخول أولاً');
+      return;
+    }
     setLoading(true); 
     setError(null);
     try {
@@ -60,6 +64,10 @@ export default function Reports() {
   }
 
   async function loadRange(days: number) {
+    if (!user) {
+      setError('الرجاء تسجيل الدخول أولاً');
+      return;
+    }
     setLoading(true); 
     setError(null);
     try {
@@ -129,21 +137,21 @@ export default function Reports() {
           <div className="flex flex-wrap gap-2">
             <button 
               className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50" 
-              disabled={loading} 
+              disabled={loading || !user} 
               onClick={loadSingle}
             >
               {loading ? '...' : 'اليوم فقط'}
             </button>
             <button 
               className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50" 
-              disabled={loading} 
+              disabled={loading || !user} 
               onClick={() => loadRange(7)}
             >
               {loading ? '...' : 'آخر 7 أيام'}
             </button>
             <button 
               className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50" 
-              disabled={loading} 
+              disabled={loading || !user} 
               onClick={() => loadRange(30)}
             >
               {loading ? '...' : 'آخر 30 يومًا'}
