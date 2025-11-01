@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/lib/auth';
 import { track } from '@/lib/telemetry';
+import QuickAdd from '@/components/QuickAdd';
 import {
   startOfWeek,
   endOfWeek,
@@ -59,11 +60,24 @@ export default function Calendar() {
   const [conflicts, setConflicts] = useState<Conflict[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [dragging, setDragging] = useState<{ eventId: string; startY: number } | null>(null);
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [activeTags, setActiveTags] = useState<string[]>([]);
   const tzRef = useRef<string>('Asia/Dubai');
 
   const weekStart = useMemo(() => startOfWeek(cursor, tzRef.current), [cursor]);
   const weekEnd = useMemo(() => endOfWeek(cursor, tzRef.current), [cursor]);
   const days = useMemo(() => getDaysInRange(weekStart, weekEnd), [weekStart, weekEnd]);
+
+  const allTags = useMemo(() => {
+    const a = new Set<string>();
+    events.forEach(ev => (ev.tags || []).forEach(t => a.add(t)));
+    return Array.from(a).sort();
+  }, [events]);
+
+  const filteredEvents = useMemo(() => {
+    if (!activeTags.length) return events;
+    return events.filter(ev => (ev.tags || []).some(t => activeTags.includes(t)));
+  }, [events, activeTags]);
 
   async function loadAll() {
     if (!user) return;
@@ -129,6 +143,18 @@ export default function Calendar() {
     loadAll();
     track('calendar_open_week');
   }, [user?.id, cursor]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const meta = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k';
+      if (meta) {
+        e.preventDefault();
+        setShowQuickAdd(s => !s);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   function goToToday() {
     setCursor(new Date());
@@ -258,10 +284,61 @@ export default function Calendar() {
           <div className="text-sm font-medium min-w-[200px] text-center">
             {formatDateRange(weekStart, weekEnd)}
           </div>
+
+          <Button 
+            onClick={() => setShowQuickAdd(true)} 
+            variant="outline" 
+            size="sm"
+            className="no-print"
+          >
+            + سريع (⌘K)
+          </Button>
+
+          <Button 
+            onClick={() => window.print()} 
+            variant="outline" 
+            size="sm"
+            className="no-print"
+          >
+            طباعة PDF
+          </Button>
         </div>
 
         {isLoading && <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />}
       </div>
+
+      {/* Tags Filter */}
+      {allTags.length > 0 && (
+        <div className="flex flex-wrap gap-2 bg-card p-3 rounded-xl border no-print">
+          {allTags.map(tag => {
+            const on = activeTags.includes(tag);
+            return (
+              <button
+                key={tag}
+                onClick={() => {
+                  setActiveTags(s => on ? s.filter(x => x !== tag) : [...s, tag]);
+                  track('calendar_filter_tags', { tag, active: !on });
+                }}
+                className={`px-2 py-1 rounded-full text-xs border transition-colors ${
+                  on 
+                    ? 'bg-primary text-primary-foreground border-primary' 
+                    : 'bg-secondary hover:bg-secondary/80 border-border'
+                }`}
+              >
+                #{tag}
+              </button>
+            );
+          })}
+          {activeTags.length > 0 && (
+            <button 
+              onClick={() => setActiveTags([])} 
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              مسح الوسوم
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Week Grid */}
       <div className="flex-1 overflow-auto bg-card rounded-xl shadow-md border">
@@ -323,7 +400,9 @@ export default function Calendar() {
 
             {/* Events Overlay */}
             {days.map((day, dayIndex) => {
-              const dayEvents = getEventsForDay(day);
+              const dayEvents = getEventsForDay(day).filter(ev => 
+                activeTags.length === 0 || (ev.tags || []).some(t => activeTags.includes(t))
+              );
               return (
                 <div key={day.toISOString()}>
                   {dayEvents.map((event) => {
@@ -379,6 +458,13 @@ export default function Calendar() {
           ))}
         </div>
       </div>
+
+      <QuickAdd 
+        open={showQuickAdd} 
+        onClose={() => setShowQuickAdd(false)} 
+        defaultProjectId={null}
+        onSuccess={loadAll}
+      />
     </div>
   );
 }

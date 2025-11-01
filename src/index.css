@@ -113,3 +113,25 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Print styles for PDF export */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .calendar-grid {
+    page-break-inside: avoid;
+  }
+
+  /* Ensure cards and borders are visible in print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

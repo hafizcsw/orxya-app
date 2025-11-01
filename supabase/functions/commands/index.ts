@@ -57,6 +57,15 @@ const AddTask = z.object({
   status: z.enum(["todo", "doing", "done"]).optional(),
   order_pos: z.number().optional(),
   due_date: z.string().optional(),
+  tags: z.array(z.string()).default([]),
+});
+
+const CreateEvent = z.object({
+  title: z.string().min(1),
+  starts_at: z.string(),
+  ends_at: z.string(),
+  source: z.enum(['user','ai','external']).default('user'),
+  tags: z.array(z.string()).default([]),
 });
 
 const MoveTask = z.object({
@@ -97,6 +106,7 @@ const BodySchema = z.object({
     "add_task",
     "move_task",
     "set_task_status",
+    "create_event",
     "move_event",
     "resize_event",
     "materialize_task_event",
@@ -265,6 +275,28 @@ serve(async (req) => {
       }
       savedIds = data?.map(d => d.id) ?? [];
       result = { table: "tasks", action: "status_updated", count: savedIds.length };
+    }
+
+    // ─────────────────────── create_event ─────────────────────────
+    if (command === "create_event") {
+      const p = CreateEvent.parse(parsed.data.payload);
+      const { data, error } = await supabase
+        .from("events")
+        .insert({
+          owner_id: user.id,
+          title: p.title,
+          starts_at: p.starts_at,
+          ends_at: p.ends_at,
+          source_id: p.source,
+          tags: p.tags
+        })
+        .select("id");
+      if (error) {
+        console.error("DB error (events):", error);
+        throw error;
+      }
+      savedIds = data?.map(d => d.id) ?? [];
+      result = { table: "events", action: "created", count: savedIds.length };
     }
 
     // ─────────────────────── move_event ─────────────────────────
