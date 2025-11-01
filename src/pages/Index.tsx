@@ -9,8 +9,10 @@ const Index = () => {
   useEffect(() => {
     if (!loading) {
       if (user) {
+        console.log('[Index] User found, redirecting to /today')
         navigate('/today');
       } else {
+        console.log('[Index] No user, redirecting to /auth')
         navigate('/auth');
       }
     }

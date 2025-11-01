@@ -17,7 +17,10 @@ export default function Auth() {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
 
   useEffect(() => {
-    if (user) navigate('/projects')
+    if (user) {
+      console.log('[Auth] User already logged in, redirecting to /today')
+      navigate('/today')
+    }
   }, [user, navigate])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -27,7 +30,8 @@ export default function Auth() {
       if (mode === 'signin') {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
-        navigate('/projects')
+        console.log('[Auth] Sign in successful, redirecting to /today')
+        navigate('/today')
       } else {
         const { error } = await supabase.auth.signUp({ 
           email, 
@@ -36,7 +40,8 @@ export default function Auth() {
         })
         if (error) throw error
         setMsg('✅ تم إنشاء الحساب بنجاح! جاري تسجيل الدخول...')
-        setTimeout(() => navigate('/projects'), 1000)
+        console.log('[Auth] Sign up successful, redirecting to /today')
+        setTimeout(() => navigate('/today'), 1000)
       }
     } catch (e: any) {
       setErr(e?.message ?? 'حدث خطأ')

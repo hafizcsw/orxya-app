@@ -27,16 +27,24 @@ export function useUser() {
   useEffect(() => {
     let mounted = true;
     
-    // Initialize auth state
-    supabase.auth.getUser().then(async ({ data }) => {
+    console.log('[useUser] Initializing auth...')
+    
+    // Initialize auth state using getSession (better for OAuth)
+    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
       if (!mounted) return;
-      const u = data.user ?? null;
+      
+      if (error) {
+        console.error('[useUser] Session error:', error);
+      }
+      
+      const u = session?.user ?? null;
+      console.log('[useUser] Initial session:', u ? 'User found' : 'No user')
       setUser(u);
       setLoading(false);
       identifyUser(u?.id ?? null, u ? { email: u.email } : undefined);
       await applyProfileFlags(u?.id ?? null);
     }).catch((err) => {
-      console.error('Auth initialization error:', err);
+      console.error('[useUser] Auth initialization error:', err);
       if (mounted) {
         setUser(null);
         setLoading(false);
@@ -44,15 +52,18 @@ export function useUser() {
     });
     
     // Listen for auth changes
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_e, sess) => {
+    const { data: sub } = supabase.auth.onAuthStateChange(async (event, sess) => {
       if (!mounted) return;
+      
+      console.log('[useUser] Auth state changed:', event, sess?.user ? 'User present' : 'No user')
+      
       const u = sess?.user ?? null;
       setUser(u);
       identifyUser(u?.id ?? null, u ? { email: u.email } : undefined);
       await applyProfileFlags(u?.id ?? null);
       
       // Flush queue and reschedule notifications after login
-      if (u) {
+      if (u && event === 'SIGNED_IN') {
         setTimeout(async () => {
           flushQueueOnce();
           rescheduleAllFromDB();
