@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_messages: {
+        Row: {
+          content: Json
+          created_at: string
+          id: number
+          owner_id: string
+          role: string
+          session_id: string
+        }
+        Insert: {
+          content: Json
+          created_at?: string
+          id?: number
+          owner_id: string
+          role: string
+          session_id: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: number
+          owner_id?: string
+          role?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "ai_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_runs: {
         Row: {
           completion_tokens: number | null
@@ -41,6 +76,33 @@ export type Database = {
           mode?: string
           owner_id?: string
           prompt_tokens?: number | null
+        }
+        Relationships: []
+      }
+      ai_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          is_archived: boolean
+          last_activity: string
+          owner_id: string
+          title: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_archived?: boolean
+          last_activity?: string
+          owner_id: string
+          title?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_archived?: boolean
+          last_activity?: string
+          owner_id?: string
+          title?: string | null
         }
         Relationships: []
       }
@@ -198,6 +260,7 @@ export type Database = {
           owner_id: string
           source_id: string | null
           starts_at: string
+          tags: string[] | null
           title: string
           updated_at: string | null
         }
@@ -214,6 +277,7 @@ export type Database = {
           owner_id: string
           source_id?: string | null
           starts_at: string
+          tags?: string[] | null
           title: string
           updated_at?: string | null
         }
@@ -230,6 +294,7 @@ export type Database = {
           owner_id?: string
           source_id?: string | null
           starts_at?: string
+          tags?: string[] | null
           title?: string
           updated_at?: string | null
         }

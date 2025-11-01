@@ -17,6 +17,13 @@ const SYSTEM_PROMPT = `أنت وكيل جدولة ومهام ذكي للمستخ
 - حدّد أي التباسات زمنية بالـ timezone الخاص بالمستخدم.
 - كن مختصراً ومباشراً في إجاباتك.`;
 
+const FEWSHOT: any[] = [
+  { role: "user", content: "رتّب اجتماع مراجعة عرض الساعة 5 مساء اليوم لمدة 30 دقيقة." },
+  { role: "assistant", content: "هل تفضّل بعد صلاة العصر أم بعدها مباشرةً؟ أحتاج مدة الاجتماع إن لم تكن 30 دقيقة." },
+  { role: "user", content: "بعد العصر مباشرةً، 30 دقيقة." },
+  { role: "assistant", content: "سأحجز اجتماع 30 دقيقة بعد العصر، وسأتحقق من التعارض مع مواقيت الصلاة ثم أؤكد الوقت المناسب." }
+];
+
 interface ToolCall {
   id: string;
   type: 'function';
@@ -27,168 +34,114 @@ interface ToolCall {
 }
 
 function getToolsSpec() {
+  const fn = (name:string, desc:string, params:any) => ({ 
+    type: 'function', 
+    function: { name, description: desc, parameters: params }
+  });
+  
   return [
-    {
-      type: 'function',
-      function: {
-        name: 'get_profile',
-        description: 'جلب تفضيلات المستخدم (timezone, prayer_method...)',
-        parameters: {
-          type: 'object',
-          properties: {},
-          additionalProperties: false,
-        },
+    fn('get_profile', 'جلب تفضيلات المستخدم (timezone, prayer_method...)', {
+      type: 'object',
+      properties: {},
+      additionalProperties: false,
+    }),
+    fn('list_events_window', 'جلب أحداث المستخدم خلال نافذة زمنية', {
+      type: 'object',
+      properties: {
+        from: { type: 'string', description: 'ISO datetime' },
+        to: { type: 'string', description: 'ISO datetime' },
       },
-    },
-    {
-      type: 'function',
-      function: {
-        name: 'list_events_window',
-        description: 'جلب أحداث المستخدم خلال نافذة زمنية',
-        parameters: {
-          type: 'object',
-          properties: {
-            from: { type: 'string', description: 'ISO datetime' },
-            to: { type: 'string', description: 'ISO datetime' },
-          },
-          required: ['from', 'to'],
-          additionalProperties: false,
-        },
+      required: ['from', 'to'],
+      additionalProperties: false,
+    }),
+    fn('create_event', 'إنشاء حدث جديد', {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        starts_at: { type: 'string', description: 'ISO datetime' },
+        ends_at: { type: 'string', description: 'ISO datetime' },
+        duration_min: { type: 'number' },
+        description: { type: 'string' },
+        tags: { type: 'array', items: { type: 'string' } },
       },
-    },
-    {
-      type: 'function',
-      function: {
-        name: 'create_event',
-        description: 'إنشاء حدث جديد',
-        parameters: {
-          type: 'object',
-          properties: {
-            title: { type: 'string' },
-            starts_at: { type: 'string', description: 'ISO datetime' },
-            ends_at: { type: 'string', description: 'ISO datetime' },
-            duration_min: { type: 'number' },
-            description: { type: 'string' },
-          },
-          required: ['title'],
-          additionalProperties: false,
-        },
+      required: ['title'],
+      additionalProperties: false,
+    }),
+    fn('update_event', 'تعديل حدث موجود', {
+      type: 'object',
+      properties: {
+        event_id: { type: 'string' },
+        title: { type: 'string' },
+        starts_at: { type: 'string' },
+        ends_at: { type: 'string' },
+        duration_min: { type: 'number' },
+        description: { type: 'string' },
+        tags: { type: 'array', items: { type: 'string' } },
       },
-    },
-    {
-      type: 'function',
-      function: {
-        name: 'update_event',
-        description: 'تعديل حدث موجود',
-        parameters: {
-          type: 'object',
-          properties: {
-            event_id: { type: 'string' },
-            title: { type: 'string' },
-            starts_at: { type: 'string' },
-            ends_at: { type: 'string' },
-            duration_min: { type: 'number' },
-            description: { type: 'string' },
-          },
-          required: ['event_id'],
-          additionalProperties: false,
-        },
+      required: ['event_id'],
+      additionalProperties: false,
+    }),
+    fn('create_task', 'إنشاء مهمة جديدة', {
+      type: 'object',
+      properties: {
+        project_id: { type: 'string' },
+        title: { type: 'string' },
+        status: { type: 'string', enum: ['todo', 'doing', 'done'] },
+        due_date: { type: 'string', description: 'YYYY-MM-DD' },
       },
-    },
-    {
-      type: 'function',
-      function: {
-        name: 'create_task',
-        description: 'إنشاء مهمة جديدة',
-        parameters: {
-          type: 'object',
-          properties: {
-            project_id: { type: 'string' },
-            title: { type: 'string' },
-            status: { type: 'string', enum: ['todo', 'doing', 'done'] },
-            due_date: { type: 'string', description: 'YYYY-MM-DD' },
-          },
-          required: ['title'],
-          additionalProperties: false,
-        },
+      required: ['title'],
+      additionalProperties: false,
+    }),
+    fn('list_tasks', 'جلب قائمة المهام', {
+      type: 'object',
+      properties: {
+        status: { type: 'string', enum: ['todo', 'doing', 'done'] },
+        project_id: { type: 'string' },
       },
-    },
-    {
-      type: 'function',
-      function: {
-        name: 'list_tasks',
-        description: 'جلب قائمة المهام',
-        parameters: {
-          type: 'object',
-          properties: {
-            status: { type: 'string', enum: ['todo', 'doing', 'done'] },
-            project_id: { type: 'string' },
-          },
-          additionalProperties: false,
-        },
+      additionalProperties: false,
+    }),
+    fn('update_task_status', 'تحديث حالة مهمة', {
+      type: 'object',
+      properties: {
+        task_id: { type: 'string' },
+        status: { type: 'string', enum: ['todo', 'doing', 'done'] },
       },
-    },
-    {
-      type: 'function',
-      function: {
-        name: 'update_task_status',
-        description: 'تحديث حالة مهمة',
-        parameters: {
-          type: 'object',
-          properties: {
-            task_id: { type: 'string' },
-            status: { type: 'string', enum: ['todo', 'doing', 'done'] },
-          },
-          required: ['task_id', 'status'],
-          additionalProperties: false,
-        },
+      required: ['task_id', 'status'],
+      additionalProperties: false,
+    }),
+    fn('location_update', 'تسجيل موقع المستخدم ومزامنة مواقيت الصلاة', {
+      type: 'object',
+      properties: {
+        lat: { type: 'number' },
+        lon: { type: 'number' },
+        accuracy: { type: 'number' },
       },
-    },
-    {
-      type: 'function',
-      function: {
-        name: 'location_update',
-        description: 'تسجيل موقع المستخدم ومزامنة مواقيت الصلاة',
-        parameters: {
-          type: 'object',
-          properties: {
-            lat: { type: 'number' },
-            lon: { type: 'number' },
-            accuracy: { type: 'number' },
-          },
-          required: ['lat', 'lon'],
-          additionalProperties: false,
-        },
+      required: ['lat', 'lon'],
+      additionalProperties: false,
+    }),
+    fn('prayer_sync_today', 'تشغيل مزامنة مواقيت الصلاة لليوم', {
+      type: 'object',
+      properties: {},
+      additionalProperties: false,
+    }),
+    fn('conflict_check', 'فحص تعارضات الصلاة مع الأحداث', {
+      type: 'object',
+      properties: {
+        days: { type: 'number', description: 'عدد الأيام للفحص (افتراضي: 7)' },
+        buffer_min: { type: 'number', description: 'هامش الصلاة بالدقائق (افتراضي: 30)' },
+        upsert: { type: 'boolean', description: 'حفظ النتائج (افتراضي: true)' },
       },
-    },
-    {
-      type: 'function',
-      function: {
-        name: 'prayer_sync_today',
-        description: 'تشغيل مزامنة مواقيت الصلاة لليوم',
-        parameters: {
-          type: 'object',
-          properties: {},
-          additionalProperties: false,
-        },
+      additionalProperties: false,
+    }),
+    fn('enqueue_alarm', 'إنشاء تنبيه محلي لحدث', {
+      type: 'object',
+      properties: {
+        label: { type: 'string' },
+        time_local: { type: 'string', description: 'HH:MM' },
       },
-    },
-    {
-      type: 'function',
-      function: {
-        name: 'conflict_check',
-        description: 'فحص تعارضات الصلاة مع الأحداث',
-        parameters: {
-          type: 'object',
-          properties: {
-            days: { type: 'number', description: 'عدد الأيام للفحص (افتراضي: 7)' },
-            buffer_min: { type: 'number', description: 'هامش الصلاة بالدقائق (افتراضي: 30)' },
-            upsert: { type: 'boolean', description: 'حفظ النتائج (افتراضي: true)' },
-          },
-          additionalProperties: false,
-        },
-      },
-    },
+      required: ['label', 'time_local'],
+      additionalProperties: false,
+    }),
   ];
 }
 
@@ -224,8 +177,59 @@ serve(async (req) => {
 
     const body = await req.json();
     const userMessage = String(body?.message ?? '').slice(0, 8000);
+    const now = new Date().toISOString();
 
     console.log(`Agent request from user ${user.id}: ${userMessage.slice(0, 100)}...`);
+
+    // Session handling
+    const session_id_in = body?.session_id as string | undefined;
+    let sessionId = session_id_in ?? null;
+
+    if (!sessionId) {
+      const { data: sdata, error: serr } = await supabase.from('ai_sessions')
+        .insert({ owner_id: user.id, title: (body?.title ?? 'جلسة جديدة') })
+        .select('id').single();
+      if (serr) throw serr;
+      sessionId = sdata.id;
+    } else {
+      await supabase.from('ai_sessions')
+        .update({ last_activity: now })
+        .eq('id', sessionId)
+        .eq('owner_id', user.id);
+    }
+
+    // Load conversation history
+    const { data: prev } = await supabase.from('ai_messages')
+      .select('role, content')
+      .eq('owner_id', user.id)
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: true })
+      .limit(20);
+
+    function toOpenAIMsg(m: any) {
+      const c = m.content || {};
+      if (m.role === 'tool') {
+        return { 
+          role: 'tool', 
+          content: JSON.stringify(c.tool_result ?? c), 
+          tool_call_id: c.tool_call_id ?? undefined 
+        };
+      }
+      return { role: m.role, content: String(c.text ?? '') };
+    }
+
+    const history = (prev ?? []).map(toOpenAIMsg);
+
+    // Save user message
+    await supabase.from('ai_messages').insert({
+      session_id: sessionId,
+      owner_id: user.id,
+      role: 'user',
+      content: { text: userMessage }
+    });
+
+    // Track if events were modified
+    let touchedEvents = false;
 
     // Tool implementations
     const toolImplementations: Record<string, (args: any) => Promise<any>> = {
@@ -250,7 +254,7 @@ serve(async (req) => {
       },
 
       async create_event(args: any) {
-        const now = new Date().toISOString();
+        touchedEvents = true;
         const row = {
           owner_id: user.id,
           title: args.title,
@@ -258,6 +262,7 @@ serve(async (req) => {
           ends_at: args.ends_at ?? null,
           duration_min: args.duration_min ?? 30,
           description: args.description ?? null,
+          tags: args.tags ?? [],
           source_id: 'ai',
           is_ai_created: true,
           created_at: now,
@@ -269,12 +274,14 @@ serve(async (req) => {
       },
 
       async update_event(args: any) {
+        touchedEvents = true;
         const patch: any = {};
         if (args.title) patch.title = args.title;
         if (args.starts_at) patch.starts_at = args.starts_at;
         if (args.ends_at) patch.ends_at = args.ends_at;
         if (args.duration_min != null) patch.duration_min = args.duration_min;
         if (args.description) patch.description = args.description;
+        if (args.tags) patch.tags = args.tags;
 
         const { data, error } = await supabase
           .from('events')
@@ -356,16 +363,29 @@ serve(async (req) => {
         if (error) throw error;
         return data ?? {};
       },
+
+      async enqueue_alarm(args: any) {
+        const payload = {
+          command: 'set_alarm',
+          idempotency_key: crypto.randomUUID(),
+          payload: { label: String(args.label), time_local: String(args.time_local) }
+        };
+        const { data, error } = await supabase.functions.invoke('commands', { body: payload });
+        if (error) throw error;
+        return data ?? {};
+      },
     };
 
     // OpenAI conversation loop
     const messages = [
       { role: 'system', content: SYSTEM_PROMPT },
+      ...FEWSHOT,
+      ...history,
       { role: 'user', content: userMessage },
-    ];
+    ] as any[];
 
     let toolLoop = 0;
-    const maxLoops = 6;
+    const maxLoops = 8;
     let finalReply = '';
     const toolOutputs: any[] = [];
 
@@ -401,6 +421,15 @@ serve(async (req) => {
       // No more tools needed - final answer
       if (!toolCalls?.length) {
         finalReply = String(choice?.message?.content ?? '').trim();
+        
+        // Save assistant message
+        await supabase.from('ai_messages').insert({
+          session_id: sessionId,
+          owner_id: user.id,
+          role: 'assistant',
+          content: { text: finalReply }
+        });
+        
         break;
       }
 
@@ -410,6 +439,14 @@ serve(async (req) => {
         content: choice.message.content ?? null,
         tool_calls: toolCalls,
       } as any);
+
+      // Save assistant tool request
+      await supabase.from('ai_messages').insert({
+        session_id: sessionId,
+        owner_id: user.id,
+        role: 'assistant',
+        content: { text: choice?.message?.content ?? null, tool_calls: toolCalls }
+      });
 
       for (const toolCall of toolCalls) {
         const toolName = toolCall.function.name;
@@ -436,16 +473,53 @@ serve(async (req) => {
           tool_call_id: toolCall.id,
           content: JSON.stringify(result),
         } as any);
+
+        // Save tool result
+        await supabase.from('ai_messages').insert({
+          session_id: sessionId,
+          owner_id: user.id,
+          role: 'tool',
+          content: {
+            tool_name: toolName,
+            tool_args: toolArgs,
+            tool_result: result,
+            tool_call_id: toolCall.id
+          }
+        });
       }
     }
 
     console.log(`Agent completed after ${toolLoop} loops`);
+
+    // Post-flight conflict check if events were modified
+    if (touchedEvents) {
+      try {
+        const conflictResult = await toolImplementations.conflict_check({ 
+          days: 7, 
+          buffer_min: 30, 
+          upsert: true 
+        });
+        await supabase.from('ai_messages').insert({
+          session_id: sessionId,
+          owner_id: user.id,
+          role: 'tool',
+          content: { 
+            tool_name: 'conflict_check', 
+            tool_result: conflictResult, 
+            summary: 'post-flight check' 
+          }
+        });
+      } catch (e) {
+        console.error('Post-flight conflict check failed:', e);
+      }
+    }
 
     return new Response(
       JSON.stringify({
         ok: true,
         reply: finalReply,
         tool_outputs: toolOutputs,
+        session_id: sessionId,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

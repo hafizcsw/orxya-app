@@ -1,12 +1,18 @@
 import { useState, useRef, useEffect } from 'react';
-import { askAgent } from '@/lib/agent';
+import { askAgent, getSessions, createSession, archiveSession } from '@/lib/agent';
 import { useUser } from '@/lib/auth';
-import { Send, Sparkles, Loader2 } from 'lucide-react';
+import { Send, Sparkles, Loader2, Plus, Archive, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Message {
   role: 'user' | 'assistant';
   text: string;
+}
+
+interface Session {
+  id: string;
+  title: string;
+  last_activity: string;
 }
 
 export default function Assistant() {
@@ -15,6 +21,8 @@ export default function Assistant() {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -25,8 +33,49 @@ export default function Assistant() {
     scrollToBottom();
   }, [messages]);
 
-  async function sendMessage() {
-    const msg = input.trim();
+  useEffect(() => {
+    if (user) loadSessions();
+  }, [user]);
+
+  async function loadSessions() {
+    try {
+      const data = await getSessions();
+      setSessions(data);
+    } catch (e) {
+      console.error('Failed to load sessions:', e);
+    }
+  }
+
+  async function handleNewSession() {
+    try {
+      const session = await createSession('جلسة جديدة');
+      setCurrentSessionId(session.id);
+      setMessages([]);
+      await loadSessions();
+    } catch (e) {
+      console.error('Failed to create session:', e);
+    }
+  }
+
+  async function handleArchiveSession(id: string) {
+    try {
+      await archiveSession(id);
+      if (currentSessionId === id) {
+        setCurrentSessionId(null);
+        setMessages([]);
+      }
+      await loadSessions();
+    } catch (e) {
+      console.error('Failed to archive session:', e);
+    }
+  }
+
+  function handleQuickAction(action: string) {
+    sendMessage(action);
+  }
+
+  async function sendMessage(quickAction?: string) {
+    const msg = quickAction || input.trim();
     if (!msg || isLoading) return;
 
     if (!user) {
@@ -39,17 +88,34 @@ export default function Assistant() {
     }
 
     setMessages((prev) => [...prev, { role: 'user', text: msg }]);
-    setInput('');
+    if (!quickAction) setInput('');
     setIsLoading(true);
 
     try {
-      const response = await askAgent(msg);
+      const response = await askAgent(msg, { session_id: currentSessionId || undefined });
       
       if (response.ok) {
+        if (response.session_id && !currentSessionId) {
+          setCurrentSessionId(response.session_id);
+          await loadSessions();
+        }
+
         setMessages((prev) => [
           ...prev,
           { role: 'assistant', text: response.reply || 'تم التنفيذ بنجاح' },
         ]);
+
+        // Check for conflict warnings
+        const conflicts = response.tool_outputs?.find(
+          (t: any) => t.name === 'conflict_check' || t.result?.summary === 'post-flight check'
+        );
+        if (conflicts?.result?.count > 0) {
+          toast({
+            title: '⛔️ تعارض مع مواقيت الصلاة',
+            description: `وُجدت ${conflicts.result.count} تعارضات`,
+            variant: 'destructive',
+          });
+        }
       } else {
         setMessages((prev) => [
           ...prev,
@@ -80,15 +146,84 @@ export default function Assistant() {
     }
   };
 
+  const quickActions = [
+    'خطة اليوم بعد العشاء',
+    'راجع التعارضات للأسبوع',
+    'أضف: متابعة عميل غدًا قبل الظهر',
+  ];
+
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] max-w-4xl mx-auto p-4">
-      <div className="flex items-center gap-2 mb-4">
-        <Sparkles className="w-6 h-6 text-primary" />
-        <h1 className="text-3xl font-bold">المساعد الذكي</h1>
+    <div className="flex h-[calc(100vh-4rem)] max-w-7xl mx-auto p-4 gap-4">
+      {/* Sessions Sidebar */}
+      <div className="w-64 border-2 rounded-3xl p-4 bg-card shadow-lg overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-bold flex items-center gap-2">
+            <MessageSquare className="w-5 h-5" />
+            الجلسات
+          </h2>
+          <button
+            onClick={handleNewSession}
+            className="p-2 hover:bg-accent rounded-lg transition-colors"
+            title="جلسة جديدة"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="space-y-2">
+          {sessions.map((session) => (
+            <div
+              key={session.id}
+              className={`p-3 rounded-lg cursor-pointer transition-all ${
+                currentSessionId === session.id
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted hover:bg-accent'
+              }`}
+              onClick={() => {
+                setCurrentSessionId(session.id);
+                setMessages([]);
+              }}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <span className="text-sm line-clamp-2 flex-1">{session.title}</span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleArchiveSession(session.id);
+                  }}
+                  className="p-1 hover:bg-background/20 rounded transition-colors"
+                >
+                  <Archive className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto mb-4 space-y-4 bg-card border-2 rounded-3xl p-6 shadow-lg">
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col">
+        <div className="flex items-center gap-2 mb-4">
+          <Sparkles className="w-6 h-6 text-primary" />
+          <h1 className="text-3xl font-bold">المساعد الذكي</h1>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="flex gap-2 mb-3 flex-wrap">
+          {quickActions.map((action, idx) => (
+            <button
+              key={idx}
+              onClick={() => handleQuickAction(action)}
+              disabled={isLoading}
+              className="px-3 py-1.5 text-sm rounded-full bg-secondary hover:bg-accent transition-colors disabled:opacity-50"
+            >
+              {action}
+            </button>
+          ))}
+        </div>
+
+        {/* Messages Area */}
+        <div className="flex-1 overflow-y-auto mb-4 space-y-4 bg-card border-2 rounded-3xl p-6 shadow-lg">
         {messages.length === 0 && (
           <div className="text-center text-muted-foreground py-12">
             <Sparkles className="w-16 h-16 mx-auto mb-4 text-primary/30" />
@@ -128,11 +263,11 @@ export default function Assistant() {
           </div>
         )}
 
-        <div ref={messagesEndRef} />
-      </div>
+          <div ref={messagesEndRef} />
+        </div>
 
-      {/* Input Area */}
-      <div className="flex gap-2">
+        {/* Input Area */}
+        <div className="flex gap-2">
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -143,7 +278,7 @@ export default function Assistant() {
           disabled={isLoading}
         />
         <button
-          onClick={sendMessage}
+          onClick={() => sendMessage()}
           disabled={isLoading || !input.trim()}
           className="px-6 py-3 rounded-2xl bg-primary text-primary-foreground shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -152,7 +287,8 @@ export default function Assistant() {
           ) : (
             <Send className="w-5 h-5" />
           )}
-        </button>
+          </button>
+        </div>
       </div>
     </div>
   );
