@@ -3,6 +3,8 @@ import { supabase } from '@/integrations/supabase/client'
 import { useUser } from '@/lib/auth'
 import { getQueued } from '@/lib/localdb/dexie'
 import { flushQueueOnce } from '@/lib/sync'
+import * as SentryCap from '@sentry/capacitor'
+import { track } from '@/lib/telemetry'
 
 const Diagnostics = () => {
   const { user } = useUser()
@@ -17,8 +19,10 @@ const Diagnostics = () => {
     try {
       const { error } = await supabase.from('profiles').select('id').limit(1)
       setPing(error ? 'fail' : 'ok')
+      track('diagnostics_ping', { status: error ? 'fail' : 'ok' })
     } catch {
       setPing('fail')
+      track('diagnostics_ping', { status: 'fail' })
     }
 
     // Load audit logs
@@ -29,6 +33,7 @@ const Diagnostics = () => {
         .order('created_at', { ascending: false })
         .limit(5)
       setAudit(data ?? [])
+      track('diagnostics_audit_loaded', { count: (data ?? []).length })
     } else {
       setAudit([])
     }
@@ -167,6 +172,31 @@ const Diagnostics = () => {
             </pre>
           </div>
         )}
+      </div>
+
+      {/* Test Buttons */}
+      <div className="p-4 bg-white border rounded-2xl">
+        <h2 className="font-semibold text-lg mb-3">أزرار الاختبار</h2>
+        <div className="flex gap-2 flex-wrap">
+          <button 
+            className="btn max-w-xs" 
+            onClick={() => { 
+              try { 
+                throw new Error('Oryxa test error'); 
+              } catch (e) { 
+                SentryCap.captureException(e); 
+              } 
+            }}
+          >
+            Throw test error (Sentry)
+          </button>
+          <button 
+            className="btn max-w-xs" 
+            onClick={() => track('test_event_clicked', { at: Date.now() })}
+          >
+            Send test event (PostHog)
+          </button>
+        </div>
       </div>
 
       {/* Audit Log */}

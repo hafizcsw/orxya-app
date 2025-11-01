@@ -14,32 +14,32 @@ const Today = () => {
 
   async function fetchReport() {
     setLoading(true)
-    trackEvent('daily_report_view')
     try {
       const { data, error } = await supabase.functions.invoke('report-daily')
       if (error) throw error
       setReport(data?.report ?? null)
+      trackEvent('report_daily_loaded', { hasReport: !!data?.report })
     } catch (e: any) {
       setReport(null)
     } finally { setLoading(false) }
   }
 
   useEffect(() => { 
-    trackEvent('page_view', { page: 'today' })
     fetchReport() 
   }, [user?.id])
 
   async function sendCommand(command: 'add_daily_log' | 'add_finance' | 'add_sale', payload: any) {
-    trackEvent('command_submit', { command })
     try {
       const { error } = await supabase.functions.invoke('commands', {
         body: { command, idempotency_key: genIdem(), payload }
       })
       if (error) throw error
       setToast('تم الحفظ ✅')
+      trackEvent('command_sent', { command })
       fetchReport()
     } catch {
       await enqueueCommand(command, payload)
+      trackEvent('command_queued_offline', { command })
       setToast('تم الحفظ أوفلاين وسيُرفع بعد تسجيل الدخول/الاتصال 🔄')
     }
   }

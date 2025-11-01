@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { useUser } from '@/lib/auth'
+import { track } from '@/lib/telemetry'
 
 const Reports = () => {
   const { user } = useUser()
@@ -17,6 +18,7 @@ const Reports = () => {
       const r = await fetch(url, { headers: { Authorization: `Bearer ${jwt}` } })
       const j = await r.json()
       setRes(j)
+      track('report_daily_loaded_by_date', { date: d, ok: j?.ok === true })
     } catch (e) {
       setRes({ error: String(e) })
     } finally {

@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client'
 import { genIdem } from '@/lib/sync'
 import { useUser } from '@/lib/auth'
 import { Toast } from '@/components/Toast'
+import { track } from '@/lib/telemetry'
 
 const Automation = () => {
   const { user } = useUser()
@@ -31,6 +32,7 @@ const Automation = () => {
       await supabase.functions.invoke('commands', { body: body('Morning Plan', '08:00') })
       await supabase.functions.invoke('commands', { body: body('Daily Check-in', '21:30') })
       setToast('تم الحفظ ✅')
+      track('automation_saved_defaults', { count: 2 })
       load()
     } catch {
       setToast('تعذّر الحفظ الآن — جرّب لاحقًا')

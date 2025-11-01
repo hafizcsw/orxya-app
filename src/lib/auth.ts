@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client'
 import { useEffect, useState } from 'react'
+import { identifyUser } from './telemetry'
 import type { User } from '@supabase/supabase-js'
 
 export function useUser() {
@@ -7,12 +8,15 @@ export function useUser() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => { 
+    supabase.auth.getUser().then(({ data }) => {
       setUser(data.user ?? null)
-      setLoading(false) 
+      setLoading(false)
+      identifyUser(data.user?.id ?? null, data.user ? { email: data.user.email } : undefined)
     })
     const { data: sub } = supabase.auth.onAuthStateChange((_e, sess) => {
-      setUser(sess?.user ?? null)
+      const u = sess?.user ?? null
+      setUser(u)
+      identifyUser(u?.id ?? null, u ? { email: u.email } : undefined)
     })
     return () => sub.subscription.unsubscribe()
   }, [])
