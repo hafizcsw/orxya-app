@@ -76,10 +76,12 @@ export type Database = {
       }
       conflicts: {
         Row: {
+          buffer_min: number | null
           created_at: string | null
           date_iso: string
+          event_id: string | null
           id: string
-          object_id: string
+          object_id: string | null
           object_kind: string
           overlap_min: number
           owner_id: string
@@ -87,14 +89,18 @@ export type Database = {
           prayer_name: string
           prayer_start: string
           resolution: string | null
+          severity: string | null
           status: string | null
+          suggested_start_iso: string | null
           updated_at: string | null
         }
         Insert: {
+          buffer_min?: number | null
           created_at?: string | null
           date_iso: string
+          event_id?: string | null
           id?: string
-          object_id: string
+          object_id?: string | null
           object_kind: string
           overlap_min: number
           owner_id: string
@@ -102,14 +108,18 @@ export type Database = {
           prayer_name: string
           prayer_start: string
           resolution?: string | null
+          severity?: string | null
           status?: string | null
+          suggested_start_iso?: string | null
           updated_at?: string | null
         }
         Update: {
+          buffer_min?: number | null
           created_at?: string | null
           date_iso?: string
+          event_id?: string | null
           id?: string
-          object_id?: string
+          object_id?: string | null
           object_kind?: string
           overlap_min?: number
           owner_id?: string
@@ -117,10 +127,20 @@ export type Database = {
           prayer_name?: string
           prayer_start?: string
           resolution?: string | null
+          severity?: string | null
           status?: string | null
+          suggested_start_iso?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "conflicts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       daily_logs: {
         Row: {
@@ -167,6 +187,8 @@ export type Database = {
       events: {
         Row: {
           created_at: string | null
+          description: string | null
+          duration_min: number | null
           ends_at: string
           external_etag: string | null
           external_event_id: string | null
@@ -181,6 +203,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          description?: string | null
+          duration_min?: number | null
           ends_at: string
           external_etag?: string | null
           external_event_id?: string | null
@@ -195,6 +219,8 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          description?: string | null
+          duration_min?: number | null
           ends_at?: string
           external_etag?: string | null
           external_event_id?: string | null
@@ -286,6 +312,8 @@ export type Database = {
           longitude: number
           owner_id: string
           recorded_at: string | null
+          sampled_at: string | null
+          source: string | null
         }
         Insert: {
           accuracy_m?: number | null
@@ -294,6 +322,8 @@ export type Database = {
           longitude: number
           owner_id: string
           recorded_at?: string | null
+          sampled_at?: string | null
+          source?: string | null
         }
         Update: {
           accuracy_m?: number | null
@@ -302,6 +332,8 @@ export type Database = {
           longitude?: number
           owner_id?: string
           recorded_at?: string | null
+          sampled_at?: string | null
+          source?: string | null
         }
         Relationships: []
       }
@@ -384,6 +416,7 @@ export type Database = {
           full_name: string | null
           id: string
           latitude: number | null
+          location_updated_at: string | null
           longitude: number | null
           prayer_method: string | null
           telemetry_enabled: boolean | null
@@ -396,6 +429,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           latitude?: number | null
+          location_updated_at?: string | null
           longitude?: number | null
           prayer_method?: string | null
           telemetry_enabled?: boolean | null
@@ -408,6 +442,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           latitude?: number | null
+          location_updated_at?: string | null
           longitude?: number | null
           prayer_method?: string | null
           telemetry_enabled?: boolean | null
