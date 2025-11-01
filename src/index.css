@@ -10,6 +10,14 @@ html {
   font-family: var(--font-sans);
 }
 
+.input {
+  @apply w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring;
+}
+
+.btn {
+  @apply w-full rounded-xl bg-black text-white text-sm py-2 hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
