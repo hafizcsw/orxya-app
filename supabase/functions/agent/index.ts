@@ -1,0 +1,468 @@
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+const SYSTEM_PROMPT = `أنت وكيل جدولة ومهام ذكي للمستخدم. مبادئ أساسية:
+- احترم تفضيلات المستخدم (المنطقة الزمنية، طريقة حساب الصلاة، الدين).
+- لا تنشئ أحداثًا متعارضة مع مواقيت الصلاة. إنْ لزم، اقترح وقتًا بديلًا بعد نهاية نافذة الصلاة.
+- اسأل بلُطف عن أي معلومة ناقصة (مدة الحدث، الموقع، المشاركون، درجة الأولوية).
+- انقل الأوامر لواجهات الأدوات بدقّة عبر JSON فقط.
+- استخدم نطاق الأيام الافتراضي 7 أيام عند الفحص، وإضافة buffer للصلاة 30 دقيقة افتراضيًا.
+- عند وجود تغيير موقع ≥ 0.7 كم، اطلب sync مواقيت الصلاة اليوم + 2 يومًا قادمين.
+- حدّد أي التباسات زمنية بالـ timezone الخاص بالمستخدم.
+- كن مختصراً ومباشراً في إجاباتك.`;
+
+interface ToolCall {
+  id: string;
+  type: 'function';
+  function: {
+    name: string;
+    arguments: string;
+  };
+}
+
+function getToolsSpec() {
+  return [
+    {
+      type: 'function',
+      function: {
+        name: 'get_profile',
+        description: 'جلب تفضيلات المستخدم (timezone, prayer_method...)',
+        parameters: {
+          type: 'object',
+          properties: {},
+          additionalProperties: false,
+        },
+      },
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'list_events_window',
+        description: 'جلب أحداث المستخدم خلال نافذة زمنية',
+        parameters: {
+          type: 'object',
+          properties: {
+            from: { type: 'string', description: 'ISO datetime' },
+            to: { type: 'string', description: 'ISO datetime' },
+          },
+          required: ['from', 'to'],
+          additionalProperties: false,
+        },
+      },
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'create_event',
+        description: 'إنشاء حدث جديد',
+        parameters: {
+          type: 'object',
+          properties: {
+            title: { type: 'string' },
+            starts_at: { type: 'string', description: 'ISO datetime' },
+            ends_at: { type: 'string', description: 'ISO datetime' },
+            duration_min: { type: 'number' },
+            description: { type: 'string' },
+          },
+          required: ['title'],
+          additionalProperties: false,
+        },
+      },
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'update_event',
+        description: 'تعديل حدث موجود',
+        parameters: {
+          type: 'object',
+          properties: {
+            event_id: { type: 'string' },
+            title: { type: 'string' },
+            starts_at: { type: 'string' },
+            ends_at: { type: 'string' },
+            duration_min: { type: 'number' },
+            description: { type: 'string' },
+          },
+          required: ['event_id'],
+          additionalProperties: false,
+        },
+      },
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'create_task',
+        description: 'إنشاء مهمة جديدة',
+        parameters: {
+          type: 'object',
+          properties: {
+            project_id: { type: 'string' },
+            title: { type: 'string' },
+            status: { type: 'string', enum: ['todo', 'doing', 'done'] },
+            due_date: { type: 'string', description: 'YYYY-MM-DD' },
+          },
+          required: ['title'],
+          additionalProperties: false,
+        },
+      },
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'list_tasks',
+        description: 'جلب قائمة المهام',
+        parameters: {
+          type: 'object',
+          properties: {
+            status: { type: 'string', enum: ['todo', 'doing', 'done'] },
+            project_id: { type: 'string' },
+          },
+          additionalProperties: false,
+        },
+      },
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'update_task_status',
+        description: 'تحديث حالة مهمة',
+        parameters: {
+          type: 'object',
+          properties: {
+            task_id: { type: 'string' },
+            status: { type: 'string', enum: ['todo', 'doing', 'done'] },
+          },
+          required: ['task_id', 'status'],
+          additionalProperties: false,
+        },
+      },
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'location_update',
+        description: 'تسجيل موقع المستخدم ومزامنة مواقيت الصلاة',
+        parameters: {
+          type: 'object',
+          properties: {
+            lat: { type: 'number' },
+            lon: { type: 'number' },
+            accuracy: { type: 'number' },
+          },
+          required: ['lat', 'lon'],
+          additionalProperties: false,
+        },
+      },
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'prayer_sync_today',
+        description: 'تشغيل مزامنة مواقيت الصلاة لليوم',
+        parameters: {
+          type: 'object',
+          properties: {},
+          additionalProperties: false,
+        },
+      },
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'conflict_check',
+        description: 'فحص تعارضات الصلاة مع الأحداث',
+        parameters: {
+          type: 'object',
+          properties: {
+            days: { type: 'number', description: 'عدد الأيام للفحص (افتراضي: 7)' },
+            buffer_min: { type: 'number', description: 'هامش الصلاة بالدقائق (افتراضي: 30)' },
+            upsert: { type: 'boolean', description: 'حفظ النتائج (افتراضي: true)' },
+          },
+          additionalProperties: false,
+        },
+      },
+    },
+  ];
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')!;
+    const authHeader = req.headers.get('Authorization') ?? '';
+
+    if (!OPENAI_API_KEY) {
+      return new Response(
+        JSON.stringify({ ok: false, error: 'OPENAI_API_KEY not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return new Response(
+        JSON.stringify({ ok: false, error: 'UNAUTHENTICATED' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const body = await req.json();
+    const userMessage = String(body?.message ?? '').slice(0, 8000);
+
+    console.log(`Agent request from user ${user.id}: ${userMessage.slice(0, 100)}...`);
+
+    // Tool implementations
+    const toolImplementations: Record<string, (args: any) => Promise<any>> = {
+      async get_profile() {
+        const { data } = await supabase
+          .from('profiles')
+          .select('timezone, prayer_method, latitude, longitude, full_name')
+          .eq('id', user.id)
+          .maybeSingle();
+        return data ?? {};
+      },
+
+      async list_events_window(args: { from: string; to: string }) {
+        const { data } = await supabase
+          .from('events')
+          .select('*')
+          .eq('owner_id', user.id)
+          .gte('starts_at', args.from)
+          .lte('starts_at', args.to)
+          .order('starts_at');
+        return data ?? [];
+      },
+
+      async create_event(args: any) {
+        const now = new Date().toISOString();
+        const row = {
+          owner_id: user.id,
+          title: args.title,
+          starts_at: args.starts_at ?? null,
+          ends_at: args.ends_at ?? null,
+          duration_min: args.duration_min ?? 30,
+          description: args.description ?? null,
+          source_id: 'ai',
+          is_ai_created: true,
+          created_at: now,
+        };
+
+        const { data, error } = await supabase.from('events').insert(row).select('id, title');
+        if (error) throw error;
+        return data?.[0] ?? {};
+      },
+
+      async update_event(args: any) {
+        const patch: any = {};
+        if (args.title) patch.title = args.title;
+        if (args.starts_at) patch.starts_at = args.starts_at;
+        if (args.ends_at) patch.ends_at = args.ends_at;
+        if (args.duration_min != null) patch.duration_min = args.duration_min;
+        if (args.description) patch.description = args.description;
+
+        const { data, error } = await supabase
+          .from('events')
+          .update(patch)
+          .eq('id', args.event_id)
+          .eq('owner_id', user.id)
+          .select('id, title');
+        if (error) throw error;
+        return data?.[0] ?? {};
+      },
+
+      async create_task(args: any) {
+        const now = new Date().toISOString();
+        const row = {
+          owner_id: user.id,
+          project_id: args.project_id ?? null,
+          title: args.title,
+          status: args.status ?? 'todo',
+          order_pos: 1_000_000,
+          due_date: args.due_date ?? null,
+          created_at: now,
+        };
+
+        const { data, error } = await supabase.from('tasks').insert(row).select('id, title');
+        if (error) throw error;
+        return data?.[0] ?? {};
+      },
+
+      async list_tasks(args: any) {
+        let query = supabase.from('tasks').select('*').eq('owner_id', user.id);
+        
+        if (args.status) {
+          query = query.eq('status', args.status);
+        }
+        if (args.project_id) {
+          query = query.eq('project_id', args.project_id);
+        }
+
+        const { data } = await query.order('order_pos');
+        return data ?? [];
+      },
+
+      async update_task_status(args: { task_id: string; status: string }) {
+        const { data, error } = await supabase
+          .from('tasks')
+          .update({ status: args.status })
+          .eq('id', args.task_id)
+          .eq('owner_id', user.id)
+          .select('id, title, status');
+        if (error) throw error;
+        return data?.[0] ?? {};
+      },
+
+      async location_update(args: { lat: number; lon: number; accuracy?: number }) {
+        const { data, error } = await supabase.functions.invoke('location-update', {
+          body: args,
+        });
+        if (error) throw error;
+        return data ?? {};
+      },
+
+      async prayer_sync_today() {
+        const today = new Date().toISOString().slice(0, 10);
+        const { data, error } = await supabase.functions.invoke('prayer-sync', {
+          body: { date: today, days: 1 },
+        });
+        if (error) throw error;
+        return data ?? {};
+      },
+
+      async conflict_check(args: any) {
+        const { data, error } = await supabase.functions.invoke('conflict-check', {
+          body: {
+            days: args?.days ?? 7,
+            buffer_min: args?.buffer_min ?? 30,
+            upsert: args?.upsert ?? true,
+          },
+        });
+        if (error) throw error;
+        return data ?? {};
+      },
+    };
+
+    // OpenAI conversation loop
+    const messages = [
+      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'user', content: userMessage },
+    ];
+
+    let toolLoop = 0;
+    const maxLoops = 6;
+    let finalReply = '';
+    const toolOutputs: any[] = [];
+
+    while (toolLoop < maxLoops) {
+      toolLoop++;
+      console.log(`Tool loop ${toolLoop}`);
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-5-mini-2025-08-07',
+          messages,
+          tools: getToolsSpec(),
+          tool_choice: 'auto',
+          max_completion_tokens: 2000,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        console.error('OpenAI error:', error);
+        throw new Error(`OpenAI API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const choice = data.choices?.[0];
+      const toolCalls: ToolCall[] = choice?.message?.tool_calls ?? [];
+
+      // No more tools needed - final answer
+      if (!toolCalls?.length) {
+        finalReply = String(choice?.message?.content ?? '').trim();
+        break;
+      }
+
+      // Execute tools
+      messages.push({
+        role: 'assistant',
+        content: choice.message.content ?? null,
+        tool_calls: toolCalls,
+      } as any);
+
+      for (const toolCall of toolCalls) {
+        const toolName = toolCall.function.name;
+        const toolArgs = JSON.parse(toolCall.function.arguments || '{}');
+
+        console.log(`Executing tool: ${toolName}`, toolArgs);
+
+        let result: any = { ok: true };
+        try {
+          const impl = toolImplementations[toolName];
+          if (impl) {
+            result = await impl(toolArgs);
+          } else {
+            result = { ok: false, error: 'TOOL_NOT_FOUND' };
+          }
+        } catch (e: any) {
+          console.error(`Tool ${toolName} error:`, e);
+          result = { ok: false, error: String(e?.message ?? e) };
+        }
+
+        toolOutputs.push({ tool_call_id: toolCall.id, name: toolName, result });
+        messages.push({
+          role: 'tool',
+          tool_call_id: toolCall.id,
+          content: JSON.stringify(result),
+        } as any);
+      }
+    }
+
+    console.log(`Agent completed after ${toolLoop} loops`);
+
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        reply: finalReply,
+        tool_outputs: toolOutputs,
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  } catch (error) {
+    console.error('Agent error:', error);
+    return new Response(
+      JSON.stringify({
+        ok: false,
+        error: 'SERVER_ERROR',
+        details: String(error),
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
+});

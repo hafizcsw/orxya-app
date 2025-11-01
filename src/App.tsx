@@ -14,6 +14,7 @@ import Seed from "./pages/Seed";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
+import Assistant from "./pages/Assistant";
 import NotFound from "./pages/NotFound";
 import { Protected } from "./components/Protected";
 
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/reports" element={<Protected><Reports /></Protected>} />
           <Route path="/automation" element={<Protected><Automation /></Protected>} />
           <Route path="/ai" element={<AI />} />
+          <Route path="/assistant" element={<Protected><Assistant /></Protected>} />
           <Route path="/diagnostics" element={<Protected><Diagnostics /></Protected>} />
           <Route path="/seed" element={<Seed />} />
           <Route path="/profile" element={<Protected><Profile /></Protected>} />

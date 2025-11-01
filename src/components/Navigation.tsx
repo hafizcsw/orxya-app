@@ -21,6 +21,7 @@ const Navigation = () => {
     { to: "/reports", label: "التقارير" },
     { to: "/automation", label: "الأتمتة" },
     { to: "/ai", label: "الذكاء الاصطناعي" },
+    { to: "/assistant", label: "المساعد" },
     { to: "/diagnostics", label: "التشخيص" },
     { to: "/profile", label: "حسابي" },
   ];
