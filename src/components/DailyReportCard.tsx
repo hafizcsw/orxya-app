@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useUser } from "@/lib/auth";
 import { Card } from "./ui/card";
 import { Loader2 } from "lucide-react";
 
@@ -17,12 +18,21 @@ interface DailyReport {
 }
 
 export const DailyReportCard = ({ date }: { date?: string }) => {
+  const { user, loading: authLoading } = useUser();
   const [report, setReport] = useState<DailyReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchReport = async () => {
+      // Don't fetch if user is not authenticated
+      if (!user) {
+        setLoading(false);
+        setError(null);
+        setReport(null);
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
@@ -46,16 +56,26 @@ export const DailyReportCard = ({ date }: { date?: string }) => {
       }
     };
 
-    fetchReport();
-  }, [date]);
+    if (!authLoading) {
+      fetchReport();
+    }
+  }, [date, user, authLoading]);
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <Card className="p-6">
         <div className="flex items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin" />
           <span className="mr-2">جاري تحميل التقرير...</span>
         </div>
+      </Card>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Card className="p-6">
+        <p className="text-muted-foreground">سجّل الدخول لعرض التقرير اليومي</p>
       </Card>
     );
   }
@@ -71,7 +91,7 @@ export const DailyReportCard = ({ date }: { date?: string }) => {
   if (!report) {
     return (
       <Card className="p-6">
-        <p className="text-muted-foreground">لا توجد بيانات</p>
+        <p className="text-muted-foreground">لا توجد بيانات لهذا اليوم</p>
       </Card>
     );
   }
