@@ -26,6 +26,7 @@ export default function Projects() {
   const [tDue, setTDue] = useState<string>('');
   const [tInitStatus, setTInitStatus] = useState<Task['status']>('todo');
   const [toast, setToast] = useState<string | null>(null);
+  const [draggedTask, setDraggedTask] = useState<Task | null>(null);
 
   async function loadProjects() {
     if (!user) { setProjects([]); return; }
@@ -145,6 +146,31 @@ export default function Projects() {
     }
   }
 
+  // Drag & Drop handlers
+  function handleDragStart(e: React.DragEvent, task: Task) {
+    setDraggedTask(task);
+    e.dataTransfer.effectAllowed = 'move';
+  }
+
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  }
+
+  async function handleDrop(e: React.DragEvent, targetStatus: Task['status']) {
+    e.preventDefault();
+    if (!draggedTask || !selected) return;
+    
+    if (draggedTask.status !== targetStatus) {
+      await moveToStatus(draggedTask, targetStatus);
+    }
+    setDraggedTask(null);
+  }
+
+  function handleDragEnd() {
+    setDraggedTask(null);
+  }
+
   return (
     <div className="container mx-auto p-4 space-y-6">
       <h1 className="text-3xl font-bold mb-6">المشاريع</h1>
@@ -238,11 +264,26 @@ export default function Projects() {
 
               <div className="grid md:grid-cols-3 gap-4">
                 {statusCols.map(col => (
-                  <div key={col} className="rounded-2xl border border-border p-4 bg-card space-y-3">
+                  <div 
+                    key={col} 
+                    className={`rounded-2xl border border-border p-4 bg-card space-y-3 transition-colors ${
+                      draggedTask && draggedTask.status !== col ? 'ring-2 ring-primary/50' : ''
+                    }`}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, col)}
+                  >
                     <div className="font-semibold text-lg">{statusLabel[col]}</div>
                     <div className="space-y-3">
                       {(grouped[col] ?? []).map(t => (
-                        <div key={t.id} className="border border-border rounded-xl p-4 bg-background space-y-3">
+                        <div 
+                          key={t.id} 
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, t)}
+                          onDragEnd={handleDragEnd}
+                          className={`border border-border rounded-xl p-4 bg-background space-y-3 cursor-move transition-all ${
+                            draggedTask?.id === t.id ? 'opacity-50 scale-95' : 'hover:shadow-md'
+                          }`}
+                        >
                           <div className="font-medium">{t.title}</div>
                           <div className="text-sm text-muted-foreground">
                             {t.due_date ? `موعد: ${t.due_date}` : '—'}
