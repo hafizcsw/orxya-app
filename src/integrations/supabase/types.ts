@@ -74,6 +74,54 @@ export type Database = {
         }
         Relationships: []
       }
+      conflicts: {
+        Row: {
+          created_at: string | null
+          date_iso: string
+          id: string
+          object_id: string
+          object_kind: string
+          overlap_min: number
+          owner_id: string
+          prayer_end: string
+          prayer_name: string
+          prayer_start: string
+          resolution: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date_iso: string
+          id?: string
+          object_id: string
+          object_kind: string
+          overlap_min: number
+          owner_id: string
+          prayer_end: string
+          prayer_name: string
+          prayer_start: string
+          resolution?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date_iso?: string
+          id?: string
+          object_id?: string
+          object_kind?: string
+          overlap_min?: number
+          owner_id?: string
+          prayer_end?: string
+          prayer_name?: string
+          prayer_start?: string
+          resolution?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       daily_logs: {
         Row: {
           created_at: string | null
@@ -116,6 +164,84 @@ export type Database = {
         }
         Relationships: []
       }
+      events: {
+        Row: {
+          created_at: string | null
+          ends_at: string
+          external_etag: string | null
+          external_event_id: string | null
+          id: string
+          is_ai_created: boolean | null
+          last_write_origin: string | null
+          owner_id: string
+          source_id: string | null
+          starts_at: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          ends_at: string
+          external_etag?: string | null
+          external_event_id?: string | null
+          id?: string
+          is_ai_created?: boolean | null
+          last_write_origin?: string | null
+          owner_id: string
+          source_id?: string | null
+          starts_at: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          ends_at?: string
+          external_etag?: string | null
+          external_event_id?: string | null
+          id?: string
+          is_ai_created?: boolean | null
+          last_write_origin?: string | null
+          owner_id?: string
+          source_id?: string | null
+          starts_at?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      external_accounts: {
+        Row: {
+          access_token_enc: string
+          created_at: string | null
+          expires_at: string | null
+          owner_id: string
+          provider: string
+          refresh_token_enc: string | null
+          scopes: string[]
+          updated_at: string | null
+        }
+        Insert: {
+          access_token_enc: string
+          created_at?: string | null
+          expires_at?: string | null
+          owner_id: string
+          provider: string
+          refresh_token_enc?: string | null
+          scopes: string[]
+          updated_at?: string | null
+        }
+        Update: {
+          access_token_enc?: string
+          created_at?: string | null
+          expires_at?: string | null
+          owner_id?: string
+          provider?: string
+          refresh_token_enc?: string | null
+          scopes?: string[]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       finance_entries: {
         Row: {
           amount_usd: number
@@ -149,6 +275,33 @@ export type Database = {
           owner_id?: string
           source?: string | null
           type?: string
+        }
+        Relationships: []
+      }
+      location_samples: {
+        Row: {
+          accuracy_m: number | null
+          id: string
+          latitude: number
+          longitude: number
+          owner_id: string
+          recorded_at: string | null
+        }
+        Insert: {
+          accuracy_m?: number | null
+          id?: string
+          latitude: number
+          longitude: number
+          owner_id: string
+          recorded_at?: string | null
+        }
+        Update: {
+          accuracy_m?: number | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          owner_id?: string
+          recorded_at?: string | null
         }
         Relationships: []
       }
@@ -342,6 +495,7 @@ export type Database = {
         Row: {
           created_at: string | null
           due_date: string | null
+          event_id: string | null
           id: string
           order_pos: number
           owner_id: string
@@ -353,6 +507,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           due_date?: string | null
+          event_id?: string | null
           id?: string
           order_pos?: number
           owner_id: string
@@ -364,6 +519,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           due_date?: string | null
+          event_id?: string | null
           id?: string
           order_pos?: number
           owner_id?: string
@@ -372,7 +528,15 @@ export type Database = {
           tags?: string[] | null
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tasks_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
