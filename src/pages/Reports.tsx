@@ -6,6 +6,9 @@ import { StatCard } from '@/components/StatCard'
 import { Sparkline } from '@/components/Sparkline'
 import { toCSV } from '@/lib/csv'
 import { track } from '@/lib/telemetry'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Loader2, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 
 type DayReport = {
   date: string;
@@ -44,6 +47,12 @@ export default function Reports() {
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<DayReport[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // AI Summary state
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summary, setSummary] = useState<string | null>(null);
+  const [summaryStats, setSummaryStats] = useState<any>(null);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
 
   async function loadSingle() {
     if (!user) {
@@ -97,6 +106,36 @@ export default function Reports() {
     track('reports_export_csv', { count: rows.length });
   }
 
+  async function loadAISummary(span: 'day' | 'week' | 'month', startDate?: string) {
+    if (!user) {
+      setSummaryError('الرجاء تسجيل الدخول أولاً');
+      return;
+    }
+    setSummaryLoading(true);
+    setSummaryError(null);
+    setSummary(null);
+    try {
+      track('reports_ai_summary', { span, date: startDate || date });
+      const { data, error } = await supabase.functions.invoke('summarize-period', {
+        body: { span, start_iso: startDate || date }
+      });
+      
+      if (error) throw error;
+      
+      if (!data?.ok) {
+        throw new Error(data?.error || 'فشل في توليد الملخص');
+      }
+      
+      setSummary(data.summary);
+      setSummaryStats(data.stats);
+    } catch (e: any) {
+      console.error('AI summary error:', e);
+      setSummaryError(String(e?.message ?? e));
+    } finally {
+      setSummaryLoading(false);
+    }
+  }
+
   const totals = rows?.reduce((acc, r) => {
     acc.income += r.income_usd || 0;
     acc.spend += r.spend_usd || 0;
@@ -115,7 +154,9 @@ export default function Reports() {
   return (
     <Protected>
       <div className="container mx-auto p-4 space-y-6">
-        <h1 className="text-3xl font-bold">التقارير</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">التقارير</h1>
+        </div>
 
         {!user && (
           <div className="text-sm text-muted-foreground">
@@ -123,163 +164,285 @@ export default function Reports() {
           </div>
         )}
 
-        <div className="flex flex-col md:flex-row gap-4 items-start">
-          <label className="flex flex-col gap-2">
-            <span className="text-sm font-medium">التاريخ الأساسي</span>
-            <input
-              className="px-3 py-2 rounded-lg border border-input bg-background text-foreground"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
-          </label>
+        <Tabs defaultValue="daily" className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="daily">التقارير اليومية</TabsTrigger>
+            <TabsTrigger value="ai">الملخصات الذكية</TabsTrigger>
+          </TabsList>
 
-          <div className="flex flex-wrap gap-2">
-            <button 
-              className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50" 
-              disabled={loading || !user} 
-              onClick={loadSingle}
-            >
-              {loading ? '...' : 'اليوم فقط'}
-            </button>
-            <button 
-              className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50" 
-              disabled={loading || !user} 
-              onClick={() => loadRange(7)}
-            >
-              {loading ? '...' : 'آخر 7 أيام'}
-            </button>
-            <button 
-              className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50" 
-              disabled={loading || !user} 
-              onClick={() => loadRange(30)}
-            >
-              {loading ? '...' : 'آخر 30 يومًا'}
-            </button>
-            <button 
-              className="px-4 py-2 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors disabled:opacity-50" 
-              disabled={loading || !rows?.length} 
-              onClick={exportCSV}
-            >
-              تصدير CSV
-            </button>
-          </div>
-        </div>
+          {/* Daily Reports Tab */}
+          <TabsContent value="daily" className="space-y-6">
+            <div className="flex flex-col md:flex-row gap-4 items-start">
+              <label className="flex flex-col gap-2">
+                <span className="text-sm font-medium">التاريخ الأساسي</span>
+                <input
+                  className="px-3 py-2 rounded-lg border border-input bg-background text-foreground"
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                />
+              </label>
 
-        {error && (
-          <div className="p-3 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-100 text-sm">
-            {error}
-          </div>
-        )}
-
-        {rows && (
-          <>
-            {/* بطاقات الملخّص */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <StatCard 
-                title="إجمالي الدخل $" 
-                value={totals?.income.toFixed(2) ?? 0} 
-                tone="good" 
-              />
-              <StatCard 
-                title="إجمالي المصروف $" 
-                value={totals?.spend.toFixed(2) ?? 0} 
-                tone="bad" 
-              />
-              <StatCard 
-                title="الصافي $" 
-                value={totals?.net.toFixed(2) ?? 0} 
-                tone={(totals?.net ?? 0) >= 0 ? 'good' : 'bad'} 
-              />
-              <StatCard 
-                title="مشي (د)" 
-                value={totals?.walk ?? 0} 
-              />
-              <StatCard 
-                title="دراسة (س)" 
-                value={totals?.study.toFixed(1) ?? 0} 
-              />
-              <StatCard 
-                title="MMA (س)" 
-                value={totals?.mma.toFixed(1) ?? 0} 
-              />
-              <StatCard 
-                title="عمل (س)" 
-                value={totals?.work.toFixed(1) ?? 0} 
-              />
-              <StatCard 
-                title="مبيعات" 
-                value={`${totals?.sch ?? 0} منح / ${totals?.villas ?? 0} فلل`} 
-              />
+              <div className="flex flex-wrap gap-2">
+                <button 
+                  className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50" 
+                  disabled={loading || !user} 
+                  onClick={loadSingle}
+                >
+                  {loading ? '...' : 'اليوم فقط'}
+                </button>
+                <button 
+                  className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50" 
+                  disabled={loading || !user} 
+                  onClick={() => loadRange(7)}
+                >
+                  {loading ? '...' : 'آخر 7 أيام'}
+                </button>
+                <button 
+                  className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50" 
+                  disabled={loading || !user} 
+                  onClick={() => loadRange(30)}
+                >
+                  {loading ? '...' : 'آخر 30 يومًا'}
+                </button>
+                <button 
+                  className="px-4 py-2 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors disabled:opacity-50" 
+                  disabled={loading || !rows?.length} 
+                  onClick={exportCSV}
+                >
+                  تصدير CSV
+                </button>
+              </div>
             </div>
 
-            {/* Sparkline للصافي */}
-            {netSeries.length > 1 && (
-              <div className="rounded-2xl border border-border p-4 bg-card">
-                <div className="text-sm text-muted-foreground mb-2">
-                  اتجاه الصافي (أقدم ← أحدث)
-                </div>
-                <div className="text-xs text-muted-foreground mb-2">
-                  نقاط: {netSeries.length}
-                </div>
-                <div className="w-full overflow-x-auto">
-                  <Sparkline points={netSeries} width={Math.min(600, netSeries.length * 40)} />
-                </div>
+            {error && (
+              <div className="p-3 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-100 text-sm">
+                {error}
               </div>
             )}
 
-            {/* جدول مختصر للأيام */}
-            <div className="overflow-x-auto rounded-xl border border-border">
-              <table className="min-w-full text-sm">
-                <thead className="bg-muted">
-                  <tr>
-                    <th className="text-right p-3 font-medium">التاريخ</th>
-                    <th className="text-right p-3 font-medium">دخل $</th>
-                    <th className="text-right p-3 font-medium">مصروف $</th>
-                    <th className="text-right p-3 font-medium">صافي $</th>
-                    <th className="text-right p-3 font-medium">دراسة</th>
-                    <th className="text-right p-3 font-medium">MMA</th>
-                    <th className="text-right p-3 font-medium">عمل</th>
-                    <th className="text-right p-3 font-medium">مشي (د)</th>
-                    <th className="text-right p-3 font-medium">منح</th>
-                    <th className="text-right p-3 font-medium">فلل</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((r, idx) => (
-                    <tr 
-                      key={r.date} 
-                      className={idx % 2 === 0 ? 'bg-background' : 'bg-muted/50'}
-                    >
-                      <td className="p-3">{r.date}</td>
-                      <td className="p-3 text-green-700 dark:text-green-400">
-                        {r.income_usd.toFixed(2)}
-                      </td>
-                      <td className="p-3 text-red-700 dark:text-red-400">
-                        {r.spend_usd.toFixed(2)}
-                      </td>
-                      <td className={`p-3 font-medium ${r.net_usd >= 0 ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
-                        {r.net_usd.toFixed(2)}
-                      </td>
-                      <td className="p-3">{r.study_hours.toFixed(1)}</td>
-                      <td className="p-3">{r.mma_hours.toFixed(1)}</td>
-                      <td className="p-3">{r.work_hours.toFixed(1)}</td>
-                      <td className="p-3">{r.walk_min}</td>
-                      <td className="p-3">{r.scholarships_sold}</td>
-                      <td className="p-3">{r.villas_sold}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
+            {rows && (
+              <>
+                {/* بطاقات الملخّص */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <StatCard 
+                    title="إجمالي الدخل $" 
+                    value={totals?.income.toFixed(2) ?? 0} 
+                    tone="good" 
+                  />
+                  <StatCard 
+                    title="إجمالي المصروف $" 
+                    value={totals?.spend.toFixed(2) ?? 0} 
+                    tone="bad" 
+                  />
+                  <StatCard 
+                    title="الصافي $" 
+                    value={totals?.net.toFixed(2) ?? 0} 
+                    tone={(totals?.net ?? 0) >= 0 ? 'good' : 'bad'} 
+                  />
+                  <StatCard 
+                    title="مشي (د)" 
+                    value={totals?.walk ?? 0} 
+                  />
+                  <StatCard 
+                    title="دراسة (س)" 
+                    value={totals?.study.toFixed(1) ?? 0} 
+                  />
+                  <StatCard 
+                    title="MMA (س)" 
+                    value={totals?.mma.toFixed(1) ?? 0} 
+                  />
+                  <StatCard 
+                    title="عمل (س)" 
+                    value={totals?.work.toFixed(1) ?? 0} 
+                  />
+                  <StatCard 
+                    title="مبيعات" 
+                    value={`${totals?.sch ?? 0} منح / ${totals?.villas ?? 0} فلل`} 
+                  />
+                </div>
 
-        {!rows && !loading && (
-          <div className="text-center text-muted-foreground py-8">
-            اختر نطاقًا زمنيًا لعرض التقارير
-          </div>
-        )}
+                {/* Sparkline للصافي */}
+                {netSeries.length > 1 && (
+                  <div className="rounded-2xl border border-border p-4 bg-card">
+                    <div className="text-sm text-muted-foreground mb-2">
+                      اتجاه الصافي (أقدم ← أحدث)
+                    </div>
+                    <div className="text-xs text-muted-foreground mb-2">
+                      نقاط: {netSeries.length}
+                    </div>
+                    <div className="w-full overflow-x-auto">
+                      <Sparkline points={netSeries} width={Math.min(600, netSeries.length * 40)} />
+                    </div>
+                  </div>
+                )}
+
+                {/* جدول مختصر للأيام */}
+                <div className="overflow-x-auto rounded-xl border border-border">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="text-right p-3 font-medium">التاريخ</th>
+                        <th className="text-right p-3 font-medium">دخل $</th>
+                        <th className="text-right p-3 font-medium">مصروف $</th>
+                        <th className="text-right p-3 font-medium">صافي $</th>
+                        <th className="text-right p-3 font-medium">دراسة</th>
+                        <th className="text-right p-3 font-medium">MMA</th>
+                        <th className="text-right p-3 font-medium">عمل</th>
+                        <th className="text-right p-3 font-medium">مشي (د)</th>
+                        <th className="text-right p-3 font-medium">منح</th>
+                        <th className="text-right p-3 font-medium">فلل</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.map((r, idx) => (
+                        <tr 
+                          key={r.date} 
+                          className={idx % 2 === 0 ? 'bg-background' : 'bg-muted/50'}
+                        >
+                          <td className="p-3">{r.date}</td>
+                          <td className="p-3 text-green-700 dark:text-green-400">
+                            {r.income_usd.toFixed(2)}
+                          </td>
+                          <td className="p-3 text-red-700 dark:text-red-400">
+                            {r.spend_usd.toFixed(2)}
+                          </td>
+                          <td className={`p-3 font-medium ${r.net_usd >= 0 ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
+                            {r.net_usd.toFixed(2)}
+                          </td>
+                          <td className="p-3">{r.study_hours.toFixed(1)}</td>
+                          <td className="p-3">{r.mma_hours.toFixed(1)}</td>
+                          <td className="p-3">{r.work_hours.toFixed(1)}</td>
+                          <td className="p-3">{r.walk_min}</td>
+                          <td className="p-3">{r.scholarships_sold}</td>
+                          <td className="p-3">{r.villas_sold}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+
+            {!rows && !loading && (
+              <div className="text-center text-muted-foreground py-8">
+                اختر نطاقًا زمنيًا لعرض التقارير
+              </div>
+            )}
+          </TabsContent>
+
+          {/* AI Summary Tab */}
+          <TabsContent value="ai" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>الملخص الذكي</CardTitle>
+                <CardDescription>
+                  احصل على تحليل AI شامل لإنتاجيتك، المهام، الأحداث، والتعارضات مع الصلاة
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-col md:flex-row gap-4 items-start">
+                  <label className="flex flex-col gap-2">
+                    <span className="text-sm font-medium">تاريخ البداية</span>
+                    <input
+                      className="px-3 py-2 rounded-lg border border-input bg-background text-foreground"
+                      type="date"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                    />
+                  </label>
+
+                  <div className="flex flex-wrap gap-2">
+                    <button 
+                      className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2" 
+                      disabled={summaryLoading || !user} 
+                      onClick={() => loadAISummary('day')}
+                    >
+                      {summaryLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                      اليوم
+                    </button>
+                    <button 
+                      className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2" 
+                      disabled={summaryLoading || !user} 
+                      onClick={() => loadAISummary('week')}
+                    >
+                      {summaryLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                      هذا الأسبوع
+                    </button>
+                    <button 
+                      className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2" 
+                      disabled={summaryLoading || !user} 
+                      onClick={() => loadAISummary('month')}
+                    >
+                      {summaryLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                      هذا الشهر
+                    </button>
+                  </div>
+                </div>
+
+                {summaryError && (
+                  <div className="p-3 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-100 text-sm">
+                    {summaryError}
+                  </div>
+                )}
+
+                {summaryStats && (
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    <Card>
+                      <CardContent className="pt-4">
+                        <div className="text-2xl font-bold">{summaryStats.total_tasks}</div>
+                        <div className="text-xs text-muted-foreground">إجمالي المهام</div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="pt-4">
+                        <div className="text-2xl font-bold text-green-600">{summaryStats.done_tasks}</div>
+                        <div className="text-xs text-muted-foreground">مهام منجزة</div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="pt-4">
+                        <div className="text-2xl font-bold">{summaryStats.total_events}</div>
+                        <div className="text-xs text-muted-foreground">أحداث</div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="pt-4">
+                        <div className="text-2xl font-bold text-blue-600">{summaryStats.ai_events}</div>
+                        <div className="text-xs text-muted-foreground">أحداث AI</div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="pt-4">
+                        <div className="text-2xl font-bold text-orange-600">{summaryStats.conflicts}</div>
+                        <div className="text-xs text-muted-foreground">تعارضات</div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+
+                {summary && (
+                  <Card className="bg-muted/50">
+                    <CardHeader>
+                      <CardTitle className="text-lg">التحليل والتوصيات</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
+                        {summary}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {!summary && !summaryLoading && (
+                  <div className="text-center text-muted-foreground py-8">
+                    اختر نطاقًا زمنيًا للحصول على ملخص ذكي
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </Protected>
   );
