@@ -14,7 +14,270 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      command_audit: {
+        Row: {
+          command_type: string
+          created_at: string | null
+          id: string
+          idempotency_key: string | null
+          owner_id: string
+          payload: Json
+          result: Json | null
+        }
+        Insert: {
+          command_type: string
+          created_at?: string | null
+          id?: string
+          idempotency_key?: string | null
+          owner_id: string
+          payload: Json
+          result?: Json | null
+        }
+        Update: {
+          command_type?: string
+          created_at?: string | null
+          id?: string
+          idempotency_key?: string | null
+          owner_id?: string
+          payload?: Json
+          result?: Json | null
+        }
+        Relationships: []
+      }
+      daily_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          log_date: string
+          mma_hours: number | null
+          notes: string | null
+          owner_id: string
+          project_focus: string | null
+          study_hours: number | null
+          walk_min: number | null
+          weight_kg: number | null
+          work_hours: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          log_date: string
+          mma_hours?: number | null
+          notes?: string | null
+          owner_id: string
+          project_focus?: string | null
+          study_hours?: number | null
+          walk_min?: number | null
+          weight_kg?: number | null
+          work_hours?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          log_date?: string
+          mma_hours?: number | null
+          notes?: string | null
+          owner_id?: string
+          project_focus?: string | null
+          study_hours?: number | null
+          walk_min?: number | null
+          weight_kg?: number | null
+          work_hours?: number | null
+        }
+        Relationships: []
+      }
+      finance_entries: {
+        Row: {
+          amount_usd: number
+          category: string | null
+          created_at: string | null
+          entry_date: string
+          id: string
+          note: string | null
+          owner_id: string
+          source: string | null
+          type: string
+        }
+        Insert: {
+          amount_usd: number
+          category?: string | null
+          created_at?: string | null
+          entry_date: string
+          id?: string
+          note?: string | null
+          owner_id: string
+          source?: string | null
+          type: string
+        }
+        Update: {
+          amount_usd?: number
+          category?: string | null
+          created_at?: string | null
+          entry_date?: string
+          id?: string
+          note?: string | null
+          owner_id?: string
+          source?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string | null
+          enabled: boolean | null
+          id: string
+          label: string | null
+          owner_id: string
+          rrule: string | null
+          time_local: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          label?: string | null
+          owner_id: string
+          rrule?: string | null
+          time_local?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          label?: string | null
+          owner_id?: string
+          rrule?: string | null
+          time_local?: string | null
+        }
+        Relationships: []
+      }
+      prayer_times: {
+        Row: {
+          asr: string | null
+          day: string
+          dhuhr: string | null
+          fajr: string | null
+          isha: string | null
+          maghrib: string | null
+          sunrise: string | null
+        }
+        Insert: {
+          asr?: string | null
+          day: string
+          dhuhr?: string | null
+          fajr?: string | null
+          isha?: string | null
+          maghrib?: string | null
+          sunrise?: string | null
+        }
+        Update: {
+          asr?: string | null
+          day?: string
+          dhuhr?: string | null
+          fajr?: string | null
+          isha?: string | null
+          maghrib?: string | null
+          sunrise?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          full_name: string | null
+          id: string
+          tz: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          tz?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          tz?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          created_at: string | null
+          deadline: string | null
+          id: string
+          next_action: string | null
+          notes: string | null
+          owner_id: string
+          priority: string | null
+          status: string | null
+          target: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          deadline?: string | null
+          id?: string
+          next_action?: string | null
+          notes?: string | null
+          owner_id: string
+          priority?: string | null
+          status?: string | null
+          target?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          deadline?: string | null
+          id?: string
+          next_action?: string | null
+          notes?: string | null
+          owner_id?: string
+          priority?: string | null
+          status?: string | null
+          target?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      sales: {
+        Row: {
+          created_at: string | null
+          id: string
+          item: string | null
+          owner_id: string
+          price_usd: number | null
+          profit_usd: number | null
+          qty: number | null
+          sale_date: string
+          type: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          item?: string | null
+          owner_id: string
+          price_usd?: number | null
+          profit_usd?: number | null
+          qty?: number | null
+          sale_date: string
+          type?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          item?: string | null
+          owner_id?: string
+          price_usd?: number | null
+          profit_usd?: number | null
+          qty?: number | null
+          sale_date?: string
+          type?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
