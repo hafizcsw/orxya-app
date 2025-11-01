@@ -36,6 +36,11 @@ export default function Projects() {
   const [dropTarget, setDropTarget] = useState<{ status: Task['status']; beforeId: string | null } | null>(null);
   const [pendingOps, setPendingOps] = useState<PendingOp[]>([]);
   const [mobileColumn, setMobileColumn] = useState<Task['status']>('todo');
+  const [normalizing, setNormalizing] = useState<Record<Task['status'], boolean>>({ 
+    todo: false, 
+    doing: false, 
+    done: false 
+  });
 
   async function loadProjects() {
     if (!user) { setProjects([]); return; }
@@ -203,7 +208,8 @@ export default function Projects() {
         list.splice(actualIdx, 0, t);
       }
 
-      setPendingOps(op => [{ snapshot, desc: 'move_task' }, ...op]);
+      // Limit pendingOps to last 20 operations to prevent memory bloat
+      setPendingOps(op => [{ snapshot, desc: 'move_task' }, ...op].slice(0, 20));
       return list;
     });
   }
@@ -220,18 +226,27 @@ export default function Projects() {
 
   // Normalize column order positions when gaps become too small
   async function normalizeColumn(status: Task['status']) {
-    const col = (grouped[status] ?? []).slice().sort((a, b) => Number(a.order_pos) - Number(b.order_pos));
-    const patches = normalizeOrder(col);
+    // Prevent concurrent normalization
+    if (normalizing[status]) return;
     
-    for (const p of patches) {
-      await sendCommand('move_task', 
-        { task_id: p.id, to_status: status, new_order_pos: p.order_pos },
-        undefined
-      );
+    setNormalizing(s => ({ ...s, [status]: true }));
+    
+    try {
+      const col = (grouped[status] ?? []).slice().sort((a, b) => Number(a.order_pos) - Number(b.order_pos));
+      const patches = normalizeOrder(col);
+      
+      for (const p of patches) {
+        await sendCommand('move_task', 
+          { task_id: p.id, to_status: status, new_order_pos: p.order_pos },
+          undefined
+        );
+      }
+      
+      track('kanban_normalized', { status, count: patches.length });
+      reloadTasks();
+    } finally {
+      setNormalizing(s => ({ ...s, [status]: false }));
     }
-    
-    track('kanban_normalized', { status, count: patches.length });
-    reloadTasks();
   }
 
   // Precise drop handler with optimistic UI
