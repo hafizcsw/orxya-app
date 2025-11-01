@@ -6,6 +6,7 @@ import { initOnlineSync } from "./lib/sync";
 import { initTelemetry } from "./lib/telemetry";
 import { startDailyRescheduler } from "./lib/notify";
 import { startPrayerDailyScheduler } from "./native/prayer";
+import { startCalendarAutoSync } from "./native/calendar";
 import { Toaster } from "@/components/ui/sonner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
@@ -13,6 +14,7 @@ initOnlineSync();
 void initTelemetry();
 startDailyRescheduler();
 startPrayerDailyScheduler();
+startCalendarAutoSync(60);
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

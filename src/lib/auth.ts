@@ -4,6 +4,7 @@ import { identifyUser, setTelemetryOn } from './telemetry'
 import { flushQueueOnce } from './sync'
 import { rescheduleAllFromDB } from './notify'
 import { syncPrayers, schedulePrayersFor } from '@/native/prayer'
+import { startCalendarAutoSync } from '@/native/calendar'
 import type { User } from '@supabase/supabase-js'
 
 export function useUser() {
@@ -65,6 +66,9 @@ export function useUser() {
           } catch (e) {
             console.error('Location push failed:', e);
           }
+
+          // بدء مزامنة التقويم الدورية
+          startCalendarAutoSync(30);
         }, 0);
       }
     })

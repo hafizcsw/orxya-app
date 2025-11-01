@@ -8,6 +8,8 @@ import { rescheduleAllFromDB, ensureNotificationPerms } from '@/lib/notify';
 import { getDeviceLocation } from '@/native/geo';
 import ThemeControls from '@/components/ThemeControls';
 import { ensureAISession, getAIConsents, updateAIConsents, computeAIStatus } from '@/lib/ai';
+import { useGoogleAccount } from '@/hooks/useExternal';
+import CalendarList from '@/components/CalendarList';
 
 const tzGuess = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Dubai';
 
@@ -16,6 +18,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const { status, lastSyncAt, loading: gLoading, connect, syncNow, refresh } = useGoogleAccount();
 
   const [fullName, setFullName] = useState('');
   const [currency, setCurrency] = useState('USD');
@@ -341,6 +344,69 @@ export default function Profile() {
           الحالة الحالية: <strong>{aiConsents ? computeAIStatus(aiConsents as any) : "غير معروف"}</strong> —
           يمكنك إطفاء/تشغيل الكل سريعًا من صفحة المشاريع.
         </div>
+      </div>
+
+      {/* الحسابات الخارجية */}
+      <div className="rounded-2xl border border-border p-6 bg-card space-y-4">
+        <div className="text-sm text-muted-foreground font-medium">الحسابات الخارجية</div>
+        <div className="rounded-xl border p-4 flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🗓️</span>
+              <div>
+                <div className="font-medium">Google Calendar</div>
+                <div className="text-sm text-muted-foreground">
+                  الحالة: {status === 'connected' ? 'متصل ✅' : status === 'pending' ? 'قيد الربط… ⏳' : status === 'error' ? 'خطأ ❌' : 'غير متصل —'}
+                  {lastSyncAt && <span className="ml-2">| آخر مزامنة: {new Date(lastSyncAt).toLocaleString()}</span>}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {status !== 'connected' && (
+                <button
+                  onClick={connect}
+                  disabled={gLoading}
+                  className="px-3 py-2 rounded-lg border bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50"
+                >
+                  {gLoading ? '...' : 'ربط الآن'}
+                </button>
+              )}
+              {status === 'connected' && (
+                <>
+                  <button
+                    onClick={async ()=>{ 
+                      const r=await syncNow(); 
+                      setMsg(`تمت المزامنة: +${r?.added??0}/~${r?.updated??0}/⏭️${r?.skipped??0}`);
+                      setTimeout(() => setMsg(null), 3000);
+                    }}
+                    disabled={gLoading}
+                    className="px-3 py-2 rounded-lg border bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50"
+                  >
+                    {gLoading ? '...' : 'مزامنة الآن'}
+                  </button>
+                  <button
+                    onClick={refresh}
+                    className="px-3 py-2 rounded-lg border bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                  >
+                    تحديث
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            يُستخدم الوصول «قراءة فقط» في هذه المرحلة. يمكن توسيع الأذونات لاحقًا للإنشاء/التعديل.
+          </p>
+        </div>
+
+        {status === 'connected' && (
+          <div className="space-y-2">
+            <div className="text-sm font-medium">أحداث الأسبوع القادم:</div>
+            <CalendarList />
+          </div>
+        )}
       </div>
     </div>
   );

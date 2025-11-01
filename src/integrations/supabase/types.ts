@@ -296,8 +296,11 @@ export type Database = {
           description: string | null
           duration_min: number | null
           ends_at: string
+          external_calendar_id: string | null
           external_etag: string | null
           external_event_id: string | null
+          external_id: string | null
+          external_source: string | null
           id: string
           is_ai_created: boolean | null
           last_write_origin: string | null
@@ -313,8 +316,11 @@ export type Database = {
           description?: string | null
           duration_min?: number | null
           ends_at: string
+          external_calendar_id?: string | null
           external_etag?: string | null
           external_event_id?: string | null
+          external_id?: string | null
+          external_source?: string | null
           id?: string
           is_ai_created?: boolean | null
           last_write_origin?: string | null
@@ -330,8 +336,11 @@ export type Database = {
           description?: string | null
           duration_min?: number | null
           ends_at?: string
+          external_calendar_id?: string | null
           external_etag?: string | null
           external_event_id?: string | null
+          external_id?: string | null
+          external_source?: string | null
           id?: string
           is_ai_created?: boolean | null
           last_write_origin?: string | null
@@ -349,30 +358,42 @@ export type Database = {
           access_token_enc: string
           created_at: string | null
           expires_at: string | null
+          last_sync_at: string | null
           owner_id: string
           provider: string
+          provider_user_id: string | null
           refresh_token_enc: string | null
           scopes: string[]
+          status: string | null
+          sync_token: string | null
           updated_at: string | null
         }
         Insert: {
           access_token_enc: string
           created_at?: string | null
           expires_at?: string | null
+          last_sync_at?: string | null
           owner_id: string
           provider: string
+          provider_user_id?: string | null
           refresh_token_enc?: string | null
           scopes: string[]
+          status?: string | null
+          sync_token?: string | null
           updated_at?: string | null
         }
         Update: {
           access_token_enc?: string
           created_at?: string | null
           expires_at?: string | null
+          last_sync_at?: string | null
           owner_id?: string
           provider?: string
+          provider_user_id?: string | null
           refresh_token_enc?: string | null
           scopes?: string[]
+          status?: string | null
+          sync_token?: string | null
           updated_at?: string | null
         }
         Relationships: []
