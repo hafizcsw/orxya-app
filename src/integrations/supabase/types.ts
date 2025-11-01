@@ -317,6 +317,7 @@ export type Database = {
           owner_id: string
           project_id: string
           status: string
+          tags: string[] | null
           title: string
         }
         Insert: {
@@ -327,6 +328,7 @@ export type Database = {
           owner_id: string
           project_id: string
           status?: string
+          tags?: string[] | null
           title: string
         }
         Update: {
@@ -337,6 +339,7 @@ export type Database = {
           owner_id?: string
           project_id?: string
           status?: string
+          tags?: string[] | null
           title?: string
         }
         Relationships: []
@@ -346,7 +349,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       [_ in never]: never

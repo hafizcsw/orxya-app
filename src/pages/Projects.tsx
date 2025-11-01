@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/lib/auth';
 import { enqueueCommand } from '@/lib/offline-actions';
@@ -9,7 +9,8 @@ import { nextOrderPos, midpoint, normalizeOrder } from '@/lib/order';
 import { throttle } from '@/lib/throttle';
 import { Toast } from '@/components/Toast';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, Filter, X, Calendar, Tag, AlertCircle, Clock } from 'lucide-react';
+import { KeyboardHelp } from '@/components/KeyboardHelp';
 
 const statusCols: Array<Task['status']> = ['todo', 'doing', 'done'];
 const statusLabel: Record<Task['status'], string> = {
@@ -42,6 +43,16 @@ export default function Projects() {
     done: false 
   });
 
+  // Filter states
+  const [q, setQ] = useState('');
+  const [fStatuses, setFStatuses] = useState<Task['status'][]>(['todo', 'doing', 'done']);
+  const [fOnlyToday, setFOnlyToday] = useState(false);
+  const [fOnlyOverdue, setFOnlyOverdue] = useState(false);
+  const [fFrom, setFFrom] = useState<string>('');
+  const [fTo, setFTo] = useState<string>('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+
   async function loadProjects() {
     if (!user) { setProjects([]); return; }
     const { data, error } = await supabase
@@ -55,30 +66,170 @@ export default function Projects() {
 
   async function loadTasks(project_id: string) {
     if (!user) { setTasks([]); return; }
-    const { data, error } = await supabase
+    setLoading(true);
+    
+    // Try loading from cache first
+    const cacheKey = `oryxa:tasks:${project_id}:v2`;
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const parsedCache = JSON.parse(cached);
+        if (parsedCache.timestamp && Date.now() - parsedCache.timestamp < 5000) {
+          setTasks(parsedCache.tasks);
+        }
+      }
+    } catch (e) {
+      // Ignore cache errors
+    }
+
+    let query = supabase
       .from('tasks')
       .select('*')
       .eq('owner_id', user.id)
-      .eq('project_id', project_id)
+      .eq('project_id', project_id);
+
+    // Apply filters
+    if (fStatuses.length && fStatuses.length < 3) {
+      query = query.in('status', fStatuses);
+    }
+
+    // Text search
+    if (q.trim()) {
+      query = query.ilike('title', `%${q.trim()}%`);
+    }
+
+    // Date filters
+    const todayISO = new Date().toISOString().slice(0, 10);
+    if (fOnlyToday) {
+      query = query.eq('due_date', todayISO);
+    }
+    if (fOnlyOverdue) {
+      query = query.lt('due_date', todayISO).neq('status', 'done');
+    }
+    if (fFrom) query = query.gte('due_date', fFrom);
+    if (fTo) query = query.lte('due_date', fTo);
+
+    // Order
+    query = query
       .order('status', { ascending: true })
       .order('order_pos', { ascending: true })
       .order('created_at', { ascending: true });
-    if (!error) setTasks((data ?? []) as Task[]);
+
+    const { data, error } = await query;
+    
+    if (!error) {
+      const tasksData = (data ?? []) as Task[];
+      setTasks(tasksData);
+      
+      // Update cache
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify({
+          tasks: tasksData,
+          timestamp: Date.now()
+        }));
+      } catch (e) {
+        // Ignore cache errors
+      }
+      
+      track('tasks_loaded', { 
+        count: tasksData.length, 
+        from_cache: false,
+        filtered: q.trim() !== '' || fOnlyToday || fOnlyOverdue || fFrom !== '' || fTo !== ''
+      });
+    }
+    
+    setLoading(false);
   }
 
   // Throttled reload to reduce server load
   const reloadTasks = useMemo(
     () => throttle(() => selected && loadTasks(selected), 250),
-    [selected]
+    [selected, q, fStatuses, fOnlyToday, fOnlyOverdue, fFrom, fTo]
   );
 
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => { loadProjects(); }, [user?.id]);
-  useEffect(() => { if (selected) loadTasks(selected); }, [user?.id, selected]);
+  useEffect(() => { 
+    if (selected) loadTasks(selected); 
+  }, [user?.id, selected, q, fStatuses, fOnlyToday, fOnlyOverdue, fFrom, fTo]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check if user is typing in an input
+      const isInputFocused = document.activeElement?.tagName === 'INPUT' || 
+                            document.activeElement?.tagName === 'TEXTAREA';
+      
+      if (e.key === '?' && !isInputFocused) {
+        e.preventDefault();
+        setShowKeyboardHelp(prev => !prev);
+        track('kb_help_toggle');
+      }
+      
+      if (e.key === 'Escape') {
+        setShowKeyboardHelp(false);
+        setShowFilters(false);
+      }
+      
+      if (e.key === '/' && !isInputFocused) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        track('kb_focus_search');
+      }
+      
+      if (e.key === 'n' && !isInputFocused) {
+        e.preventDefault();
+        document.querySelector<HTMLInputElement>('input[placeholder="عنوان المهمة"]')?.focus();
+        track('kb_new_task');
+      }
+      
+      if (['1', '2', '3'].includes(e.key) && !isInputFocused) {
+        e.preventDefault();
+        const statusMap = { '1': 'todo', '2': 'doing', '3': 'done' } as const;
+        setMobileColumn(statusMap[e.key as '1' | '2' | '3']);
+        track('kb_switch_col', { column: statusMap[e.key as '1' | '2' | '3'] });
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const grouped = useMemo(() => {
     const g: Record<Task['status'], Task[]> = { todo: [], doing: [], done: [] };
     for (const t of tasks) g[t.status].push(t);
     return g;
+  }, [tasks]);
+
+  // Helper: check if task is overdue or today
+  const isOverdue = (task: Task) => {
+    if (!task.due_date || task.status === 'done') return false;
+    const today = new Date().toISOString().slice(0, 10);
+    return task.due_date < today;
+  };
+
+  const isToday = (task: Task) => {
+    if (!task.due_date) return false;
+    const today = new Date().toISOString().slice(0, 10);
+    return task.due_date === today;
+  };
+
+  // Column stats
+  const columnStats = useMemo(() => {
+    const stats: Record<Task['status'], { total: number; overdue: number; today: number }> = {
+      todo: { total: 0, overdue: 0, today: 0 },
+      doing: { total: 0, overdue: 0, today: 0 },
+      done: { total: 0, overdue: 0, today: 0 }
+    };
+    
+    for (const task of tasks) {
+      stats[task.status].total++;
+      if (isOverdue(task)) stats[task.status].overdue++;
+      if (isToday(task)) stats[task.status].today++;
+    }
+    
+    return stats;
   }, [tasks]);
 
   async function sendCommand(command: string, payload: any, offlineMsg?: string): Promise<{ ok: boolean; data?: any }> {
@@ -428,6 +579,161 @@ export default function Projects() {
             </div>
           </div>
 
+
+          {/* Search and Filters - Only show when project is selected */}
+          {selected && (
+            <div className="rounded-2xl border border-border p-6 bg-card space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={q}
+                    onChange={(e) => {
+                      setQ(e.target.value);
+                      track('tasks_search', { query: e.target.value });
+                    }}
+                    placeholder="بحث في المهام..."
+                    className="w-full pl-10 pr-3 py-2 rounded-lg border border-input bg-background text-foreground"
+                  />
+                </div>
+                
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`px-4 py-2 rounded-lg border transition-colors flex items-center gap-2 ${
+                    showFilters ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-secondary-foreground border-border hover:bg-secondary/80'
+                  }`}
+                >
+                  <Filter className="h-4 w-4" />
+                  {!isMobile && 'فلاتر'}
+                </button>
+              </div>
+
+              {/* Filters Panel */}
+              {showFilters && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-4 border-t border-border">
+                  {/* Status filters */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">الحالة</label>
+                    <div className="flex flex-wrap gap-2">
+                      {(['todo', 'doing', 'done'] as const).map(status => (
+                        <button
+                          key={status}
+                          onClick={() => {
+                            setFStatuses(prev => 
+                              prev.includes(status) 
+                                ? prev.filter(s => s !== status)
+                                : [...prev, status]
+                            );
+                            track('tasks_filter_status', { status, active: !fStatuses.includes(status) });
+                          }}
+                          className={`px-3 py-1 rounded-lg text-sm transition-colors ${
+                            fStatuses.includes(status)
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                          }`}
+                        >
+                          {statusLabel[status]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Quick filters */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">سريع</label>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => {
+                          setFOnlyToday(!fOnlyToday);
+                          if (!fOnlyToday) setFOnlyOverdue(false);
+                          track('tasks_filter_today', { active: !fOnlyToday });
+                        }}
+                        className={`px-3 py-1 rounded-lg text-sm flex items-center gap-1 transition-colors ${
+                          fOnlyToday
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                        }`}
+                      >
+                        <Clock className="h-3 w-3" />
+                        اليوم
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          setFOnlyOverdue(!fOnlyOverdue);
+                          if (!fOnlyOverdue) setFOnlyToday(false);
+                          track('tasks_filter_overdue', { active: !fOnlyOverdue });
+                        }}
+                        className={`px-3 py-1 rounded-lg text-sm flex items-center gap-1 transition-colors ${
+                          fOnlyOverdue
+                            ? 'bg-red-500 text-white'
+                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                        }`}
+                      >
+                        <AlertCircle className="h-3 w-3" />
+                        متأخرة
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Date range */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">المدى الزمني</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="date"
+                        value={fFrom}
+                        onChange={(e) => {
+                          setFFrom(e.target.value);
+                          track('tasks_filter_date_from', { date: e.target.value });
+                        }}
+                        className="flex-1 px-2 py-1 text-sm rounded-lg border border-input bg-background"
+                        placeholder="من"
+                      />
+                      <input
+                        type="date"
+                        value={fTo}
+                        onChange={(e) => {
+                          setFTo(e.target.value);
+                          track('tasks_filter_date_to', { date: e.target.value });
+                        }}
+                        className="flex-1 px-2 py-1 text-sm rounded-lg border border-input bg-background"
+                        placeholder="إلى"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Clear filters */}
+                  <div className="sm:col-span-2 md:col-span-3 flex justify-end">
+                    <button
+                      onClick={() => {
+                        setQ('');
+                        setFStatuses(['todo', 'doing', 'done']);
+                        setFOnlyToday(false);
+                        setFOnlyOverdue(false);
+                        setFFrom('');
+                        setFTo('');
+                        track('tasks_filters_clear');
+                      }}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                    >
+                      <X className="h-3 w-3" />
+                      مسح الكل
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Results count */}
+              <div className="text-sm text-muted-foreground">
+                {tasks.length} {tasks.length === 1 ? 'مهمة' : 'مهام'}
+                {(q || fOnlyToday || fOnlyOverdue || fFrom || fTo) && ' (مُفلتَرة)'}
+              </div>
+            </div>
+          )}
+
           {/* إضافة مهمة + كانبان */}
           {selected && (
             <>
@@ -509,9 +815,24 @@ export default function Projects() {
                             key={t.id}
                             className="border border-border rounded-xl p-4 bg-background space-y-3"
                           >
-                            <div className="font-medium">{t.title}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {t.due_date ? `موعد: ${t.due_date}` : '—'}
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="font-medium flex-1">{t.title}</div>
+                              {isOverdue(t) && (
+                                <span className="text-xs px-2 py-1 rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 flex items-center gap-1">
+                                  <AlertCircle className="h-3 w-3" />
+                                  متأخرة
+                                </span>
+                              )}
+                              {!isOverdue(t) && isToday(t) && (
+                                <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  اليوم
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-sm text-muted-foreground flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {t.due_date || '—'}
                             </div>
                             <div className="flex gap-2 flex-wrap">
                               {mobileColumn !== 'todo' && (
@@ -575,7 +896,21 @@ export default function Projects() {
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="font-semibold text-lg">{statusLabel[col]}</div>
-                        <div className="text-xs px-2 py-0.5 rounded bg-muted">{(grouped[col] ?? []).length} مهام</div>
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="px-2 py-0.5 rounded bg-muted">
+                            {columnStats[col].total}
+                          </span>
+                          {columnStats[col].overdue > 0 && (
+                            <span className="px-2 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                              🔴 {columnStats[col].overdue}
+                            </span>
+                          )}
+                          {columnStats[col].today > 0 && (
+                            <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                              🔵 {columnStats[col].today}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <div className="space-y-2">
                         {(grouped[col] ?? []).length === 0 ? (
@@ -599,9 +934,24 @@ export default function Projects() {
                                     draggedTask?.id === t.id ? 'opacity-50 scale-95' : 'hover:shadow-md'
                                   }`}
                                 >
-                                  <div className="font-medium">{t.title}</div>
-                                  <div className="text-sm text-muted-foreground">
-                                    {t.due_date ? `موعد: ${t.due_date}` : '—'}
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="font-medium flex-1">{t.title}</div>
+                                    {isOverdue(t) && (
+                                      <span className="text-xs px-2 py-1 rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 flex items-center gap-1">
+                                        <AlertCircle className="h-3 w-3" />
+                                        متأخرة
+                                      </span>
+                                    )}
+                                    {!isOverdue(t) && isToday(t) && (
+                                      <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 flex items-center gap-1">
+                                        <Clock className="h-3 w-3" />
+                                        اليوم
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-sm text-muted-foreground flex items-center gap-1">
+                                    <Calendar className="h-3 w-3" />
+                                    {t.due_date || '—'}
                                   </div>
                                   <div className="flex gap-2 flex-wrap">
                                     {col !== 'todo' && (
@@ -664,6 +1014,7 @@ export default function Projects() {
       )}
 
       {toast && <Toast msg={toast} />}
+      {showKeyboardHelp && <KeyboardHelp onClose={() => setShowKeyboardHelp(false)} />}
     </div>
   );
 }
