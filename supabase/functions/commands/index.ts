@@ -40,8 +40,46 @@ const SetAlarm = z.object({
   rrule: z.string().optional(),
 });
 
+const AddProject = z.object({
+  title: z.string(),
+  status: z.enum(["Active", "Archived"]).optional(),
+  priority: z.string().optional(),
+  target: z.string().optional(),
+  deadline: z.string().optional(),
+  next_action: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+const AddTask = z.object({
+  project_id: z.string(),
+  title: z.string(),
+  status: z.enum(["todo", "doing", "done"]).optional(),
+  order_pos: z.number().optional(),
+  due_date: z.string().optional(),
+});
+
+const MoveTask = z.object({
+  task_id: z.string(),
+  to_status: z.enum(["todo", "doing", "done"]),
+  new_order_pos: z.number(),
+});
+
+const SetTaskStatus = z.object({
+  task_id: z.string(),
+  status: z.enum(["todo", "doing", "done"]),
+});
+
 const BodySchema = z.object({
-  command: z.enum(["add_daily_log","add_finance","add_sale","set_alarm"]),
+  command: z.enum([
+    "add_daily_log",
+    "add_finance",
+    "add_sale",
+    "set_alarm",
+    "add_project",
+    "add_task",
+    "move_task",
+    "set_task_status"
+  ]),
   idempotency_key: z.string().min(8),
   payload: z.unknown(),
 });
@@ -140,6 +178,62 @@ serve(async (req) => {
       }
       savedIds = data?.map(d => d.id) ?? [];
       result = { table: "notifications", count: savedIds.length };
+    }
+
+    if (command === "add_project") {
+      const payload = AddProject.parse(parsed.data.payload);
+      const { data, error } = await supabase.from("projects")
+        .insert({ ...payload, owner_id: user.id })
+        .select("id");
+      if (error) {
+        console.error("DB error (projects):", error);
+        throw error;
+      }
+      savedIds = data?.map(d => d.id) ?? [];
+      result = { table: "projects", count: savedIds.length };
+    }
+
+    if (command === "add_task") {
+      const payload = AddTask.parse(parsed.data.payload);
+      const { data, error } = await supabase.from("tasks")
+        .insert({ ...payload, owner_id: user.id })
+        .select("id");
+      if (error) {
+        console.error("DB error (tasks):", error);
+        throw error;
+      }
+      savedIds = data?.map(d => d.id) ?? [];
+      result = { table: "tasks", count: savedIds.length };
+    }
+
+    if (command === "move_task") {
+      const payload = MoveTask.parse(parsed.data.payload);
+      const { data, error } = await supabase.from("tasks")
+        .update({ status: payload.to_status, order_pos: payload.new_order_pos })
+        .eq("id", payload.task_id)
+        .eq("owner_id", user.id)
+        .select("id");
+      if (error) {
+        console.error("DB error (move_task):", error);
+        throw error;
+      }
+      savedIds = data?.map(d => d.id) ?? [];
+      result = { table: "tasks", action: "moved", count: savedIds.length };
+    }
+
+    if (command === "set_task_status") {
+      const payload = SetTaskStatus.parse(parsed.data.payload);
+      const { data, error } = await supabase.from("tasks")
+        .update({ status: payload.status })
+        .eq("id", payload.task_id)
+        .eq("owner_id", user.id)
+        .select("id");
+      if (error) {
+        console.error("DB error (set_task_status):", error);
+        throw error;
+      }
+      savedIds = data?.map(d => d.id) ?? [];
+      result = { table: "tasks", action: "status_updated", count: savedIds.length };
     }
 
     // Audit

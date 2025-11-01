@@ -3,9 +3,9 @@ import { LocalNotifications } from "@capacitor/local-notifications";
 
 type PT = { fajr?: string; dhuhr?: string; asr?: string; maghrib?: string; isha?: string };
 
-const isNative = !!(window as any).Capacitor?.isNativePlatform?.();
+let PRAYER_SCHEDULER_STARTED = false;
 
-function toDateToday(hhmm: string) {
+function toDateToday(hhmm: string): Date {
   const [hh, mm] = hhmm.split(":").map((x) => parseInt(x, 10));
   const d = new Date();
   d.setHours(hh, mm, 0, 0);
@@ -75,8 +75,10 @@ export async function schedulePrayersFor(dateISO: string): Promise<number> {
 }
 
 /** مجدول يومي خاص بالصلاة: عند 00:03 يزامن تاريخ اليوم ويعيد الجدولة تلقائيًا */
-export function startPrayerDailyScheduler() {
-  // على الويب يعمل أيضًا، ولكن الفائدة المثلى على المنصات الـ Native
+export function startPrayerDailyScheduler(): void {
+  if (PRAYER_SCHEDULER_STARTED) return;
+  PRAYER_SCHEDULER_STARTED = true;
+  
   const now = new Date();
   const next = new Date();
   next.setHours(0, 3, 0, 0); // 00:03

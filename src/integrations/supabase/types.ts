@@ -308,6 +308,39 @@ export type Database = {
         }
         Relationships: []
       }
+      tasks: {
+        Row: {
+          created_at: string | null
+          due_date: string | null
+          id: string
+          order_pos: number
+          owner_id: string
+          project_id: string
+          status: string
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
+          order_pos?: number
+          owner_id: string
+          project_id: string
+          status?: string
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
+          order_pos?: number
+          owner_id?: string
+          project_id?: string
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
