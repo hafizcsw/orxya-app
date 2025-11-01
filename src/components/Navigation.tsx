@@ -20,14 +20,20 @@ const Navigation = () => {
     try {
       track('auth_signout');
       
-      // تسجيل الخروج من Supabase
-      await supabase.auth.signOut();
+      // Clear all local state immediately
+      localStorage.clear();
+      sessionStorage.clear();
       
-      // إعادة تحميل الصفحة بالكامل لمسح كل الحالة
+      // Sign out from Supabase
+      await supabase.auth.signOut({ scope: 'local' });
+      
+      // Force reload to auth page
       window.location.replace('/auth');
     } catch (err) {
       console.error('Sign out failed:', err);
-      // في حالة الخطأ، أعد تحميل الصفحة
+      // Force reload anyway
+      localStorage.clear();
+      sessionStorage.clear();
       window.location.replace('/auth');
     }
   };

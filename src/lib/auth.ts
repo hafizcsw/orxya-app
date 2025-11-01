@@ -25,18 +25,32 @@ export function useUser() {
   }
 
   useEffect(() => {
+    let mounted = true;
+    
+    // Initialize auth state
     supabase.auth.getUser().then(async ({ data }) => {
-      const u = data.user ?? null
-      setUser(u)
-      setLoading(false)
-      identifyUser(u?.id ?? null, u ? { email: u.email } : undefined)
-      await applyProfileFlags(u?.id ?? null)
-    })
+      if (!mounted) return;
+      const u = data.user ?? null;
+      setUser(u);
+      setLoading(false);
+      identifyUser(u?.id ?? null, u ? { email: u.email } : undefined);
+      await applyProfileFlags(u?.id ?? null);
+    }).catch((err) => {
+      console.error('Auth initialization error:', err);
+      if (mounted) {
+        setUser(null);
+        setLoading(false);
+      }
+    });
+    
+    // Listen for auth changes
     const { data: sub } = supabase.auth.onAuthStateChange(async (_e, sess) => {
-      const u = sess?.user ?? null
-      setUser(u)
-      identifyUser(u?.id ?? null, u ? { email: u.email } : undefined)
-      await applyProfileFlags(u?.id ?? null)
+      if (!mounted) return;
+      const u = sess?.user ?? null;
+      setUser(u);
+      identifyUser(u?.id ?? null, u ? { email: u.email } : undefined);
+      await applyProfileFlags(u?.id ?? null);
+      
       // Flush queue and reschedule notifications after login
       if (u) {
         setTimeout(async () => {
@@ -71,9 +85,13 @@ export function useUser() {
           startCalendarAutoSync(30);
         }, 0);
       }
-    })
-    return () => sub.subscription.unsubscribe()
-  }, [])
+    });
+    
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
 
   return { user, loading }
 }
