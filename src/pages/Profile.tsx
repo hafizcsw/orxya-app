@@ -7,7 +7,7 @@ import { getQueued } from '@/lib/localdb/dexie';
 import { rescheduleAllFromDB, ensureNotificationPerms } from '@/lib/notify';
 import { getDeviceLocation } from '@/native/geo';
 import ThemeControls from '@/components/ThemeControls';
-import { ensureAISession, getAIConsents, updateAIConsents } from '@/lib/ai';
+import { ensureAISession, getAIConsents, updateAIConsents, computeAIStatus } from '@/lib/ai';
 
 const tzGuess = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Dubai';
 
@@ -337,6 +337,10 @@ export default function Profile() {
           <span className="text-sm">السماح بإنشاء مهام</span>
         </label>
         {aiMsg && <div className="text-sm text-muted-foreground">{aiMsg}</div>}
+        <div className="text-xs text-muted-foreground pt-2 border-t">
+          الحالة الحالية: <strong>{aiConsents ? computeAIStatus(aiConsents as any) : "غير معروف"}</strong> —
+          يمكنك إطفاء/تشغيل الكل سريعًا من صفحة المشاريع.
+        </div>
       </div>
     </div>
   );

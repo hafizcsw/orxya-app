@@ -57,3 +57,36 @@ export async function aiAsk(message: string, opts?: { context_project_id?: strin
   if (error || !data?.ok) return { ok:false, error: error?.message || data?.error || "AI_ERROR" };
   return { ok:true, reply: data.reply, raw: data.raw };
 }
+
+export type AIConsents = {
+  id?: string;
+  consent_read_calendar: boolean;
+  consent_write_calendar: boolean;
+  consent_write_tasks: boolean;
+};
+
+export function computeAIStatus(c: AIConsents | null): "off" | "limited" | "on" {
+  if (!c) return "off";
+  const anyWrite = !!(c.consent_write_tasks || c.consent_write_calendar);
+  const allOff = !c.consent_read_calendar && !anyWrite;
+  if (allOff) return "off";
+  if (anyWrite) return "on";
+  return "limited";
+}
+
+export async function setAIConsentsPreset(preset: "all_on" | "all_off") {
+  const flags =
+    preset === "all_on"
+      ? {
+          consent_read_calendar: true,
+          consent_write_calendar: true,
+          consent_write_tasks: true,
+        }
+      : {
+          consent_read_calendar: false,
+          consent_write_calendar: false,
+          consent_write_tasks: false,
+        };
+  return updateAIConsents(flags);
+}
+

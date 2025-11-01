@@ -20,7 +20,7 @@ import { CardSkeleton } from '@/components/ui/skeleton';
 import Spinner from '@/components/ui/Spinner';
 import { useNotify } from '@/lib/notify-utils';
 import { copy } from '@/lib/copy';
-import { aiAsk } from '@/lib/ai';
+import { aiAsk, getAIConsents, setAIConsentsPreset, computeAIStatus, type AIConsents } from '@/lib/ai';
 
 const statusCols: Array<Task['status']> = ['todo', 'doing', 'done'];
 const statusLabel: Record<Task['status'], string> = {
@@ -57,6 +57,8 @@ export default function Projects() {
   const [aiText, setAIText] = useState("");
   const [aiBusy, setAIBusy] = useState(false);
   const [aiReply, setAIReply] = useState<string|null>(null);
+  const [aiCons, setAICons] = useState<AIConsents | null>(null);
+  const [aiBarMsg, setAIBarMsg] = useState<string>("");
 
   // Filter states
   const [q, setQ] = useState('');
@@ -170,7 +172,15 @@ export default function Projects() {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { loadProjects(); }, [user?.id]);
-  useEffect(() => { 
+  
+  useEffect(() => {
+    (async () => {
+      const c = await getAIConsents();
+      if (c) setAICons(c as any);
+    })();
+  }, [user?.id]);
+
+  useEffect(() => {
     if (selected) loadTasks(selected); 
   }, [user?.id, selected, q, fStatuses, fOnlyToday, fOnlyOverdue, fFrom, fTo]);
 
@@ -795,6 +805,70 @@ export default function Projects() {
           {/* إضافة مهمة + كانبان */}
           {selected && (
             <>
+              {/* شريط حالة الأذونات */}
+              <div className="mb-3 p-3 border rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                    computeAIStatus(aiCons) === "on" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" :
+                    computeAIStatus(aiCons) === "limited" ? "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200" :
+                    "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                  }`}>
+                    🤖 الذكاء: {computeAIStatus(aiCons) === "on" ? "مُفعّل" : computeAIStatus(aiCons) === "limited" ? "مقيّد" : "مقفول"}
+                  </span>
+                  {aiCons && (
+                    <div className="hidden sm:flex items-center gap-2 text-xs">
+                      <span className={`px-2 py-0.5 rounded ${aiCons.consent_read_calendar ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"}`}>
+                        قراءة التقويم
+                      </span>
+                      <span className={`px-2 py-0.5 rounded ${aiCons.consent_write_calendar ? "bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200" : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"}`}>
+                        كتابة التقويم
+                      </span>
+                      <span className={`px-2 py-0.5 rounded ${aiCons.consent_write_tasks ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200" : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"}`}>
+                        إنشاء المهام
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    className="px-3 py-1.5 rounded-lg border border-border hover:bg-secondary text-sm transition-colors"
+                    onClick={async () => {
+                      const ok = await setAIConsentsPreset("all_on");
+                      if (ok.ok) {
+                        const c = await getAIConsents();
+                        setAICons(c as any);
+                        setAIBarMsg("تم تفعيل جميع الأذونات ✅");
+                        setTimeout(() => setAIBarMsg(""), 3000);
+                      } else setAIBarMsg("تعذّر التفعيل");
+                    }}
+                  >
+                    تشغيل الكل
+                  </button>
+                  <button
+                    className="px-3 py-1.5 rounded-lg border border-border hover:bg-secondary text-sm transition-colors"
+                    onClick={async () => {
+                      const ok = await setAIConsentsPreset("all_off");
+                      if (ok.ok) {
+                        const c = await getAIConsents();
+                        setAICons(c as any);
+                        setAIBarMsg("تم إيقاف الذكاء كاملاً ⏹️");
+                        setTimeout(() => setAIBarMsg(""), 3000);
+                      } else setAIBarMsg("تعذّر الإيقاف");
+                    }}
+                  >
+                    إيقاف الكل
+                  </button>
+                  <a
+                    href="/profile"
+                    className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm hover:opacity-90 transition-opacity"
+                  >
+                    الإعدادات
+                  </a>
+                </div>
+              </div>
+              {aiBarMsg && <div className="mb-2 text-sm text-muted-foreground">{aiBarMsg}</div>}
+
               {/* ذكاء المهام للمشروع */}
               <div className="rounded-2xl border border-border p-6 bg-card space-y-4">
                 <div className="font-semibold text-lg">توليد مهام بالذكاء للمشروع المحدّد</div>
@@ -810,6 +884,10 @@ export default function Projects() {
                     disabled={!aiText.trim() || !selected || aiBusy}
                     onClick={async ()=>{
                       if (!selected) return;
+                      if (!aiCons?.consent_write_tasks) {
+                        notify.error("⚠️ إنشاء المهام متوقف. استخدم شريط الأذونات لتفعيله أو افتح الإعدادات.");
+                        return;
+                      }
                       setAIBusy(true); setAIReply(null);
                       const m = aiText.trim() + `\n\n[context] استخدم project_id=${selected} لأي مهام مناسبة. تأكد من إضافة due_date حيث يمكن.`;
                       const res = await aiAsk(m, { context_project_id: selected });
