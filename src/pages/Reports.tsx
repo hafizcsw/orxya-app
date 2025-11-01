@@ -21,14 +21,11 @@ type DayReport = {
 };
 
 async function fetchDaily(dateISO: string): Promise<DayReport | null> {
-  const { data: sess } = await supabase.auth.getSession();
-  const jwt = sess?.session?.access_token;
-  if (!jwt) return null;
-  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/report-daily?date=${dateISO}`;
-  const r = await fetch(url, { headers: { Authorization: `Bearer ${jwt}` } });
-  const j = await r.json().catch(() => null);
-  if (!j?.ok) return null;
-  return j.report as DayReport;
+  const { data, error } = await supabase.functions.invoke('report-daily', {
+    body: { date: dateISO }
+  });
+  if (error || !data?.ok) return null;
+  return data.report as DayReport;
 }
 
 function fmt(d: Date) { 

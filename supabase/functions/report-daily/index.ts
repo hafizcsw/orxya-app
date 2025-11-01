@@ -22,9 +22,8 @@ function json(data: unknown, status = 200) {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: { ...cors } });
   try {
-    const url = new URL(req.url);
-    const dateParam = url.searchParams.get("date") || undefined;
-    const reportDate = dateParam ?? todayDubaiISODate();
+    const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+    const reportDate = body.date || todayDubaiISODate();
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
