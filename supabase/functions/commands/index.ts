@@ -70,6 +70,23 @@ const SetTaskStatus = z.object({
   status: z.enum(["todo", "doing", "done"]),
 });
 
+const MoveEvent = z.object({
+  event_id: z.string().uuid(),
+  starts_at: z.string(),
+  ends_at: z.string(),
+});
+
+const ResizeEvent = z.object({
+  event_id: z.string().uuid(),
+  ends_at: z.string(),
+});
+
+const MaterializeTaskEvent = z.object({
+  task_id: z.string().uuid(),
+  starts_at: z.string(),
+  duration_min: z.number().int().positive().max(12 * 60),
+});
+
 const BodySchema = z.object({
   command: z.enum([
     "add_daily_log",
@@ -79,7 +96,10 @@ const BodySchema = z.object({
     "add_project",
     "add_task",
     "move_task",
-    "set_task_status"
+    "set_task_status",
+    "move_event",
+    "resize_event",
+    "materialize_task_event",
   ]),
   idempotency_key: z.string().min(8),
   payload: z.unknown(),
@@ -245,6 +265,79 @@ serve(async (req) => {
       }
       savedIds = data?.map(d => d.id) ?? [];
       result = { table: "tasks", action: "status_updated", count: savedIds.length };
+    }
+
+    // ─────────────────────── move_event ─────────────────────────
+    if (command === "move_event") {
+      const p = MoveEvent.parse(parsed.data.payload);
+      const { data, error } = await supabase
+        .from("events")
+        .update({ starts_at: p.starts_at, ends_at: p.ends_at })
+        .eq("id", p.event_id)
+        .eq("owner_id", user.id)
+        .select("id");
+      if (error) throw error;
+      savedIds = data?.map((d) => d.id) ?? [];
+      result = { table: "events", action: "moved", count: savedIds.length };
+    }
+
+    // ─────────────────────── resize_event ─────────────────────────
+    if (command === "resize_event") {
+      const p = ResizeEvent.parse(parsed.data.payload);
+      const { data, error } = await supabase
+        .from("events")
+        .update({ ends_at: p.ends_at })
+        .eq("id", p.event_id)
+        .eq("owner_id", user.id)
+        .select("id");
+      if (error) throw error;
+      savedIds = data?.map((d) => d.id) ?? [];
+      result = { table: "events", action: "resized", count: savedIds.length };
+    }
+
+    // ─────────────────────── materialize_task_event ─────────────────────────
+    if (command === "materialize_task_event") {
+      const p = MaterializeTaskEvent.parse(parsed.data.payload);
+
+      // Get task
+      const { data: task } = await supabase
+        .from("tasks")
+        .select("id, title, status")
+        .eq("id", p.task_id)
+        .eq("owner_id", user.id)
+        .maybeSingle();
+
+      if (!task) throw new Error("TASK_NOT_FOUND");
+
+      const starts = new Date(p.starts_at);
+      const ends = new Date(starts);
+      ends.setMinutes(ends.getMinutes() + p.duration_min);
+
+      // Create event
+      const { data: ev, error: e1 } = await supabase
+        .from("events")
+        .insert({
+          owner_id: user.id,
+          title: task.title ?? "Task Session",
+          starts_at: starts.toISOString(),
+          ends_at: ends.toISOString(),
+          duration_min: p.duration_min,
+          source_id: "ai",
+          tags: ["task"],
+        })
+        .select("id");
+
+      if (e1) throw e1;
+
+      // Update task status to doing
+      await supabase
+        .from("tasks")
+        .update({ status: "doing" })
+        .eq("id", p.task_id)
+        .eq("owner_id", user.id);
+
+      savedIds = ev?.map((d) => d.id) ?? [];
+      result = { table: "events", action: "materialized", count: savedIds.length };
     }
 
     // Audit

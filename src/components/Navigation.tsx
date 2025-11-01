@@ -17,6 +17,7 @@ const Navigation = () => {
 
   const links = [
     { to: "/", label: "اليوم" },
+    { to: "/calendar", label: "التقويم" },
     { to: "/projects", label: "المشاريع" },
     { to: "/reports", label: "التقارير" },
     { to: "/automation", label: "الأتمتة" },

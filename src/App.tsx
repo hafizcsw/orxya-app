@@ -15,6 +15,7 @@ import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
 import Assistant from "./pages/Assistant";
+import Calendar from "./pages/Calendar";
 import NotFound from "./pages/NotFound";
 import { Protected } from "./components/Protected";
 
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/automation" element={<Protected><Automation /></Protected>} />
           <Route path="/ai" element={<AI />} />
           <Route path="/assistant" element={<Protected><Assistant /></Protected>} />
+          <Route path="/calendar" element={<Protected><Calendar /></Protected>} />
           <Route path="/diagnostics" element={<Protected><Diagnostics /></Protected>} />
           <Route path="/seed" element={<Seed />} />
           <Route path="/profile" element={<Protected><Profile /></Protected>} />
