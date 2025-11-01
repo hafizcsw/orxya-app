@@ -15,7 +15,7 @@ export default function Auth() {
   const [err, setErr] = useState<string | null>(null)
 
   useEffect(() => {
-    if (user) navigate('/today')
+    if (user) navigate('/projects')
   }, [user, navigate])
 
   async function signInEmail(e: React.FormEvent) {
@@ -27,79 +27,63 @@ export default function Auth() {
         options: { emailRedirectTo: redirectTo },
       })
       if (error) throw error
-      setMsg('تم إرسال رابط الدخول إلى بريدك 📩')
+      setMsg('✅ تم إرسال رابط الدخول إلى بريدك. تحقق من صندوق الوارد.')
     } catch (e: any) {
       setErr(e?.message ?? 'تعذر الإرسال')
     } finally { setLoading(false) }
   }
 
-  async function signInGoogle() {
-    setErr(null); setMsg(null)
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { 
-          redirectTo,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-        },
-      })
-      if (error) throw error
-      if (!data?.url) {
-        throw new Error('لم يتم إعداد Google OAuth. يرجى إعداده في لوحة التحكم')
-      }
-    } catch (e: any) {
-      console.error('Google OAuth error:', e)
-      setErr(e?.message ?? 'تعذر تسجيل الدخول عبر Google')
-    }
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6 bg-card p-8 rounded-xl shadow-lg">
-        <h1 className="text-3xl font-bold text-center">تسجيل الدخول</h1>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-muted">
+      <div className="w-full max-w-md space-y-6 bg-card p-8 rounded-xl shadow-2xl border">
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold">تسجيل الدخول</h1>
+          <p className="text-sm text-muted-foreground">أدخل بريدك للحصول على رابط دخول فوري</p>
+        </div>
 
         <form onSubmit={signInEmail} className="space-y-4">
           <label className="block space-y-2">
             <span className="text-sm font-medium">البريد الإلكتروني</span>
             <input
-              className="w-full px-4 py-2 rounded-lg border border-input bg-background text-foreground"
+              className="w-full px-4 py-3 rounded-lg border border-input bg-background text-foreground focus:ring-2 focus:ring-primary transition-shadow"
               type="email"
               required
               dir="ltr"
               value={email}
               onChange={(e)=>setEmail(e.target.value)}
-              placeholder="you@example.com"
+              placeholder="your@email.com"
+              autoFocus
             />
           </label>
           <button 
-            className="w-full px-4 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 font-medium" 
+            className="w-full px-4 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 font-medium shadow-lg" 
             disabled={loading}
           >
-            {loading ? 'جاري الإرسال…' : 'أرسل رابط الدخول'}
+            {loading ? 'جاري الإرسال…' : '🚀 أرسل رابط الدخول'}
           </button>
         </form>
 
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-border"></div>
+        {msg && (
+          <div className="p-4 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-900 dark:text-green-100 border border-green-300 dark:border-green-700">
+            <p className="text-sm font-medium">{msg}</p>
+            <p className="text-xs mt-1">لو ما وصلك، تحقق من مجلد Spam</p>
           </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-card text-muted-foreground">أو</span>
+        )}
+        
+        {err && (
+          <div className="p-4 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-100 border border-red-300 dark:border-red-700">
+            <p className="text-sm font-medium">{err}</p>
           </div>
+        )}
+
+        <div className="text-center">
+          <button 
+            onClick={() => navigate('/')} 
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            ← العودة للرئيسية
+          </button>
         </div>
-
-        <button 
-          onClick={signInGoogle} 
-          className="w-full px-4 py-3 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors font-medium"
-        >
-          متابعة عبر Google
-        </button>
-
-        {msg && <div className="p-3 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-900 dark:text-green-100 text-sm">{msg}</div>}
-        {err && <div className="p-3 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-100 text-sm">{err}</div>}
       </div>
     </div>
   )
