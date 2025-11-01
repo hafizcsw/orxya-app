@@ -60,18 +60,18 @@ export default function Projects() {
     return g;
   }, [tasks]);
 
-  async function sendCommand(command: string, payload: any, offlineMsg?: string) {
+  async function sendCommand(command: string, payload: any, offlineMsg?: string): Promise<{ ok: boolean; data?: any }> {
     try {
-      const { error } = await supabase.functions.invoke('commands', {
+      const { data, error } = await supabase.functions.invoke('commands', {
         body: { command, idempotency_key: genIdem(), payload },
       });
       if (error) throw error;
       setToast('تم الحفظ ✅');
-      return true;
+      return { ok: true, data };
     } catch {
       await enqueueCommand(command as any, payload);
       if (offlineMsg) setToast(offlineMsg);
-      return false;
+      return { ok: false };
     }
   }
 
@@ -79,10 +79,11 @@ export default function Projects() {
     if (!pname.trim()) return;
     setLoading(true);
     track('projects_add_project');
-    const ok = await sendCommand('add_project', { title: pname.trim() },
+    const { ok, data } = await sendCommand('add_project', { title: pname.trim() },
       'حُفظ المشروع أوفلاين وسيُزامَن 🔄');
     setPname('');
     await loadProjects();
+    if (ok && data?.saved_ids?.[0]) setSelected(data.saved_ids[0]);
     setLoading(false);
   }
 
