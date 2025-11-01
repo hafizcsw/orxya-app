@@ -34,20 +34,34 @@ export default function CalendarList() {
   if (loading) return <div className="text-sm text-muted-foreground">جاري التحميل...</div>;
 
   return (
-    <div className="rounded-xl border divide-y">
+    <div className="rounded-xl border divide-y bg-card">
       {rows.length === 0 && <div className="p-4 text-sm text-muted-foreground">لا أحداث خلال 7 أيام.</div>}
       {rows.map(ev => (
-        <div key={ev.id} className="p-3 flex items-center justify-between">
+        <div key={ev.id} className="p-3 flex items-center justify-between hover:bg-muted/50 transition-colors">
           <div className="flex items-center gap-2">
-            {ev.external_source === 'google' ? <span title="Google">ⓖ</span> : <span>•</span>}
+            {ev.external_source === 'google' ? (
+              <span className="text-base" title="Google Calendar">🔗</span>
+            ) : (
+              <span className="text-base">📅</span>
+            )}
             <div>
-              <div className="font-medium">{ev.title || '(بدون عنوان)'}</div>
+              <div className="font-medium text-foreground">{ev.title || '(بدون عنوان)'}</div>
               <div className="text-xs text-muted-foreground">
-                {new Date(ev.starts_at).toLocaleString()} → {new Date(ev.ends_at).toLocaleTimeString()}
+                {new Date(ev.starts_at).toLocaleString('ar-EG', { 
+                  month: 'short', 
+                  day: 'numeric', 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                })} → {new Date(ev.ends_at).toLocaleTimeString('ar-EG', { 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                })}
               </div>
             </div>
           </div>
-          <div className="text-xs uppercase text-muted-foreground">{ev.external_source || ev.source_id || 'local'}</div>
+          <div className="text-xs uppercase text-muted-foreground px-2 py-1 rounded bg-muted">
+            {ev.external_source || ev.source_id || 'محلي'}
+          </div>
         </div>
       ))}
     </div>
