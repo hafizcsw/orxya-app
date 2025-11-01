@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_actions: {
+        Row: {
+          created_at: string
+          id: string
+          input: Json | null
+          output: Json | null
+          session_id: string
+          tool: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          input?: Json | null
+          output?: Json | null
+          session_id: string
+          tool: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          input?: Json | null
+          output?: Json | null
+          session_id?: string
+          tool?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_actions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "ai_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_messages: {
         Row: {
           content: Json
@@ -81,6 +116,9 @@ export type Database = {
       }
       ai_sessions: {
         Row: {
+          consent_read_calendar: boolean | null
+          consent_write_calendar: boolean | null
+          consent_write_tasks: boolean | null
           created_at: string
           id: string
           is_archived: boolean
@@ -89,6 +127,9 @@ export type Database = {
           title: string | null
         }
         Insert: {
+          consent_read_calendar?: boolean | null
+          consent_write_calendar?: boolean | null
+          consent_write_tasks?: boolean | null
           created_at?: string
           id?: string
           is_archived?: boolean
@@ -97,6 +138,9 @@ export type Database = {
           title?: string | null
         }
         Update: {
+          consent_read_calendar?: boolean | null
+          consent_write_calendar?: boolean | null
+          consent_write_tasks?: boolean | null
           created_at?: string
           id?: string
           is_archived?: boolean

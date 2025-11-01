@@ -7,6 +7,7 @@ import { initTelemetry } from "./lib/telemetry";
 import { startDailyRescheduler } from "./lib/notify";
 import { startPrayerDailyScheduler } from "./native/prayer";
 import { Toaster } from "@/components/ui/sonner";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 initOnlineSync();
 void initTelemetry();
@@ -15,7 +16,9 @@ startPrayerDailyScheduler();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
-    <Toaster />
+    <ErrorBoundary>
+      <App />
+      <Toaster />
+    </ErrorBoundary>
   </StrictMode>
 );

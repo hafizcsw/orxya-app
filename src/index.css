@@ -118,7 +118,26 @@ All colors MUST be HSL.
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
+}
+
+/* تباين للثيم الداكن/الفاتح */
+:root { 
+  --focus-bg: color-mix(in oklab, var(--accent-hex) 18%, white); 
+}
+[data-theme="dark"] { 
+  --focus-bg: color-mix(in oklab, var(--accent-hex) 28%, black); 
+}
+
+/* عناصر تفاعلية قابلة للكيبورد */
+[role="button"], 
+button, 
+a, 
+input, 
+select, 
+textarea { 
+  -webkit-tap-highlight-color: transparent; 
 }
 
 @layer base {
