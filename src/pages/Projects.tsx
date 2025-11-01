@@ -15,6 +15,11 @@ import { AIAssistPanel } from '@/components/AIAssistPanel';
 import { exportProjectsToJSON, exportSingleProjectToJSON } from '@/lib/export';
 import EmptyState from '@/components/EmptyState';
 import { motion, AnimatePresence } from 'framer-motion';
+import Button from '@/components/ui/Button';
+import { CardSkeleton } from '@/components/ui/skeleton';
+import Spinner from '@/components/ui/Spinner';
+import { useNotify } from '@/lib/notify-utils';
+import { copy } from '@/lib/copy';
 
 const statusCols: Array<Task['status']> = ['todo', 'doing', 'done'];
 const statusLabel: Record<Task['status'], string> = {
@@ -28,6 +33,7 @@ type PendingOp = { snapshot: Task[]; desc: string };
 export default function Projects() {
   const { user } = useUser();
   const isMobile = useIsMobile();
+  const notify = useNotify();
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -36,7 +42,6 @@ export default function Projects() {
   const [tTitle, setTTitle] = useState('');
   const [tDue, setTDue] = useState<string>('');
   const [tInitStatus, setTInitStatus] = useState<Task['status']>('todo');
-  const [toast, setToast] = useState<string | null>(null);
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
   const [dropTarget, setDropTarget] = useState<{ status: Task['status']; beforeId: string | null } | null>(null);
   const [pendingOps, setPendingOps] = useState<PendingOp[]>([]);
@@ -73,6 +78,9 @@ export default function Projects() {
     if (!user) { setTasks([]); return; }
     setLoading(true);
     
+    // Show skeleton while loading
+    const tempLoading = true;
+    
     // Try loading from cache first
     const cacheKey = `oryxa:tasks:${project_id}:v2`;
     try {
@@ -81,6 +89,7 @@ export default function Projects() {
         const parsedCache = JSON.parse(cached);
         if (parsedCache.timestamp && Date.now() - parsedCache.timestamp < 5000) {
           setTasks(parsedCache.tasks);
+          setLoading(false);
         }
       }
     } catch (e) {
@@ -243,11 +252,11 @@ export default function Projects() {
         body: { command, idempotency_key: genIdem(), payload },
       });
       if (error) throw error;
-      setToast('تم الحفظ ✅');
+      notify.success(copy.saved);
       return { ok: true, data };
     } catch {
       await enqueueCommand(command as any, payload);
-      if (offlineMsg) setToast(offlineMsg);
+      if (offlineMsg) notify.info(offlineMsg);
       return { ok: false };
     }
   }
@@ -450,7 +459,7 @@ export default function Projects() {
 
     if (!ok) {
       rollbackLastOp();
-      setToast('تعذّر الحفظ، تم التراجع ↩️');
+      notify.error(copy.undo);
       track('kanban_undo', { reason: 'network' });
       return;
     }
@@ -523,8 +532,8 @@ export default function Projects() {
           e.preventDefault();
           handleDropPrecise(status, beforeId);
         }}
-        className={`h-2 my-1 rounded transition-all ${
-          active ? 'bg-blue-500/60 h-2.5' : 'bg-blue-200/30 hover:bg-blue-400/50'
+        className={`h-2 my-1 rounded-2xl transition-all ${
+          active ? 'bg-primary/80 h-2.5 shadow-[0_0_0_2px_rgba(255,255,255,.6)_inset]' : 'bg-primary/20 hover:bg-primary/40'
         }`}
       />
     );
@@ -552,13 +561,14 @@ export default function Projects() {
                 onChange={e => setPname(e.target.value)}
                 placeholder="اسم المشروع"
               />
-              <button 
-                className="px-6 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+              <Button 
+                variant="primary"
                 onClick={addProject} 
                 disabled={loading || !pname.trim()}
               >
-                {loading ? '...' : 'إضافة'}
-              </button>
+                {loading ? <Spinner className="mr-2" /> : null}
+                {loading ? 'جارٍ...' : 'إضافة'}
+              </Button>
             </div>
           </div>
 
@@ -865,80 +875,88 @@ export default function Projects() {
 
                   {/* Mobile Column Content */}
                   <div className="rounded-2xl border border-border p-4 bg-card space-y-3 min-h-[400px]">
-                    <div className="space-y-2">
-                      {(grouped[mobileColumn] ?? []).length === 0 ? (
-                        <div className="text-sm text-muted-foreground py-8 text-center">— لا مهام —</div>
-                      ) : (
-                        (grouped[mobileColumn] ?? []).map((t, idx, arr) => (
-                          <div 
-                            key={t.id}
-                            className="border border-border rounded-xl p-4 bg-background space-y-3"
-                          >
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="font-medium flex-1">{t.title}</div>
-                              {isOverdue(t) && (
-                                <span className="text-xs px-2 py-1 rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 flex items-center gap-1">
-                                  <AlertCircle className="h-3 w-3" />
-                                  متأخرة
-                                </span>
-                              )}
-                              {!isOverdue(t) && isToday(t) && (
-                                <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  اليوم
-                                </span>
-                              )}
+                    {loading ? (
+                      <div className="space-y-2">
+                        <CardSkeleton />
+                        <CardSkeleton />
+                        <CardSkeleton />
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {(grouped[mobileColumn] ?? []).length === 0 ? (
+                          <div className="text-sm text-muted-foreground py-8 text-center">— لا مهام —</div>
+                        ) : (
+                          (grouped[mobileColumn] ?? []).map((t, idx, arr) => (
+                            <div 
+                              key={t.id}
+                              className="border border-border rounded-xl p-4 bg-background space-y-3"
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="font-medium flex-1">{t.title}</div>
+                                {isOverdue(t) && (
+                                  <span className="text-xs px-2 py-1 rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 flex items-center gap-1">
+                                    <AlertCircle className="h-3 w-3" />
+                                    متأخرة
+                                  </span>
+                                )}
+                                {!isOverdue(t) && isToday(t) && (
+                                  <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 flex items-center gap-1">
+                                    <Clock className="h-3 w-3" />
+                                    اليوم
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-sm text-muted-foreground flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                {t.due_date || '—'}
+                              </div>
+                              <div className="flex gap-2 flex-wrap">
+                                {mobileColumn !== 'todo' && (
+                                  <button 
+                                    className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                                    onClick={() => moveToStatus(t, 'todo')}
+                                  >
+                                    ← To-Do
+                                  </button>
+                                )}
+                                {mobileColumn !== 'doing' && (
+                                  <button 
+                                    className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                                    onClick={() => moveToStatus(t, 'doing')}
+                                  >
+                                    ↔ Doing
+                                  </button>
+                                )}
+                                {mobileColumn !== 'done' && (
+                                  <button 
+                                    className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                                    onClick={() => moveToStatus(t, 'done')}
+                                  >
+                                    → Done
+                                  </button>
+                                )}
+                                {idx > 0 && (
+                                  <button 
+                                    className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                                    onClick={() => moveUpDown(t, 'up')}
+                                  >
+                                    ↑
+                                  </button>
+                                )}
+                                {idx < arr.length - 1 && (
+                                  <button 
+                                    className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                                    onClick={() => moveUpDown(t, 'down')}
+                                  >
+                                    ↓
+                                  </button>
+                                )}
+                              </div>
                             </div>
-                            <div className="text-sm text-muted-foreground flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              {t.due_date || '—'}
-                            </div>
-                            <div className="flex gap-2 flex-wrap">
-                              {mobileColumn !== 'todo' && (
-                                <button 
-                                  className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-                                  onClick={() => moveToStatus(t, 'todo')}
-                                >
-                                  ← To-Do
-                                </button>
-                              )}
-                              {mobileColumn !== 'doing' && (
-                                <button 
-                                  className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-                                  onClick={() => moveToStatus(t, 'doing')}
-                                >
-                                  ↔ Doing
-                                </button>
-                              )}
-                              {mobileColumn !== 'done' && (
-                                <button 
-                                  className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-                                  onClick={() => moveToStatus(t, 'done')}
-                                >
-                                  → Done
-                                </button>
-                              )}
-                              {idx > 0 && (
-                                <button 
-                                  className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-                                  onClick={() => moveUpDown(t, 'up')}
-                                >
-                                  ↑
-                                </button>
-                              )}
-                              {idx < arr.length - 1 && (
-                                <button 
-                                  className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-                                  onClick={() => moveUpDown(t, 'down')}
-                                >
-                                  ↓
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
+                          ))
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -1088,7 +1106,6 @@ export default function Projects() {
         </>
       )}
 
-      {toast && <Toast msg={toast} />}
       {showKeyboardHelp && <KeyboardHelp onClose={() => setShowKeyboardHelp(false)} />}
       {showAIPanel && selected && (
         <AIAssistPanel 
