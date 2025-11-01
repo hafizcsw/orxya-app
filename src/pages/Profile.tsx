@@ -7,6 +7,7 @@ import { getQueued } from '@/lib/localdb/dexie';
 import { rescheduleAllFromDB, ensureNotificationPerms } from '@/lib/notify';
 import { getDeviceLocation } from '@/native/geo';
 import ThemeControls from '@/components/ThemeControls';
+import { ensureAISession, getAIConsents, updateAIConsents } from '@/lib/ai';
 
 const tzGuess = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Dubai';
 
@@ -24,6 +25,8 @@ export default function Profile() {
   const [prayerMethod, setPrayerMethod] = useState('MWL');
   const [latitude, setLatitude] = useState<string>('');
   const [longitude, setLongitude] = useState<string>('');
+  const [aiConsents, setAIConsents] = useState<{id?:string; consent_read_calendar:boolean; consent_write_calendar:boolean; consent_write_tasks:boolean} | null>(null);
+  const [aiMsg, setAIMsg] = useState<string>("");
 
   const tzList = useMemo(() => [
     'Asia/Dubai', 'UTC', 'Europe/Helsinki', 'Europe/London', 
@@ -52,6 +55,16 @@ export default function Profile() {
       setPendingCount(q.length);
     })();
   }, [user?.id, tzGuess]);
+
+  useEffect(() => {
+    (async () => {
+      if (!user) return;
+      const sess = await ensureAISession();
+      if (!sess) return;
+      const c = await getAIConsents();
+      if (c) setAIConsents(c as any);
+    })();
+  }, [user?.id]);
 
   async function save() {
     if (!user) return;
@@ -276,6 +289,54 @@ export default function Profile() {
       <div className="rounded-2xl border border-border p-6 bg-card space-y-4">
         <div className="text-sm text-muted-foreground font-medium">المظهر والكثافة</div>
         <ThemeControls />
+      </div>
+
+      {/* أذونات الذكاء الاصطناعي */}
+      <div className="rounded-2xl border border-border p-6 bg-card space-y-4">
+        <div className="text-sm text-muted-foreground font-medium">أذونات الذكاء الاصطناعي</div>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input 
+            type="checkbox"
+            className="w-4 h-4 rounded border-input"
+            checked={!!aiConsents?.consent_read_calendar}
+            onChange={async (e)=>{
+              const ok = await updateAIConsents({ consent_read_calendar: e.target.checked });
+              if (ok.ok) setAIConsents(s=>s?{...s,consent_read_calendar:e.target.checked}:s);
+              setAIMsg(ok.ok ? "تم الحفظ ✅" : "تعذّر الحفظ");
+              setTimeout(() => setAIMsg(""), 2000);
+            }} 
+          />
+          <span className="text-sm">السماح بقراءة التقويم</span>
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input 
+            type="checkbox"
+            className="w-4 h-4 rounded border-input"
+            checked={!!aiConsents?.consent_write_calendar}
+            onChange={async (e)=>{
+              const ok = await updateAIConsents({ consent_write_calendar: e.target.checked });
+              if (ok.ok) setAIConsents(s=>s?{...s,consent_write_calendar:e.target.checked}:s);
+              setAIMsg(ok.ok ? "تم الحفظ ✅" : "تعذّر الحفظ");
+              setTimeout(() => setAIMsg(""), 2000);
+            }} 
+          />
+          <span className="text-sm">السماح بإنشاء/تعديل أحداث في التقويم</span>
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input 
+            type="checkbox"
+            className="w-4 h-4 rounded border-input"
+            checked={!!aiConsents?.consent_write_tasks}
+            onChange={async (e)=>{
+              const ok = await updateAIConsents({ consent_write_tasks: e.target.checked });
+              if (ok.ok) setAIConsents(s=>s?{...s,consent_write_tasks:e.target.checked}:s);
+              setAIMsg(ok.ok ? "تم الحفظ ✅" : "تعذّر الحفظ");
+              setTimeout(() => setAIMsg(""), 2000);
+            }} 
+          />
+          <span className="text-sm">السماح بإنشاء مهام</span>
+        </label>
+        {aiMsg && <div className="text-sm text-muted-foreground">{aiMsg}</div>}
       </div>
     </div>
   );

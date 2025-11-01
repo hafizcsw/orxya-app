@@ -111,7 +111,7 @@ serve(async (req) => {
       return json({ ok: false, error: "UNAUTHENTICATED" }, 401);
     }
 
-    const { session_id, message } = await req.json();
+    const { session_id, message, context_project_id } = await req.json();
     if (!session_id || !message) {
       return json({ ok: false, error: "INVALID_INPUT" }, 400);
     }
@@ -195,23 +195,27 @@ serve(async (req) => {
           assistantText = "ليس لدي إذن لإنشاء مهام. يرجى تفعيل الإذن من الإعدادات.";
         } else {
           const items = args.items ?? [];
+          const fallbackProject = args.project_id ?? context_project_id ?? null;
+
+          let created = 0;
           for (const it of items) {
-            await sb.from("tasks").insert({
+            const ins = await sb.from("tasks").insert({
               owner_id: user.id,
-              project_id: args.project_id ?? null,
+              project_id: it.project_id ?? fallbackProject,
               title: it.title,
               status: it.status ?? "todo",
               order_pos: 1_000_000,
               due_date: it.due_date ?? null
-            });
+            }).select("id").single();
+            if (!ins.error) created++;
           }
           await sb.from("ai_actions").insert({
             session_id,
             tool: toolName,
-            input: args,
-            output: { created: items.length }
+            input: { ...args, project_id: fallbackProject },
+            output: { created }
           });
-          assistantText = `تم إنشاء ${items.length} مهمة.`;
+          assistantText = `تم إنشاء ${created} مهمة.`;
         }
       }
 

@@ -20,6 +20,7 @@ import { CardSkeleton } from '@/components/ui/skeleton';
 import Spinner from '@/components/ui/Spinner';
 import { useNotify } from '@/lib/notify-utils';
 import { copy } from '@/lib/copy';
+import { aiAsk } from '@/lib/ai';
 
 const statusCols: Array<Task['status']> = ['todo', 'doing', 'done'];
 const statusLabel: Record<Task['status'], string> = {
@@ -51,6 +52,11 @@ export default function Projects() {
     doing: false, 
     done: false 
   });
+
+  // AI states
+  const [aiText, setAIText] = useState("");
+  const [aiBusy, setAIBusy] = useState(false);
+  const [aiReply, setAIReply] = useState<string|null>(null);
 
   // Filter states
   const [q, setQ] = useState('');
@@ -789,6 +795,40 @@ export default function Projects() {
           {/* إضافة مهمة + كانبان */}
           {selected && (
             <>
+              {/* ذكاء المهام للمشروع */}
+              <div className="rounded-2xl border border-border p-6 bg-card space-y-4">
+                <div className="font-semibold text-lg">توليد مهام بالذكاء للمشروع المحدّد</div>
+                <textarea
+                  value={aiText}
+                  onChange={(e)=>setAIText(e.target.value)}
+                  placeholder="اكتب ما تريد تنظيمه… مثال: 'قسّم خطة الأسبوع إلى مهام يومية قصيرة مع مواعيد نهائية قبل صلاة العشاء.'"
+                  className="w-full min-h-[90px] px-3 py-2 rounded-xl border border-input bg-background"
+                />
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Button
+                    variant="primary"
+                    disabled={!aiText.trim() || !selected || aiBusy}
+                    onClick={async ()=>{
+                      if (!selected) return;
+                      setAIBusy(true); setAIReply(null);
+                      const m = aiText.trim() + `\n\n[context] استخدم project_id=${selected} لأي مهام مناسبة. تأكد من إضافة due_date حيث يمكن.`;
+                      const res = await aiAsk(m, { context_project_id: selected });
+                      setAIBusy(false);
+                      if (!res.ok) { notify.error("فشل توليد المهام"); return; }
+                      setAIReply(res.reply || "تمت المعالجة.");
+                      setAIText("");
+                      if (selected) await loadTasks(selected);
+                    }}
+                  >
+                    {aiBusy ? <><Spinner className="h-4 w-4 mr-2" /> جارٍ التوليد…</> : "استخدم الذكاء"}
+                  </Button>
+                  {aiReply && <div className="text-sm text-muted-foreground">{aiReply}</div>}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  * سيحترم النظام أذوناتك من الإعدادات (إنشاء مهام/أحداث، قراءة/كتابة التقويم).
+                </div>
+              </div>
+
               <div className="rounded-2xl border border-border p-6 bg-card space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="font-semibold text-lg">إضافة مهمة</div>
