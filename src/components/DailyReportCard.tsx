@@ -25,6 +25,9 @@ export const DailyReportCard = ({ date }: { date?: string }) => {
 
   useEffect(() => {
     const fetchReport = async () => {
+      // Wait for auth to finish loading first
+      if (authLoading) return;
+      
       // Don't fetch if user is not authenticated
       if (!user) {
         setLoading(false);
@@ -36,6 +39,14 @@ export const DailyReportCard = ({ date }: { date?: string }) => {
       try {
         setLoading(true);
         setError(null);
+        
+        // Get current session to ensure we have a valid JWT
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          setLoading(false);
+          setReport(null);
+          return;
+        }
         
         const targetDate = date || new Date().toISOString().split('T')[0];
         const { data, error } = await supabase.functions.invoke('report-daily', {
@@ -56,9 +67,7 @@ export const DailyReportCard = ({ date }: { date?: string }) => {
       }
     };
 
-    if (!authLoading) {
-      fetchReport();
-    }
+    fetchReport();
   }, [date, user, authLoading]);
 
   if (authLoading || loading) {
