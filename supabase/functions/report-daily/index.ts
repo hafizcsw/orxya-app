@@ -1,105 +1,103 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+const cors = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-headers": "authorization, x-client-info, apikey, content-type",
+  "access-control-allow-methods": "GET, POST, OPTIONS",
+  "content-type": "application/json; charset=utf-8",
 };
 
+function todayDubaiISODate(): string {
+  // Dubai is UTC+4 year-round (no DST)
+  const now = new Date();
+  const dubai = new Date(now.getTime() + 4 * 60 * 60 * 1000);
+  return dubai.toISOString().slice(0, 10); // YYYY-MM-DD
+}
+
+function json(data: unknown, status = 200) {
+  return new Response(JSON.stringify(data), { status, headers: { ...cors } });
+}
+
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+  if (req.method === "OPTIONS") return new Response("ok", { headers: { ...cors } });
   try {
-    const authHeader = req.headers.get("Authorization") ?? "";
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const { data: { user }, error: userErr } = await supabase.auth.getUser();
-    if (userErr || !user) {
-      return new Response(
-        JSON.stringify({ ok: false, error: "UNAUTHENTICATED" }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Get date from query param or use today (Dubai timezone)
     const url = new URL(req.url);
-    const dateParam = url.searchParams.get("date");
-    const targetDate = dateParam || new Date().toISOString().split('T')[0];
+    const dateParam = url.searchParams.get("date") || undefined;
+    const reportDate = dateParam ?? todayDubaiISODate();
 
-    console.log("Generating daily report for:", targetDate, "user:", user.id);
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const authHeader = req.headers.get("Authorization") ?? "";
 
-    // Aggregate finance
-    const { data: financeData } = await supabase
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }, // keep RLS
+    });
+
+    // Ensure authenticated user (RLS context)
+    const { data: { user }, error: userErr } = await supabase.auth.getUser();
+    if (userErr || !user) return json({ ok: false, error: "UNAUTHENTICATED" }, 401);
+
+    console.log("Generating report for:", reportDate, "user:", user.id);
+
+    // --- Finance aggregates ---
+    const { data: finRows, error: finErr } = await supabase
       .from("finance_entries")
       .select("type, amount_usd")
-      .eq("owner_id", user.id)
-      .eq("entry_date", targetDate);
+      .eq("entry_date", reportDate)
+      .eq("owner_id", user.id);
+    if (finErr) throw finErr;
 
-    let income_usd = 0;
-    let spend_usd = 0;
-    financeData?.forEach(entry => {
-      if (entry.type === 'income') income_usd += Number(entry.amount_usd);
-      if (entry.type === 'spend') spend_usd += Number(entry.amount_usd);
-    });
+    let income_usd = 0, spend_usd = 0;
+    for (const r of finRows ?? []) {
+      const amt = Number(r.amount_usd) || 0;
+      if (r.type === "income") income_usd += amt;
+      if (r.type === "spend") spend_usd += amt;
+    }
     const net_usd = income_usd - spend_usd;
 
-    // Aggregate daily logs
-    const { data: logsData } = await supabase
+    // --- Daily logs aggregates (sum across same date) ---
+    const { data: logRows, error: logErr } = await supabase
       .from("daily_logs")
       .select("work_hours, study_hours, mma_hours, walk_min")
-      .eq("owner_id", user.id)
-      .eq("log_date", targetDate)
-      .maybeSingle();
+      .eq("log_date", reportDate)
+      .eq("owner_id", user.id);
+    if (logErr) throw logErr;
 
-    const study_hours = logsData?.study_hours || 0;
-    const mma_hours = logsData?.mma_hours || 0;
-    const work_hours = logsData?.work_hours || 0;
-    const walk_min = logsData?.walk_min || 0;
+    let work_hours = 0, study_hours = 0, mma_hours = 0, walk_min = 0;
+    for (const r of logRows ?? []) {
+      work_hours += Number(r.work_hours) || 0;
+      study_hours += Number(r.study_hours) || 0;
+      mma_hours += Number(r.mma_hours) || 0;
+      walk_min += Number(r.walk_min) || 0;
+    }
 
-    // Aggregate sales
-    const { data: salesData } = await supabase
+    // --- Sales aggregates (sum qty by type) ---
+    const { data: saleRows, error: saleErr } = await supabase
       .from("sales")
       .select("type, qty")
-      .eq("owner_id", user.id)
-      .eq("sale_date", targetDate);
+      .eq("sale_date", reportDate)
+      .eq("owner_id", user.id);
+    if (saleErr) throw saleErr;
 
-    let scholarships_sold = 0;
-    let villas_sold = 0;
-    salesData?.forEach(sale => {
-      if (sale.type === 'scholarship') scholarships_sold += sale.qty || 0;
-      if (sale.type === 'villa') villas_sold += sale.qty || 0;
-    });
+    let scholarships_sold = 0, villas_sold = 0;
+    for (const r of saleRows ?? []) {
+      const q = Number(r.qty) || 0;
+      if (r.type === "scholarship") scholarships_sold += q;
+      if (r.type === "villa") villas_sold += q;
+    }
 
     const report = {
-      date: targetDate,
-      income_usd,
-      spend_usd,
-      net_usd,
-      study_hours,
-      mma_hours,
-      work_hours,
-      walk_min,
-      scholarships_sold,
-      villas_sold
+      date: reportDate,
+      income_usd, spend_usd, net_usd,
+      study_hours, mma_hours, work_hours, walk_min,
+      scholarships_sold, villas_sold
     };
 
     console.log("Report generated:", report);
-
-    return new Response(
-      JSON.stringify({ ok: true, report }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  } catch (e: any) {
-    console.error("Server error:", e);
-    return new Response(
-      JSON.stringify({ ok: false, error: "SERVER_ERROR", details: String(e) }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return json({ ok: true, report });
+  } catch (e) {
+    console.error("report-daily error:", e);
+    return json({ ok: false, error: "SERVER_ERROR", details: String(e) }, 500);
   }
 });
