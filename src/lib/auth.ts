@@ -41,6 +41,7 @@ export function useUser() {
         setTimeout(async () => {
           flushQueueOnce();
           rescheduleAllFromDB();
+          
           // تهيئة صلاة اليوم فور تسجيل الدخول
           const today = new Date().toISOString().slice(0, 10);
           try {
@@ -48,6 +49,21 @@ export function useUser() {
             await schedulePrayersFor(today);
           } catch (e) {
             console.error('Error syncing prayers on login:', e);
+          }
+
+          // موقع + مزامنة صلاة تلقائيًا إن لزم
+          try {
+            const { getDeviceLocation } = await import('@/native/geo');
+            const { pushLocationSample } = await import('@/lib/location');
+            const loc = await getDeviceLocation();
+            if (loc) {
+              const result = await pushLocationSample(loc.lat, loc.lon);
+              if (result.did_sync) {
+                console.log(`Location updated: moved ${result.moved_km}km, prayer sync triggered`);
+              }
+            }
+          } catch (e) {
+            console.error('Location push failed:', e);
           }
         }, 0);
       }

@@ -14,6 +14,8 @@ const Diagnostics = () => {
   const [syncing, setSyncing] = useState(false)
   const [syncResult, setSyncResult] = useState<string | null>(null)
   const [prayerCount, setPrayerCount] = useState(0)
+  const [conflictsCount, setConflictsCount] = useState<number | null>(null)
+  const [checkingConflicts, setCheckingConflicts] = useState(false)
 
   async function loadData() {
     // Test DB connection
@@ -79,12 +81,28 @@ const Diagnostics = () => {
     }
   }
 
+  async function handleConflictCheck() {
+    setCheckingConflicts(true)
+    setConflictsCount(null)
+    try {
+      const { runConflictCheck } = await import('@/lib/location')
+      const result = await runConflictCheck({ days: 7, buffer_min: 30, upsert: true })
+      setConflictsCount(result.count)
+      track('conflict_check_run', { count: result.count })
+    } catch (e: any) {
+      console.error('Conflict check failed:', e)
+      setConflictsCount(-1)
+    } finally {
+      setCheckingConflicts(false)
+    }
+  }
+
   return (
     <div className="p-4 space-y-4 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">التشخيص</h1>
 
       {/* System Status */}
-      <div className="p-4 bg-white border rounded-2xl space-y-3">
+      <div className="p-4 bg-card border-2 rounded-3xl shadow-lg space-y-3">
         <h2 className="font-semibold text-lg mb-3">حالة النظام</h2>
         
         <div className="grid grid-cols-2 gap-3">
@@ -165,7 +183,7 @@ const Diagnostics = () => {
       </div>
 
       {/* Offline Queue */}
-      <div className="p-4 bg-white border rounded-2xl">
+      <div className="p-4 bg-card border-2 rounded-3xl shadow-lg">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-semibold text-lg">طابور الأوفلاين</h2>
           <button
@@ -195,9 +213,37 @@ const Diagnostics = () => {
         )}
       </div>
 
+      {/* Conflict Check */}
+      <div className="p-4 bg-card border-2 rounded-3xl shadow-lg">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-bold text-lg">فحص التعارضات</h2>
+          <button
+            onClick={handleConflictCheck}
+            disabled={checkingConflicts || !user}
+            className="btn max-w-xs text-xs py-2 px-4"
+          >
+            {checkingConflicts ? 'جاري الفحص...' : 'فحص التعارضات (7 أيام)'}
+          </button>
+        </div>
+        
+        {conflictsCount !== null && (
+          <div className={`p-3 rounded-2xl text-sm ${
+            conflictsCount === 0 
+              ? 'bg-emerald-500/10 text-emerald-700 border-2 border-emerald-500/30' 
+              : conflictsCount > 0
+              ? 'bg-primary/10 text-primary border-2 border-primary/30'
+              : 'bg-destructive/10 text-destructive border-2 border-destructive/30'
+          }`}>
+            {conflictsCount === 0 && '✅ لا توجد تعارضات - جدولك متوافق مع مواقيت الصلاة'}
+            {conflictsCount > 0 && `⚠️ تم اكتشاف ${conflictsCount} تعارض مع مواقيت الصلاة`}
+            {conflictsCount === -1 && '❌ فشل الفحص - تحقق من الاتصال'}
+          </div>
+        )}
+      </div>
+
       {/* Test Buttons */}
-      <div className="p-4 bg-white border rounded-2xl">
-        <h2 className="font-semibold text-lg mb-3">أزرار الاختبار</h2>
+      <div className="p-4 bg-card border-2 rounded-3xl shadow-lg">
+        <h2 className="font-bold text-lg mb-3">أزرار الاختبار</h2>
         <div className="flex gap-2 flex-wrap">
           <button 
             className="btn max-w-xs" 
@@ -218,7 +264,7 @@ const Diagnostics = () => {
       </div>
 
       {/* Audit Log */}
-      <div className="p-4 bg-white border rounded-2xl">
+      <div className="p-4 bg-card border-2 rounded-3xl shadow-lg">
         <h2 className="font-semibold text-lg mb-3">آخر 5 أوامر محفوظة</h2>
         {audit.length === 0 ? (
           <p className="text-sm text-muted-foreground">لا توجد أوامر محفوظة</p>
