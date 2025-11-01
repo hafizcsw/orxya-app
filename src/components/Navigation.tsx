@@ -17,9 +17,26 @@ const Navigation = () => {
   const isMobile = useIsMobile();
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    track('auth_signout');
-    navigate('/auth');
+    try {
+      // تسجيل الخروج من Supabase
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Sign out error:', error);
+      }
+      
+      // تتبع الحدث
+      track('auth_signout');
+      
+      // مسح التخزين المحلي
+      localStorage.clear();
+      
+      // إعادة تحميل الصفحة للتأكد من مسح كل البيانات
+      window.location.href = '/auth';
+    } catch (err) {
+      console.error('Sign out failed:', err);
+      // في حالة فشل تسجيل الخروج، أعد تحميل الصفحة
+      window.location.href = '/auth';
+    }
   };
 
   const links = [
