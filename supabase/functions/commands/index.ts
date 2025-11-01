@@ -1,14 +1,16 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+// Deno Edge Function: commands
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+const cors = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-headers": "authorization, x-client-info, apikey, content-type",
+  "access-control-allow-methods": "GET, POST, OPTIONS",
 };
 
 const AddDailyLog = z.object({
-  log_date: z.string(),
+  log_date: z.string(),                  // "2025-11-01"
   work_hours: z.number().optional(),
   study_hours: z.number().optional(),
   mma_hours: z.number().optional(),
@@ -17,7 +19,6 @@ const AddDailyLog = z.object({
   weight_kg: z.number().optional(),
   notes: z.string().optional(),
 });
-
 const AddFinance = z.object({
   entry_date: z.string(),
   type: z.enum(["income", "spend"]),
@@ -25,7 +26,6 @@ const AddFinance = z.object({
   category: z.string().optional(),
   note: z.string().optional(),
 });
-
 const AddSale = z.object({
   sale_date: z.string(),
   type: z.enum(["scholarship", "villa", "other"]),
@@ -34,73 +34,65 @@ const AddSale = z.object({
   price_usd: z.number().optional(),
   profit_usd: z.number().optional(),
 });
-
 const SetAlarm = z.object({
   label: z.string(),
-  time_local: z.string(),
-  rrule: z.string().optional()
+  time_local: z.string(), // "21:30"
+  rrule: z.string().optional(),
 });
 
 const BodySchema = z.object({
-  command: z.enum(["add_daily_log", "add_finance", "add_sale", "set_alarm"]),
+  command: z.enum(["add_daily_log","add_finance","add_sale","set_alarm"]),
   idempotency_key: z.string().min(8),
-  payload: z.any()
+  payload: z.unknown(),
 });
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: { ...cors } });
   }
-
   try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const authHeader = req.headers.get("Authorization") ?? "";
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
 
-    const body = await req.json();
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }, // keep RLS with user JWT
+    });
+
+    const body = await req.json().catch(() => null);
     const parsed = BodySchema.safeParse(body);
     if (!parsed.success) {
       console.error("Validation error:", parsed.error.flatten());
-      return new Response(
-        JSON.stringify({ ok: false, error: "INVALID_BODY", details: parsed.error.flatten() }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return json({ ok: false, error: "INVALID_BODY", details: parsed.error.flatten() }, 400);
     }
 
+    // Ensure user session (RLS)
     const { data: { user }, error: userErr } = await supabase.auth.getUser();
     if (userErr || !user) {
       console.error("Auth error:", userErr);
-      return new Response(
-        JSON.stringify({ ok: false, error: "UNAUTHENTICATED" }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return json({ ok: false, error: "UNAUTHENTICATED" }, 401);
     }
 
-    // Check idempotency
+    const { command, idempotency_key } = parsed.data;
+
+    // Idempotency check
     const { data: existing } = await supabase
       .from("command_audit")
       .select("id,result")
-      .eq("idempotency_key", parsed.data.idempotency_key)
+      .eq("idempotency_key", idempotency_key)
       .maybeSingle();
-
     if (existing) {
-      console.log("Idempotency hit:", existing.id);
-      return new Response(
-        JSON.stringify({ ok: true, reused: true, audit_id: existing.id, result: existing.result }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      console.log("Idempotency hit for key:", idempotency_key);
+      return json({ ok: true, reused: true, audit_id: existing.id, result: existing.result });
     }
 
     let savedIds: string[] = [];
-    let result: any = null;
+    let result: Record<string, unknown> = {};
 
-    if (parsed.data.command === "add_daily_log") {
+    // Validate and execute
+    if (command === "add_daily_log") {
       const payload = AddDailyLog.parse(parsed.data.payload);
-      const { data, error } = await supabase
-        .from("daily_logs")
+      const { data, error } = await supabase.from("daily_logs")
         .insert({ ...payload, owner_id: user.id })
         .select("id");
       if (error) {
@@ -111,10 +103,9 @@ serve(async (req) => {
       result = { table: "daily_logs", count: savedIds.length };
     }
 
-    if (parsed.data.command === "add_finance") {
+    if (command === "add_finance") {
       const payload = AddFinance.parse(parsed.data.payload);
-      const { data, error } = await supabase
-        .from("finance_entries")
+      const { data, error } = await supabase.from("finance_entries")
         .insert({ ...payload, owner_id: user.id })
         .select("id");
       if (error) {
@@ -125,10 +116,9 @@ serve(async (req) => {
       result = { table: "finance_entries", count: savedIds.length };
     }
 
-    if (parsed.data.command === "add_sale") {
+    if (command === "add_sale") {
       const payload = AddSale.parse(parsed.data.payload);
-      const { data, error } = await supabase
-        .from("sales")
+      const { data, error } = await supabase.from("sales")
         .insert({ ...payload, owner_id: user.id })
         .select("id");
       if (error) {
@@ -139,10 +129,9 @@ serve(async (req) => {
       result = { table: "sales", count: savedIds.length };
     }
 
-    if (parsed.data.command === "set_alarm") {
+    if (command === "set_alarm") {
       const payload = SetAlarm.parse(parsed.data.payload);
-      const { data, error } = await supabase
-        .from("notifications")
+      const { data, error } = await supabase.from("notifications")
         .insert({ ...payload, owner_id: user.id })
         .select("id");
       if (error) {
@@ -153,33 +142,31 @@ serve(async (req) => {
       result = { table: "notifications", count: savedIds.length };
     }
 
-    const { data: auditRow, error: auditErr } = await supabase
-      .from("command_audit")
+    // Audit
+    const { data: audit, error: auditErr } = await supabase.from("command_audit")
       .insert({
         owner_id: user.id,
-        command_type: parsed.data.command,
-        idempotency_key: parsed.data.idempotency_key,
-        payload: parsed.data.payload,
+        command_type: command,
+        idempotency_key,
+        payload: parsed.data.payload as Record<string, unknown>,
         result
-      })
-      .select("id")
-      .single();
-
+      }).select("id").single();
     if (auditErr) {
       console.error("Audit error:", auditErr);
       throw auditErr;
     }
 
-    console.log("Command executed:", parsed.data.command, "audit:", auditRow.id);
-    return new Response(
-      JSON.stringify({ ok: true, saved_ids: savedIds, audit_id: auditRow.id, result }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  } catch (e: any) {
+    console.log("Command executed successfully:", command, "audit_id:", audit.id);
+    return json({ ok: true, saved_ids: savedIds, audit_id: audit.id, result });
+  } catch (e) {
     console.error("Server error:", e);
-    return new Response(
-      JSON.stringify({ ok: false, error: "SERVER_ERROR", details: String(e) }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return json({ ok: false, error: "SERVER_ERROR", details: String(e) }, 500);
   }
 });
+
+function json(data: unknown, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { "content-type": "application/json; charset=utf-8", ...cors },
+  });
+}
