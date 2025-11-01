@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_runs: {
+        Row: {
+          completion_tokens: number | null
+          cost_usd: number | null
+          created_at: string | null
+          id: number
+          mode: string
+          owner_id: string
+          prompt_tokens: number | null
+        }
+        Insert: {
+          completion_tokens?: number | null
+          cost_usd?: number | null
+          created_at?: string | null
+          id?: number
+          mode: string
+          owner_id: string
+          prompt_tokens?: number | null
+        }
+        Update: {
+          completion_tokens?: number | null
+          cost_usd?: number | null
+          created_at?: string | null
+          id?: number
+          mode?: string
+          owner_id?: string
+          prompt_tokens?: number | null
+        }
+        Relationships: []
+      }
       command_audit: {
         Row: {
           command_type: string

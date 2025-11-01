@@ -11,6 +11,7 @@ import { Toast } from '@/components/Toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ChevronLeft, ChevronRight, Search, Filter, X, Calendar, Tag, AlertCircle, Clock, Download } from 'lucide-react';
 import { KeyboardHelp } from '@/components/KeyboardHelp';
+import { AIAssistPanel } from '@/components/AIAssistPanel';
 import { exportProjectsToJSON, exportSingleProjectToJSON } from '@/lib/export';
 
 const statusCols: Array<Task['status']> = ['todo', 'doing', 'done'];
@@ -53,6 +54,7 @@ export default function Projects() {
   const [fTo, setFTo] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+  const [showAIPanel, setShowAIPanel] = useState(false);
 
   async function loadProjects() {
     if (!user) { setProjects([]); return; }
@@ -722,7 +724,7 @@ export default function Projects() {
 
                   {/* Clear filters */}
                   <div className="sm:col-span-2 md:col-span-3 flex justify-end">
-                    <button
+                     <button
                       onClick={() => {
                         setQ('');
                         setFStatuses(['todo', 'doing', 'done']);
@@ -737,6 +739,18 @@ export default function Projects() {
                       <X className="h-3 w-3" />
                       مسح الكل
                     </button>
+                    {selected && (
+                      <button 
+                        onClick={() => { setShowAIPanel(true); track('ai_panel_open'); }} 
+                        className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:opacity-90 transition-opacity flex items-center gap-2"
+                        title="مساعد الذكاء الاصطناعي"
+                      >
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"/>
+                        </svg>
+                        <span className="text-sm font-medium">AI</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
@@ -1047,6 +1061,13 @@ export default function Projects() {
 
       {toast && <Toast msg={toast} />}
       {showKeyboardHelp && <KeyboardHelp onClose={() => setShowKeyboardHelp(false)} />}
+      {showAIPanel && selected && (
+        <AIAssistPanel 
+          projectId={selected} 
+          onClose={() => setShowAIPanel(false)}
+          onTasksCreated={() => { reloadTasks(); setShowAIPanel(false); }}
+        />
+      )}
     </div>
   );
 }
