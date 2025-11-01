@@ -5,6 +5,7 @@ import { setTelemetryOn, track } from '@/lib/telemetry';
 import { flushQueueOnce } from '@/lib/sync';
 import { getQueued } from '@/lib/localdb/dexie';
 import { rescheduleAllFromDB, ensureNotificationPerms } from '@/lib/notify';
+import { getDeviceLocation } from '@/native/geo';
 
 const tzGuess = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Dubai';
 
@@ -19,6 +20,9 @@ export default function Profile() {
   const [timezone, setTimezone] = useState(tzGuess);
   const [telemetry, setTelemetry] = useState(true);
   const [pendingCount, setPendingCount] = useState<number>(0);
+  const [prayerMethod, setPrayerMethod] = useState('MWL');
+  const [latitude, setLatitude] = useState<string>('');
+  const [longitude, setLongitude] = useState<string>('');
 
   const tzList = useMemo(() => [
     'Asia/Dubai', 'UTC', 'Europe/Helsinki', 'Europe/London', 
@@ -30,7 +34,7 @@ export default function Profile() {
       if (!user) return;
       const { data } = await supabase
         .from('profiles')
-        .select('full_name,currency,timezone,telemetry_enabled')
+        .select('full_name,currency,timezone,telemetry_enabled,prayer_method,latitude,longitude')
         .eq('id', user.id)
         .maybeSingle();
       if (data) {
@@ -39,6 +43,9 @@ export default function Profile() {
         setTimezone(data.timezone ?? tzGuess);
         setTelemetry(!!data.telemetry_enabled);
         setTelemetryOn(!!data.telemetry_enabled);
+        setPrayerMethod(data.prayer_method ?? 'MWL');
+        setLatitude(data.latitude?.toString() ?? '');
+        setLongitude(data.longitude?.toString() ?? '');
       }
       const q = await getQueued();
       setPendingCount(q.length);
@@ -56,16 +63,37 @@ export default function Profile() {
         full_name: fullName || null,
         currency,
         timezone,
-        telemetry_enabled: telemetry
+        telemetry_enabled: telemetry,
+        prayer_method: prayerMethod,
+        latitude: latitude ? parseFloat(latitude) : null,
+        longitude: longitude ? parseFloat(longitude) : null
       });
       if (error) throw error;
       setTelemetryOn(telemetry);
       setMsg('تم الحفظ ✅');
-      track('profile_saved', { currency, timezone, telemetry });
+      track('profile_saved', { currency, timezone, telemetry, prayerMethod });
     } catch (e: any) {
       setErr(e?.message ?? 'تعذّر الحفظ');
     } finally { 
       setLoading(false); 
+    }
+  }
+
+  async function captureLocation() {
+    setLoading(true);
+    try {
+      const loc = await getDeviceLocation();
+      if (loc) {
+        setLatitude(loc.lat.toString());
+        setLongitude(loc.lon.toString());
+        setMsg('تم الحصول على الموقع ✅');
+      } else {
+        setErr('تعذر الحصول على الموقع');
+      }
+    } catch (e: any) {
+      setErr(e?.message ?? 'خطأ في الموقع');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -123,6 +151,50 @@ export default function Profile() {
               {tzList.map(tz => <option key={tz} value={tz}>{tz}</option>)}
             </select>
           </label>
+
+          <label className="block space-y-2">
+            <span className="text-sm font-medium">طريقة حساب الصلاة</span>
+            <select 
+              className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground" 
+              value={prayerMethod} 
+              onChange={e => setPrayerMethod(e.target.value)}
+            >
+              <option value="MWL">Muslim World League</option>
+              <option value="ISNA">Islamic Society of North America</option>
+              <option value="Egypt">Egyptian General Authority</option>
+              <option value="Makkah">Umm Al-Qura University, Makkah</option>
+              <option value="Karachi">University of Islamic Sciences, Karachi</option>
+            </select>
+          </label>
+
+          <div className="space-y-2">
+            <span className="text-sm font-medium">الموقع الجغرافي</span>
+            <div className="grid grid-cols-2 gap-2">
+              <input 
+                className="px-3 py-2 rounded-lg border border-input bg-background text-foreground" 
+                value={latitude} 
+                onChange={e => setLatitude(e.target.value)} 
+                placeholder="خط العرض"
+                type="number"
+                step="any"
+              />
+              <input 
+                className="px-3 py-2 rounded-lg border border-input bg-background text-foreground" 
+                value={longitude} 
+                onChange={e => setLongitude(e.target.value)} 
+                placeholder="خط الطول"
+                type="number"
+                step="any"
+              />
+            </div>
+            <button 
+              className="w-full px-4 py-2 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors text-sm"
+              onClick={captureLocation}
+              disabled={loading}
+            >
+              📍 التقاط من الجهاز
+            </button>
+          </div>
 
           <label className="flex items-center gap-3 cursor-pointer">
             <input 

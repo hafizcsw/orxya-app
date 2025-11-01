@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { identifyUser, setTelemetryOn } from './telemetry'
 import { flushQueueOnce } from './sync'
 import { rescheduleAllFromDB } from './notify'
+import { syncPrayers, schedulePrayersFor } from '@/native/prayer'
 import type { User } from '@supabase/supabase-js'
 
 export function useUser() {
@@ -37,9 +38,17 @@ export function useUser() {
       await applyProfileFlags(u?.id ?? null)
       // Flush queue and reschedule notifications after login
       if (u) {
-        setTimeout(() => {
+        setTimeout(async () => {
           flushQueueOnce();
           rescheduleAllFromDB();
+          // تهيئة صلاة اليوم فور تسجيل الدخول
+          const today = new Date().toISOString().slice(0, 10);
+          try {
+            await syncPrayers(today);
+            await schedulePrayersFor(today);
+          } catch (e) {
+            console.error('Error syncing prayers on login:', e);
+          }
         }, 0);
       }
     })
