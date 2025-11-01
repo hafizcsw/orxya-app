@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/lib/auth';
 import { track } from '@/lib/telemetry';
 import QuickAdd from '@/components/QuickAdd';
+import EmptyState from '@/components/EmptyState';
 import {
   startOfWeek,
   endOfWeek,

@@ -24,83 +24,100 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 7%;
-    --foreground: 0 0% 95%;
+    --bg: 0 0% 100%;
+    --fg: 222 47% 11%;
+    --border: 210 16% 90%;
+    --muted: 210 20% 98%;
+    --muted-fg: 215 20% 35%;
+    --sec: 210 16% 96%;
+    --sec-fg: 222 47% 11%;
+    --accent-hex: #0ea5e9;
+    --accent-fg: 0 0% 100%;
 
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 95%;
-
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 95%;
-
-    --primary: 0 100% 60%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 95%;
-
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 60%;
-
-    --accent: 0 0% 18%;
-    --accent-foreground: 0 0% 95%;
-
-    --destructive: 0 100% 60%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 0 100% 60%;
-
+    --background: var(--bg);
+    --foreground: var(--fg);
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: var(--accent-hex);
+    --primary-foreground: var(--accent-fg);
+    --secondary: var(--sec);
+    --secondary-foreground: var(--sec-fg);
+    --muted: var(--muted);
+    --muted-foreground: var(--muted-fg);
+    --accent: 210 16% 96%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: var(--border);
+    --input: var(--border);
+    --ring: var(--accent-hex);
     --radius: 1rem;
 
-    --sidebar-background: 0 0% 8%;
-    --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 0 100% 60%;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: var(--accent-hex);
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 15%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 0 0% 18%;
-    --sidebar-ring: 0 100% 60%;
+    --sidebar-accent: 210 16% 96%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 210 16% 90%;
+    --sidebar-ring: var(--accent-hex);
   }
 
-  .dark {
-    --background: 0 0% 7%;
-    --foreground: 0 0% 95%;
+  [data-theme="dark"] {
+    --bg: 222 47% 11%;
+    --fg: 210 40% 98%;
+    --border: 217 33% 20%;
+    --muted: 217 33% 15%;
+    --muted-fg: 210 20% 80%;
+    --sec: 217 33% 14%;
+    --sec-fg: 210 40% 98%;
 
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 95%;
+    --background: var(--bg);
+    --foreground: var(--fg);
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+    --secondary: var(--sec);
+    --secondary-foreground: var(--sec-fg);
+    --muted: var(--muted);
+    --muted-foreground: var(--muted-fg);
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: var(--border);
+    --input: var(--border);
 
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 95%;
+    --sidebar-background: 222 47% 8%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-accent: 217 33% 15%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 18%;
+  }
+}
 
-    --primary: 0 100% 60%;
-    --primary-foreground: 0 0% 100%;
+/* كثافة مضغوطة */
+[data-density="compact"] .compact-py {
+  padding-top: 0.375rem;
+  padding-bottom: 0.375rem;
+}
+[data-density="compact"] .compact-px {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+[data-density="compact"] .compact-text {
+  font-size: 0.9rem;
+}
 
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 95%;
-
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 60%;
-
-    --accent: 0 0% 18%;
-    --accent-foreground: 0 0% 95%;
-
-    --destructive: 0 100% 60%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 0 100% 60%;
-    
-    --sidebar-background: 0 0% 8%;
-    --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 0 100% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 15%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 0 0% 18%;
-    --sidebar-ring: 0 100% 60%;
+/* احترام تقليل الحركة */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
 }
 

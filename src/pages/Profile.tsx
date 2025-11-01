@@ -6,6 +6,7 @@ import { flushQueueOnce } from '@/lib/sync';
 import { getQueued } from '@/lib/localdb/dexie';
 import { rescheduleAllFromDB, ensureNotificationPerms } from '@/lib/notify';
 import { getDeviceLocation } from '@/native/geo';
+import ThemeControls from '@/components/ThemeControls';
 
 const tzGuess = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Dubai';
 
@@ -269,6 +270,12 @@ export default function Profile() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* المظهر والكثافة */}
+      <div className="rounded-2xl border border-border p-6 bg-card space-y-4">
+        <div className="text-sm text-muted-foreground font-medium">المظهر والكثافة</div>
+        <ThemeControls />
       </div>
     </div>
   );

@@ -476,8 +476,10 @@ export type Database = {
       }
       profiles: {
         Row: {
+          accent_color: string | null
           created_at: string | null
           currency: string | null
+          density_pref: string | null
           full_name: string | null
           id: string
           latitude: number | null
@@ -485,12 +487,15 @@ export type Database = {
           longitude: number | null
           prayer_method: string | null
           telemetry_enabled: boolean | null
+          theme_pref: string | null
           timezone: string | null
           tz: string | null
         }
         Insert: {
+          accent_color?: string | null
           created_at?: string | null
           currency?: string | null
+          density_pref?: string | null
           full_name?: string | null
           id?: string
           latitude?: number | null
@@ -498,12 +503,15 @@ export type Database = {
           longitude?: number | null
           prayer_method?: string | null
           telemetry_enabled?: boolean | null
+          theme_pref?: string | null
           timezone?: string | null
           tz?: string | null
         }
         Update: {
+          accent_color?: string | null
           created_at?: string | null
           currency?: string | null
+          density_pref?: string | null
           full_name?: string | null
           id?: string
           latitude?: number | null
@@ -511,6 +519,7 @@ export type Database = {
           longitude?: number | null
           prayer_method?: string | null
           telemetry_enabled?: boolean | null
+          theme_pref?: string | null
           timezone?: string | null
           tz?: string | null
         }

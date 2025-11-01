@@ -13,6 +13,8 @@ import { ChevronLeft, ChevronRight, Search, Filter, X, Calendar, Tag, AlertCircl
 import { KeyboardHelp } from '@/components/KeyboardHelp';
 import { AIAssistPanel } from '@/components/AIAssistPanel';
 import { exportProjectsToJSON, exportSingleProjectToJSON } from '@/lib/export';
+import EmptyState from '@/components/EmptyState';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const statusCols: Array<Task['status']> = ['todo', 'doing', 'done'];
 const statusLabel: Record<Task['status'], string> = {
@@ -579,11 +581,22 @@ export default function Projects() {
             </div>
             <div className="flex flex-wrap gap-2">
               {projects.length === 0 ? (
-                <div className="text-muted-foreground">لا توجد مشاريع بعد.</div>
+                <EmptyState
+                  title="لا توجد مشاريع بعد"
+                  hint="ابدأ بإضافة مشروع جديد لتنظيم مهامك."
+                  cta={
+                    <button
+                      onClick={() => document.querySelector<HTMLInputElement>('input[placeholder="اسم المشروع"]')?.focus()}
+                      className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                    >
+                      + مشروع جديد
+                    </button>
+                  }
+                />
               ) : projects.map(p => (
                 <button
                   key={p.id}
-                  className={`px-4 py-2 rounded-lg border transition-colors ${
+                  className={`px-4 py-2 rounded-lg border transition-colors compact-py compact-px ${
                     selected === p.id 
                       ? 'bg-primary text-primary-foreground border-primary' 
                       : 'bg-secondary text-secondary-foreground border-border hover:bg-secondary/80'
@@ -970,17 +983,26 @@ export default function Projects() {
                             {/* Drop zone at top */}
                             <DropZone status={col} beforeId={(grouped[col] ?? [])[0]?.id ?? null} />
                             
-                            {(grouped[col] ?? []).map((t, idx, arr) => (
-                              <div key={t.id}>
-                                <div 
-                                  draggable
-                                  onDragStart={(e) => handleDragStart(e, t)}
-                                  onDragEnd={handleDragEnd}
-                                  className={`border border-border rounded-xl p-4 bg-background space-y-3 cursor-grab active:cursor-grabbing transition-all ${
-                                    draggedTask?.id === t.id ? 'opacity-50 scale-95' : 'hover:shadow-md'
-                                  }`}
-                                >
-                                  <div className="flex items-start justify-between gap-2">
+                            <AnimatePresence initial={false}>
+                              {(grouped[col] ?? []).map((t, idx, arr) => (
+                                <div key={t.id}>
+                                  <motion.div
+                                    layout
+                                    initial={{ opacity: 0.8, scale: 0.98 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.98 }}
+                                    transition={{ type: 'spring', stiffness: 280, damping: 24, mass: 0.6 }}
+                                    className={`border border-border rounded-xl p-4 bg-background space-y-3 cursor-grab active:cursor-grabbing transition-all compact-py compact-px compact-text ${
+                                      draggedTask?.id === t.id ? 'opacity-50 scale-95' : 'hover:shadow-md'
+                                    }`}
+                                  >
+                                    <div
+                                      draggable
+                                      onDragStart={(e) => handleDragStart(e as any, t)}
+                                      onDragEnd={handleDragEnd}
+                                      className="cursor-grab active:cursor-grabbing w-full"
+                                    >
+                                      <div className="flex items-start justify-between gap-2">
                                     <div className="font-medium flex-1">{t.title}</div>
                                     {isOverdue(t) && (
                                       <span className="text-xs px-2 py-1 rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 flex items-center gap-1">
@@ -1039,14 +1061,21 @@ export default function Projects() {
                                       >
                                         ↓
                                       </button>
-                                    )}
-                                  </div>
+                                     )}
+                                      </div>
+                                    </div>
+                                  </motion.div>
+                                  
+                                  {/* Drop zone between tasks */}
+                                  {idx < arr.length - 1 && (
+                                    <DropZone status={col} beforeId={arr[idx + 1]?.id ?? null} />
+                                  )}
                                 </div>
-                                
-                                {/* Drop zone between tasks */}
-                                <DropZone status={col} beforeId={arr[idx + 1]?.id ?? null} />
-                              </div>
-                            ))}
+                              ))}
+                            </AnimatePresence>
+                            
+                            {/* Drop zone at bottom */}
+                            <DropZone status={col} beforeId={null} />
                           </>
                         )}
                       </div>
