@@ -1,6 +1,6 @@
 import { supabase } from '@/integrations/supabase/client'
 import { useEffect, useState } from 'react'
-import { identifyUser } from './telemetry'
+import { identifyUser, setTelemetryOn } from './telemetry'
 import { flushQueueOnce } from './sync'
 import { rescheduleAllFromDB } from './notify'
 import type { User } from '@supabase/supabase-js'
@@ -9,16 +9,32 @@ export function useUser() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
+  async function applyProfileFlags(uid: string | null) {
+    if (!uid) { 
+      setTelemetryOn(false); 
+      return; 
+    }
+    const { data } = await supabase
+      .from('profiles')
+      .select('telemetry_enabled')
+      .eq('id', uid)
+      .maybeSingle();
+    setTelemetryOn(data?.telemetry_enabled ?? false);
+  }
+
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user ?? null)
+    supabase.auth.getUser().then(async ({ data }) => {
+      const u = data.user ?? null
+      setUser(u)
       setLoading(false)
-      identifyUser(data.user?.id ?? null, data.user ? { email: data.user.email } : undefined)
+      identifyUser(u?.id ?? null, u ? { email: u.email } : undefined)
+      await applyProfileFlags(u?.id ?? null)
     })
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, sess) => {
+    const { data: sub } = supabase.auth.onAuthStateChange(async (_e, sess) => {
       const u = sess?.user ?? null
       setUser(u)
       identifyUser(u?.id ?? null, u ? { email: u.email } : undefined)
+      await applyProfileFlags(u?.id ?? null)
       // Flush queue and reschedule notifications after login
       if (u) {
         setTimeout(() => {

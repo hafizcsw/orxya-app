@@ -3,28 +3,25 @@
 // import { ErrorBoundary } from "@sentry/react";
 import { Posthog } from "@capawesome/capacitor-posthog";
 
-const ON = String(import.meta.env.VITE_TELEMETRY_ENABLED) === "true";
+let RUNTIME_ON = String(import.meta.env.VITE_TELEMETRY_ENABLED) === "true";
+
+export function setTelemetryOn(on: boolean) {
+  RUNTIME_ON = !!on;
+  try {
+    if (!RUNTIME_ON) {
+      Posthog.reset();
+    }
+  } catch {}
+}
+
+function ON() { 
+  return RUNTIME_ON; 
+}
 
 export async function initTelemetry() {
-  if (!ON) return;
+  if (!ON()) return;
   
   // Sentry temporarily disabled due to version conflicts
-  // try {
-  //   const dsn = import.meta.env.VITE_SENTRY_DSN as string | undefined;
-  //   if (dsn) {
-  //     Sentry.init({
-  //       dsn,
-  //       integrations: [],
-  //       tracesSampleRate: 0.2,
-  //       replaysSessionSampleRate: 0.0,
-  //       replaysOnErrorSampleRate: 1.0,
-  //     });
-  //     console.log('✅ Sentry initialized');
-  //   }
-  // } catch (e) {
-  //   console.warn('⚠️ Sentry init failed:', e);
-  // }
-  
   // PostHog
   try {
     const key = import.meta.env.VITE_POSTHOG_KEY as string | undefined;
@@ -39,20 +36,20 @@ export async function initTelemetry() {
 }
 
 export function identifyUser(distinctId: string | null, props?: Record<string, any>) {
-  if (!ON) return;
+  if (!ON()) return;
   try {
     if (distinctId) {
-      Posthog.identify({ distinctId, ...(props || {}) });
+      Posthog.identify({ distinctId, ...props });
     } else {
-      Posthog.reset(); // logout
+      Posthog.reset();
     }
   } catch {}
 }
 
 export function track(event: string, properties?: Record<string, any>) {
-  if (!ON) return;
+  if (!ON()) return;
   try { 
-    Posthog.capture({ event, ...(properties || {}) }); 
+    Posthog.capture({ event, properties: properties ?? {} }); 
   } catch {}
 }
 

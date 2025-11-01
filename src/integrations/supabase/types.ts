@@ -185,20 +185,29 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string | null
+          currency: string | null
           full_name: string | null
           id: string
+          telemetry_enabled: boolean | null
+          timezone: string | null
           tz: string | null
         }
         Insert: {
           created_at?: string | null
+          currency?: string | null
           full_name?: string | null
           id?: string
+          telemetry_enabled?: boolean | null
+          timezone?: string | null
           tz?: string | null
         }
         Update: {
           created_at?: string | null
+          currency?: string | null
           full_name?: string | null
           id?: string
+          telemetry_enabled?: boolean | null
+          timezone?: string | null
           tz?: string | null
         }
         Relationships: []
