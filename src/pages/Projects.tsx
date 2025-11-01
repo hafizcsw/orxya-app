@@ -8,6 +8,8 @@ import type { Project, Task } from '@/types/project';
 import { nextOrderPos, midpoint, normalizeOrder } from '@/lib/order';
 import { throttle } from '@/lib/throttle';
 import { Toast } from '@/components/Toast';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const statusCols: Array<Task['status']> = ['todo', 'doing', 'done'];
 const statusLabel: Record<Task['status'], string> = {
@@ -20,6 +22,7 @@ type PendingOp = { snapshot: Task[]; desc: string };
 
 export default function Projects() {
   const { user } = useUser();
+  const isMobile = useIsMobile();
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -32,6 +35,7 @@ export default function Projects() {
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
   const [dropTarget, setDropTarget] = useState<{ status: Task['status']; beforeId: string | null } | null>(null);
   const [pendingOps, setPendingOps] = useState<PendingOp[]>([]);
+  const [mobileColumn, setMobileColumn] = useState<Task['status']>('todo');
 
   async function loadProjects() {
     if (!user) { setProjects([]); return; }
@@ -414,7 +418,7 @@ export default function Projects() {
             <>
               <div className="rounded-2xl border border-border p-6 bg-card space-y-4">
                 <div className="font-semibold text-lg">إضافة مهمة</div>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                   <input
                     className="px-3 py-2 rounded-lg border border-input bg-background text-foreground"
                     value={tTitle}
@@ -446,100 +450,199 @@ export default function Projects() {
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-3 gap-4">
-                {statusCols.map(col => (
-                  <div 
-                    key={col} 
-                    className={`rounded-2xl border border-border p-4 bg-card space-y-3 transition-colors ${
-                      draggedTask && draggedTask.status !== col ? 'ring-2 ring-primary/50' : ''
-                    }`}
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, col)}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="font-semibold text-lg">{statusLabel[col]}</div>
-                      <div className="text-xs px-2 py-0.5 rounded bg-muted">{(grouped[col] ?? []).length} مهام</div>
+              {/* Kanban Board - Mobile: Single Column with Navigation */}
+              {isMobile ? (
+                <div className="space-y-4">
+                  {/* Mobile Column Selector */}
+                  <div className="flex items-center justify-between gap-2 bg-card rounded-2xl border border-border p-4">
+                    <button
+                      onClick={() => {
+                        const idx = statusCols.indexOf(mobileColumn);
+                        setMobileColumn(statusCols[idx > 0 ? idx - 1 : statusCols.length - 1]);
+                      }}
+                      className="p-2 hover:bg-accent rounded-lg transition-colors"
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </button>
+                    
+                    <div className="flex-1 text-center">
+                      <div className="font-semibold text-lg">{statusLabel[mobileColumn]}</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {(grouped[mobileColumn] ?? []).length} مهام
+                      </div>
                     </div>
+                    
+                    <button
+                      onClick={() => {
+                        const idx = statusCols.indexOf(mobileColumn);
+                        setMobileColumn(statusCols[(idx + 1) % statusCols.length]);
+                      }}
+                      className="p-2 hover:bg-accent rounded-lg transition-colors"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  {/* Mobile Column Content */}
+                  <div className="rounded-2xl border border-border p-4 bg-card space-y-3 min-h-[400px]">
                     <div className="space-y-2">
-                      {(grouped[col] ?? []).length === 0 ? (
-                        <>
-                          <DropZone status={col} beforeId={null} />
-                          <div className="text-sm text-muted-foreground py-4 text-center">— لا مهام —</div>
-                          <DropZone status={col} beforeId={null} />
-                        </>
+                      {(grouped[mobileColumn] ?? []).length === 0 ? (
+                        <div className="text-sm text-muted-foreground py-8 text-center">— لا مهام —</div>
                       ) : (
-                        <>
-                          {/* Drop zone at top */}
-                          <DropZone status={col} beforeId={(grouped[col] ?? [])[0]?.id ?? null} />
-                          
-                          {(grouped[col] ?? []).map((t, idx, arr) => (
-                            <div key={t.id}>
-                              <div 
-                                draggable
-                                onDragStart={(e) => handleDragStart(e, t)}
-                                onDragEnd={handleDragEnd}
-                                className={`border border-border rounded-xl p-4 bg-background space-y-3 cursor-grab active:cursor-grabbing transition-all ${
-                                  draggedTask?.id === t.id ? 'opacity-50 scale-95' : 'hover:shadow-md'
-                                }`}
-                              >
-                                <div className="font-medium">{t.title}</div>
-                                <div className="text-sm text-muted-foreground">
-                                  {t.due_date ? `موعد: ${t.due_date}` : '—'}
-                                </div>
-                                <div className="flex gap-2 flex-wrap">
-                                  {col !== 'todo' && (
-                                    <button 
-                                      className="px-3 py-1 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-                                      onClick={() => moveToStatus(t, 'todo')}
-                                    >
-                                      ↤ To-Do
-                                    </button>
-                                  )}
-                                  {col !== 'doing' && (
-                                    <button 
-                                      className="px-3 py-1 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-                                      onClick={() => moveToStatus(t, 'doing')}
-                                    >
-                                      ↔ Doing
-                                    </button>
-                                  )}
-                                  {col !== 'done' && (
-                                    <button 
-                                      className="px-3 py-1 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-                                      onClick={() => moveToStatus(t, 'done')}
-                                    >
-                                      ↦ Done
-                                    </button>
-                                  )}
-                                  {idx > 0 && (
-                                    <button 
-                                      className="px-3 py-1 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-                                      onClick={() => moveUpDown(t, 'up')}
-                                    >
-                                      ↑
-                                    </button>
-                                  )}
-                                  {idx < arr.length - 1 && (
-                                    <button 
-                                      className="px-3 py-1 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-                                      onClick={() => moveUpDown(t, 'down')}
-                                    >
-                                      ↓
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                              
-                              {/* Drop zone between tasks */}
-                              <DropZone status={col} beforeId={arr[idx + 1]?.id ?? null} />
+                        (grouped[mobileColumn] ?? []).map((t, idx, arr) => (
+                          <div 
+                            key={t.id}
+                            className="border border-border rounded-xl p-4 bg-background space-y-3"
+                          >
+                            <div className="font-medium">{t.title}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {t.due_date ? `موعد: ${t.due_date}` : '—'}
                             </div>
-                          ))}
-                        </>
+                            <div className="flex gap-2 flex-wrap">
+                              {mobileColumn !== 'todo' && (
+                                <button 
+                                  className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                                  onClick={() => moveToStatus(t, 'todo')}
+                                >
+                                  ← To-Do
+                                </button>
+                              )}
+                              {mobileColumn !== 'doing' && (
+                                <button 
+                                  className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                                  onClick={() => moveToStatus(t, 'doing')}
+                                >
+                                  ↔ Doing
+                                </button>
+                              )}
+                              {mobileColumn !== 'done' && (
+                                <button 
+                                  className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                                  onClick={() => moveToStatus(t, 'done')}
+                                >
+                                  → Done
+                                </button>
+                              )}
+                              {idx > 0 && (
+                                <button 
+                                  className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                                  onClick={() => moveUpDown(t, 'up')}
+                                >
+                                  ↑
+                                </button>
+                              )}
+                              {idx < arr.length - 1 && (
+                                <button 
+                                  className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                                  onClick={() => moveUpDown(t, 'down')}
+                                >
+                                  ↓
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))
                       )}
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ) : (
+                /* Desktop: 3-Column Kanban */
+                <div className="grid md:grid-cols-3 gap-4">
+                  {statusCols.map(col => (
+                    <div 
+                      key={col} 
+                      className={`rounded-2xl border border-border p-4 bg-card space-y-3 transition-colors ${
+                        draggedTask && draggedTask.status !== col ? 'ring-2 ring-primary/50' : ''
+                      }`}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, col)}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="font-semibold text-lg">{statusLabel[col]}</div>
+                        <div className="text-xs px-2 py-0.5 rounded bg-muted">{(grouped[col] ?? []).length} مهام</div>
+                      </div>
+                      <div className="space-y-2">
+                        {(grouped[col] ?? []).length === 0 ? (
+                          <>
+                            <DropZone status={col} beforeId={null} />
+                            <div className="text-sm text-muted-foreground py-4 text-center">— لا مهام —</div>
+                            <DropZone status={col} beforeId={null} />
+                          </>
+                        ) : (
+                          <>
+                            {/* Drop zone at top */}
+                            <DropZone status={col} beforeId={(grouped[col] ?? [])[0]?.id ?? null} />
+                            
+                            {(grouped[col] ?? []).map((t, idx, arr) => (
+                              <div key={t.id}>
+                                <div 
+                                  draggable
+                                  onDragStart={(e) => handleDragStart(e, t)}
+                                  onDragEnd={handleDragEnd}
+                                  className={`border border-border rounded-xl p-4 bg-background space-y-3 cursor-grab active:cursor-grabbing transition-all ${
+                                    draggedTask?.id === t.id ? 'opacity-50 scale-95' : 'hover:shadow-md'
+                                  }`}
+                                >
+                                  <div className="font-medium">{t.title}</div>
+                                  <div className="text-sm text-muted-foreground">
+                                    {t.due_date ? `موعد: ${t.due_date}` : '—'}
+                                  </div>
+                                  <div className="flex gap-2 flex-wrap">
+                                    {col !== 'todo' && (
+                                      <button 
+                                        className="px-3 py-1 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                                        onClick={() => moveToStatus(t, 'todo')}
+                                      >
+                                        ↤ To-Do
+                                      </button>
+                                    )}
+                                    {col !== 'doing' && (
+                                      <button 
+                                        className="px-3 py-1 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                                        onClick={() => moveToStatus(t, 'doing')}
+                                      >
+                                        ↔ Doing
+                                      </button>
+                                    )}
+                                    {col !== 'done' && (
+                                      <button 
+                                        className="px-3 py-1 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                                        onClick={() => moveToStatus(t, 'done')}
+                                      >
+                                        ↦ Done
+                                      </button>
+                                    )}
+                                    {idx > 0 && (
+                                      <button 
+                                        className="px-3 py-1 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                                        onClick={() => moveUpDown(t, 'up')}
+                                      >
+                                        ↑
+                                      </button>
+                                    )}
+                                    {idx < arr.length - 1 && (
+                                      <button 
+                                        className="px-3 py-1 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                                        onClick={() => moveUpDown(t, 'down')}
+                                      >
+                                        ↓
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                                
+                                {/* Drop zone between tasks */}
+                                <DropZone status={col} beforeId={arr[idx + 1]?.id ?? null} />
+                              </div>
+                            ))}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </>
           )}
         </>
