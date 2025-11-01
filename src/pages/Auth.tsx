@@ -10,26 +10,36 @@ export default function Auth() {
   const { user } = useUser()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
+  const [mode, setMode] = useState<'signin' | 'signup'>('signin')
 
   useEffect(() => {
     if (user) navigate('/projects')
   }, [user, navigate])
 
-  async function signInEmail(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true); setErr(null); setMsg(null)
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: redirectTo },
-      })
-      if (error) throw error
-      setMsg('✅ تم إرسال رابط الدخول إلى بريدك. تحقق من صندوق الوارد.')
+      if (mode === 'signin') {
+        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        if (error) throw error
+        navigate('/projects')
+      } else {
+        const { error } = await supabase.auth.signUp({ 
+          email, 
+          password,
+          options: { emailRedirectTo: redirectTo }
+        })
+        if (error) throw error
+        setMsg('✅ تم إنشاء الحساب بنجاح! جاري تسجيل الدخول...')
+        setTimeout(() => navigate('/projects'), 1000)
+      }
     } catch (e: any) {
-      setErr(e?.message ?? 'تعذر الإرسال')
+      setErr(e?.message ?? 'حدث خطأ')
     } finally { setLoading(false) }
   }
 
@@ -37,11 +47,13 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-muted">
       <div className="w-full max-w-md space-y-6 bg-card p-8 rounded-xl shadow-2xl border">
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold">تسجيل الدخول</h1>
-          <p className="text-sm text-muted-foreground">أدخل بريدك للحصول على رابط دخول فوري</p>
+          <h1 className="text-3xl font-bold">{mode === 'signin' ? 'تسجيل الدخول' : 'إنشاء حساب'}</h1>
+          <p className="text-sm text-muted-foreground">
+            {mode === 'signin' ? 'أدخل بريدك وكلمة المرور' : 'سجل حساب جديد'}
+          </p>
         </div>
 
-        <form onSubmit={signInEmail} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <label className="block space-y-2">
             <span className="text-sm font-medium">البريد الإلكتروني</span>
             <input
@@ -55,13 +67,35 @@ export default function Auth() {
               autoFocus
             />
           </label>
+          <label className="block space-y-2">
+            <span className="text-sm font-medium">كلمة المرور</span>
+            <input
+              className="w-full px-4 py-3 rounded-lg border border-input bg-background text-foreground focus:ring-2 focus:ring-primary transition-shadow"
+              type="password"
+              required
+              dir="ltr"
+              value={password}
+              onChange={(e)=>setPassword(e.target.value)}
+              placeholder="••••••••"
+              minLength={6}
+            />
+          </label>
           <button 
             className="w-full px-4 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 font-medium shadow-lg" 
             disabled={loading}
           >
-            {loading ? 'جاري الإرسال…' : '🚀 أرسل رابط الدخول'}
+            {loading ? 'جاري المعالجة…' : mode === 'signin' ? '🚀 دخول' : '✨ إنشاء حساب'}
           </button>
         </form>
+
+        <div className="text-center">
+          <button 
+            onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {mode === 'signin' ? 'ليس لديك حساب؟ سجل الآن' : 'لديك حساب؟ سجل الدخول'}
+          </button>
+        </div>
 
         {msg && (
           <div className="p-4 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-900 dark:text-green-100 border border-green-300 dark:border-green-700">
