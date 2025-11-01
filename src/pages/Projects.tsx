@@ -9,8 +9,9 @@ import { nextOrderPos, midpoint, normalizeOrder } from '@/lib/order';
 import { throttle } from '@/lib/throttle';
 import { Toast } from '@/components/Toast';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { ChevronLeft, ChevronRight, Search, Filter, X, Calendar, Tag, AlertCircle, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, Filter, X, Calendar, Tag, AlertCircle, Clock, Download } from 'lucide-react';
 import { KeyboardHelp } from '@/components/KeyboardHelp';
+import { exportProjectsToJSON, exportSingleProjectToJSON } from '@/lib/export';
 
 const statusCols: Array<Task['status']> = ['todo', 'doing', 'done'];
 const statusLabel: Record<Task['status'], string> = {
@@ -559,7 +560,21 @@ export default function Projects() {
 
           {/* قائمة المشاريع */}
           <div className="rounded-2xl border border-border p-6 bg-card space-y-4">
-            <div className="font-semibold text-lg">المشاريع</div>
+            <div className="flex items-center justify-between">
+              <div className="font-semibold text-lg">المشاريع</div>
+              {projects.length > 0 && (
+                <button
+                  onClick={() => {
+                    exportProjectsToJSON(projects, tasks);
+                    track('projects_export_all');
+                  }}
+                  className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors flex items-center gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  تصدير JSON
+                </button>
+              )}
+            </div>
             <div className="flex flex-wrap gap-2">
               {projects.length === 0 ? (
                 <div className="text-muted-foreground">لا توجد مشاريع بعد.</div>
@@ -738,7 +753,24 @@ export default function Projects() {
           {selected && (
             <>
               <div className="rounded-2xl border border-border p-6 bg-card space-y-4">
-                <div className="font-semibold text-lg">إضافة مهمة</div>
+                <div className="flex items-center justify-between">
+                  <div className="font-semibold text-lg">إضافة مهمة</div>
+                  {tasks.length > 0 && (
+                    <button
+                      onClick={() => {
+                        const project = projects.find(p => p.id === selected);
+                        if (project) {
+                          exportSingleProjectToJSON(project, tasks);
+                          track('projects_export_single', { project_id: selected });
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors flex items-center gap-2"
+                    >
+                      <Download className="h-4 w-4" />
+                      {!isMobile && 'تصدير المشروع'}
+                    </button>
+                  )}
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                   <input
                     className="px-3 py-2 rounded-lg border border-input bg-background text-foreground"

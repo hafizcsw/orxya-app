@@ -1,73 +1,116 @@
-# Welcome to your Lovable project
+# Oryxa - مدير المشاريع والمهام الشخصي
 
-## Project info
+نظام إدارة مشاريع ومهام متقدم مع دعم أوفلاين، كانبان سحب وإفلات، فلاتر ذكية، واختصارات لوحة مفاتيح.
 
-**URL**: https://lovable.dev/projects/57dc7576-1990-4872-a4c0-f7cfc474f0d0
+## ✨ الميزات الرئيسية
 
-## How can I edit this code?
+### 🎯 إدارة المشاريع والمهام
+- **Kanban Board** متطور مع سحب وإفلات دقيق (Drag & Drop)
+- **Optimistic UI** - تحديثات فورية مع إمكانية التراجع
+- **Offline-First** - العمل بدون اتصال مع مزامنة تلقائية
+- **Auto-Normalize** - ترتيب تلقائي للمهام عند الحاجة
 
-There are several ways of editing your application.
+### 🔍 البحث والفلاتر
+- بحث نصي سريع في عناوين المهام
+- فلاتر متقدمة: الحالة، اليوم، المتأخرة، مدى زمني
+- عدادات ذكية: 🔴 متأخرة / 🔵 اليوم
+- كاش محلي للأداء الفائق
 
-**Use Lovable**
+### ⌨️ اختصارات لوحة المفاتيح
+- `?` - عرض المساعدة
+- `/` - التركيز على البحث
+- `n` - إضافة مهمة جديدة
+- `1/2/3` - التنقل بين الأعمدة (To-Do/Doing/Done)
+- `Esc` - إغلاق/إلغاء
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/57dc7576-1990-4872-a4c0-f7cfc474f0d0) and start prompting.
+### 💾 النسخ الاحتياطي
+- تصدير JSON لجميع المشاريع
+- تصدير JSON لمشروع واحد
+- استيراد/استعادة سهلة
 
-Changes made via Lovable will be committed automatically to this repo.
+### 📊 التقارير والإحصائيات
+- تقارير يومية شاملة
+- رسوم بيانية تفاعلية
+- تتبع العادات والأهداف
 
-**Use your preferred IDE**
+### 🔐 الأمان
+- Row-Level Security (RLS) كامل
+- مصادقة آمنة عبر Supabase
+- تشفير البيانات
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 📱 واجهة متجاوبة
+- تصميم موبايل/تابلت/ديسكتوب
+- وضع داكن/فاتح تلقائي
+- أيقونات Lucide React
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 🚀 التقنيات المستخدمة
 
-Follow these steps:
+- **Frontend**: React 18 + TypeScript + Vite
+- **Styling**: Tailwind CSS + shadcn/ui
+- **Backend**: Supabase (PostgreSQL + Edge Functions)
+- **Offline**: Dexie.js (IndexedDB)
+- **Analytics**: PostHog
+- **Icons**: Lucide React
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## 📦 التثبيت والتشغيل
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+```bash
+# تثبيت الحزم
+npm install
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# تشغيل التطوير
 npm run dev
+
+# البناء للإنتاج
+npm run build
 ```
 
-**Edit a file directly in GitHub**
+## 🗄️ قاعدة البيانات
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+يتطلب المشروع Supabase مع الجداول التالية:
+- `projects` - المشاريع
+- `tasks` - المهام (مع tags، due_date، order_pos)
+- `daily_logs` - السجلات اليومية
+- `profiles` - ملفات المستخدمين
+- `prayer_times` - مواقيت الصلاة
 
-**Use GitHub Codespaces**
+### الفهارس للأداء
+```sql
+CREATE INDEX idx_tasks_owner_project ON tasks(owner_id, project_id);
+CREATE INDEX idx_tasks_project_status_order ON tasks(project_id, status, order_pos);
+CREATE INDEX idx_tasks_due ON tasks(due_date);
+CREATE INDEX idx_tasks_tags_gin ON tasks USING GIN (tags);
+CREATE INDEX idx_tasks_title_trgm ON tasks USING GIN (title gin_trgm_ops);
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 📱 الميزات المحلية (Native)
 
-## What technologies are used for this project?
+- إشعارات محلية
+- تحديد الموقع الجغرافي
+- مزامنة مواقيت الصلاة
 
-This project is built with:
+## 🎨 التصميم
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+يستخدم المشروع نظام تصميم موحد مع:
+- متغيرات CSS للألوان
+- مكونات shadcn/ui قابلة للتخصيص
+- انيميشنز سلسة
+- تدرجات لونية جميلة
 
-## How can I deploy this project?
+## 🔧 التطوير
 
-Simply open [Lovable](https://lovable.dev/projects/57dc7576-1990-4872-a4c0-f7cfc474f0d0) and click on Share -> Publish.
+### Project URL
+https://lovable.dev/projects/57dc7576-1990-4872-a4c0-f7cfc474f0d0
 
-## Can I connect a custom domain to my Lovable project?
+### How to edit
+- **Use Lovable**: Visit the project and start prompting
+- **Use your IDE**: Clone, edit locally, and push changes
+- **GitHub Codespaces**: Edit directly in browser
 
-Yes, you can!
+## 📄 الترخيص
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+MIT License
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+---
+
+Built with ❤️ using Lovable
