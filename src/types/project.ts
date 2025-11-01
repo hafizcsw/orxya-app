@@ -2,7 +2,6 @@ export type Project = {
   id: string;
   owner_id: string;
   title: string;
-  name?: string;
   status: 'Active' | 'Archived';
   priority?: string;
   target?: string;
