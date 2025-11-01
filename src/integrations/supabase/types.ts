@@ -238,37 +238,37 @@ export type Database = {
           created_at: string | null
           deadline: string | null
           id: string
+          name: string
           next_action: string | null
           notes: string | null
           owner_id: string
           priority: string | null
           status: string | null
           target: string | null
-          title: string
         }
         Insert: {
           created_at?: string | null
           deadline?: string | null
           id?: string
+          name: string
           next_action?: string | null
           notes?: string | null
           owner_id: string
           priority?: string | null
           status?: string | null
           target?: string | null
-          title: string
         }
         Update: {
           created_at?: string | null
           deadline?: string | null
           id?: string
+          name?: string
           next_action?: string | null
           notes?: string | null
           owner_id?: string
           priority?: string | null
           status?: string | null
           target?: string | null
-          title?: string
         }
         Relationships: []
       }

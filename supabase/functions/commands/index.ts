@@ -41,14 +41,15 @@ const SetAlarm = z.object({
 });
 
 const AddProject = z.object({
-  title: z.string(),
+  name: z.string().min(1).optional(),
+  title: z.string().min(1).optional(),
   status: z.enum(["Active", "Archived"]).optional(),
   priority: z.string().optional(),
   target: z.string().optional(),
   deadline: z.string().optional(),
   next_action: z.string().optional(),
   notes: z.string().optional(),
-});
+}).refine(v => !!(v.name || v.title), { message: "name or title is required" });
 
 const AddTask = z.object({
   project_id: z.string(),
@@ -182,8 +183,18 @@ serve(async (req) => {
 
     if (command === "add_project") {
       const payload = AddProject.parse(parsed.data.payload);
+      const row = {
+        owner_id: user.id,
+        name: (payload.name ?? payload.title)!,
+        status: payload.status,
+        priority: payload.priority,
+        target: payload.target,
+        deadline: payload.deadline,
+        next_action: payload.next_action,
+        notes: payload.notes,
+      };
       const { data, error } = await supabase.from("projects")
-        .insert({ ...payload, owner_id: user.id })
+        .insert(row)
         .select("id");
       if (error) {
         console.error("DB error (projects):", error);

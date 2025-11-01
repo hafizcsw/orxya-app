@@ -80,7 +80,7 @@ export default function Projects() {
     if (!pname.trim()) return;
     setLoading(true);
     track('projects_add_project');
-    const { ok, data } = await sendCommand('add_project', { title: pname.trim() },
+    const { ok, data } = await sendCommand('add_project', { name: pname.trim() },
       'حُفظ المشروع أوفلاين وسيُزامَن 🔄');
     setPname('');
     await loadProjects();
@@ -219,7 +219,7 @@ export default function Projects() {
                   }`}
                   onClick={() => setSelected(p.id)}
                 >
-                  {p.title}
+                  {p.name}
                 </button>
               ))}
             </div>
