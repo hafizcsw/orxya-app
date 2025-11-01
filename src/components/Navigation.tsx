@@ -18,24 +18,17 @@ const Navigation = () => {
 
   const handleSignOut = async () => {
     try {
-      // تسجيل الخروج من Supabase
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Sign out error:', error);
-      }
-      
-      // تتبع الحدث
       track('auth_signout');
       
-      // مسح التخزين المحلي
-      localStorage.clear();
+      // تسجيل الخروج من Supabase
+      await supabase.auth.signOut();
       
-      // إعادة تحميل الصفحة للتأكد من مسح كل البيانات
-      window.location.href = '/auth';
+      // إعادة تحميل الصفحة بالكامل لمسح كل الحالة
+      window.location.replace('/auth');
     } catch (err) {
       console.error('Sign out failed:', err);
-      // في حالة فشل تسجيل الخروج، أعد تحميل الصفحة
-      window.location.href = '/auth';
+      // في حالة الخطأ، أعد تحميل الصفحة
+      window.location.replace('/auth');
     }
   };
 
