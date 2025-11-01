@@ -1,29 +1,30 @@
 // Centralized telemetry init + helpers
-import * as Sentry from "@sentry/capacitor";
-import { ErrorBoundary } from "@sentry/react";
+// import * as Sentry from "@sentry/capacitor";
+// import { ErrorBoundary } from "@sentry/react";
 import { Posthog } from "@capawesome/capacitor-posthog";
 
 const ON = String(import.meta.env.VITE_TELEMETRY_ENABLED) === "true";
 
 export async function initTelemetry() {
   if (!ON) return;
-  // Sentry
-  try {
-    const dsn = import.meta.env.VITE_SENTRY_DSN as string | undefined;
-    if (dsn) {
-      Sentry.init({
-        dsn,
-        // Light defaults: capture errors + basic traces + session replay on errors
-        integrations: [],
-        tracesSampleRate: 0.2,
-        replaysSessionSampleRate: 0.0,
-        replaysOnErrorSampleRate: 1.0,
-      });
-      console.log('✅ Sentry initialized');
-    }
-  } catch (e) {
-    console.warn('⚠️ Sentry init failed:', e);
-  }
+  
+  // Sentry temporarily disabled due to version conflicts
+  // try {
+  //   const dsn = import.meta.env.VITE_SENTRY_DSN as string | undefined;
+  //   if (dsn) {
+  //     Sentry.init({
+  //       dsn,
+  //       integrations: [],
+  //       tracesSampleRate: 0.2,
+  //       replaysSessionSampleRate: 0.0,
+  //       replaysOnErrorSampleRate: 1.0,
+  //     });
+  //     console.log('✅ Sentry initialized');
+  //   }
+  // } catch (e) {
+  //   console.warn('⚠️ Sentry init failed:', e);
+  // }
+  
   // PostHog
   try {
     const key = import.meta.env.VITE_POSTHOG_KEY as string | undefined;
@@ -58,5 +59,5 @@ export function track(event: string, properties?: Record<string, any>) {
 // Alias for backward compatibility
 export { track as trackEvent };
 
-// Sentry Error Boundary re-export for optional wrapping
-export { ErrorBoundary as SentryErrorBoundary };
+// Sentry Error Boundary disabled temporarily
+// export { ErrorBoundary as SentryErrorBoundary };

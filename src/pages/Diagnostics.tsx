@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client'
 import { useUser } from '@/lib/auth'
 import { getQueued } from '@/lib/localdb/dexie'
 import { flushQueueOnce } from '@/lib/sync'
-import * as SentryCap from '@sentry/capacitor'
+// import * as SentryCap from '@sentry/capacitor'
 import { track } from '@/lib/telemetry'
 
 const Diagnostics = () => {
@@ -181,14 +181,11 @@ const Diagnostics = () => {
           <button 
             className="btn max-w-xs" 
             onClick={() => { 
-              try { 
-                throw new Error('Oryxa test error'); 
-              } catch (e) { 
-                SentryCap.captureException(e); 
-              } 
+              console.error('Oryxa test error - Sentry temporarily disabled');
+              alert('Test error logged to console (Sentry temporarily disabled)');
             }}
           >
-            Throw test error (Sentry)
+            Throw test error (Console)
           </button>
           <button 
             className="btn max-w-xs" 
