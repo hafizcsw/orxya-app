@@ -5,7 +5,7 @@ import { enqueueCommand } from '@/lib/offline-actions';
 import { genIdem } from '@/lib/sync';
 import { track } from '@/lib/telemetry';
 import type { Project, Task } from '@/types/project';
-import { nextOrderPos, midpoint } from '@/lib/kanban';
+import { nextOrderPos, midpoint, normalizeOrder } from '@/lib/order';
 import { Toast } from '@/components/Toast';
 
 const statusCols: Array<Task['status']> = ['todo', 'doing', 'done'];
@@ -146,7 +146,84 @@ export default function Projects() {
     }
   }
 
-  // Drag & Drop handlers
+  // Helper: smallest gap between consecutive tasks in a column
+  function smallestGap(list: Task[]): number {
+    if (!list || list.length < 2) return Infinity;
+    const sorted = [...list].sort((a, b) => Number(a.order_pos) - Number(b.order_pos));
+    let minGap = Infinity;
+    for (let i = 1; i < sorted.length; i++) {
+      const gap = Number(sorted[i].order_pos) - Number(sorted[i - 1].order_pos);
+      if (gap < minGap) minGap = gap;
+    }
+    return minGap;
+  }
+
+  // Normalize column order positions when gaps become too small
+  async function normalizeColumn(status: Task['status']) {
+    const col = (grouped[status] ?? []).slice().sort((a, b) => Number(a.order_pos) - Number(b.order_pos));
+    const patches = normalizeOrder(col);
+    
+    for (const p of patches) {
+      await sendCommand('move_task', 
+        { task_id: p.id, to_status: status, new_order_pos: p.order_pos },
+        undefined
+      );
+    }
+    
+    track('kanban_normalized', { status, count: patches.length });
+    await loadTasks(selected!);
+  }
+
+  // Precise drop handler with midpoint calculations
+  async function handleDropPrecise(toStatus: Task['status'], beforeId: string | null) {
+    if (!draggedTask || !selected) return;
+    
+    const col = (grouped[toStatus] ?? []).slice().sort((a, b) => Number(a.order_pos) - Number(b.order_pos));
+    let new_order_pos: number;
+
+    if (beforeId === null) {
+      // Drop at end of column
+      new_order_pos = nextOrderPos(col);
+    } else {
+      const idx = col.findIndex(t => t.id === beforeId);
+      if (idx === -1) {
+        new_order_pos = nextOrderPos(col);
+      } else if (idx === 0) {
+        // Drop before first item
+        const first = col[0];
+        new_order_pos = midpoint(Number(first.order_pos) - 1000, Number(first.order_pos));
+      } else {
+        // Drop between items
+        const prev = col[idx - 1];
+        const next = col[idx];
+        new_order_pos = midpoint(Number(prev.order_pos), Number(next.order_pos));
+      }
+    }
+
+    track('kanban_drop', { from: draggedTask.status, to: toStatus, order_pos: new_order_pos });
+    
+    await sendCommand('move_task', 
+      { task_id: draggedTask.id, to_status: toStatus, new_order_pos },
+      'نُقلت المهمة أوفلاين وسيُزامَن 🔄'
+    );
+    
+    setDraggedTask(null);
+    await loadTasks(selected);
+
+    // Auto-normalize if gaps become too small
+    const updatedCol = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('project_id', selected)
+      .eq('status', toStatus)
+      .order('order_pos');
+    
+    if (updatedCol.data && smallestGap(updatedCol.data as Task[]) < 1) {
+      await normalizeColumn(toStatus);
+    }
+  }
+
+  // Legacy drag handlers (keep for column-level drops)
   function handleDragStart(e: React.DragEvent, task: Task) {
     setDraggedTask(task);
     e.dataTransfer.effectAllowed = 'move';
@@ -169,6 +246,26 @@ export default function Projects() {
 
   function handleDragEnd() {
     setDraggedTask(null);
+  }
+
+  // DropZone component for precise drops
+  function DropZone({ 
+    status, 
+    beforeId 
+  }: { 
+    status: Task['status']; 
+    beforeId: string | null;
+  }) {
+    return (
+      <div
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          handleDropPrecise(status, beforeId);
+        }}
+        className="h-2 my-1 rounded bg-blue-200/30 hover:bg-blue-400/50 transition-colors"
+      />
+    );
   }
 
   return (
@@ -273,63 +370,81 @@ export default function Projects() {
                     onDrop={(e) => handleDrop(e, col)}
                   >
                     <div className="font-semibold text-lg">{statusLabel[col]}</div>
-                    <div className="space-y-3">
-                      {(grouped[col] ?? []).map(t => (
-                        <div 
-                          key={t.id} 
-                          draggable
-                          onDragStart={(e) => handleDragStart(e, t)}
-                          onDragEnd={handleDragEnd}
-                          className={`border border-border rounded-xl p-4 bg-background space-y-3 cursor-move transition-all ${
-                            draggedTask?.id === t.id ? 'opacity-50 scale-95' : 'hover:shadow-md'
-                          }`}
-                        >
-                          <div className="font-medium">{t.title}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {t.due_date ? `موعد: ${t.due_date}` : '—'}
-                          </div>
-                          <div className="flex gap-2 flex-wrap">
-                            {col !== 'todo' && (
-                              <button 
-                                className="px-3 py-1 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-                                onClick={() => moveToStatus(t, 'todo')}
+                    <div className="space-y-2">
+                      {(grouped[col] ?? []).length === 0 ? (
+                        <>
+                          <DropZone status={col} beforeId={null} />
+                          <div className="text-sm text-muted-foreground py-4 text-center">— لا مهام —</div>
+                          <DropZone status={col} beforeId={null} />
+                        </>
+                      ) : (
+                        <>
+                          {/* Drop zone at top */}
+                          <DropZone status={col} beforeId={(grouped[col] ?? [])[0]?.id ?? null} />
+                          
+                          {(grouped[col] ?? []).map((t, idx, arr) => (
+                            <div key={t.id}>
+                              <div 
+                                draggable
+                                onDragStart={(e) => handleDragStart(e, t)}
+                                onDragEnd={handleDragEnd}
+                                className={`border border-border rounded-xl p-4 bg-background space-y-3 cursor-grab active:cursor-grabbing transition-all ${
+                                  draggedTask?.id === t.id ? 'opacity-50 scale-95' : 'hover:shadow-md'
+                                }`}
                               >
-                                ↤ To-Do
-                              </button>
-                            )}
-                            {col !== 'doing' && (
-                              <button 
-                                className="px-3 py-1 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-                                onClick={() => moveToStatus(t, 'doing')}
-                              >
-                                ↔ Doing
-                              </button>
-                            )}
-                            {col !== 'done' && (
-                              <button 
-                                className="px-3 py-1 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-                                onClick={() => moveToStatus(t, 'done')}
-                              >
-                                ↦ Done
-                              </button>
-                            )}
-                            <button 
-                              className="px-3 py-1 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-                              onClick={() => moveUpDown(t, 'up')}
-                            >
-                              ↑
-                            </button>
-                            <button 
-                              className="px-3 py-1 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-                              onClick={() => moveUpDown(t, 'down')}
-                            >
-                              ↓
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                      {grouped[col]?.length === 0 && (
-                        <div className="text-muted-foreground text-sm text-center py-4">— لا مهام —</div>
+                                <div className="font-medium">{t.title}</div>
+                                <div className="text-sm text-muted-foreground">
+                                  {t.due_date ? `موعد: ${t.due_date}` : '—'}
+                                </div>
+                                <div className="flex gap-2 flex-wrap">
+                                  {col !== 'todo' && (
+                                    <button 
+                                      className="px-3 py-1 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                                      onClick={() => moveToStatus(t, 'todo')}
+                                    >
+                                      ↤ To-Do
+                                    </button>
+                                  )}
+                                  {col !== 'doing' && (
+                                    <button 
+                                      className="px-3 py-1 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                                      onClick={() => moveToStatus(t, 'doing')}
+                                    >
+                                      ↔ Doing
+                                    </button>
+                                  )}
+                                  {col !== 'done' && (
+                                    <button 
+                                      className="px-3 py-1 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                                      onClick={() => moveToStatus(t, 'done')}
+                                    >
+                                      ↦ Done
+                                    </button>
+                                  )}
+                                  {idx > 0 && (
+                                    <button 
+                                      className="px-3 py-1 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                                      onClick={() => moveUpDown(t, 'up')}
+                                    >
+                                      ↑
+                                    </button>
+                                  )}
+                                  {idx < arr.length - 1 && (
+                                    <button 
+                                      className="px-3 py-1 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                                      onClick={() => moveUpDown(t, 'down')}
+                                    >
+                                      ↓
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              {/* Drop zone between tasks */}
+                              <DropZone status={col} beforeId={arr[idx + 1]?.id ?? null} />
+                            </div>
+                          ))}
+                        </>
                       )}
                     </div>
                   </div>
