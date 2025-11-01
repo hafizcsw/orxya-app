@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/lib/auth';
 import { enqueueCommand } from '@/lib/offline-actions';
@@ -6,6 +6,7 @@ import { genIdem } from '@/lib/sync';
 import { track } from '@/lib/telemetry';
 import type { Project, Task } from '@/types/project';
 import { nextOrderPos, midpoint, normalizeOrder } from '@/lib/order';
+import { throttle } from '@/lib/throttle';
 import { Toast } from '@/components/Toast';
 
 const statusCols: Array<Task['status']> = ['todo', 'doing', 'done'];
@@ -14,6 +15,8 @@ const statusLabel: Record<Task['status'], string> = {
   doing: 'Doing',
   done: 'Done',
 };
+
+type PendingOp = { snapshot: Task[]; desc: string };
 
 export default function Projects() {
   const { user } = useUser();
@@ -27,6 +30,8 @@ export default function Projects() {
   const [tInitStatus, setTInitStatus] = useState<Task['status']>('todo');
   const [toast, setToast] = useState<string | null>(null);
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
+  const [dropTarget, setDropTarget] = useState<{ status: Task['status']; beforeId: string | null } | null>(null);
+  const [pendingOps, setPendingOps] = useState<PendingOp[]>([]);
 
   async function loadProjects() {
     if (!user) { setProjects([]); return; }
@@ -51,6 +56,12 @@ export default function Projects() {
       .order('created_at', { ascending: true });
     if (!error) setTasks((data ?? []) as Task[]);
   }
+
+  // Throttled reload to reduce server load
+  const reloadTasks = useMemo(
+    () => throttle(() => selected && loadTasks(selected), 250),
+    [selected]
+  );
 
   useEffect(() => { loadProjects(); }, [user?.id]);
   useEffect(() => { if (selected) loadTasks(selected); }, [user?.id, selected]);
@@ -146,6 +157,13 @@ export default function Projects() {
     }
   }
 
+  // Helper: check if move is a no-op
+  function isNoopMove(t: Task, to: Task['status'], newPos: number): boolean {
+    const sameStatus = t.status === to;
+    const posClose = Math.abs(Number(t.order_pos) - Number(newPos)) < 0.5;
+    return sameStatus && posClose;
+  }
+
   // Helper: smallest gap between consecutive tasks in a column
   function smallestGap(list: Task[]): number {
     if (!list || list.length < 2) return Infinity;
@@ -156,6 +174,44 @@ export default function Projects() {
       if (gap < minGap) minGap = gap;
     }
     return minGap;
+  }
+
+  // Optimistic UI: apply local move immediately
+  function applyLocalMove(taskId: string, to: Task['status'], newPos: number) {
+    setTasks(prev => {
+      const snapshot = [...prev];
+      const list = [...prev];
+      const idx = list.findIndex(t => t.id === taskId);
+      if (idx < 0) return prev;
+
+      const t = { ...list[idx] };
+      list.splice(idx, 1);
+      t.status = to;
+      t.order_pos = newPos;
+
+      const sameCol = list.filter(x => x.status === to).sort((a,b)=>Number(a.order_pos)-Number(b.order_pos));
+      const insertIdx = sameCol.findIndex(x => Number(x.order_pos) > newPos);
+      
+      if (insertIdx === -1) {
+        list.push(t);
+      } else {
+        const actualIdx = list.findIndex(x => x.id === sameCol[insertIdx].id);
+        list.splice(actualIdx, 0, t);
+      }
+
+      setPendingOps(op => [{ snapshot, desc: 'move_task' }, ...op]);
+      return list;
+    });
+  }
+
+  // Rollback last optimistic operation
+  function rollbackLastOp() {
+    setPendingOps(op => {
+      if (!op.length) return op;
+      const [last, ...rest] = op;
+      setTasks(last.snapshot);
+      return rest;
+    });
   }
 
   // Normalize column order positions when gaps become too small
@@ -171,10 +227,10 @@ export default function Projects() {
     }
     
     track('kanban_normalized', { status, count: patches.length });
-    await loadTasks(selected!);
+    reloadTasks();
   }
 
-  // Precise drop handler with midpoint calculations
+  // Precise drop handler with optimistic UI
   async function handleDropPrecise(toStatus: Task['status'], beforeId: string | null) {
     if (!draggedTask || !selected) return;
     
@@ -182,35 +238,51 @@ export default function Projects() {
     let new_order_pos: number;
 
     if (beforeId === null) {
-      // Drop at end of column
       new_order_pos = nextOrderPos(col);
     } else {
       const idx = col.findIndex(t => t.id === beforeId);
       if (idx === -1) {
         new_order_pos = nextOrderPos(col);
       } else if (idx === 0) {
-        // Drop before first item
         const first = col[0];
         new_order_pos = midpoint(Number(first.order_pos) - 1000, Number(first.order_pos));
       } else {
-        // Drop between items
         const prev = col[idx - 1];
         const next = col[idx];
         new_order_pos = midpoint(Number(prev.order_pos), Number(next.order_pos));
       }
     }
 
-    track('kanban_drop', { from: draggedTask.status, to: toStatus, order_pos: new_order_pos });
-    
-    await sendCommand('move_task', 
-      { task_id: draggedTask.id, to_status: toStatus, new_order_pos },
+    // Prevent no-op moves
+    if (isNoopMove(draggedTask, toStatus, new_order_pos)) {
+      track('kanban_noop', { task_id: draggedTask.id });
+      setDraggedTask(null);
+      setDropTarget(null);
+      return;
+    }
+
+    // Apply optimistic UI update
+    const taskToMove = draggedTask;
+    applyLocalMove(draggedTask.id, toStatus, new_order_pos);
+    setDraggedTask(null);
+    setDropTarget(null);
+
+    // Send to server
+    const { ok } = await sendCommand('move_task', 
+      { task_id: taskToMove.id, to_status: toStatus, new_order_pos },
       'نُقلت المهمة أوفلاين وسيُزامَن 🔄'
     );
-    
-    setDraggedTask(null);
-    await loadTasks(selected);
 
-    // Auto-normalize if gaps become too small
+    if (!ok) {
+      rollbackLastOp();
+      setToast('تعذّر الحفظ، تم التراجع ↩️');
+      track('kanban_undo', { reason: 'network' });
+      return;
+    }
+
+    // Throttled reload + auto-normalize if needed
+    reloadTasks();
+
     const updatedCol = await supabase
       .from('tasks')
       .select('*')
@@ -221,6 +293,13 @@ export default function Projects() {
     if (updatedCol.data && smallestGap(updatedCol.data as Task[]) < 1) {
       await normalizeColumn(toStatus);
     }
+
+    track('kanban_drop_opt', {
+      project_id: selected,
+      task_id: taskToMove.id,
+      to_status: toStatus,
+      before_id: beforeId,
+    });
   }
 
   // Legacy drag handlers (keep for column-level drops)
@@ -248,7 +327,7 @@ export default function Projects() {
     setDraggedTask(null);
   }
 
-  // DropZone component for precise drops
+  // DropZone component with visual highlighting
   function DropZone({ 
     status, 
     beforeId 
@@ -256,14 +335,22 @@ export default function Projects() {
     status: Task['status']; 
     beforeId: string | null;
   }) {
+    const active = dropTarget && dropTarget.status === status && dropTarget.beforeId === beforeId;
     return (
       <div
+        onDragEnter={(e) => { 
+          e.preventDefault(); 
+          setDropTarget({ status, beforeId }); 
+        }}
         onDragOver={(e) => e.preventDefault()}
+        onDragLeave={() => setDropTarget(null)}
         onDrop={(e) => {
           e.preventDefault();
           handleDropPrecise(status, beforeId);
         }}
-        className="h-2 my-1 rounded bg-blue-200/30 hover:bg-blue-400/50 transition-colors"
+        className={`h-2 my-1 rounded transition-all ${
+          active ? 'bg-blue-500/60 h-2.5' : 'bg-blue-200/30 hover:bg-blue-400/50'
+        }`}
       />
     );
   }
@@ -369,7 +456,10 @@ export default function Projects() {
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, col)}
                   >
-                    <div className="font-semibold text-lg">{statusLabel[col]}</div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="font-semibold text-lg">{statusLabel[col]}</div>
+                      <div className="text-xs px-2 py-0.5 rounded bg-muted">{(grouped[col] ?? []).length} مهام</div>
+                    </div>
                     <div className="space-y-2">
                       {(grouped[col] ?? []).length === 0 ? (
                         <>
