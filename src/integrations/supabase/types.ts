@@ -661,7 +661,15 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      vw_productivity_daily: {
+        Row: {
+          ai_events: number | null
+          day_utc: string | null
+          events_total: number | null
+          owner_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {

@@ -15,13 +15,22 @@ const SYSTEM_PROMPT = `أنت وكيل جدولة ومهام ذكي للمستخ
 - استخدم نطاق الأيام الافتراضي 7 أيام عند الفحص، وإضافة buffer للصلاة 30 دقيقة افتراضيًا.
 - عند وجود تغيير موقع ≥ 0.7 كم، اطلب sync مواقيت الصلاة اليوم + 2 يومًا قادمين.
 - حدّد أي التباسات زمنية بالـ timezone الخاص بالمستخدم.
-- كن مختصراً ومباشراً في إجاباتك.`;
+- كن مختصراً ومباشراً في إجاباتك.
+
+أدوات القوالب والتلخيص:
+- عند طلب "خطة اليوم" أو "work after maghrib" استخدم apply_template
+- عند طلب "ملخص اليوم/الأسبوع/الشهر" استخدم summarize_period
+- عند أسئلة البحث مثل "اعرض مهامي المتأخرة" استخدم nlq_search`;
 
 const FEWSHOT: any[] = [
   { role: "user", content: "رتّب اجتماع مراجعة عرض الساعة 5 مساء اليوم لمدة 30 دقيقة." },
   { role: "assistant", content: "هل تفضّل بعد صلاة العصر أم بعدها مباشرةً؟ أحتاج مدة الاجتماع إن لم تكن 30 دقيقة." },
   { role: "user", content: "بعد العصر مباشرةً، 30 دقيقة." },
-  { role: "assistant", content: "سأحجز اجتماع 30 دقيقة بعد العصر، وسأتحقق من التعارض مع مواقيت الصلاة ثم أؤكد الوقت المناسب." }
+  { role: "assistant", content: "سأحجز اجتماع 30 دقيقة بعد العصر، وسأتحقق من التعارض مع مواقيت الصلاة ثم أؤكد الوقت المناسب." },
+  { role: "user", content: "خطة عمل بعد المغرب" },
+  { role: "assistant", content: "سأطبّق قالب 'عمل بعد المغرب' الذي يتضمن جلستي عمل عميق واستراحة ومراجعة بريد." },
+  { role: "user", content: "لخّص أسبوعي" },
+  { role: "assistant", content: "سأجمع أحداثك ومهامك للأسبوع وأقدم ملخصاً مع توصيات عملية." }
 ];
 
 interface ToolCall {
@@ -140,6 +149,37 @@ function getToolsSpec() {
         time_local: { type: 'string', description: 'HH:MM' },
       },
       required: ['label', 'time_local'],
+      additionalProperties: false,
+    }),
+    fn('apply_template', 'تطبيق قالب ذكي لإنشاء مجموعة أحداث/مهام', {
+      type: 'object',
+      properties: {
+        template_key: { 
+          type: 'string', 
+          enum: ['work_after_maghrib', 'gym_after_isha', 'deep_work_morning', 'balanced_day'],
+          description: 'نوع القالب' 
+        },
+        date: { type: 'string', description: 'YYYY-MM-DD (افتراضي: اليوم)' },
+        tags: { type: 'array', items: { type: 'string' } },
+      },
+      required: ['template_key'],
+      additionalProperties: false,
+    }),
+    fn('summarize_period', 'تلخيص فترة من المهام والأحداث', {
+      type: 'object',
+      properties: {
+        span: { type: 'string', enum: ['day', 'week', 'month'], description: 'نطاق التلخيص' },
+        start_iso: { type: 'string', description: 'تاريخ البداية (اختياري)' },
+      },
+      required: ['span'],
+      additionalProperties: false,
+    }),
+    fn('nlq_search', 'بحث لغوي طبيعي في المهام والأحداث', {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'استعلام بالعربية أو الإنجليزية' },
+      },
+      required: ['query'],
       additionalProperties: false,
     }),
   ];
@@ -373,6 +413,98 @@ serve(async (req) => {
         const { data, error } = await supabase.functions.invoke('commands', { body: payload });
         if (error) throw error;
         return data ?? {};
+      },
+
+      async apply_template(args: any) {
+        const { data, error } = await supabase.functions.invoke('templates', {
+          body: {
+            template_key: args.template_key,
+            date: args.date,
+            tags: args.tags ?? [],
+          },
+        });
+        if (error) throw error;
+        return data ?? {};
+      },
+
+      async summarize_period(args: any) {
+        const { data, error } = await supabase.functions.invoke('summarize-period', {
+          body: {
+            span: args.span,
+            start_iso: args.start_iso,
+          },
+        });
+        if (error) throw error;
+        return data ?? {};
+      },
+
+      async nlq_search(args: any) {
+        const q = String(args.query || '').toLowerCase();
+        
+        // Parse query intent
+        const isDone = q.includes('done') || q.includes('منجزة') || q.includes('مكتملة');
+        const isTodo = q.includes('todo') || q.includes('قيد الانتظار');
+        const isDoing = q.includes('doing') || q.includes('قيد التنفيذ');
+        const isOverdue = q.includes('overdue') || q.includes('متأخرة') || q.includes('متأخر');
+        const isToday = q.includes('today') || q.includes('اليوم');
+        const isTomorrow = q.includes('tomorrow') || q.includes('غد') || q.includes('غدا');
+        
+        const isEvents = q.includes('event') || q.includes('اجتماع') || q.includes('حدث');
+        const isTasks = q.includes('task') || q.includes('مهمة') || q.includes('مهام');
+        
+        // Default to tasks if not specified
+        const domain = isEvents && !isTasks ? 'events' : 'tasks';
+        
+        if (domain === 'tasks') {
+          let query = supabase.from('tasks')
+            .select('id, title, status, due_date, order_pos')
+            .eq('owner_id', user.id)
+            .limit(100);
+          
+          if (isDone) query = query.eq('status', 'done');
+          if (isTodo) query = query.eq('status', 'todo');
+          if (isDoing) query = query.eq('status', 'doing');
+          
+          const today = new Date().toISOString().slice(0, 10);
+          
+          if (isToday) {
+            query = query.eq('due_date', today);
+          }
+          
+          if (isTomorrow) {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            query = query.eq('due_date', tomorrow.toISOString().slice(0, 10));
+          }
+          
+          if (isOverdue) {
+            query = query.lt('due_date', today).neq('status', 'done');
+          }
+          
+          const { data } = await query.order('due_date', { ascending: true });
+          return { kind: 'tasks', items: data ?? [], count: data?.length ?? 0 };
+        } else {
+          // Events
+          let start = new Date();
+          start.setHours(0, 0, 0, 0);
+          let end = new Date();
+          end.setHours(23, 59, 59, 999);
+          
+          if (isTomorrow) {
+            start.setDate(start.getDate() + 1);
+            end.setDate(end.getDate() + 1);
+          }
+          
+          const { data } = await supabase.from('events')
+            .select('id, title, starts_at, ends_at, tags')
+            .eq('owner_id', user.id)
+            .gte('starts_at', start.toISOString())
+            .lte('starts_at', end.toISOString())
+            .order('starts_at', { ascending: true })
+            .limit(100);
+          
+          return { kind: 'events', items: data ?? [], count: data?.length ?? 0 };
+        }
       },
     };
 

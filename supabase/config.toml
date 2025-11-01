@@ -1,1 +1,28 @@
 project_id = "gcjggazmatipzqnxixhp"
+
+[functions.agent]
+verify_jwt = true
+
+[functions.templates]
+verify_jwt = true
+
+[functions.summarize-period]
+verify_jwt = true
+
+[functions.ai-assist]
+verify_jwt = true
+
+[functions.commands]
+verify_jwt = true
+
+[functions.conflict-check]
+verify_jwt = true
+
+[functions.location-update]
+verify_jwt = true
+
+[functions.prayer-sync]
+verify_jwt = true
+
+[functions.report-daily]
+verify_jwt = true

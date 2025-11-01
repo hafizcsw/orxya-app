@@ -116,6 +116,25 @@ export default function Assistant() {
             variant: 'destructive',
           });
         }
+
+        // Check for template application
+        const templateResult = response.tool_outputs?.find(
+          (t: any) => t.name === 'apply_template'
+        );
+        if (templateResult?.result?.inserted > 0) {
+          toast({
+            title: '✅ تم تطبيق القالب',
+            description: `تم إضافة ${templateResult.result.inserted} حدث/أحداث`,
+          });
+        }
+
+        // Check for summary
+        const summaryResult = response.tool_outputs?.find(
+          (t: any) => t.name === 'summarize_period'
+        );
+        if (summaryResult?.result?.summary) {
+          // Summary is shown in the chat message
+        }
       } else {
         setMessages((prev) => [
           ...prev,
@@ -151,6 +170,27 @@ export default function Assistant() {
     'راجع التعارضات للأسبوع',
     'أضف: متابعة عميل غدًا قبل الظهر',
   ];
+
+  const templates = [
+    { key: 'work_after_maghrib', label: 'عمل بعد المغرب', icon: '💼' },
+    { key: 'gym_after_isha', label: 'تمرين بعد العشاء', icon: '💪' },
+    { key: 'deep_work_morning', label: 'عمل عميق صباحاً', icon: '🌅' },
+    { key: 'balanced_day', label: 'يوم متوازن', icon: '⚖️' },
+  ];
+
+  const summaryOptions = [
+    { span: 'day', label: 'ملخص اليوم', icon: '📅' },
+    { span: 'week', label: 'ملخص الأسبوع', icon: '📊' },
+    { span: 'month', label: 'ملخص الشهر', icon: '📈' },
+  ];
+
+  async function applyTemplate(templateKey: string) {
+    handleQuickAction(`طبّق قالب ${templateKey}`);
+  }
+
+  async function requestSummary(span: string) {
+    handleQuickAction(`لخّص ${span === 'day' ? 'اليوم' : span === 'week' ? 'الأسبوع' : 'الشهر'}`);
+  }
 
   return (
     <div className="flex h-[calc(100vh-4rem)] max-w-7xl mx-auto p-4 gap-4">
@@ -209,17 +249,48 @@ export default function Assistant() {
         </div>
 
         {/* Quick Actions */}
-        <div className="flex gap-2 mb-3 flex-wrap">
-          {quickActions.map((action, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleQuickAction(action)}
-              disabled={isLoading}
-              className="px-3 py-1.5 text-sm rounded-full bg-secondary hover:bg-accent transition-colors disabled:opacity-50"
-            >
-              {action}
-            </button>
-          ))}
+        <div className="mb-3 space-y-2">
+          <div className="flex gap-2 flex-wrap">
+            <span className="text-sm font-medium text-muted-foreground">أسئلة سريعة:</span>
+            {quickActions.map((action, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleQuickAction(action)}
+                disabled={isLoading}
+                className="px-3 py-1.5 text-sm rounded-full bg-secondary hover:bg-accent transition-colors disabled:opacity-50"
+              >
+                {action}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex gap-2 flex-wrap">
+            <span className="text-sm font-medium text-muted-foreground">قوالب:</span>
+            {templates.map((tpl) => (
+              <button
+                key={tpl.key}
+                onClick={() => applyTemplate(tpl.key)}
+                disabled={isLoading}
+                className="px-3 py-1.5 text-sm rounded-full bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50"
+              >
+                {tpl.icon} {tpl.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex gap-2 flex-wrap">
+            <span className="text-sm font-medium text-muted-foreground">ملخصات:</span>
+            {summaryOptions.map((opt) => (
+              <button
+                key={opt.span}
+                onClick={() => requestSummary(opt.span)}
+                disabled={isLoading}
+                className="px-3 py-1.5 text-sm rounded-full bg-accent hover:bg-accent/80 transition-colors disabled:opacity-50"
+              >
+                {opt.icon} {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Messages Area */}
