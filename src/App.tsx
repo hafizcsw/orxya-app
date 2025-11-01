@@ -11,6 +11,7 @@ import Automation from "./pages/Automation";
 import AI from "./pages/AI";
 import Diagnostics from "./pages/Diagnostics";
 import Seed from "./pages/Seed";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/ai" element={<AI />} />
           <Route path="/diagnostics" element={<Diagnostics />} />
           <Route path="/seed" element={<Seed />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

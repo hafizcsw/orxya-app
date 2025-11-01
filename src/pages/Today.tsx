@@ -4,7 +4,8 @@ import { enqueueCommand } from '@/lib/offline-actions'
 import { genIdem } from '@/lib/sync'
 import { useUser } from '@/lib/auth'
 import { Toast } from '@/components/Toast'
-import { trackEvent } from '@/lib/telemetry'
+import { track } from '@/lib/telemetry'
+import { SessionBanner } from '@/components/SessionBanner'
 
 const Today = () => {
   const { user } = useUser()
@@ -18,7 +19,7 @@ const Today = () => {
       const { data, error } = await supabase.functions.invoke('report-daily')
       if (error) throw error
       setReport(data?.report ?? null)
-      trackEvent('report_daily_loaded', { hasReport: !!data?.report })
+      track('report_daily_loaded', { hasReport: !!data?.report })
     } catch (e: any) {
       setReport(null)
     } finally { setLoading(false) }
@@ -35,17 +36,18 @@ const Today = () => {
       })
       if (error) throw error
       setToast('تم الحفظ ✅')
-      trackEvent('command_sent', { command })
+      track('command_sent', { command })
       fetchReport()
     } catch {
       await enqueueCommand(command, payload)
-      trackEvent('command_queued_offline', { command })
+      track('command_queued_offline', { command })
       setToast('تم الحفظ أوفلاين وسيُرفع بعد تسجيل الدخول/الاتصال 🔄')
     }
   }
 
   return (
     <div className="p-4 space-y-6 max-w-6xl mx-auto">
+      <SessionBanner />
       {!user && (
         <div className="bg-yellow-50 border border-yellow-200 text-yellow-900 p-3 rounded-lg">
           لا توجد جلسة تسجيل دخول. ستُحفظ إدخالاتك أوفلاين وتُزامَن لاحقًا بعد تسجيل الدخول.
