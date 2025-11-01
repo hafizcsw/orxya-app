@@ -49,22 +49,27 @@ const Navigation = () => {
           
           <div className="flex items-center gap-2">
             {user ? (
-              <button 
-                className="px-4 py-2 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors text-sm" 
-                onClick={async () => { 
-                  await supabase.auth.signOut(); 
-                  track('auth_signout'); 
-                }}
-              >
-                خروج
-              </button>
+              <>
+                <span className="text-sm text-muted-foreground hidden md:inline">
+                  {user.email}
+                </span>
+                <button 
+                  className="px-4 py-2 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors text-sm" 
+                  onClick={async () => { 
+                    await supabase.auth.signOut(); 
+                    track('auth_signout'); 
+                  }}
+                >
+                  خروج
+                </button>
+              </>
             ) : (
-              <button 
+              <Link
+                to="/auth"
                 className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm" 
-                onClick={() => setAuthOpen(true)}
               >
                 دخول
-              </button>
+              </Link>
             )}
           </div>
         </div>

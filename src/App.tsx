@@ -12,7 +12,10 @@ import AI from "./pages/AI";
 import Diagnostics from "./pages/Diagnostics";
 import Seed from "./pages/Seed";
 import Profile from "./pages/Profile";
+import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
+import { Protected } from "./components/Protected";
 
 const queryClient = new QueryClient();
 
@@ -26,12 +29,14 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Today />} />
           <Route path="/projects" element={<Projects />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/automation" element={<Automation />} />
+          <Route path="/reports" element={<Protected><Reports /></Protected>} />
+          <Route path="/automation" element={<Protected><Automation /></Protected>} />
           <Route path="/ai" element={<AI />} />
-          <Route path="/diagnostics" element={<Diagnostics />} />
+          <Route path="/diagnostics" element={<Protected><Diagnostics /></Protected>} />
           <Route path="/seed" element={<Seed />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/profile" element={<Protected><Profile /></Protected>} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
