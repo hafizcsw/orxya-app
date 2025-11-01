@@ -4,6 +4,7 @@ import { enqueueCommand } from '@/lib/offline-actions'
 import { genIdem } from '@/lib/sync'
 import { useUser } from '@/lib/auth'
 import { Toast } from '@/components/Toast'
+import { trackEvent } from '@/lib/telemetry'
 
 const Today = () => {
   const { user } = useUser()
@@ -13,6 +14,7 @@ const Today = () => {
 
   async function fetchReport() {
     setLoading(true)
+    trackEvent('daily_report_view')
     try {
       const { data, error } = await supabase.functions.invoke('report-daily')
       if (error) throw error
@@ -22,9 +24,13 @@ const Today = () => {
     } finally { setLoading(false) }
   }
 
-  useEffect(() => { fetchReport() }, [user?.id])
+  useEffect(() => { 
+    trackEvent('page_view', { page: 'today' })
+    fetchReport() 
+  }, [user?.id])
 
   async function sendCommand(command: 'add_daily_log' | 'add_finance' | 'add_sale', payload: any) {
+    trackEvent('command_submit', { command })
     try {
       const { error } = await supabase.functions.invoke('commands', {
         body: { command, idempotency_key: genIdem(), payload }
