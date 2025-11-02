@@ -383,28 +383,49 @@ const Today = () => {
                 </div>
               </div>
 
+              {/* Daily Stats Rings */}
+              <div className="grid grid-cols-3 gap-1 mb-8">
+                <div className="flex flex-col items-center scale-75 md:scale-100">
+                  <StatRing
+                    value={Math.min(100, Math.max(0, ((report.income_usd || 0) / 1000) * 100))}
+                    label="دخل اليوم"
+                    subtitle="TODAY INCOME"
+                    color="hsl(var(--whoop-green))"
+                    size="sm"
+                    customDisplay={`$${report.income_usd || 0}`}
+                  />
+                </div>
+                
+                <div className="flex flex-col items-center scale-75 md:scale-100">
+                  <StatRing
+                    value={Math.min(100, Math.max(0, ((report.spend_usd || 0) / 1000) * 100))}
+                    label="مصروف اليوم"
+                    subtitle="TODAY EXPENSES"
+                    color="hsl(var(--whoop-red))"
+                    size="sm"
+                    customDisplay={`$${report.spend_usd || 0}`}
+                  />
+                </div>
+                
+                <div className="flex flex-col items-center scale-75 md:scale-100">
+                  <StatRing
+                    value={Math.min(100, Math.max(0, ((Math.abs(report.net_usd || 0)) / 1000) * 100))}
+                    label="صافي اليوم"
+                    subtitle="TODAY NET"
+                    color={report.net_usd >= 0 ? "hsl(var(--whoop-green))" : "hsl(var(--whoop-red))"}
+                    size="sm"
+                    customDisplay={`${report.net_usd >= 0 ? '+' : ''}$${report.net_usd || 0}`}
+                  />
+                </div>
+              </div>
 
-              {/* Stats Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {renderEditableCard('income_usd', <TrendingUp className="w-5 h-5 text-[hsl(var(--whoop-green))]" />, 'دخل اليوم', report.income_usd, 'bg-[hsl(var(--whoop-green)_/_0.1)]', '$', 1)}
-                {renderEditableCard('spend_usd', <TrendingDown className="w-5 h-5 text-[hsl(var(--whoop-red))]" />, 'مصروف اليوم', report.spend_usd, 'bg-[hsl(var(--whoop-red)_/_0.1)]', '$', 1)}
+              {/* Date Card Only */}
+              <div className="mb-8">
                 <OryxaCard>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">صافي اليوم</span>
-                    <div className="w-10 h-10 rounded-full bg-[hsl(var(--whoop-blue)_/_0.1)] flex items-center justify-center">
-                      <DollarSign className="w-5 h-5 text-[hsl(var(--whoop-blue))]" />
-                    </div>
+                  <div className="flex items-center justify-center gap-3 py-2">
+                    <Clock className="w-5 h-5 text-muted-foreground" />
+                    <span className="text-lg font-medium">{report.date}</span>
                   </div>
-                  <div className="text-3xl font-bold">{report.net_usd >= 0 ? '✅' : '⚠️'} ${report.net_usd}</div>
-                </OryxaCard>
-                <OryxaCard>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">التاريخ</span>
-                    <div className="w-10 h-10 rounded-full bg-muted/10 flex items-center justify-center">
-                      <Clock className="w-5 h-5 text-muted-foreground" />
-                    </div>
-                  </div>
-                  <div className="text-lg font-medium">{report.date}</div>
                 </OryxaCard>
               </div>
 
