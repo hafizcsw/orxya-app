@@ -365,36 +365,36 @@ const Today = () => {
                 <h2 className="text-2xl font-bold">WHOOP</h2>
               </div>
               
-              <div className="grid grid-cols-3 gap-2 mb-8 px-2">
-                <div className="flex flex-col items-center">
+              <div className="grid grid-cols-3 gap-1 mb-8">
+                <div className="flex flex-col items-center scale-75 md:scale-100">
                   <StatRing
                     value={Math.min(100, Math.max(0, ((report.current_balance || 0) / 10000) * 100))}
                     label="الرصيد"
                     subtitle="BALANCE"
                     color="hsl(var(--whoop-blue))"
-                    size="md"
+                    size="sm"
                     customDisplay={`$${(report.current_balance || 0).toFixed(0)}`}
                   />
                 </div>
                 
-                <div className="flex flex-col items-center">
+                <div className="flex flex-col items-center scale-75 md:scale-100">
                   <StatRing
                     value={Math.min(100, Math.max(0, ((report.total_income || 0) / 5000) * 100))}
                     label="الدخل"
                     subtitle="INCOME"
                     color="hsl(var(--whoop-green))"
-                    size="md"
+                    size="sm"
                     customDisplay={`$${report.total_income || 0}`}
                   />
                 </div>
                 
-                <div className="flex flex-col items-center">
+                <div className="flex flex-col items-center scale-75 md:scale-100">
                   <StatRing
                     value={Math.min(100, Math.max(0, ((report.total_spend || 0) / 5000) * 100))}
                     label="المصروفات"
                     subtitle="EXPENSES"
                     color="hsl(var(--whoop-red))"
-                    size="md"
+                    size="sm"
                     customDisplay={`$${report.total_spend || 0}`}
                   />
                 </div>
