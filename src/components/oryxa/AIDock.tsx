@@ -1,11 +1,14 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Send, Loader2 } from "lucide-react";
+import { X, Send, Loader2, CheckCircle2, XCircle, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BottomNav } from "@/components/BottomNav";
+import { askAgentHub, type AgentResponse, type ActionResult } from "@/lib/agent-hub";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  actions?: ActionResult[];
+  tips?: string[];
 }
 
 export function AIDock() {
@@ -33,83 +36,22 @@ export function AIDock() {
     setMessage("");
     setIsLoading(true);
 
-    let assistantContent = "";
-    const updateAssistant = (chunk: string) => {
-      assistantContent += chunk;
-      setMessages(prev => {
-        const last = prev[prev.length - 1];
-        if (last?.role === "assistant") {
-          return prev.map((m, i) => 
-            i === prev.length - 1 ? { ...m, content: assistantContent } : m
-          );
-        }
-        return [...prev, { role: "assistant", content: assistantContent }];
-      });
-    };
-
     try {
-      const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whoop-chat`;
-      const resp = await fetch(CHAT_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({ messages: [...messages, userMsg] }),
-      });
-
-      if (!resp.ok || !resp.body) {
-        throw new Error("فشل الاتصال بالذكاء الصناعي");
-      }
-
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder();
-      let textBuffer = "";
-      let streamDone = false;
-
-      while (!streamDone) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        textBuffer += decoder.decode(value, { stream: true });
-
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") continue;
-          if (!line.startsWith("data: ")) continue;
-
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") {
-            streamDone = true;
-            break;
-          }
-
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) updateAssistant(content);
-          } catch {
-            textBuffer = line + "\n" + textBuffer;
-            break;
-          }
-        }
-      }
-
-      if (textBuffer.trim()) {
-        for (let raw of textBuffer.split("\n")) {
-          if (!raw || raw.startsWith(":") || raw.trim() === "") continue;
-          if (!raw.startsWith("data: ")) continue;
-          const jsonStr = raw.slice(6).trim();
-          if (jsonStr === "[DONE]") continue;
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) updateAssistant(content);
-          } catch { }
-        }
+      const response: AgentResponse = await askAgentHub(message);
+      
+      if (response.ok && response.assistant_message) {
+        const assistantMsg: Message = {
+          role: "assistant",
+          content: response.assistant_message,
+          actions: response.applied_actions,
+          tips: response.tips,
+        };
+        setMessages(prev => [...prev, assistantMsg]);
+      } else {
+        setMessages(prev => [...prev, { 
+          role: "assistant", 
+          content: response.error || "عذراً، حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى." 
+        }]);
       }
     } catch (error) {
       console.error("Chat error:", error);
@@ -161,22 +103,66 @@ export function AIDock() {
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={cn(
-                    "rounded-2xl p-4 max-w-[85%]",
-                    msg.role === "assistant"
-                      ? "bg-secondary/50 mr-auto"
-                      : "bg-[hsl(var(--whoop-blue)_/_0.15)] ml-auto border border-[hsl(var(--whoop-blue)_/_0.3)]"
+                <div key={i} className="space-y-2">
+                  <div
+                    className={cn(
+                      "rounded-2xl p-4 max-w-[85%]",
+                      msg.role === "assistant"
+                        ? "bg-secondary/50 mr-auto"
+                        : "bg-[hsl(var(--whoop-blue)_/_0.15)] ml-auto border border-[hsl(var(--whoop-blue)_/_0.3)]"
+                    )}
+                  >
+                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                  </div>
+                  
+                  {/* Display Actions */}
+                  {msg.actions && msg.actions.length > 0 && (
+                    <div className="space-y-1 max-w-[85%] mr-auto">
+                      {msg.actions.map((act, idx) => (
+                        <div
+                          key={idx}
+                          className={cn(
+                            "flex items-center gap-2 p-2 rounded-lg text-xs",
+                            act.error
+                              ? "bg-destructive/10 text-destructive"
+                              : "bg-primary/10 text-primary"
+                          )}
+                        >
+                          {act.error ? (
+                            <XCircle className="w-3 h-3 flex-shrink-0" />
+                          ) : (
+                            <CheckCircle2 className="w-3 h-3 flex-shrink-0" />
+                          )}
+                          <span>
+                            {act.error 
+                              ? `فشل: ${act.action.type}` 
+                              : `✓ ${getActionLabel(act.action.type)}`}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   )}
-                >
-                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+
+                  {/* Display Tips */}
+                  {msg.tips && msg.tips.length > 0 && (
+                    <div className="space-y-1 max-w-[85%] mr-auto">
+                      {msg.tips.map((tip, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-start gap-2 p-2 rounded-lg text-xs bg-accent/10 text-accent-foreground"
+                        >
+                          <Sparkles className="w-3 h-3 flex-shrink-0 mt-0.5" />
+                          <span>{tip}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
               {isLoading && (
                 <div className="bg-secondary/50 rounded-2xl p-4 max-w-[85%] mr-auto flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="text-sm text-muted-foreground">يكتب...</span>
+                  <span className="text-sm text-muted-foreground">يعمل...</span>
                 </div>
               )}
               <div ref={messagesEndRef} />
@@ -213,4 +199,24 @@ export function AIDock() {
       )}
     </>
   );
+}
+
+function getActionLabel(type: string): string {
+  const labels: Record<string, string> = {
+    connect_google: "ربط Google",
+    sync_gcal: "مزامنة التقويم",
+    location_update: "تحديث الموقع",
+    prayer_sync: "مزامنة الصلاة",
+    conflict_check: "فحص التعارضات",
+    create_task: "إنشاء مهمة",
+    move_task: "نقل مهمة",
+    create_event: "إنشاء حدث",
+    reschedule_event: "إعادة جدولة",
+    set_alarm: "تعيين منبه",
+    read_daily_report: "قراءة التقرير",
+    update_daily_log: "تحديث السجل",
+    add_transaction: "إضافة معاملة",
+    update_balance: "تحديث الرصيد",
+  };
+  return labels[type] || type;
 }

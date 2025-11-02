@@ -5,7 +5,9 @@ export const AiAction = z.object({
     "create_task","move_task","set_alarm",
     "sync_prayers","conflict_check",
     "google_sync","create_event_local",
-    "ask_consent","notify_local"
+    "ask_consent","notify_local",
+    "read_daily_report","update_daily_log",
+    "add_transaction","update_balance"
   ]),
   payload: z.record(z.any())
 });
@@ -28,5 +30,9 @@ export const ActionScopes: Record<string, string[]> = {
   google_sync: ["calendar_read"],
   create_event_local: ["calendar_read","tasks_write"],
   ask_consent: [],
-  notify_local: ["notifications"]
+  notify_local: ["notifications"],
+  read_daily_report: [],
+  update_daily_log: ["daily_logs_write"],
+  add_transaction: ["transactions_write"],
+  update_balance: ["balance_write"]
 };

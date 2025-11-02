@@ -37,7 +37,11 @@ type Action =
   | { type: "move_task"; task_id: string; to_status: "todo" | "doing" | "done"; new_order_pos?: number }
   | { type: "create_event"; title: string; start_ts: string; end_ts: string; location?: string | null; description?: string | null }
   | { type: "reschedule_event"; event_id: string; start_ts: string; end_ts: string }
-  | { type: "set_alarm"; label: string; time_local: string };
+  | { type: "set_alarm"; label: string; time_local: string }
+  | { type: "read_daily_report"; date?: string }
+  | { type: "update_daily_log"; date: string; field: "study_hours" | "mma_hours" | "work_hours" | "walk_min"; value: number }
+  | { type: "add_transaction"; date: string; txn_type: "income" | "spend"; amount: number; category?: string }
+  | { type: "update_balance"; balance: number };
 
 type AgentReply = {
   assistant_message: string;
@@ -62,6 +66,10 @@ async function callOpenAI(prompt: string, data: any): Promise<AgentReply> {
 - create_event: title, start_ts, end_ts, (location), (description)
 - reschedule_event: event_id, start_ts, end_ts
 - set_alarm: label, time_local (HH:MM)
+- read_daily_report: (date) - قراءة تقرير يومي
+- update_daily_log: date, field(study_hours|mma_hours|work_hours|walk_min), value
+- add_transaction: date, txn_type(income|spend), amount, (category)
+- update_balance: balance - تحديث الرصيد الحالي
 
 قيود:
 - لا تغيّر حالة المستخدم الدينية؛ استعملها فقط لتجنّب التعارضات (الصلاة).
@@ -203,6 +211,55 @@ async function execAction(supabase: any, user_id: string, a: Action) {
     if (error) throw error;
     return { ok: true, type: a.type, meta: data };
   }
+  if (a.type === "read_daily_report") {
+    const targetDate = a.date ?? new Date().toISOString().slice(0, 10);
+    const { error, data } = await supabase.functions.invoke("report-daily", {
+      body: { date: targetDate },
+    });
+    if (error) throw error;
+    return { ok: true, type: a.type, report: data };
+  }
+  if (a.type === "update_daily_log") {
+    const { error, data } = await supabase
+      .from("daily_logs")
+      .upsert(
+        {
+          owner_id: user_id,
+          date: a.date,
+          [a.field]: a.value,
+        },
+        { onConflict: "owner_id,date" }
+      )
+      .select("*")
+      .single();
+    if (error) throw error;
+    return { ok: true, type: a.type, log: data };
+  }
+  if (a.type === "add_transaction") {
+    const { error, data } = await supabase
+      .from("transactions")
+      .insert({
+        owner_id: user_id,
+        date: a.date,
+        type: a.txn_type,
+        amount: a.amount,
+        category: a.category ?? null,
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    return { ok: true, type: a.type, id: data?.id };
+  }
+  if (a.type === "update_balance") {
+    const { error, data } = await supabase
+      .from("profiles")
+      .update({ balance: a.balance })
+      .eq("id", user_id)
+      .select("balance")
+      .single();
+    if (error) throw error;
+    return { ok: true, type: a.type, balance: data?.balance };
+  }
   return { ok: false, type: (a as any).type, error: "unsupported_action" };
 }
 
@@ -257,12 +314,18 @@ Deno.serve(async (req) => {
       .eq("provider", "google")
       .maybeSingle();
 
+    // Fetch today's daily report for context
+    const { data: todayReport } = await supabase.functions.invoke("report-daily", {
+      body: { date: todayISO },
+    });
+
     const ctx = {
       profile,
       today_prayers: prayers,
       upcoming_conflicts: conflicts,
       projects,
       google_connected: googleAcc?.status === "connected",
+      today_report: todayReport,
     };
 
     // === Ask OpenAI ===
