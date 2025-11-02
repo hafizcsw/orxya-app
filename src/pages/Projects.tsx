@@ -15,7 +15,7 @@ import { AIAssistPanel } from '@/components/AIAssistPanel';
 import { exportProjectsToJSON, exportSingleProjectToJSON } from '@/lib/export';
 import EmptyState from '@/components/EmptyState';
 import { motion, AnimatePresence } from 'framer-motion';
-import Button from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { CardSkeleton } from '@/components/ui/skeleton';
 import Spinner from '@/components/ui/Spinner';
 import { useNotify } from '@/lib/notify-utils';
@@ -578,7 +578,7 @@ export default function Projects() {
                 placeholder="اسم المشروع"
               />
               <Button 
-                variant="primary"
+                variant="default"
                 onClick={addProject} 
                 disabled={loading || !pname.trim()}
               >
@@ -880,7 +880,7 @@ export default function Projects() {
                 />
                 <div className="flex items-center gap-2 flex-wrap">
                   <Button
-                    variant="primary"
+                    variant="default"
                     disabled={!aiText.trim() || !selected || aiBusy}
                     onClick={async ()=>{
                       if (!selected) return;

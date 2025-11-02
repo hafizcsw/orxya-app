@@ -9,9 +9,12 @@ import { SessionBanner } from '@/components/SessionBanner'
 import { LocalNotifications } from '@capacitor/local-notifications'
 import { ensureNotificationPerms } from '@/lib/notify'
 import { Protected } from '@/components/Protected'
-import { ActionButton } from '@/components/ui/ActionButton'
 import { Button } from '@/components/ui/button'
-import { Bell } from 'lucide-react'
+import { HolographicCard } from '@/components/ui/HolographicCard'
+import { StatCardFuturistic } from '@/components/ui/StatCardFuturistic'
+import { NeonButton } from '@/components/ui/NeonButton'
+import { GlassPanel } from '@/components/ui/GlassPanel'
+import { Bell, DollarSign, TrendingUp, TrendingDown, Clock, Dumbbell, BookOpen, Footprints, Award, Building } from 'lucide-react'
 
 const Today = () => {
   const { user } = useUser()
@@ -58,27 +61,17 @@ const Today = () => {
         <SessionBanner />
 
         {/* Hero Section */}
-        <div className="relative overflow-hidden rounded-3xl p-8 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20">
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary rounded-full blur-3xl" />
-            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-success rounded-full blur-3xl" />
-          </div>
-          
-          <div className="relative z-10">
-            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-              مرحبًا بك في Oryxa
-            </h1>
-            <p className="text-muted-foreground">ابدأ يومك بإنتاجية عالية</p>
-          </div>
-        </div>
-
-        <section className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">التقرير اليومي</h2>
-            <ActionButton 
-              variant="ghost"
-              size="sm"
-              icon={<Bell className="w-4 h-4" />}
+        <HolographicCard variant="neon" glow className="p-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                مرحبًا بك في Oryxa
+              </h1>
+              <p className="text-muted-foreground">ابدأ يومك بإنتاجية عالية</p>
+            </div>
+            <Button 
+              variant="outline"
+              size="icon"
               onClick={async () => {
                 await ensureNotificationPerms();
                 const now = new Date(); 
@@ -94,62 +87,84 @@ const Today = () => {
                 setToast('تم جدولة إشعار اختبار بعد دقيقة ⏰');
               }}
             >
-              اختبار إشعار
-            </ActionButton>
+              <Bell className="w-4 h-4" />
+            </Button>
           </div>
+        </HolographicCard>
+
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold">التقرير اليومي</h2>
           
           {loading ? (
-            <div className="card-glass p-6 text-center">
+            <GlassPanel className="p-6 text-center">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               <p className="mt-2 text-sm text-muted-foreground">جار التحميل…</p>
-            </div>
+            </GlassPanel>
           ) : report ? (
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              <div className="card group p-4">
-                <div className="text-xs text-muted-foreground mb-1">التاريخ</div>
-                <div className="text-lg font-bold">{report.date}</div>
-              </div>
-              <div className="card group p-4 border-success/30">
-                <div className="text-xs text-muted-foreground mb-1">الدخل</div>
-                <div className="text-lg font-bold text-success">${report.income_usd}</div>
-              </div>
-              <div className="card group p-4 border-destructive/30">
-                <div className="text-xs text-muted-foreground mb-1">المصروف</div>
-                <div className="text-lg font-bold text-destructive">${report.spend_usd}</div>
-              </div>
-              <div className="card group p-4 border-primary/30">
-                <div className="text-xs text-muted-foreground mb-1">الصافي</div>
-                <div className="text-lg font-bold">{report.net_usd >= 0 ? '✅' : '⚠️'} ${report.net_usd}</div>
-              </div>
-              <div className="card group p-4">
-                <div className="text-xs text-muted-foreground mb-1">دراسة</div>
-                <div className="text-lg font-bold">{report.study_hours}س</div>
-              </div>
-              <div className="card group p-4">
-                <div className="text-xs text-muted-foreground mb-1">MMA</div>
-                <div className="text-lg font-bold">{report.mma_hours}س</div>
-              </div>
-              <div className="card group p-4">
-                <div className="text-xs text-muted-foreground mb-1">عمل</div>
-                <div className="text-lg font-bold">{report.work_hours}س</div>
-              </div>
-              <div className="card group p-4">
-                <div className="text-xs text-muted-foreground mb-1">المشي</div>
-                <div className="text-lg font-bold">{report.walk_min}د</div>
-              </div>
-              <div className="card group p-4">
-                <div className="text-xs text-muted-foreground mb-1">منح</div>
-                <div className="text-lg font-bold">{report.scholarships_sold}</div>
-              </div>
-              <div className="card group p-4">
-                <div className="text-xs text-muted-foreground mb-1">فلل</div>
-                <div className="text-lg font-bold">{report.villas_sold}</div>
-              </div>
+              <StatCardFuturistic
+                icon={<Clock className="w-5 h-5 text-muted-foreground" />}
+                label="التاريخ"
+                value={report.date}
+              />
+              <StatCardFuturistic
+                icon={<TrendingUp className="w-5 h-5 text-success" />}
+                label="الدخل"
+                value={`$${report.income_usd}`}
+                iconBgClass="bg-success/10"
+              />
+              <StatCardFuturistic
+                icon={<TrendingDown className="w-5 h-5 text-destructive" />}
+                label="المصروف"
+                value={`$${report.spend_usd}`}
+                iconBgClass="bg-destructive/10"
+              />
+              <StatCardFuturistic
+                icon={<DollarSign className="w-5 h-5 text-primary" />}
+                label="الصافي"
+                value={`${report.net_usd >= 0 ? '✅' : '⚠️'} $${report.net_usd}`}
+                iconBgClass="bg-primary/10"
+              />
+              <StatCardFuturistic
+                icon={<BookOpen className="w-5 h-5 text-primary" />}
+                label="دراسة"
+                value={`${report.study_hours}س`}
+              />
+              <StatCardFuturistic
+                icon={<Dumbbell className="w-5 h-5 text-warning" />}
+                label="MMA"
+                value={`${report.mma_hours}س`}
+                iconBgClass="bg-warning/10"
+              />
+              <StatCardFuturistic
+                icon={<Clock className="w-5 h-5 text-accent" />}
+                label="عمل"
+                value={`${report.work_hours}س`}
+                iconBgClass="bg-accent/10"
+              />
+              <StatCardFuturistic
+                icon={<Footprints className="w-5 h-5 text-success" />}
+                label="المشي"
+                value={`${report.walk_min}د`}
+                iconBgClass="bg-success/10"
+              />
+              <StatCardFuturistic
+                icon={<Award className="w-5 h-5 text-warning" />}
+                label="منح"
+                value={report.scholarships_sold}
+                iconBgClass="bg-warning/10"
+              />
+              <StatCardFuturistic
+                icon={<Building className="w-5 h-5 text-primary" />}
+                label="فلل"
+                value={report.villas_sold}
+                iconBgClass="bg-primary/10"
+              />
             </div>
           ) : (
-            <div className="card-glass p-8 text-center">
+            <GlassPanel className="p-8 text-center">
               <p className="text-muted-foreground">لا توجد بيانات لليوم</p>
-            </div>
+            </GlassPanel>
           )}
         </section>
 
@@ -171,7 +186,7 @@ const Today = () => {
                 e.currentTarget.reset()
               })
             }}>
-              <div className="card p-6 space-y-3">
+              <GlassPanel className="space-y-3">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                     <span className="text-lg">📝</span>
@@ -183,8 +198,8 @@ const Today = () => {
                 <input name="mma_hours" placeholder="ساعات MMA" className="input" type="number" step="0.5" />
                 <input name="walk_min" placeholder="دقائق المشي" className="input" type="number" step="1" />
                 <input name="notes" placeholder="ملاحظات" className="input" />
-                <button type="submit" className="btn btn-futuristic btn-gradient w-full">حفظ</button>
-              </div>
+                <NeonButton type="submit" variant="primary" className="w-full">حفظ</NeonButton>
+              </GlassPanel>
             </form>
 
             {/* Finance */}
@@ -201,7 +216,7 @@ const Today = () => {
                 e.currentTarget.reset()
               })
             }}>
-              <div className="card p-6 space-y-3">
+              <GlassPanel className="space-y-3">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
                     <span className="text-lg">💰</span>
@@ -215,8 +230,8 @@ const Today = () => {
                 <input name="amount_usd" placeholder="المبلغ USD" className="input" type="number" step="0.01" />
                 <input name="category" placeholder="تصنيف" className="input" />
                 <input name="note" placeholder="ملاحظة" className="input" />
-                <button type="submit" className="btn btn-futuristic btn-gradient w-full">حفظ</button>
-              </div>
+                <NeonButton type="submit" variant="success" className="w-full">حفظ</NeonButton>
+              </GlassPanel>
             </form>
 
             {/* Sales */}
@@ -234,7 +249,7 @@ const Today = () => {
                 e.currentTarget.reset()
               })
             }}>
-              <div className="card p-6 space-y-3">
+              <GlassPanel className="space-y-3">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center">
                     <span className="text-lg">🏆</span>
@@ -250,8 +265,8 @@ const Today = () => {
                 <input name="qty" placeholder="الكمية" className="input" type="number" min="1" />
                 <input name="price_usd" placeholder="السعر USD" className="input" type="number" step="0.01" />
                 <input name="profit_usd" placeholder="الربح USD" className="input" type="number" step="0.01" />
-                <button type="submit" className="btn btn-futuristic btn-gradient w-full">حفظ</button>
-              </div>
+                <NeonButton type="submit" variant="accent" className="w-full">حفظ</NeonButton>
+              </GlassPanel>
             </form>
           </div>
         </section>

@@ -10,7 +10,7 @@ import { track } from '@/lib/telemetry';
 import { buildPrayerWindowsForDay } from '@/lib/calendar';
 import { useUser } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
-import Button from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { Loader2, Calendar as CalendarIcon } from 'lucide-react';
 import { SessionBanner } from '@/components/SessionBanner';
 
