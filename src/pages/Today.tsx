@@ -370,9 +370,10 @@ const Today = () => {
                   <StatRing
                     value={Math.min(100, Math.max(0, ((report.current_balance || 0) / 10000) * 100))}
                     label="الرصيد"
-                    subtitle={`$${(report.current_balance || 0).toFixed(0)}`}
+                    subtitle="BALANCE"
                     color="hsl(var(--whoop-blue))"
                     size="lg"
+                    customDisplay={`$${(report.current_balance || 0).toFixed(0)}`}
                   />
                 </div>
                 
@@ -380,9 +381,10 @@ const Today = () => {
                   <StatRing
                     value={Math.min(100, Math.max(0, ((report.total_income || 0) / 5000) * 100))}
                     label="الدخل"
-                    subtitle={`$${report.total_income || 0}`}
+                    subtitle="INCOME"
                     color="hsl(var(--whoop-green))"
                     size="lg"
+                    customDisplay={`$${report.total_income || 0}`}
                   />
                 </div>
                 
@@ -390,9 +392,10 @@ const Today = () => {
                   <StatRing
                     value={Math.min(100, Math.max(0, ((report.total_spend || 0) / 5000) * 100))}
                     label="المصروفات"
-                    subtitle={`$${report.total_spend || 0}`}
+                    subtitle="EXPENSES"
                     color="hsl(var(--whoop-red))"
                     size="lg"
+                    customDisplay={`$${report.total_spend || 0}`}
                   />
                 </div>
               </div>

@@ -8,6 +8,7 @@ interface StatRingProps {
   size?: 'sm' | 'md' | 'lg';
   subtitle?: string;
   className?: string;
+  customDisplay?: string; // نص مخصص بدلاً من النسبة المئوية
 }
 
 export function StatRing({
@@ -17,6 +18,7 @@ export function StatRing({
   size = 'md',
   subtitle,
   className,
+  customDisplay,
 }: StatRingProps) {
   const sizes = {
     sm: { width: 120, strokeWidth: 8, fontSize: '1.5rem' },
@@ -71,12 +73,12 @@ export function StatRing({
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <motion.div
             className="font-bold"
-            style={{ fontSize }}
+            style={{ fontSize: customDisplay ? (size === 'lg' ? '1.5rem' : '1.25rem') : fontSize }}
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.5 }}
           >
-            {Math.round(value)}%
+            {customDisplay || `${Math.round(value)}%`}
           </motion.div>
         </div>
       </div>
