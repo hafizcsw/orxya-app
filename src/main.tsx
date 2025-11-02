@@ -29,17 +29,20 @@ startLocationTracking(15); // Capture location every 15 minutes on native
   if (!Cap?.isNativePlatform?.()) {
     document.addEventListener("visibilitychange", async () => {
       if (document.visibilityState === "visible") {
-        try {
-          // Check if user is authenticated before calling
-          const { data: { session } } = await supabase.auth.getSession();
-          
-          if (session?.user) {
-            await captureAndSendLocation();
-            await conflictCheckToday();
+        // Add delay to ensure auth is ready
+        setTimeout(async () => {
+          try {
+            // Check if user is authenticated before calling
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (session?.user) {
+              await captureAndSendLocation();
+              await conflictCheckToday();
+            }
+          } catch (e) {
+            console.error('[Visibility] Location/Conflicts failed:', e);
           }
-        } catch (e) {
-          console.error('[Visibility] Location/Conflicts failed:', e);
-        }
+        }, 500);
       }
     });
   }
