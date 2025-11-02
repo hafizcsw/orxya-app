@@ -5,6 +5,8 @@ import { flushQueueOnce } from './sync'
 import { rescheduleAllFromDB } from './notify'
 import { syncPrayers, schedulePrayersFor } from '@/native/prayer'
 import { startCalendarAutoSync } from '@/native/calendar'
+import { captureAndSendLocation } from '@/native/location'
+import { conflictCheckToday } from './conflicts'
 import type { User } from '@supabase/supabase-js'
 
 export function useUser() {
@@ -69,7 +71,18 @@ export function useUser() {
         setTimeout(() => {
           console.log('[useUser] Running post-login tasks...');
           
-          // Run without awaiting
+          // Location capture + conflict check (non-blocking)
+          Promise.race([
+            (async () => {
+              await captureAndSendLocation();
+              await conflictCheckToday();
+            })(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Location timeout')), 5000))
+          ]).catch(e => {
+            console.error('Location/Conflicts failed:', e);
+          });
+          
+          // Run other tasks without awaiting
           Promise.all([
             flushQueueOnce().catch(e => console.error('Flush failed:', e)),
             rescheduleAllFromDB().catch(e => console.error('Reschedule failed:', e))

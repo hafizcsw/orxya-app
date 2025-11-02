@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.46.1";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.47.10";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,6 +12,17 @@ function json(body: any, status = 200) {
     status,
     headers: { ...corsHeaders, "content-type": "application/json" }
   });
+}
+
+function haversine(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371000; // Earth radius in meters
+  const toRad = (d: number) => d * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 + 
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * 
+            Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
 }
 
 serve(async (req) => {
@@ -34,16 +45,20 @@ serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { latitude, longitude, accuracy_m, sampled_at } = body;
+    const { latitude, longitude, accuracy_m, sampled_at, provider } = body;
 
     if (typeof latitude !== "number" || typeof longitude !== "number") {
       return json({ ok: false, error: "INVALID_COORDS" }, 400);
     }
 
-    // Get last sample for rate limiting
+    const sampledAt = sampled_at && !Number.isNaN(+new Date(sampled_at))
+      ? sampled_at
+      : new Date().toISOString();
+
+    // Get last sample for deduplication
     const { data: lastSample } = await supabase
       .from("location_samples")
-      .select("sampled_at, latitude, longitude, accuracy_m")
+      .select("sampled_at, latitude, longitude")
       .eq("owner_id", user.id)
       .order("sampled_at", { ascending: false })
       .limit(1)
@@ -53,28 +68,23 @@ serve(async (req) => {
     let shouldSave = true;
 
     if (lastSample) {
-      // Haversine distance
-      const R = 6371000;
-      const toRad = (x: number) => x * Math.PI / 180;
-      const dLat = toRad(latitude - lastSample.latitude);
-      const dLon = toRad(longitude - lastSample.longitude);
-      const a = Math.sin(dLat / 2) ** 2 + 
-                Math.cos(toRad(lastSample.latitude)) * Math.cos(toRad(latitude)) * 
-                Math.sin(dLon / 2) ** 2;
-      distance = 2 * R * Math.asin(Math.sqrt(a));
-
-      const minutesSince = (Date.now() - new Date(lastSample.sampled_at).getTime()) / 60000;
-      const betterAccuracy = accuracy_m && lastSample.accuracy_m && 
-                             accuracy_m < lastSample.accuracy_m * 0.75;
+      const dt = Math.abs(+new Date(sampledAt) - +new Date(lastSample.sampled_at)) / 1000; // seconds
+      distance = haversine(
+        latitude, longitude,
+        Number(lastSample.latitude), Number(lastSample.longitude)
+      );
       
-      shouldSave = minutesSince > 10 || distance > 300 || betterAccuracy;
+      // Skip if <5 minutes AND <100 meters
+      if (dt < 5 * 60 && distance < 100) {
+        shouldSave = false;
+      }
     }
 
     if (!shouldSave) {
       return json({ 
         ok: true, 
         saved: false, 
-        skipped_reason: "RATE_LIMIT",
+        skipped_reason: "DEDUP",
         last_distance_m: distance 
       });
     }
@@ -87,8 +97,8 @@ serve(async (req) => {
         latitude,
         longitude,
         accuracy_m: accuracy_m ?? null,
-        sampled_at: sampled_at || new Date().toISOString(),
-        source: "device"
+        sampled_at: sampledAt,
+        source: provider ?? "device"
       })
       .select("id")
       .single();
@@ -108,7 +118,7 @@ serve(async (req) => {
       })
       .eq("id", user.id);
 
-    // If moved significantly (>30km), trigger prayer sync and conflict check
+    // If moved significantly (>30km), trigger prayer sync
     let didSyncPrayer = false;
     if (distance && distance > 30000) {
       const today = new Date().toISOString().slice(0, 10);
@@ -127,11 +137,9 @@ serve(async (req) => {
       }
     }
 
-    // Trigger conflict check for today
+    // Trigger conflict check
     try {
-      await supabase.functions.invoke("conflict-check", {
-        body: { days_range: 1 }
-      });
+      await supabase.functions.invoke("conflict-check", { body: {} });
     } catch (e) {
       console.warn("Failed to trigger conflict-check:", e);
     }

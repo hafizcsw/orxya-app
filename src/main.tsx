@@ -8,6 +8,7 @@ import { startDailyRescheduler } from "./lib/notify";
 import { startPrayerDailyScheduler } from "./native/prayer";
 import { startCalendarAutoSync } from "./native/calendar";
 import { startCalendarDailyScheduler } from "./lib/gcal-scheduler";
+import { startLocationTracking } from "./native/location";
 import { Toaster } from "@/components/ui/sonner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
@@ -17,6 +18,7 @@ startDailyRescheduler();
 startPrayerDailyScheduler();
 startCalendarAutoSync(60);
 startCalendarDailyScheduler();
+startLocationTracking(15); // Capture location every 15 minutes on native
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

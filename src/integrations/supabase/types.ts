@@ -383,6 +383,8 @@ export type Database = {
           is_ai_created: boolean | null
           last_google_sync_at: string | null
           last_write_origin: string | null
+          location_lat: number | null
+          location_lon: number | null
           owner_id: string
           source_id: string | null
           starts_at: string
@@ -407,6 +409,8 @@ export type Database = {
           is_ai_created?: boolean | null
           last_google_sync_at?: string | null
           last_write_origin?: string | null
+          location_lat?: number | null
+          location_lon?: number | null
           owner_id: string
           source_id?: string | null
           starts_at: string
@@ -431,6 +435,8 @@ export type Database = {
           is_ai_created?: boolean | null
           last_google_sync_at?: string | null
           last_write_origin?: string | null
+          location_lat?: number | null
+          location_lon?: number | null
           owner_id?: string
           source_id?: string | null
           starts_at?: string
@@ -711,6 +717,8 @@ export type Database = {
           location_updated_at: string | null
           longitude: number | null
           prayer_method: string | null
+          prayer_postbuffer_min: number | null
+          prayer_prebuffer_min: number | null
           respect_prayer: boolean | null
           telemetry_enabled: boolean | null
           theme_pref: string | null
@@ -733,6 +741,8 @@ export type Database = {
           location_updated_at?: string | null
           longitude?: number | null
           prayer_method?: string | null
+          prayer_postbuffer_min?: number | null
+          prayer_prebuffer_min?: number | null
           respect_prayer?: boolean | null
           telemetry_enabled?: boolean | null
           theme_pref?: string | null
@@ -755,6 +765,8 @@ export type Database = {
           location_updated_at?: string | null
           longitude?: number | null
           prayer_method?: string | null
+          prayer_postbuffer_min?: number | null
+          prayer_prebuffer_min?: number | null
           respect_prayer?: boolean | null
           telemetry_enabled?: boolean | null
           theme_pref?: string | null
