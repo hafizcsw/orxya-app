@@ -94,27 +94,25 @@ const Navigation = () => {
   return (
     <>
       <nav className="border-b bg-background/95 backdrop-blur-xl sticky top-0 z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto flex h-14 items-center justify-between px-4">
+        <div className="max-w-7xl mx-auto flex h-14 items-center justify-between px-3">
           {/* Left: Avatar */}
-          <div className="flex items-center w-12">
-            {user && (
-              <div className="relative">
-                <button
-                  onClick={() => navigate('/profile')}
-                  className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white font-semibold shadow-lg hover:scale-110 transition-all duration-300 border-2 border-primary/30"
-                  style={{
-                    boxShadow: "0 0 15px hsl(var(--primary) / 0.3)",
-                  }}
-                >
-                  {user?.email?.[0]?.toUpperCase() || <User className="w-5 h-5" />}
-                </button>
-                <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-background" />
-              </div>
-            )}
-          </div>
+          {user && (
+            <div className="relative flex-shrink-0">
+              <button
+                onClick={() => navigate('/profile')}
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white font-semibold shadow-lg hover:scale-110 transition-all duration-300 border-2 border-primary/30"
+                style={{
+                  boxShadow: "0 0 15px hsl(var(--primary) / 0.3)",
+                }}
+              >
+                {user?.email?.[0]?.toUpperCase() || <User className="w-5 h-5" />}
+              </button>
+              <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-background" />
+            </div>
+          )}
 
           {/* Center: Calendar Navigation */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <button
               onClick={goToPreviousDay}
               className="w-8 h-8 rounded-lg bg-secondary/60 hover:bg-secondary/80 flex items-center justify-center transition-all"
@@ -134,15 +132,17 @@ const Navigation = () => {
             </button>
           </div>
 
-          {/* Right: Logo */}
-          <div className="flex items-center justify-end w-12">
-            <Link
-              to="/"
-              className="text-lg font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent"
-            >
-              Oryxa
-            </Link>
-          </div>
+          {/* Right: Logo - MUST BE VISIBLE */}
+          <Link
+            to="/"
+            className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent flex-shrink-0"
+            style={{
+              WebkitTextFillColor: 'transparent',
+              WebkitBackgroundClip: 'text',
+            }}
+          >
+            Oryxa
+          </Link>
         </div>
       </nav>
       
