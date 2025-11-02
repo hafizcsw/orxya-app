@@ -116,53 +116,71 @@ const Today = () => {
                 label="الدخل"
                 value={`$${report.income_usd}`}
                 iconBgClass="bg-success/10"
+                className="cursor-pointer hover:scale-105 transition-transform"
+                onClick={() => document.getElementById('finance-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
               />
               <StatCardFuturistic
                 icon={<TrendingDown className="w-5 h-5 text-destructive" />}
                 label="المصروف"
                 value={`$${report.spend_usd}`}
                 iconBgClass="bg-destructive/10"
+                className="cursor-pointer hover:scale-105 transition-transform"
+                onClick={() => document.getElementById('finance-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
               />
               <StatCardFuturistic
                 icon={<DollarSign className="w-5 h-5 text-primary" />}
                 label="الصافي"
                 value={`${report.net_usd >= 0 ? '✅' : '⚠️'} $${report.net_usd}`}
                 iconBgClass="bg-primary/10"
+                className="cursor-pointer hover:scale-105 transition-transform"
+                onClick={() => document.getElementById('finance-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
               />
               <StatCardFuturistic
                 icon={<BookOpen className="w-5 h-5 text-primary" />}
                 label="دراسة"
                 value={`${report.study_hours}س`}
+                className="cursor-pointer hover:scale-105 transition-transform"
+                onClick={() => document.getElementById('daily-log-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
               />
               <StatCardFuturistic
                 icon={<Dumbbell className="w-5 h-5 text-warning" />}
                 label="MMA"
                 value={`${report.mma_hours}س`}
                 iconBgClass="bg-warning/10"
+                className="cursor-pointer hover:scale-105 transition-transform"
+                onClick={() => document.getElementById('daily-log-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
               />
               <StatCardFuturistic
                 icon={<Clock className="w-5 h-5 text-accent" />}
                 label="عمل"
                 value={`${report.work_hours}س`}
                 iconBgClass="bg-accent/10"
+                className="cursor-pointer hover:scale-105 transition-transform"
+                onClick={() => document.getElementById('daily-log-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
               />
               <StatCardFuturistic
                 icon={<Footprints className="w-5 h-5 text-success" />}
                 label="المشي"
                 value={`${report.walk_min}د`}
                 iconBgClass="bg-success/10"
+                className="cursor-pointer hover:scale-105 transition-transform"
+                onClick={() => document.getElementById('daily-log-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
               />
               <StatCardFuturistic
                 icon={<Award className="w-5 h-5 text-warning" />}
                 label="منح"
                 value={report.scholarships_sold}
                 iconBgClass="bg-warning/10"
+                className="cursor-pointer hover:scale-105 transition-transform"
+                onClick={() => document.getElementById('sales-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
               />
               <StatCardFuturistic
                 icon={<Building className="w-5 h-5 text-primary" />}
                 label="فلل"
                 value={report.villas_sold}
                 iconBgClass="bg-primary/10"
+                className="cursor-pointer hover:scale-105 transition-transform"
+                onClick={() => document.getElementById('sales-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
               />
             </div>
           ) : (
@@ -176,7 +194,7 @@ const Today = () => {
           <h3 className="font-semibold text-lg">إجراءات سريعة</h3>
           <div className="grid md:grid-cols-3 gap-4">
             {/* Daily Log */}
-            <form onSubmit={(e: any) => {
+            <form id="daily-log-form" onSubmit={(e: any) => {
               e.preventDefault()
               const fd = new FormData(e.currentTarget)
               sendCommand('add_daily_log', {
@@ -207,7 +225,7 @@ const Today = () => {
             </form>
 
             {/* Finance */}
-            <form onSubmit={(e: any) => {
+            <form id="finance-form" onSubmit={(e: any) => {
               e.preventDefault()
               const fd = new FormData(e.currentTarget)
               sendCommand('add_finance', {
@@ -239,7 +257,7 @@ const Today = () => {
             </form>
 
             {/* Sales */}
-            <form onSubmit={(e: any) => {
+            <form id="sales-form" onSubmit={(e: any) => {
               e.preventDefault()
               const fd = new FormData(e.currentTarget)
               sendCommand('add_sale', {

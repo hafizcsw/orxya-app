@@ -11,6 +11,7 @@ interface StatCardFuturisticProps {
   };
   className?: string;
   iconBgClass?: string;
+  onClick?: () => void;
 }
 
 export function StatCardFuturistic({
@@ -19,13 +20,18 @@ export function StatCardFuturistic({
   value,
   trend,
   className,
-  iconBgClass = 'bg-success/10'
+  iconBgClass = 'bg-success/10',
+  onClick
 }: StatCardFuturisticProps) {
   return (
-    <div className={cn(
-      "card group cursor-pointer relative overflow-hidden",
-      className
-    )}>
+    <div 
+      className={cn(
+        "card group relative overflow-hidden",
+        onClick && "cursor-pointer",
+        className
+      )}
+      onClick={onClick}
+    >
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       
       <div className="relative z-10 p-6">
