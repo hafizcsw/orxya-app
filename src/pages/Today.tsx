@@ -357,8 +357,8 @@ const Today = () => {
                 {/* Background Glow Effect */}
                 <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent blur-3xl -z-10" />
                 
-                <div className="grid grid-cols-3 gap-2 md:gap-6 mb-6 md:mb-12">
-                  <div className="flex flex-col items-center group animate-fade-in scale-75 md:scale-100" style={{ animationDelay: '0ms' }}>
+                <div className="grid grid-cols-3 gap-1 md:gap-6 mb-6 md:mb-12">
+                  <div className="flex flex-col items-center group animate-fade-in scale-[0.6] md:scale-100" style={{ animationDelay: '0ms' }}>
                     <div className="relative">
                       {/* Glow Ring Effect */}
                       <div className="absolute inset-0 bg-[hsl(var(--whoop-blue))] opacity-20 blur-2xl rounded-full scale-150 group-hover:scale-[2] transition-transform duration-700" />
@@ -393,7 +393,7 @@ const Today = () => {
                     </div>
                   </div>
                   
-                  <div className="flex flex-col items-center group animate-fade-in scale-75 md:scale-100" style={{ animationDelay: '100ms' }}>
+                  <div className="flex flex-col items-center group animate-fade-in scale-[0.6] md:scale-100" style={{ animationDelay: '100ms' }}>
                     <div className="relative">
                       <div className="absolute inset-0 bg-[hsl(var(--whoop-green))] opacity-20 blur-2xl rounded-full scale-150 group-hover:scale-[2] transition-transform duration-700" />
                       <div className="relative transform transition-all duration-500 hover:scale-110">
@@ -409,7 +409,7 @@ const Today = () => {
                     </div>
                   </div>
                   
-                  <div className="flex flex-col items-center group animate-fade-in scale-75 md:scale-100" style={{ animationDelay: '200ms' }}>
+                  <div className="flex flex-col items-center group animate-fade-in scale-[0.6] md:scale-100" style={{ animationDelay: '200ms' }}>
                     <div className="relative">
                       <div className="absolute inset-0 bg-[hsl(var(--whoop-red))] opacity-20 blur-2xl rounded-full scale-150 group-hover:scale-[2] transition-transform duration-700" />
                       <div className="relative transform transition-all duration-500 hover:scale-110">
@@ -427,8 +427,8 @@ const Today = () => {
                 </div>
 
                 {/* Daily Stats Rings - Enhanced */}
-                <div className="grid grid-cols-3 gap-2 md:gap-6">
-                  <div className="flex flex-col items-center group animate-fade-in scale-75 md:scale-100" style={{ animationDelay: '300ms' }}>
+                <div className="grid grid-cols-3 gap-1 md:gap-6">
+                  <div className="flex flex-col items-center group animate-fade-in scale-[0.6] md:scale-100" style={{ animationDelay: '300ms' }}>
                     <div className="relative">
                       <div className="absolute inset-0 bg-[hsl(var(--whoop-green))] opacity-10 blur-xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-500" />
                       <div className="relative transform transition-all duration-300 hover:scale-105">
@@ -444,7 +444,7 @@ const Today = () => {
                     </div>
                   </div>
                   
-                  <div className="flex flex-col items-center group animate-fade-in scale-75 md:scale-100" style={{ animationDelay: '350ms' }}>
+                  <div className="flex flex-col items-center group animate-fade-in scale-[0.6] md:scale-100" style={{ animationDelay: '350ms' }}>
                     <div className="relative">
                       <div className="absolute inset-0 bg-[hsl(var(--whoop-red))] opacity-10 blur-xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-500" />
                       <div className="relative transform transition-all duration-300 hover:scale-105">
@@ -460,7 +460,7 @@ const Today = () => {
                     </div>
                   </div>
                   
-                  <div className="flex flex-col items-center group animate-fade-in scale-75 md:scale-100" style={{ animationDelay: '400ms' }}>
+                  <div className="flex flex-col items-center group animate-fade-in scale-[0.6] md:scale-100" style={{ animationDelay: '400ms' }}>
                     <div className="relative">
                       <div className={cn(
                         "absolute inset-0 opacity-10 blur-xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-500",
@@ -586,9 +586,9 @@ const Today = () => {
               <div className="relative mb-8 md:mb-12">
                 <div className="absolute inset-0 bg-gradient-to-t from-secondary/20 via-transparent to-transparent blur-2xl -z-10" />
                 
-                <div className="grid grid-cols-2 gap-4 md:gap-8">
+                <div className="grid grid-cols-2 gap-2 md:gap-8">
                   <div 
-                    className="flex flex-col items-center group cursor-pointer animate-fade-in scale-75 md:scale-100"
+                    className="flex flex-col items-center group cursor-pointer animate-fade-in scale-[0.65] md:scale-100"
                     style={{ animationDelay: '450ms' }}
                     onClick={() => {
                       setEditingField('work_hours')
@@ -621,7 +621,7 @@ const Today = () => {
                   </div>
                   
                   <div 
-                    className="flex flex-col items-center group cursor-pointer animate-fade-in scale-75 md:scale-100"
+                    className="flex flex-col items-center group cursor-pointer animate-fade-in scale-[0.65] md:scale-100"
                     style={{ animationDelay: '500ms' }}
                     onClick={() => {
                       setEditingField('study_hours')
@@ -654,7 +654,7 @@ const Today = () => {
                   </div>
                   
                   <div 
-                    className="flex flex-col items-center group cursor-pointer animate-fade-in scale-75 md:scale-100"
+                    className="flex flex-col items-center group cursor-pointer animate-fade-in scale-[0.65] md:scale-100"
                     style={{ animationDelay: '550ms' }}
                     onClick={() => {
                       setEditingField('mma_hours')
@@ -687,7 +687,7 @@ const Today = () => {
                   </div>
                   
                   <div 
-                    className="flex flex-col items-center group cursor-pointer animate-fade-in scale-75 md:scale-100"
+                    className="flex flex-col items-center group cursor-pointer animate-fade-in scale-[0.65] md:scale-100"
                     style={{ animationDelay: '600ms' }}
                     onClick={() => {
                       setEditingField('walk_min')
