@@ -95,8 +95,8 @@ const Navigation = () => {
     <>
       <nav className="border-b bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 shadow-sm transition-all duration-300">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          {/* Left: Avatar + Logo */}
-          <div className="flex items-center gap-3">
+          {/* Left: Avatar */}
+          <div className="flex items-center">
             {user && (
               <div className="relative">
                 <button
@@ -112,13 +112,6 @@ const Navigation = () => {
                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
               </div>
             )}
-            
-            <Link
-              to="/"
-              className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary via-primary to-primary/80 bg-clip-text text-transparent hover:scale-105 transition-transform cursor-pointer"
-            >
-              Oryxa
-            </Link>
           </div>
 
           {/* Center: Calendar Navigation */}
@@ -145,10 +138,13 @@ const Navigation = () => {
             </button>
           </div>
 
-          {/* Right: Placeholder for balance */}
-          <div className="w-11 md:w-12">
-            {/* يمكن إضافة أيقونات هنا لاحقاً */}
-          </div>
+          {/* Right: Logo */}
+          <Link
+            to="/"
+            className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary via-primary to-primary/80 bg-clip-text text-transparent hover:scale-105 transition-transform cursor-pointer"
+          >
+            Oryxa
+          </Link>
         </div>
       </nav>
       
