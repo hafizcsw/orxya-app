@@ -71,21 +71,19 @@ const Today = () => {
     }
   }, [user?.id])
 
-  async function updateField(field: string, value: any) {
+  async function updateField(field: string, value: any, increment: boolean = false) {
     if (!user) return
     const today = new Date().toISOString().slice(0, 10)
     
     try {
-      // Update based on field type
+      const parsedValue = Number(value)
+      if (isNaN(parsedValue) || parsedValue < 0) {
+        setToast('❌ قيمة غير صحيحة')
+        return
+      }
+
+      // Daily log fields
       if (field.includes('hours') || field === 'walk_min') {
-        // Daily log fields
-        const parsedValue = Number(value)
-        if (isNaN(parsedValue) || parsedValue < 0) {
-          setToast('❌ قيمة غير صحيحة')
-          return
-        }
-        
-        // Check if log exists
         const { data: existing } = await supabase
           .from('daily_logs')
           .select('id')
@@ -110,6 +108,36 @@ const Today = () => {
           if (error) throw error
         }
       }
+      // Finance fields
+      else if (field === 'add_income' || field === 'add_spend') {
+        const type = field === 'add_income' ? 'income' : 'spend'
+        const { error } = await supabase
+          .from('finance_entries')
+          .insert({
+            owner_id: user.id,
+            entry_date: today,
+            type,
+            amount_usd: parsedValue,
+            category: type === 'income' ? 'دخل سريع' : 'مصروف سريع'
+          })
+        if (error) throw error
+      }
+      // Sales fields
+      else if (field === 'add_scholarship' || field === 'add_villa') {
+        const type = field === 'add_scholarship' ? 'scholarship' : 'villa'
+        const { error } = await supabase
+          .from('sales')
+          .insert({
+            owner_id: user.id,
+            sale_date: today,
+            type,
+            item: type === 'scholarship' ? 'منحة' : 'فيلا',
+            qty: 1,
+            price_usd: parsedValue,
+            profit_usd: parsedValue * 0.1
+          })
+        if (error) throw error
+      }
       
       setToast('تم التحديث ✅')
       setEditingField(null)
@@ -119,42 +147,9 @@ const Today = () => {
     }
   }
 
-  async function quickAdd(type: 'income' | 'spend' | 'scholarship' | 'villa', value: string) {
-    if (!user || !value) return
-    const today = new Date().toISOString().slice(0, 10)
-    const amount = Number(value)
-    
-    if (isNaN(amount) || amount <= 0) {
-      setToast('❌ قيمة غير صحيحة')
-      return
-    }
-
-    try {
-      if (type === 'income' || type === 'spend') {
-        await sendCommand('add_finance', {
-          entry_date: today,
-          type,
-          amount_usd: amount,
-          category: type === 'income' ? 'دخل سريع' : 'مصروف سريع',
-          note: ''
-        })
-      } else {
-        await sendCommand('add_sale', {
-          sale_date: today,
-          type: type === 'scholarship' ? 'scholarship' : 'villa',
-          item: type === 'scholarship' ? 'منحة' : 'فيلا',
-          qty: 1,
-          price_usd: amount,
-          profit_usd: amount * 0.1
-        })
-      }
-      
-      setQuickAddType(null)
-      setQuickAddValue('')
-      await fetchReport()
-    } catch (error: any) {
-      setToast('❌ حدث خطأ في الإضافة')
-    }
+  function incrementValue(field: string, currentValue: number, step: number) {
+    const newValue = Math.max(0, currentValue + step)
+    setEditValue(newValue)
   }
 
   async function sendCommand(command: 'add_daily_log' | 'add_finance' | 'add_sale', payload: any) {
@@ -186,7 +181,7 @@ const Today = () => {
     }
   }
 
-  const renderEditableCard = (field: string, icon: any, label: string, value: any, iconBgClass: string) => {
+  const renderEditableCard = (field: string, icon: any, label: string, value: any, iconBgClass: string, suffix: string = '', step: number = 0.5) => {
     const isEditing = editingField === field
     
     return (
@@ -198,30 +193,62 @@ const Today = () => {
             <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
               {label}
             </span>
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 duration-300 ${iconBgClass}`}>
-              {icon}
+            <div className="flex items-center gap-2">
+              {!isEditing && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => {
+                    setEditingField(field)
+                    setEditValue(value || 0)
+                  }}
+                >
+                  <Edit2 className="w-4 h-4" />
+                </Button>
+              )}
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 duration-300 ${iconBgClass}`}>
+                {icon}
+              </div>
             </div>
           </div>
           
           {isEditing ? (
             <div className="space-y-2">
-              <input
-                type="number"
-                step="0.5"
-                min="0"
-                max={field === 'walk_min' ? '1440' : '24'}
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                className="input w-full text-2xl font-bold"
-                autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    updateField(field, editValue)
-                  } else if (e.key === 'Escape') {
-                    setEditingField(null)
-                  }
-                }}
-              />
+              <div className="flex gap-2 items-center">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => incrementValue(field, Number(editValue), -step)}
+                  className="h-10 w-10 p-0"
+                >
+                  -
+                </Button>
+                <input
+                  type="number"
+                  step={step}
+                  min="0"
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  className="input flex-1 text-2xl font-bold text-center"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      updateField(field, editValue)
+                    } else if (e.key === 'Escape') {
+                      setEditingField(null)
+                    }
+                  }}
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => incrementValue(field, Number(editValue), step)}
+                  className="h-10 w-10 p-0"
+                >
+                  +
+                </Button>
+              </div>
               <div className="flex gap-2">
                 <Button
                   size="sm"
@@ -248,90 +275,7 @@ const Today = () => {
                 setEditValue(value || 0)
               }}
             >
-              {value}{field === 'walk_min' ? 'د' : 'س'}
-            </div>
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  const renderQuickAddCard = (
-    type: 'income' | 'spend' | 'scholarship' | 'villa',
-    icon: any,
-    label: string,
-    value: any,
-    iconBgClass: string
-  ) => {
-    const isAdding = quickAddType === type
-    
-    return (
-      <div className="card group relative overflow-hidden p-6">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-        
-        <div className="relative z-10">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-              {label}
-            </span>
-            <div className="flex items-center gap-2">
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => {
-                  setQuickAddType(type)
-                  setQuickAddValue('')
-                }}
-              >
-                <Edit2 className="w-4 h-4" />
-              </Button>
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 duration-300 ${iconBgClass}`}>
-                {icon}
-              </div>
-            </div>
-          </div>
-          
-          {isAdding ? (
-            <div className="space-y-2">
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="أدخل المبلغ"
-                value={quickAddValue}
-                onChange={(e) => setQuickAddValue(e.target.value)}
-                className="input w-full text-2xl font-bold"
-                autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    quickAdd(type, quickAddValue)
-                  } else if (e.key === 'Escape') {
-                    setQuickAddType(null)
-                  }
-                }}
-              />
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => quickAdd(type, quickAddValue)}
-                  className="flex-1"
-                >
-                  إضافة
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setQuickAddType(null)}
-                  className="flex-1"
-                >
-                  إلغاء
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="text-3xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
-              {type === 'scholarship' || type === 'villa' ? value : `$${value}`}
+              {suffix === '$' ? '$' : ''}{value || 0}{suffix !== '$' ? suffix : ''}
             </div>
           )}
         </div>
@@ -394,8 +338,8 @@ const Today = () => {
                 label="التاريخ"
                 value={report.date}
               />
-              {renderQuickAddCard('income', <TrendingUp className="w-5 h-5 text-success" />, 'الدخل', report.income_usd, 'bg-success/10')}
-              {renderQuickAddCard('spend', <TrendingDown className="w-5 h-5 text-destructive" />, 'المصروف', report.spend_usd, 'bg-destructive/10')}
+              {renderEditableCard('add_income', <TrendingUp className="w-5 h-5 text-success" />, 'إضافة دخل', report.income_usd, 'bg-success/10', '$', 1)}
+              {renderEditableCard('add_spend', <TrendingDown className="w-5 h-5 text-destructive" />, 'إضافة مصروف', report.spend_usd, 'bg-destructive/10', '$', 1)}
               <StatCardFuturistic
                 icon={<DollarSign className="w-5 h-5 text-primary" />}
                 label="الصافي"
@@ -403,13 +347,13 @@ const Today = () => {
                 iconBgClass="bg-primary/10"
               />
               
-              {renderEditableCard('study_hours', <BookOpen className="w-5 h-5 text-primary" />, 'دراسة', report.study_hours, 'bg-primary/10')}
-              {renderEditableCard('mma_hours', <Dumbbell className="w-5 h-5 text-warning" />, 'MMA', report.mma_hours, 'bg-warning/10')}
-              {renderEditableCard('work_hours', <Clock className="w-5 h-5 text-accent" />, 'عمل', report.work_hours, 'bg-accent/10')}
-              {renderEditableCard('walk_min', <Footprints className="w-5 h-5 text-success" />, 'المشي', report.walk_min, 'bg-success/10')}
+              {renderEditableCard('study_hours', <BookOpen className="w-5 h-5 text-primary" />, 'دراسة', report.study_hours, 'bg-primary/10', 'س', 0.5)}
+              {renderEditableCard('mma_hours', <Dumbbell className="w-5 h-5 text-warning" />, 'MMA', report.mma_hours, 'bg-warning/10', 'س', 0.5)}
+              {renderEditableCard('work_hours', <Clock className="w-5 h-5 text-accent" />, 'عمل', report.work_hours, 'bg-accent/10', 'س', 0.5)}
+              {renderEditableCard('walk_min', <Footprints className="w-5 h-5 text-success" />, 'المشي', report.walk_min, 'bg-success/10', 'د', 5)}
               
-              {renderQuickAddCard('scholarship', <Award className="w-5 h-5 text-warning" />, 'منح', report.scholarships_sold, 'bg-warning/10')}
-              {renderQuickAddCard('villa', <Building className="w-5 h-5 text-primary" />, 'فلل', report.villas_sold, 'bg-primary/10')}
+              {renderEditableCard('add_scholarship', <Award className="w-5 h-5 text-warning" />, 'إضافة منحة', report.scholarships_sold, 'bg-warning/10', '', 1)}
+              {renderEditableCard('add_villa', <Building className="w-5 h-5 text-primary" />, 'إضافة فيلا', report.villas_sold, 'bg-primary/10', '', 1)}
             </div>
           ) : (
             <GlassPanel className="p-8 text-center">
