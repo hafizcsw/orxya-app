@@ -113,30 +113,30 @@ const Navigation = () => {
           )}
 
           {/* Center: Calendar Navigation */}
-          <CalendarPopover 
-            selectedDate={currentDate}
-            onDateChange={(date) => setCurrentDate(date)}
-          >
-            <button className="flex items-center gap-2 flex-shrink-0 cursor-pointer bg-transparent border-0 p-0">
-              <button
-                onClick={goToPreviousDay}
-                className="w-8 h-8 rounded-lg bg-secondary/60 hover:bg-secondary/80 flex items-center justify-center transition-all"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-              
-              <div className="px-5 py-1.5 rounded-lg bg-secondary/60 hover:bg-secondary/80 transition-all">
-                <span className="font-bold text-sm tracking-wide">{formatDate(currentDate)}</span>
-              </div>
-              
-              <button
-                onClick={goToNextDay}
-                className="w-8 h-8 rounded-lg bg-secondary/60 hover:bg-secondary/80 flex items-center justify-center transition-all"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={goToPreviousDay}
+              className="w-8 h-8 rounded-lg bg-secondary/60 hover:bg-secondary/80 flex items-center justify-center transition-all"
+            >
+              <ChevronRight className="w-4 h-4" />
             </button>
-          </CalendarPopover>
+            
+            <CalendarPopover 
+              selectedDate={currentDate}
+              onDateChange={(date) => setCurrentDate(date)}
+            >
+              <button className="px-5 py-1.5 rounded-lg bg-secondary/60 hover:bg-secondary/80 transition-all">
+                <span className="font-bold text-sm tracking-wide">{formatDate(currentDate)}</span>
+              </button>
+            </CalendarPopover>
+            
+            <button
+              onClick={goToNextDay}
+              className="w-8 h-8 rounded-lg bg-secondary/60 hover:bg-secondary/80 flex items-center justify-center transition-all"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+          </div>
 
           {/* Right: Logo - MUST BE VISIBLE */}
           <Link
