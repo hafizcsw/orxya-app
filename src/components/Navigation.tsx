@@ -5,7 +5,7 @@ import AuthSheet from "@/components/AuthSheet";
 import { useUser } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/telemetry";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const Navigation = () => {
@@ -105,32 +105,20 @@ const Navigation = () => {
             )}
           </div>
           
-          {/* Desktop Auth */}
-          {!isMobile && (
-            <div className="flex items-center gap-3">
-              {user ? (
-                <>
-                  <div className="px-3 py-1.5 rounded-lg bg-muted/50 text-sm text-muted-foreground hidden md:flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-                    {user.email}
-                  </div>
-                  <button 
-                    className="btn-ghost-glow px-4 py-2 rounded-xl text-sm font-medium" 
-                    onClick={handleSignOut}
-                  >
-                    خروج
-                  </button>
-                </>
-              ) : (
-                <Link
-                  to="/auth"
-                  className="btn-futuristic btn-gradient px-6 py-2.5 rounded-xl text-sm font-medium" 
-                >
-                  دخول
-                </Link>
-              )}
-            </div>
-          )}
+          {/* Desktop and Mobile Auth - Avatar on Right */}
+          <div className="flex items-center gap-3">
+            {user && (
+              <button
+                onClick={() => navigate('/profile')}
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white font-semibold shadow-lg hover:scale-110 transition-all duration-300 border-2 border-primary/30"
+                style={{
+                  boxShadow: "0 0 20px hsl(var(--primary) / 0.3)",
+                }}
+              >
+                {user?.email?.[0]?.toUpperCase() || <User className="w-5 h-5" />}
+              </button>
+            )}
+          </div>
 
         </div>
 

@@ -323,39 +323,26 @@ const Today = () => {
               </button>
             </div>
 
-            {/* Right side: Notification + Avatar */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={async () => {
-                  await ensureNotificationPerms();
-                  const now = new Date(); 
-                  now.setMinutes(now.getMinutes() + 1);
-                  await LocalNotifications.schedule({
-                    notifications: [{
-                      id: 999001,
-                      title: 'اختبار Oryxa',
-                      body: 'إشعار بعد دقيقة',
-                      schedule: { at: now }
-                    }]
-                  });
-                  setToast('تم جدولة إشعار اختبار ⏰');
-                }}
-                className="w-10 h-10 rounded-full bg-secondary hover:bg-secondary/80 flex items-center justify-center transition-all"
-              >
-                <Bell className="w-5 h-5" />
-              </button>
-
-              {/* User Avatar */}
-              <button
-                onClick={() => navigate('/profile')}
-                className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white font-semibold text-lg shadow-lg hover:scale-110 transition-all duration-300 border-2 border-primary/30"
-                style={{
-                  boxShadow: "0 0 20px hsl(var(--primary) / 0.3)",
-                }}
-              >
-                {user?.email?.[0]?.toUpperCase() || <User className="w-6 h-6" />}
-              </button>
-            </div>
+            {/* Right side: Notification only */}
+            <button
+              onClick={async () => {
+                await ensureNotificationPerms();
+                const now = new Date(); 
+                now.setMinutes(now.getMinutes() + 1);
+                await LocalNotifications.schedule({
+                  notifications: [{
+                    id: 999001,
+                    title: 'اختبار Oryxa',
+                    body: 'إشعار بعد دقيقة',
+                    schedule: { at: now }
+                  }]
+                });
+                setToast('تم جدولة إشعار اختبار ⏰');
+              }}
+              className="w-10 h-10 rounded-full bg-secondary hover:bg-secondary/80 flex items-center justify-center transition-all"
+            >
+              <Bell className="w-5 h-5" />
+            </button>
           </div>
         </div>
 
