@@ -92,28 +92,35 @@ Deno.serve(async (req)=>{
       const end   = ev.end?.dateTime   ?? (ev.end?.date   ? ev.end.date   + "T23:59:59Z" : null);
       if (!start || !end) { skipped++; continue; }
 
+      const allDay = !ev.start?.dateTime && !!ev.start?.date;
+      
       const row = {
         owner_id: user.id,
+        source: "google",
+        ext_id: ev.id,
+        etag: ev.etag ?? null,
         title: ev.summary ?? "(بدون عنوان)",
+        description: ev.description ?? null,
         starts_at: start,
         ends_at: end,
-        source_id: "google",
-        external_id: ev.id,
-        external_calendar_id: "primary",
-        external_etag: ev.etag ?? null,
-        external_event_id: ev.id,
-        description: ev.description ?? null,
+        all_day: allDay,
+        location: ev.location ?? null,
+        status: ev.status ?? "confirmed",
         updated_at: new Date().toISOString()
       };
 
+      // Check if event already exists
       const { data: existed } = await supa.from("events")
-        .select("id,external_etag").eq("owner_id", user.id)
-        .eq("source_id","google").eq("external_id", ev.id).maybeSingle();
+        .select("id,etag")
+        .eq("owner_id", user.id)
+        .eq("source", "google")
+        .eq("ext_id", ev.id)
+        .maybeSingle();
 
       if (!existed) {
         const { error } = await supa.from("events").insert(row);
         if (!error) added++;
-      } else if (existed.external_etag !== row.external_etag) {
+      } else if (existed.etag !== row.etag) {
         const { error } = await supa.from("events")
           .update(row).eq("id", existed.id);
         if (!error) updated++;
@@ -128,7 +135,10 @@ Deno.serve(async (req)=>{
 
   if (newSyncToken) {
     await supa.from("external_accounts").update({
-      sync_token: newSyncToken, last_sync_at: new Date().toISOString()
+      sync_token: newSyncToken, 
+      last_sync_at: new Date().toISOString(),
+      next_sync_after: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 min rate limit
+      status: "connected"
     }).eq("owner_id", user.id).eq("provider","google");
   }
 

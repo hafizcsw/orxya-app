@@ -476,11 +476,14 @@ export type Database = {
       }
       events: {
         Row: {
+          all_day: boolean | null
           color: string | null
           created_at: string | null
           description: string | null
           duration_min: number | null
           ends_at: string
+          etag: string | null
+          ext_id: string | null
           external_calendar_id: string | null
           external_etag: string | null
           external_event_id: string | null
@@ -495,6 +498,7 @@ export type Database = {
           last_push_at: string | null
           last_push_status: string | null
           last_write_origin: string | null
+          location: string | null
           location_lat: number | null
           location_lon: number | null
           next_retry_at: string | null
@@ -502,8 +506,10 @@ export type Database = {
           owner_id: string
           pending_push: boolean
           retry_count: number
+          source: string | null
           source_id: string | null
           starts_at: string
+          status: string | null
           sync_to_google: boolean | null
           tags: string[] | null
           title: string
@@ -511,11 +517,14 @@ export type Database = {
           version: number
         }
         Insert: {
+          all_day?: boolean | null
           color?: string | null
           created_at?: string | null
           description?: string | null
           duration_min?: number | null
           ends_at: string
+          etag?: string | null
+          ext_id?: string | null
           external_calendar_id?: string | null
           external_etag?: string | null
           external_event_id?: string | null
@@ -530,6 +539,7 @@ export type Database = {
           last_push_at?: string | null
           last_push_status?: string | null
           last_write_origin?: string | null
+          location?: string | null
           location_lat?: number | null
           location_lon?: number | null
           next_retry_at?: string | null
@@ -537,8 +547,10 @@ export type Database = {
           owner_id: string
           pending_push?: boolean
           retry_count?: number
+          source?: string | null
           source_id?: string | null
           starts_at: string
+          status?: string | null
           sync_to_google?: boolean | null
           tags?: string[] | null
           title: string
@@ -546,11 +558,14 @@ export type Database = {
           version?: number
         }
         Update: {
+          all_day?: boolean | null
           color?: string | null
           created_at?: string | null
           description?: string | null
           duration_min?: number | null
           ends_at?: string
+          etag?: string | null
+          ext_id?: string | null
           external_calendar_id?: string | null
           external_etag?: string | null
           external_event_id?: string | null
@@ -565,6 +580,7 @@ export type Database = {
           last_push_at?: string | null
           last_push_status?: string | null
           last_write_origin?: string | null
+          location?: string | null
           location_lat?: number | null
           location_lon?: number | null
           next_retry_at?: string | null
@@ -572,8 +588,10 @@ export type Database = {
           owner_id?: string
           pending_push?: boolean
           retry_count?: number
+          source?: string | null
           source_id?: string | null
           starts_at?: string
+          status?: string | null
           sync_to_google?: boolean | null
           tags?: string[] | null
           title?: string
@@ -584,48 +602,63 @@ export type Database = {
       }
       external_accounts: {
         Row: {
+          access_token: string | null
           access_token_enc: string
           account_email: string | null
           created_at: string | null
           expires_at: string | null
+          ext_user_id: string | null
           last_sync_at: string | null
+          next_sync_after: string | null
           owner_id: string
           primary_calendar_id: string | null
           provider: string
           provider_user_id: string | null
+          refresh_token: string | null
           refresh_token_enc: string | null
+          scope: string | null
           scopes: string[]
           status: string | null
           sync_token: string | null
           updated_at: string | null
         }
         Insert: {
+          access_token?: string | null
           access_token_enc: string
           account_email?: string | null
           created_at?: string | null
           expires_at?: string | null
+          ext_user_id?: string | null
           last_sync_at?: string | null
+          next_sync_after?: string | null
           owner_id: string
           primary_calendar_id?: string | null
           provider: string
           provider_user_id?: string | null
+          refresh_token?: string | null
           refresh_token_enc?: string | null
+          scope?: string | null
           scopes: string[]
           status?: string | null
           sync_token?: string | null
           updated_at?: string | null
         }
         Update: {
+          access_token?: string | null
           access_token_enc?: string
           account_email?: string | null
           created_at?: string | null
           expires_at?: string | null
+          ext_user_id?: string | null
           last_sync_at?: string | null
+          next_sync_after?: string | null
           owner_id?: string
           primary_calendar_id?: string | null
           provider?: string
           provider_user_id?: string | null
+          refresh_token?: string | null
           refresh_token_enc?: string | null
+          scope?: string | null
           scopes?: string[]
           status?: string | null
           sync_token?: string | null

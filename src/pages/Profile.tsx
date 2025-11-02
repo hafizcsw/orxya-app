@@ -8,8 +8,9 @@ import { rescheduleAllFromDB, ensureNotificationPerms } from '@/lib/notify';
 import { getDeviceLocation } from '@/native/geo';
 import ThemeControls from '@/components/ThemeControls';
 import { ensureAISession, getAIConsents, updateAIConsents, computeAIStatus } from '@/lib/ai';
-import { useGoogleAccount } from '@/hooks/useGoogleAccount';
+import { useGoogleAccount } from '@/hooks/useExternal';
 import CalendarList from '@/components/CalendarList';
+import GoogleCalendarCard from '@/components/GoogleCalendarCard';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Bell, Calendar as CalendarIcon, Clock, ExternalLink, Loader2, LogOut, Moon, Sun } from 'lucide-react';
@@ -21,7 +22,6 @@ export default function Profile() {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const { status, lastSyncAt, loading: gLoading, connect, syncNow, refresh } = useGoogleAccount();
 
   const [fullName, setFullName] = useState('');
   const [currency, setCurrency] = useState('USD');
@@ -455,154 +455,8 @@ export default function Profile() {
 
       {/* الحسابات الخارجية */}
       <div className="rounded-2xl border border-border p-6 bg-card space-y-4">
-        <div className="text-sm text-muted-foreground font-medium">الحسابات الخارجية</div>
-        <div className="rounded-xl border p-4 flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">🗓️</span>
-              <div>
-                <div className="font-medium">Google Calendar</div>
-                <div className="text-sm text-muted-foreground">
-                  الحالة: {status === 'connected' ? 'متصل ✅' : status === 'pending' ? 'قيد الربط… ⏳' : status === 'error' ? 'خطأ ❌' : 'غير متصل —'}
-                  {lastSyncAt && <span className="ml-2">| آخر مزامنة: {new Date(lastSyncAt).toLocaleString()}</span>}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              {status !== 'connected' && (
-                <button
-                  onClick={connect}
-                  disabled={gLoading}
-                  className="px-3 py-2 rounded-lg border bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50"
-                >
-                  {gLoading ? '...' : 'ربط الآن'}
-                </button>
-              )}
-              {status === 'connected' && (
-                <>
-                  <button
-                    onClick={async ()=>{ 
-                      const r=await syncNow(); 
-                      setMsg(`تمت المزامنة: +${r?.added??0}/~${r?.updated??0}/⏭️${r?.skipped??0}`);
-                      setTimeout(() => setMsg(null), 3000);
-                    }}
-                    disabled={gLoading}
-                    className="px-3 py-2 rounded-lg border bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50"
-                  >
-                    {gLoading ? '...' : 'مزامنة الآن'}
-                  </button>
-                  <button
-                    onClick={refresh}
-                    className="px-3 py-2 rounded-lg border bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                  >
-                    تحديث
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-
-          <p className="text-xs text-muted-foreground">
-            يُستخدم الوصول «قراءة فقط» في هذه المرحلة. يمكن توسيع الأذونات لاحقًا للإنشاء/التعديل.
-          </p>
-
-          {status === 'connected' && (
-            <label className="flex items-center gap-3 cursor-pointer pt-3 border-t">
-              <input 
-                type="checkbox" 
-                className="w-4 h-4 rounded border-input" 
-                checked={calendarWriteback} 
-                onChange={e => setCalendarWriteback(e.target.checked)} 
-              />
-              <div className="flex-1">
-                <span className="text-sm font-medium">السماح للتطبيق بتعديل أحداث Google Calendar</span>
-                <p className="text-xs text-muted-foreground mt-1">
-                  عند التفعيل، سيتم تطبيق حلول التعارضات المقبولة تلقائيًا على تقويمك في Google
-                </p>
-              </div>
-            </label>
-          )}
-
-          {status === 'connected' && (
-            <div className="space-y-4 pt-4 border-t">
-              <div className="flex items-center justify-between">
-                <h3 className="font-medium">إدارة التقاويم</h3>
-                <button
-                  onClick={fetchCalendars}
-                  disabled={calLoading}
-                  className="px-3 py-1.5 rounded-lg border bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50 text-xs"
-                >
-                  {calLoading ? '...' : 'جلب التقاويم'}
-                </button>
-              </div>
-
-              {calendars.length > 0 && (
-                <>
-                  <div className="space-y-2">
-                    <label className="block">
-                      <span className="text-sm font-medium">التقويم الافتراضي</span>
-                      <select
-                        value={defaultCal}
-                        onChange={e => setDefaultCal(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground mt-1"
-                      >
-                        <option value="">-- اختر --</option>
-                        {calendars.map(cal => (
-                          <option key={cal.calendar_id} value={cal.calendar_id}>
-                            {cal.calendar_name} {cal.primary_flag && '(الأساسي)'}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <button
-                      onClick={saveDefaultCal}
-                      disabled={!defaultCal || calLoading}
-                      className="w-full px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-                    >
-                      حفظ التقويم الافتراضي
-                    </button>
-                  </div>
-
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium">خرائط أنواع الأحداث</h4>
-                    {['task', 'meeting', 'ai_plan', 'prayer_block'].map(kind => (
-                      <label key={kind} className="block">
-                        <span className="text-xs text-muted-foreground capitalize">{kind}</span>
-                        <select
-                          value={calMap[kind] || ''}
-                          onChange={e => setCalMap(prev => ({ ...prev, [kind]: e.target.value }))}
-                          className="w-full px-2 py-1.5 rounded border border-input bg-background text-foreground text-xs mt-1"
-                        >
-                          <option value="">-- استخدام الافتراضي --</option>
-                          {calendars.map(cal => (
-                            <option key={cal.calendar_id} value={cal.calendar_id}>
-                              {cal.calendar_name}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    ))}
-                    <button
-                      onClick={saveMappings}
-                      disabled={calLoading}
-                      className="w-full px-4 py-2 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50"
-                    >
-                      حفظ الخرائط
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-
-        {status === 'connected' && (
-          <div className="space-y-2">
-            <div className="text-sm font-medium">أحداث الأسبوع القادم:</div>
-            <CalendarList />
-          </div>
-        )}
+        <div className="text-sm text-muted-foreground font-medium">التكامل الخارجي</div>
+        <GoogleCalendarCard />
       </div>
     </div>
   );
