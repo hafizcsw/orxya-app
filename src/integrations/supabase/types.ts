@@ -1161,6 +1161,36 @@ export type Database = {
       }
     }
     Views: {
+      v_admin_actions_daily: {
+        Row: {
+          applied: number | null
+          day: string | null
+          total_actions: number | null
+          undone: number | null
+        }
+        Relationships: []
+      }
+      v_admin_conflict_kpis: {
+        Row: {
+          applied_7d: number | null
+          as_of_date: string | null
+          auto_applied_now: number | null
+          open_now: number | null
+          resolved_now: number | null
+          suggested_now: number | null
+          undo_rate_7d: number | null
+          undone_7d: number | null
+          undone_now: number | null
+        }
+        Relationships: []
+      }
+      v_admin_top_reasons_30d: {
+        Row: {
+          cnt: number | null
+          reason: string | null
+        }
+        Relationships: []
+      }
       vw_events_conflicts: {
         Row: {
           conflict_open_count: number | null
@@ -1255,6 +1285,54 @@ export type Database = {
       }
     }
     Functions: {
+      admin_actions_daily: {
+        Args: never
+        Returns: {
+          applied: number | null
+          day: string | null
+          total_actions: number | null
+          undone: number | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "v_admin_actions_daily"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      admin_conflict_kpis: {
+        Args: never
+        Returns: {
+          applied_7d: number | null
+          as_of_date: string | null
+          auto_applied_now: number | null
+          open_now: number | null
+          resolved_now: number | null
+          suggested_now: number | null
+          undo_rate_7d: number | null
+          undone_7d: number | null
+          undone_now: number | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "v_admin_conflict_kpis"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      admin_top_reasons_30d: {
+        Args: never
+        Returns: {
+          cnt: number | null
+          reason: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "v_admin_top_reasons_30d"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1262,6 +1340,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin: { Args: { p_uid: string }; Returns: boolean }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
