@@ -346,10 +346,22 @@ const Today = () => {
             </OryxaCard>
           ) : report ? (
             <>
-              {/* Financial Rings - Hero Section */}
+              {/* Financial Rings - Hero Section with Editing */}
               
               <div className="grid grid-cols-3 gap-1 mb-8">
-                <div className="flex flex-col items-center scale-75 md:scale-100">
+                <div className="flex flex-col items-center scale-75 md:scale-100 group">
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <OryxaButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingBalance(true);
+                        setBalanceValue(report.current_balance?.toString() || '0');
+                      }}
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </OryxaButton>
+                  </div>
                   <StatRing
                     value={Math.min(100, Math.max(0, ((report.current_balance || 0) / 10000) * 100))}
                     label="الرصيد"
@@ -429,112 +441,48 @@ const Today = () => {
                 </OryxaCard>
               </div>
 
-              {/* Balance & Totals */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <OryxaCard className="group">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                      الرصيد الحقيقي
-                    </span>
-                    <div className="flex items-center gap-2">
-                      {!editingBalance && (
-                        <OryxaButton
-                          variant="ghost"
-                          size="sm"
-                          className="opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => {
-                            setEditingBalance(true);
-                            setBalanceValue(report.current_balance?.toString() || '0');
-                          }}
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </OryxaButton>
-                      )}
-                      <div className="w-10 h-10 rounded-full bg-[hsl(var(--whoop-blue)_/_0.1)] flex items-center justify-center">
-                        <DollarSign className="w-5 h-5 text-[hsl(var(--whoop-blue))]" />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {editingBalance ? (
-                    <div className="space-y-2">
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={balanceValue}
-                        onChange={(e) => setBalanceValue(e.target.value)}
-                        className="input w-full text-2xl font-bold"
-                        autoFocus
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            updateBalance(balanceValue);
-                          } else if (e.key === 'Escape') {
-                            setEditingBalance(false);
-                          }
-                        }}
-                      />
-                      <div className="flex gap-2">
-                        <OryxaButton
-                          size="sm"
-                          variant="primary"
-                          onClick={() => updateBalance(balanceValue)}
-                          className="flex-1"
-                        >
-                          حفظ
-                        </OryxaButton>
-                        <OryxaButton
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setEditingBalance(false)}
-                          className="flex-1"
-                        >
-                          إلغاء
-                        </OryxaButton>
-                      </div>
-                    </div>
-                  ) : (
-                    <div
-                      className="text-4xl font-bold cursor-pointer hover:scale-105 transition-transform"
-                      style={{ color: (report.current_balance || 0) >= 0 ? 'hsl(var(--whoop-green))' : 'hsl(var(--whoop-red))' }}
-                      onClick={() => {
-                        setEditingBalance(true);
-                        setBalanceValue(report.current_balance?.toString() || '0');
+              {/* Balance Edit Modal - Hidden but available */}
+              {editingBalance && (
+                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+                  <OryxaCard className="max-w-md w-full">
+                    <h3 className="text-xl font-bold mb-4">تعديل الرصيد الحقيقي</h3>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={balanceValue}
+                      onChange={(e) => setBalanceValue(e.target.value)}
+                      className="input w-full text-2xl font-bold mb-4"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          updateBalance(balanceValue);
+                        } else if (e.key === 'Escape') {
+                          setEditingBalance(false);
+                        }
                       }}
-                    >
-                      ${report.current_balance?.toFixed(2) || 0}
+                    />
+                    <div className="flex gap-2">
+                      <OryxaButton
+                        size="sm"
+                        variant="primary"
+                        onClick={() => updateBalance(balanceValue)}
+                        className="flex-1"
+                      >
+                        حفظ
+                      </OryxaButton>
+                      <OryxaButton
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setEditingBalance(false)}
+                        className="flex-1"
+                      >
+                        إلغاء
+                      </OryxaButton>
                     </div>
-                  )}
-                </OryxaCard>
-                
-                <OryxaCard>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                      إجمالي الدخل
-                    </span>
-                    <div className="w-10 h-10 rounded-full bg-[hsl(var(--whoop-green)_/_0.1)] flex items-center justify-center">
-                      <TrendingUp className="w-5 h-5 text-[hsl(var(--whoop-green))]" />
-                    </div>
-                  </div>
-                  <div className="text-3xl font-bold text-[hsl(var(--whoop-green))]">
-                    ${report.total_income || 0}
-                  </div>
-                </OryxaCard>
-                
-                <OryxaCard>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                      إجمالي المصروفات
-                    </span>
-                    <div className="w-10 h-10 rounded-full bg-[hsl(var(--whoop-red)_/_0.1)] flex items-center justify-center">
-                      <TrendingDown className="w-5 h-5 text-[hsl(var(--whoop-red))]" />
-                    </div>
-                  </div>
-                  <div className="text-3xl font-bold text-[hsl(var(--whoop-red))]">
-                    ${report.total_spend || 0}
-                  </div>
-                </OryxaCard>
-              </div>
+                  </OryxaCard>
+                </div>
+              )}
 
               {/* Activities */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
