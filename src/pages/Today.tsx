@@ -15,13 +15,41 @@ import { StatCardFuturistic } from '@/components/ui/StatCardFuturistic'
 import { NeonButton } from '@/components/ui/NeonButton'
 import { GlassPanel } from '@/components/ui/GlassPanel'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
-import { Bell, DollarSign, TrendingUp, TrendingDown, Clock, Dumbbell, BookOpen, Footprints, Award, Building } from 'lucide-react'
+import { Bell, DollarSign, TrendingUp, TrendingDown, Clock, Dumbbell, BookOpen, Footprints, Award, Building, Edit2 } from 'lucide-react'
+import { z } from 'zod'
+
+// Validation schemas
+const dailyLogSchema = z.object({
+  work_hours: z.number().min(0).max(24),
+  study_hours: z.number().min(0).max(24),
+  mma_hours: z.number().min(0).max(24),
+  walk_min: z.number().min(0).max(1440),
+  notes: z.string().max(500).optional()
+})
+
+const financeSchema = z.object({
+  type: z.enum(['income', 'spend']),
+  amount_usd: z.number().min(0),
+  category: z.string().max(100).optional(),
+  note: z.string().max(500).optional()
+})
+
+const salesSchema = z.object({
+  type: z.enum(['scholarship', 'villa', 'other']),
+  item: z.string().max(200).optional(),
+  qty: z.number().int().min(1),
+  price_usd: z.number().min(0),
+  profit_usd: z.number().min(0)
+})
 
 const Today = () => {
   const { user } = useUser()
   const [loading, setLoading] = useState(false)
   const [report, setReport] = useState<any | null>(null)
   const [toast, setToast] = useState<string | null>(null)
+  const [editingLog, setEditingLog] = useState<any>(null)
+  const [editingFinance, setEditingFinance] = useState<any>(null)
+  const [editingSale, setEditingSale] = useState<any>(null)
 
   async function fetchReport() {
     if (!user) return
@@ -36,12 +64,41 @@ const Today = () => {
     } finally { setLoading(false) }
   }
 
+  // Fetch existing data for editing
+  async function loadTodayData() {
+    if (!user) return
+    
+    const today = new Date().toISOString().slice(0, 10)
+    
+    // Load today's log
+    const { data: logData } = await supabase
+      .from('daily_logs')
+      .select('*')
+      .eq('owner_id', user.id)
+      .eq('log_date', today)
+      .maybeSingle()
+    
+    if (logData) setEditingLog(logData)
+  }
+
   useEffect(() => { 
-    if (user) fetchReport() 
+    if (user) {
+      fetchReport()
+      loadTodayData()
+    }
   }, [user?.id])
 
   async function sendCommand(command: 'add_daily_log' | 'add_finance' | 'add_sale', payload: any) {
     try {
+      // Validate based on command type
+      if (command === 'add_daily_log') {
+        dailyLogSchema.parse(payload)
+      } else if (command === 'add_finance') {
+        financeSchema.parse(payload)
+      } else if (command === 'add_sale') {
+        salesSchema.parse(payload)
+      }
+
       const { error } = await supabase.functions.invoke('commands', {
         body: { command, idempotency_key: genIdem(), payload }
       })
@@ -49,10 +106,38 @@ const Today = () => {
       setToast('تم الحفظ ✅')
       track('command_sent', { command })
       await fetchReport()
-    } catch (error) {
+      await loadTodayData()
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        setToast('❌ البيانات المدخلة غير صحيحة')
+        return
+      }
       await enqueueCommand(command, payload)
       track('command_queued_offline', { command })
       setToast('تم الحفظ أوفلاين وسيُرفع بعد تسجيل الدخول/الاتصال 🔄')
+    }
+  }
+
+  async function updateDailyLog(data: any) {
+    try {
+      dailyLogSchema.parse(data)
+      const { error } = await supabase
+        .from('daily_logs')
+        .update(data)
+        .eq('id', editingLog.id)
+        .eq('owner_id', user!.id)
+      
+      if (error) throw error
+      setToast('تم التحديث ✅')
+      setEditingLog(null)
+      await fetchReport()
+      await loadTodayData()
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        setToast('❌ البيانات المدخلة غير صحيحة')
+        return
+      }
+      setToast('❌ حدث خطأ في التحديث')
     }
   }
 
@@ -197,30 +282,92 @@ const Today = () => {
             <form id="daily-log-form" onSubmit={(e: any) => {
               e.preventDefault()
               const fd = new FormData(e.currentTarget)
-              sendCommand('add_daily_log', {
-                log_date: new Date().toISOString().slice(0, 10),
+              const data = {
                 work_hours: Number(fd.get('work_hours') || 0),
                 study_hours: Number(fd.get('study_hours') || 0),
                 mma_hours: Number(fd.get('mma_hours') || 0),
                 walk_min: Number(fd.get('walk_min') || 0),
                 notes: String(fd.get('notes') || '')
-              }).then(() => {
-                e.currentTarget.reset()
-              })
+              }
+              
+              if (editingLog) {
+                updateDailyLog(data).then(() => e.currentTarget.reset())
+              } else {
+                sendCommand('add_daily_log', {
+                  log_date: new Date().toISOString().slice(0, 10),
+                  ...data
+                }).then(() => e.currentTarget.reset())
+              }
             }}>
               <GlassPanel className="space-y-3">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-lg">📝</span>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-lg">📝</span>
+                    </div>
+                    <div className="font-semibold">سجل اليوم</div>
                   </div>
-                  <div className="font-semibold">سجل اليوم</div>
+                  {editingLog && (
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setEditingLog(null)}
+                    >
+                      إلغاء التعديل
+                    </Button>
+                  )}
                 </div>
-                <input name="work_hours" placeholder="ساعات العمل" className="input" type="number" step="0.5" />
-                <input name="study_hours" placeholder="ساعات الدراسة" className="input" type="number" step="0.5" />
-                <input name="mma_hours" placeholder="ساعات MMA" className="input" type="number" step="0.5" />
-                <input name="walk_min" placeholder="دقائق المشي" className="input" type="number" step="1" />
-                <input name="notes" placeholder="ملاحظات" className="input" />
-                <NeonButton type="submit" variant="primary" className="w-full">حفظ</NeonButton>
+                <input 
+                  name="work_hours" 
+                  placeholder="ساعات العمل" 
+                  className="input" 
+                  type="number" 
+                  step="0.5"
+                  max="24"
+                  min="0"
+                  defaultValue={editingLog?.work_hours || ''}
+                />
+                <input 
+                  name="study_hours" 
+                  placeholder="ساعات الدراسة" 
+                  className="input" 
+                  type="number" 
+                  step="0.5"
+                  max="24"
+                  min="0"
+                  defaultValue={editingLog?.study_hours || ''}
+                />
+                <input 
+                  name="mma_hours" 
+                  placeholder="ساعات MMA" 
+                  className="input" 
+                  type="number" 
+                  step="0.5"
+                  max="24"
+                  min="0"
+                  defaultValue={editingLog?.mma_hours || ''}
+                />
+                <input 
+                  name="walk_min" 
+                  placeholder="دقائق المشي" 
+                  className="input" 
+                  type="number" 
+                  step="1"
+                  max="1440"
+                  min="0"
+                  defaultValue={editingLog?.walk_min || ''}
+                />
+                <input 
+                  name="notes" 
+                  placeholder="ملاحظات (حد أقصى 500 حرف)" 
+                  className="input"
+                  maxLength={500}
+                  defaultValue={editingLog?.notes || ''}
+                />
+                <NeonButton type="submit" variant="primary" className="w-full">
+                  {editingLog ? 'تحديث' : 'حفظ'}
+                </NeonButton>
               </GlassPanel>
             </form>
 
