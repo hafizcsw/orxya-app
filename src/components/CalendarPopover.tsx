@@ -7,8 +7,10 @@ const Overlay = ({ isOpen }: { isOpen: boolean }) => {
   if (!isOpen) return null;
   return (
     <div 
-      className="fixed inset-0 z-[1299] animate-in fade-in-0"
-      style={{ backgroundColor: 'rgba(0, 0, 0, 0.75)' }}
+      className="fixed inset-0 z-[1299] bg-black/90"
+      style={{ 
+        backdropFilter: 'blur(8px)',
+      }}
     />
   );
 };
