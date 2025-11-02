@@ -7,78 +7,6 @@ const cors = {
   "Access-Control-Allow-Headers": "authorization, content-type",
 };
 
-const addMin = (d: Date, m: number) => {
-  const x = new Date(d);
-  x.setMinutes(x.getMinutes() + m);
-  return x;
-};
-
-function overlapMinutes(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date): number {
-  const s = Math.max(aStart.getTime(), bStart.getTime());
-  const e = Math.min(aEnd.getTime(), bEnd.getTime());
-  return Math.max(0, Math.round((e - s) / 60000));
-}
-
-function severityFromMinutes(overlapMin: number, minutesToPrayer: number): "low" | "medium" | "high" {
-  // High severity: significant overlap OR very close to prayer time
-  if (overlapMin >= 25 || minutesToPrayer <= 60) return "high";
-  // Medium severity: moderate overlap OR approaching prayer time
-  if (overlapMin >= 10 || minutesToPrayer <= 90) return "medium";
-  // Low severity: minimal overlap or distant from prayer
-  return "low";
-}
-
-function buildSuggestion(
-  ev: any,
-  pName: string,
-  pTime: Date,
-  pre: number,
-  post: number
-) {
-  const winStart = addMin(pTime, -pre);
-  const winEnd = addMin(pTime, +post);
-  const eStart = new Date(ev.starts_at);
-  const eEnd = new Date(ev.ends_at);
-  const durMin = Math.max(1, Math.round((eEnd.getTime() - eStart.getTime()) / 60000));
-
-  const title = (ev.title ?? "").toString().toLowerCase();
-  if (["prayer", "صلاة", "mosque", "masjid", "church", "كنيسة"].some((k) => title.includes(k))) {
-    return { type: "none" };
-  }
-
-  if (eStart <= winStart && eEnd >= winEnd && durMin >= pre + post) {
-    return {
-      type: "split",
-      explanation: "الحدث يغطي نافذة الصلاة بالكامل؛ نقترح تقسيمه إلى جزئين قبل/بعد الصلاة",
-      parts: [
-        { new_start: eStart.toISOString(), new_end: winStart.toISOString() },
-        { new_start: winEnd.toISOString(), new_end: eEnd.toISOString() },
-      ],
-    };
-  }
-
-  if (eStart < winStart && eEnd > winStart && eEnd <= winEnd) {
-    return {
-      type: "truncate_end",
-      explanation: "ينتهي الحدث داخل نافذة الصلاة؛ نقترح إنهاءه قبل بداية النافذة",
-      new_end: winStart.toISOString(),
-    };
-  }
-
-  if (eStart >= winStart && eStart < winEnd && eEnd > winEnd) {
-    return {
-      type: "delay_start",
-      explanation: "يبدأ الحدث داخل نافذة الصلاة؛ نقترح تأخيره لما بعد الصلاة",
-      new_start: winEnd.toISOString(),
-    };
-  }
-
-  return {
-    type: "mark_free",
-    explanation: "تعارض طفيف؛ نقترح جعله غير مُلزِم خلال نافذة الصلاة",
-  };
-}
-
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
 
@@ -92,160 +20,75 @@ serve(async (req) => {
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return new Response(JSON.stringify({ ok: false, error: "UNAUTHENTICATED" }), {
-        status: 401,
-        headers: { ...cors, "content-type": "application/json" },
+      return new Response(JSON.stringify({ ok: false, error: "UNAUTH" }), {
+        status: 401, headers: { ...cors, "content-type": "application/json" }
       });
     }
 
-    const { data: prof } = await supabase
-      .from("profiles")
-      .select("prayer_buffers,religion")
-      .eq("id", user.id)
-      .maybeSingle();
+    const body = await req.json().catch(() => ({}));
+    const dateISO = body.date ?? new Date().toISOString().slice(0, 10);
 
-    if ((prof?.religion ?? "muslim") !== "muslim") {
-      return new Response(
-        JSON.stringify({ ok: true, checked: 0, created: 0, skipped: "non-muslim" }),
-        { headers: { ...cors, "content-type": "application/json" } }
-      );
-    }
+    const { data: pt } = await supabase.from("prayer_times")
+      .select("fajr,dhuhr,asr,maghrib,isha")
+      .eq("owner_id", user.id).eq("date_iso", dateISO).maybeSingle();
 
-    const prayerBuffers = prof?.prayer_buffers || {
-      fajr: { pre: 10, post: 20 },
-      dhuhr: { pre: 10, post: 20 },
-      asr: { pre: 10, post: 20 },
-      maghrib: { pre: 10, post: 20 },
-      isha: { pre: 10, post: 20 },
-      jumuah: { pre: 30, post: 45 }
-    };
+    if (!pt) return new Response(JSON.stringify({ ok: true, conflicts: [] }), { headers: cors });
 
-    const base = new Date();
-    const days = [0, 1];
-    let created = 0,
-      checked = 0;
+    const dayStart = new Date(`${dateISO}T00:00:00Z`);
+    const dayEnd = new Date(`${dateISO}T23:59:59Z`);
 
-    for (const add of days) {
-      const d = new Date(base);
-      d.setDate(d.getDate() + add);
-      const dateISO = d.toISOString().slice(0, 10);
+    // استعلام موسّع للتداخل عبر منتصف الليل
+    const { data: events } = await supabase.from("events")
+      .select("id,title,starts_at,ends_at,status")
+      .eq("owner_id", user.id)
+      .is("deleted_at", null)
+      .or(`and(starts_at.gte.${dayStart.toISOString()},starts_at.lte.${dayEnd.toISOString()}),and(ends_at.gte.${dayStart.toISOString()},ends_at.lte.${dayEnd.toISOString()})`);
 
-      await supabase.functions.invoke("prayer-sync", {
-        body: { date: dateISO, days: 1 },
-      });
-
-      const { data: pt } = await supabase
-        .from("prayer_times")
-        .select("fajr,dhuhr,asr,maghrib,isha")
-        .eq("owner_id", user.id)
-        .eq("date_iso", dateISO)
-        .maybeSingle();
-
-      // Check if Friday for Jumuah
-      const dayOfWeek = new Date(dateISO).getDay();
-      const prayersOrder = dayOfWeek === 5 
-        ? ["fajr", "jumuah", "asr", "maghrib", "isha"] 
-        : ["fajr", "dhuhr", "asr", "maghrib", "isha"];
-      const pMap: Record<string, Date> = {};
-
-      for (const name of prayersOrder) {
-        const prayerKey = name === "jumuah" ? "dhuhr" : name;
-        const t = (pt as any)?.[prayerKey];
-        if (t) {
-          const [hh, mm] = String(t).split(":").map((x) => parseInt(x, 10));
-          const px = new Date(dateISO + "T00:00:00.000Z");
-          px.setUTCHours(hh, mm, 0, 0);
-          pMap[name] = px;
-        }
-      }
-
-      const dayStart = new Date(dateISO + "T00:00:00.000Z");
-      const dayEnd = new Date(dateISO + "T23:59:59.999Z");
-
-      const { data: events } = await supabase
-        .from("events")
-        .select("*")
-        .eq("owner_id", user.id)
-        .gte("starts_at", dayStart.toISOString())
-        .lte("starts_at", dayEnd.toISOString());
-
-      for (const ev of events ?? []) {
-        checked++;
-        for (const pname of prayersOrder) {
-          const pTime = pMap[pname];
-          if (!pTime) continue;
-
-          const buffers = (prayerBuffers as any)[pname] || { pre: 10, post: 20 };
-          const winStart = addMin(pTime, -buffers.pre);
-          const winEnd = addMin(pTime, +buffers.post);
-
-          const eStart = new Date(ev.starts_at);
-          const eEnd = new Date(ev.ends_at);
-          if (eEnd <= winStart || eStart >= winEnd) continue;
-
-          const minutes = overlapMinutes(eStart, eEnd, winStart, winEnd);
-          if (minutes <= 0) continue;
-
-          // Calculate minutes until prayer starts
-          const now = new Date();
-          const minutesUntilPrayer = Math.max(0, Math.round((pTime.getTime() - now.getTime()) / 60000));
-
-          const sev = severityFromMinutes(minutes, minutesUntilPrayer);
-          const suggestion = buildSuggestion(ev, pname, pTime, buffers.pre, buffers.post);
-
-          const row = {
-            owner_id: user.id,
-            date_iso: dateISO,
-            prayer_name: pname,
-            prayer_time: pTime.toISOString(),
-            prayer_start: winStart.toISOString(),
-            prayer_end: winEnd.toISOString(),
-            event_id: ev.id,
-            object_id: ev.id,
-            object_kind: "event",
-            overlap_min: minutes,
-            buffer_min: buffers.pre + buffers.post,
-            severity: sev,
-            status: suggestion.type === "none" ? "ignored" : "proposed",
-            suggestion: suggestion,
-            resolved_at: null,
-            last_checked_at: new Date().toISOString()
-          };
-
-          const { error } = await supabase.from("conflicts").upsert(row, {
-            onConflict: "owner_id,event_id,prayer_name,date_iso",
-            ignoreDuplicates: false,
-          });
-          if (!error) created++;
-          
-          // Send WhatsApp notification for high severity conflicts (optional)
-          if (!error && sev === "high" && minutesUntilPrayer > 0 && minutesUntilPrayer <= 60) {
-            try {
-              await supabase.functions.invoke("notify-dispatch", {
-                body: {
-                  owner_id: user.id,
-                  title: `⚠️ تعارض مع صلاة ${pname}`,
-                  body: `حدث "${ev.title}" يتعارض مع ${pname}. يبدأ خلال ${minutesUntilPrayer} دقيقة.`,
-                  channel: "local",
-                  priority: 2
-                }
-              });
-            } catch (e) {
-              console.warn("Failed to send notification:", e);
-            }
-          }
-        }
-      }
-    }
-
-    return new Response(JSON.stringify({ ok: true, checked, created }), {
-      headers: { ...cors, "content-type": "application/json" },
+    const slots = [
+      { name: "الفجر", time: pt.fajr, window: 35 },
+      { name: "الظهر", time: pt.dhuhr, window: 40 },
+      { name: "العصر", time: pt.asr, window: 40 },
+      { name: "المغرب", time: pt.maghrib, window: 30 },
+      { name: "العشاء", time: pt.isha, window: 35 },
+    ].map(s => {
+      const start = new Date(`${dateISO}T${s.time}:00Z`);
+      const end = new Date(start.getTime() + s.window * 60 * 1000);
+      return { ...s, start, end };
     });
-  } catch (e: any) {
-    console.error("conflict-check error:", e);
-    return new Response(
-      JSON.stringify({ ok: false, error: "SERVER_ERROR", details: String(e?.message ?? e) }),
-      { status: 500, headers: { ...cors, "content-type": "application/json" } }
-    );
+
+    const conflictsToUpsert: any[] = [];
+
+    for (const ev of (events ?? [])) {
+      const evStart = new Date(ev.starts_at);
+      const evEnd = new Date(ev.ends_at ?? ev.starts_at);
+
+      for (const s of slots) {
+        if (evStart < s.end && s.start < evEnd) {
+          const overlapMin = Math.floor(
+            (Math.min(evEnd.getTime(), s.end.getTime()) - 
+             Math.max(evStart.getTime(), s.start.getTime())) / 60000
+          );
+
+          conflictsToUpsert.push({
+            owner_id: user.id, event_id: ev.id, conflict_date: dateISO,
+            slot_name: s.name, severity: ev.status === 'confirmed' ? 'warn' : 'block',
+            status: 'open', overlap_min: overlapMin, prayer_name: s.name,
+            prayer_start: s.start.toISOString(), prayer_end: s.end.toISOString(),
+            object_kind: 'event', object_id: ev.id, date_iso: dateISO
+          });
+        }
+      }
+    }
+
+    if (conflictsToUpsert.length > 0) {
+      await supabase.from("conflicts").upsert(conflictsToUpsert, {
+        onConflict: 'owner_id,event_id,conflict_date,slot_name',
+        ignoreDuplicates: false
+      });
+    }
+
+    return new Response(JSON.stringify({ ok: true, count: conflictsToUpsert.length }), { headers: cors });
+  } catch (e) {
+    return new Response(JSON.stringify({ ok: false, error: String(e) }), { status: 500, headers: cors });
   }
 });
