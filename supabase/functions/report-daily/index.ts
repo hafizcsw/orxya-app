@@ -58,18 +58,36 @@ serve(async (req) => {
     const villas_sold = Number(logRow?.villas_sold) || 0;
     const net_usd = income_usd - spend_usd;
 
-    // --- Get totals (all time) ---
-    const { data: allLogs, error: allLogsErr } = await supabase
+    // --- Get totals from daily_logs ---
+    const { data: allDailyLogs, error: allLogsErr } = await supabase
       .from("daily_logs")
       .select("income_usd, spend_usd")
       .eq("owner_id", user.id);
     if (allLogsErr) throw allLogsErr;
 
-    let total_income = 0, total_spend = 0;
-    for (const r of allLogs ?? []) {
-      total_income += Number(r.income_usd) || 0;
-      total_spend += Number(r.spend_usd) || 0;
+    let total_income_daily = 0, total_spend_daily = 0;
+    for (const r of allDailyLogs ?? []) {
+      total_income_daily += Number(r.income_usd) || 0;
+      total_spend_daily += Number(r.spend_usd) || 0;
     }
+
+    // --- Get totals from finance_entries (legacy data) ---
+    const { data: allFinance, error: finErr } = await supabase
+      .from("finance_entries")
+      .select("type, amount_usd")
+      .eq("owner_id", user.id);
+    if (finErr) throw finErr;
+
+    let total_income_finance = 0, total_spend_finance = 0;
+    for (const r of allFinance ?? []) {
+      const amt = Number(r.amount_usd) || 0;
+      if (r.type === "income") total_income_finance += amt;
+      if (r.type === "spend") total_spend_finance += amt;
+    }
+
+    // Combine both sources
+    const total_income = total_income_daily + total_income_finance;
+    const total_spend = total_spend_daily + total_spend_finance;
     const total_balance = total_income - total_spend;
 
     const report = {
