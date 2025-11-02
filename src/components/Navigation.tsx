@@ -5,7 +5,7 @@ import AuthSheet from "@/components/AuthSheet";
 import { useUser } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/telemetry";
-import { Menu, X, User } from "lucide-react";
+import { Menu, X, User, Calendar } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const Navigation = () => {
@@ -105,8 +105,16 @@ const Navigation = () => {
             )}
           </div>
           
-          {/* Desktop and Mobile Auth - Avatar on Right */}
+          {/* Calendar Icon + Avatar */}
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/calendar')}
+              className="w-9 h-9 rounded-full bg-secondary/50 hover:bg-secondary flex items-center justify-center transition-all hover:scale-110 duration-300"
+              title="التقويم"
+            >
+              <Calendar className="w-4 h-4" />
+            </button>
+            
             {user && (
               <div className="relative">
                 <button
