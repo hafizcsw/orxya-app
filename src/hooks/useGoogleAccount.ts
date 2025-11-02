@@ -43,14 +43,11 @@ export function useGoogleAccount() {
       if (error) throw error;
 
       const url = data?.url as string | undefined;
-      if (url) {
-        const wnd = window.open(url, '_blank', 'width=520,height=650');
-        const poll = setInterval(async () => {
-          if (!wnd || wnd.closed) {
-            clearInterval(poll);
-            await refresh();
-          }
-        }, 1000);
+      const state = data?.state as string | undefined;
+      
+      if (url && state) {
+        localStorage.setItem('g_oauth_state', state);
+        window.location.href = url;
       }
     } catch (e: any) {
       console.error('Google connect error:', e);
