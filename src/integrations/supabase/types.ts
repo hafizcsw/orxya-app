@@ -246,6 +246,13 @@ export type Database = {
             referencedRelation: "events"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "conflicts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "vw_events_with_conflicts"
+            referencedColumns: ["id"]
+          },
         ]
       }
       daily_logs: {
@@ -710,6 +717,13 @@ export type Database = {
             referencedRelation: "events"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "tasks_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "vw_events_with_conflicts"
+            referencedColumns: ["id"]
+          },
         ]
       }
       user_roles: {
@@ -735,6 +749,72 @@ export type Database = {
       }
     }
     Views: {
+      vw_events_with_conflicts: {
+        Row: {
+          conflict_level: number | null
+          created_at: string | null
+          description: string | null
+          duration_min: number | null
+          ends_at: string | null
+          external_calendar_id: string | null
+          external_etag: string | null
+          external_event_id: string | null
+          external_id: string | null
+          external_source: string | null
+          id: string | null
+          is_ai_created: boolean | null
+          last_write_origin: string | null
+          owner_id: string | null
+          source_id: string | null
+          starts_at: string | null
+          tags: string[] | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          conflict_level?: never
+          created_at?: string | null
+          description?: string | null
+          duration_min?: number | null
+          ends_at?: string | null
+          external_calendar_id?: string | null
+          external_etag?: string | null
+          external_event_id?: string | null
+          external_id?: string | null
+          external_source?: string | null
+          id?: string | null
+          is_ai_created?: boolean | null
+          last_write_origin?: string | null
+          owner_id?: string | null
+          source_id?: string | null
+          starts_at?: string | null
+          tags?: string[] | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          conflict_level?: never
+          created_at?: string | null
+          description?: string | null
+          duration_min?: number | null
+          ends_at?: string | null
+          external_calendar_id?: string | null
+          external_etag?: string | null
+          external_event_id?: string | null
+          external_id?: string | null
+          external_source?: string | null
+          id?: string | null
+          is_ai_created?: boolean | null
+          last_write_origin?: string | null
+          owner_id?: string | null
+          source_id?: string | null
+          starts_at?: string | null
+          tags?: string[] | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       vw_productivity_daily: {
         Row: {
           ai_events: number | null

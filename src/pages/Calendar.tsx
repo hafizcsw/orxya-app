@@ -17,7 +17,8 @@ type DbEvent = {
   starts_at: string; 
   ends_at: string; 
   owner_id: string; 
-  source?: string 
+  source?: string;
+  conflict_level?: number;
 };
 
 type PT = { 
@@ -50,18 +51,36 @@ export default function CalendarPage() {
       const fromISO = toISODate(from);
       const toISO = toISODate(to);
 
-      const ev = await supabase.from("events")
+      // Try view first, fallback to events table
+      let ev = await supabase.from("vw_events_with_conflicts")
         .select("*")
         .eq("owner_id", user.id)
         .gte("starts_at", from.toISOString())
         .lte("ends_at", new Date(to.getTime()+24*60*60*1000-1).toISOString());
       
-      const ebd: Record<string, DbEvent[]> = {};
-      (ev.data ?? []).forEach((e: any) => {
-        const key = toISODate(new Date(e.starts_at));
-        (ebd[key] ||= []).push(e);
-      });
-      setEventsByDate(ebd);
+      if (ev.error) {
+        // Fallback to events table if view doesn't exist
+        const fallbackEv = await supabase.from("events")
+          .select("*")
+          .eq("owner_id", user.id)
+          .gte("starts_at", from.toISOString())
+          .lte("ends_at", new Date(to.getTime()+24*60*60*1000-1).toISOString());
+        
+        // Map to include conflict_level: 0
+        const ebd: Record<string, DbEvent[]> = {};
+        (fallbackEv.data ?? []).forEach((e: any) => {
+          const key = toISODate(new Date(e.starts_at));
+          (ebd[key] ||= []).push({ ...e, conflict_level: 0 });
+        });
+        setEventsByDate(ebd);
+      } else {
+        const ebd: Record<string, DbEvent[]> = {};
+        (ev.data ?? []).forEach((e: any) => {
+          const key = toISODate(new Date(e.starts_at));
+          (ebd[key] ||= []).push(e);
+        });
+        setEventsByDate(ebd);
+      }
 
       const pr = await supabase.from("prayer_times")
         .select("date_iso,fajr,dhuhr,asr,maghrib,isha")
@@ -179,6 +198,7 @@ export default function CalendarPage() {
           eventsByDate={eventsByDate} 
           prayersByDate={prayersByDate} 
           onEventClick={(id)=>{ notify.info(`حدث: ${id}`); }} 
+          onEventsChange={load}
         />
       )}
     </div>

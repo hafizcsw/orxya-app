@@ -96,6 +96,14 @@ const MaterializeTaskEvent = z.object({
   duration_min: z.number().int().positive().max(12 * 60),
 });
 
+const UpdateEvent = z.object({
+  event_id: z.string().uuid(),
+  starts_at: z.string().datetime(),
+  ends_at: z.string().datetime(),
+  title: z.string().min(1).optional(),
+  location: z.string().optional(),
+});
+
 const BodySchema = z.object({
   command: z.enum([
     "add_daily_log",
@@ -109,6 +117,7 @@ const BodySchema = z.object({
     "create_event",
     "move_event",
     "resize_event",
+    "update_event",
     "materialize_task_event",
   ]),
   idempotency_key: z.string().min(8),
@@ -325,6 +334,28 @@ serve(async (req) => {
       if (error) throw error;
       savedIds = data?.map((d) => d.id) ?? [];
       result = { table: "events", action: "resized", count: savedIds.length };
+    }
+
+    // ─────────────────────── update_event ─────────────────────────
+    if (command === "update_event") {
+      const p = UpdateEvent.parse(parsed.data.payload);
+      const updateData: any = {
+        starts_at: p.starts_at,
+        ends_at: p.ends_at,
+        updated_at: new Date().toISOString(),
+      };
+      if (p.title) updateData.title = p.title;
+      if (p.location !== undefined) updateData.location = p.location;
+      
+      const { data, error } = await supabase
+        .from("events")
+        .update(updateData)
+        .eq("id", p.event_id)
+        .eq("owner_id", user.id)
+        .select("id");
+      if (error) throw error;
+      savedIds = data?.map((d) => d.id) ?? [];
+      result = { table: "events", action: "updated", count: savedIds.length };
     }
 
     // ─────────────────────── materialize_task_event ─────────────────────────
