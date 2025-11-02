@@ -12,6 +12,7 @@ import { Protected } from '@/components/Protected'
 import { OryxaButton } from '@/components/oryxa/Button'
 import { OryxaCard } from '@/components/oryxa/Card'
 import { AIDock } from '@/components/oryxa/AIDock'
+import { cn } from '@/lib/utils'
 import { Bell, DollarSign, TrendingUp, TrendingDown, Clock, Dumbbell, BookOpen, Footprints, Award, Building, Edit2, BarChart3 } from 'lucide-react'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { z } from 'zod'
@@ -256,341 +257,358 @@ const Today = () => {
 
   return (
     <Protected>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pb-24">
         <AIDock />
         
-        <div className="p-4 space-y-6 max-w-6xl mx-auto">
+        {/* Sticky Header - WHOOP Style */}
+        <div className="sticky top-0 z-30 bg-card/80 backdrop-blur-lg border-b border-border/50 px-6 py-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            {/* Date Navigation */}
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => setPeriod('daily')}
+                className="p-2 rounded-full hover:bg-secondary transition-colors"
+              >
+                <Clock className="w-5 h-5" />
+              </button>
+              
+              <div className="text-center">
+                <div className="text-xs text-muted-foreground">التقرير</div>
+                <div className="text-sm font-semibold">
+                  {period === 'daily' ? 'يومي' : period === 'weekly' ? 'أسبوعي' : period === 'monthly' ? 'شهري' : 'سنوي'}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPeriod('daily')}
+                className={cn(
+                  "w-10 h-10 rounded-full flex items-center justify-center transition-all",
+                  period === 'daily' 
+                    ? "bg-[hsl(var(--whoop-blue))] text-white shadow-[var(--glow-blue)]" 
+                    : "bg-secondary hover:bg-secondary/80"
+                )}
+              >
+                <span className="text-xs font-bold">D</span>
+              </button>
+              <button
+                onClick={() => setPeriod('weekly')}
+                className={cn(
+                  "w-10 h-10 rounded-full flex items-center justify-center transition-all",
+                  period === 'weekly' 
+                    ? "bg-[hsl(var(--whoop-blue))] text-white shadow-[var(--glow-blue)]" 
+                    : "bg-secondary hover:bg-secondary/80"
+                )}
+              >
+                <span className="text-xs font-bold">W</span>
+              </button>
+              <button
+                onClick={() => setPeriod('monthly')}
+                className={cn(
+                  "w-10 h-10 rounded-full flex items-center justify-center transition-all",
+                  period === 'monthly' 
+                    ? "bg-[hsl(var(--whoop-blue))] text-white shadow-[var(--glow-blue)]" 
+                    : "bg-secondary hover:bg-secondary/80"
+                )}
+              >
+                <span className="text-xs font-bold">M</span>
+              </button>
+              <button
+                onClick={() => setPeriod('yearly')}
+                className={cn(
+                  "w-10 h-10 rounded-full flex items-center justify-center transition-all",
+                  period === 'yearly' 
+                    ? "bg-[hsl(var(--whoop-blue))] text-white shadow-[var(--glow-blue)]" 
+                    : "bg-secondary hover:bg-secondary/80"
+                )}
+              >
+                <span className="text-xs font-bold">Y</span>
+              </button>
+            </div>
+
+            <button
+              onClick={async () => {
+                await ensureNotificationPerms();
+                const now = new Date(); 
+                now.setMinutes(now.getMinutes() + 1);
+                await LocalNotifications.schedule({
+                  notifications: [{
+                    id: 999001,
+                    title: 'اختبار Oryxa',
+                    body: 'إشعار بعد دقيقة',
+                    schedule: { at: now }
+                  }]
+                });
+                setToast('تم جدولة إشعار اختبار ⏰');
+              }}
+              className="w-10 h-10 rounded-full bg-secondary hover:bg-secondary/80 flex items-center justify-center transition-all"
+            >
+              <Bell className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        <div className="px-6 py-8 max-w-7xl mx-auto space-y-8">
           <SessionBanner />
 
-          {/* Hero Section with WHOOP styling */}
-          <OryxaCard className="p-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-                  مرحبًا بك في Oryxa
-                </h1>
-                <p className="text-muted-foreground">ابدأ يومك بإنتاجية عالية</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <OryxaButton 
-                  variant="ghost"
-                  size="sm"
-                  onClick={async () => {
-                    await ensureNotificationPerms();
-                    const now = new Date(); 
-                    now.setMinutes(now.getMinutes() + 1);
-                    await LocalNotifications.schedule({
-                      notifications: [{
-                        id: 999001,
-                        title: 'اختبار Oryxa',
-                        body: 'إشعار بعد دقيقة',
-                        schedule: { at: now }
-                      }]
-                    });
-                    setToast('تم جدولة إشعار اختبار بعد دقيقة ⏰');
-                  }}
-                >
-                  <Bell className="w-4 h-4" />
-                </OryxaButton>
-              </div>
-            </div>
-          </OryxaCard>
-
-          <section className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">التقرير</h2>
-              <div className="flex gap-2">
-                <OryxaButton
-                  size="sm"
-                  variant={period === 'daily' ? 'primary' : 'secondary'}
-                  onClick={() => setPeriod('daily')}
-                >
-                  يومي
-                </OryxaButton>
-                <OryxaButton
-                  size="sm"
-                  variant={period === 'weekly' ? 'primary' : 'secondary'}
-                  onClick={() => setPeriod('weekly')}
-                >
-                  أسبوعي
-                </OryxaButton>
-                <OryxaButton
-                  size="sm"
-                  variant={period === 'monthly' ? 'primary' : 'secondary'}
-                  onClick={() => setPeriod('monthly')}
-                >
-                  شهري
-                </OryxaButton>
-                <OryxaButton
-                  size="sm"
-                  variant={period === 'yearly' ? 'primary' : 'secondary'}
-                  onClick={() => setPeriod('yearly')}
-                >
-                  سنوي
-                </OryxaButton>
-              </div>
-            </div>
-            
-            {loading ? (
-              <OryxaCard className="p-6 text-center">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                <p className="mt-2 text-sm text-muted-foreground">جار التحميل…</p>
-              </OryxaCard>
-            ) : report ? (
-              <>
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">اليوم - {report.date}</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {renderEditableCard('income_usd', <TrendingUp className="w-5 h-5 text-success" />, 'دخل اليوم', report.income_usd, 'bg-success/10', '$', 1)}
-                    {renderEditableCard('spend_usd', <TrendingDown className="w-5 h-5 text-destructive" />, 'مصروف اليوم', report.spend_usd, 'bg-destructive/10', '$', 1)}
-                    <OryxaCard>
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">صافي اليوم</span>
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <DollarSign className="w-5 h-5 text-primary" />
-                        </div>
-                      </div>
-                      <div className="text-3xl font-bold">{report.net_usd >= 0 ? '✅' : '⚠️'} ${report.net_usd}</div>
-                    </OryxaCard>
-                    <OryxaCard>
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">التاريخ</span>
-                        <div className="w-10 h-10 rounded-full bg-muted/10 flex items-center justify-center">
-                          <Clock className="w-5 h-5 text-muted-foreground" />
-                        </div>
-                      </div>
-                      <div className="text-lg font-medium">{report.date}</div>
-                    </OryxaCard>
+          {loading ? (
+            <OryxaCard className="p-6 text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <p className="mt-2 text-sm text-muted-foreground">جار التحميل…</p>
+            </OryxaCard>
+          ) : report ? (
+            <>
+              {/* Stats Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {renderEditableCard('income_usd', <TrendingUp className="w-5 h-5 text-[hsl(var(--whoop-green))]" />, 'دخل اليوم', report.income_usd, 'bg-[hsl(var(--whoop-green)_/_0.1)]', '$', 1)}
+                {renderEditableCard('spend_usd', <TrendingDown className="w-5 h-5 text-[hsl(var(--whoop-red))]" />, 'مصروف اليوم', report.spend_usd, 'bg-[hsl(var(--whoop-red)_/_0.1)]', '$', 1)}
+                <OryxaCard>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">صافي اليوم</span>
+                    <div className="w-10 h-10 rounded-full bg-[hsl(var(--whoop-blue)_/_0.1)] flex items-center justify-center">
+                      <DollarSign className="w-5 h-5 text-[hsl(var(--whoop-blue))]" />
+                    </div>
                   </div>
-                </div>
+                  <div className="text-3xl font-bold">{report.net_usd >= 0 ? '✅' : '⚠️'} ${report.net_usd}</div>
+                </OryxaCard>
+                <OryxaCard>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">التاريخ</span>
+                    <div className="w-10 h-10 rounded-full bg-muted/10 flex items-center justify-center">
+                      <Clock className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                  </div>
+                  <div className="text-lg font-medium">{report.date}</div>
+                </OryxaCard>
+              </div>
 
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">الإجماليات الكلية</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <OryxaCard className="group">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                          الرصيد الحقيقي
-                        </span>
-                        <div className="flex items-center gap-2">
-                          {!editingBalance && (
-                            <OryxaButton
-                              variant="ghost"
-                              size="sm"
-                              className="opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={() => {
-                                setEditingBalance(true);
-                                setBalanceValue(report.current_balance?.toString() || '0');
-                              }}
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </OryxaButton>
-                          )}
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                            <DollarSign className="w-5 h-5 text-primary" />
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {editingBalance ? (
-                        <div className="space-y-2">
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={balanceValue}
-                            onChange={(e) => setBalanceValue(e.target.value)}
-                            className="input w-full text-2xl font-bold"
-                            autoFocus
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                updateBalance(balanceValue);
-                              } else if (e.key === 'Escape') {
-                                setEditingBalance(false);
-                              }
-                            }}
-                          />
-                          <div className="flex gap-2">
-                            <OryxaButton
-                              size="sm"
-                              variant="primary"
-                              onClick={() => updateBalance(balanceValue)}
-                              className="flex-1"
-                            >
-                              حفظ
-                            </OryxaButton>
-                            <OryxaButton
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => setEditingBalance(false)}
-                              className="flex-1"
-                            >
-                              إلغاء
-                            </OryxaButton>
-                          </div>
-                        </div>
-                      ) : (
-                        <div
-                          className="text-4xl font-bold cursor-pointer hover:scale-105 transition-transform"
-                          style={{ color: (report.current_balance || 0) >= 0 ? 'hsl(var(--whoop-green))' : 'hsl(var(--whoop-red))' }}
+              {/* Balance & Totals */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <OryxaCard className="group">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                      الرصيد الحقيقي
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {!editingBalance && (
+                        <OryxaButton
+                          variant="ghost"
+                          size="sm"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
                           onClick={() => {
                             setEditingBalance(true);
                             setBalanceValue(report.current_balance?.toString() || '0');
                           }}
                         >
-                          ${report.current_balance?.toFixed(2) || 0}
-                        </div>
+                          <Edit2 className="w-4 h-4" />
+                        </OryxaButton>
                       )}
-                    </OryxaCard>
-                    
-                    <OryxaCard>
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                          إجمالي الدخل
-                        </span>
-                        <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
-                          <TrendingUp className="w-5 h-5 text-success" />
-                        </div>
+                      <div className="w-10 h-10 rounded-full bg-[hsl(var(--whoop-blue)_/_0.1)] flex items-center justify-center">
+                        <DollarSign className="w-5 h-5 text-[hsl(var(--whoop-blue))]" />
                       </div>
-                      <div className="text-3xl font-bold text-success">
-                        ${report.total_income || 0}
-                      </div>
-                    </OryxaCard>
-                    
-                    <OryxaCard>
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                          إجمالي المصروفات
-                        </span>
-                        <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
-                          <TrendingDown className="w-5 h-5 text-destructive" />
-                        </div>
-                      </div>
-                      <div className="text-3xl font-bold text-destructive">
-                        ${report.total_spend || 0}
-                      </div>
-                    </OryxaCard>
+                    </div>
                   </div>
-                </div>
+                  
+                  {editingBalance ? (
+                    <div className="space-y-2">
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={balanceValue}
+                        onChange={(e) => setBalanceValue(e.target.value)}
+                        className="input w-full text-2xl font-bold"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            updateBalance(balanceValue);
+                          } else if (e.key === 'Escape') {
+                            setEditingBalance(false);
+                          }
+                        }}
+                      />
+                      <div className="flex gap-2">
+                        <OryxaButton
+                          size="sm"
+                          variant="primary"
+                          onClick={() => updateBalance(balanceValue)}
+                          className="flex-1"
+                        >
+                          حفظ
+                        </OryxaButton>
+                        <OryxaButton
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setEditingBalance(false)}
+                          className="flex-1"
+                        >
+                          إلغاء
+                        </OryxaButton>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      className="text-4xl font-bold cursor-pointer hover:scale-105 transition-transform"
+                      style={{ color: (report.current_balance || 0) >= 0 ? 'hsl(var(--whoop-green))' : 'hsl(var(--whoop-red))' }}
+                      onClick={() => {
+                        setEditingBalance(true);
+                        setBalanceValue(report.current_balance?.toString() || '0');
+                      }}
+                    >
+                      ${report.current_balance?.toFixed(2) || 0}
+                    </div>
+                  )}
+                </OryxaCard>
+                
+                <OryxaCard>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                      إجمالي الدخل
+                    </span>
+                    <div className="w-10 h-10 rounded-full bg-[hsl(var(--whoop-green)_/_0.1)] flex items-center justify-center">
+                      <TrendingUp className="w-5 h-5 text-[hsl(var(--whoop-green))]" />
+                    </div>
+                  </div>
+                  <div className="text-3xl font-bold text-[hsl(var(--whoop-green))]">
+                    ${report.total_income || 0}
+                  </div>
+                </OryxaCard>
+                
+                <OryxaCard>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                      إجمالي المصروفات
+                    </span>
+                    <div className="w-10 h-10 rounded-full bg-[hsl(var(--whoop-red)_/_0.1)] flex items-center justify-center">
+                      <TrendingDown className="w-5 h-5 text-[hsl(var(--whoop-red))]" />
+                    </div>
+                  </div>
+                  <div className="text-3xl font-bold text-[hsl(var(--whoop-red))]">
+                    ${report.total_spend || 0}
+                  </div>
+                </OryxaCard>
+              </div>
 
+              {/* Activities */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {renderEditableCard('work_hours', <Building className="w-5 h-5 text-[hsl(var(--whoop-blue))]" />, 'ساعات العمل', report.work_hours, 'bg-[hsl(var(--whoop-blue)_/_0.1)]', ' ساعة', 0.5)}
+                {renderEditableCard('study_hours', <BookOpen className="w-5 h-5 text-[hsl(var(--whoop-yellow))]" />, 'ساعات الدراسة', report.study_hours, 'bg-[hsl(var(--whoop-yellow)_/_0.1)]', ' ساعة', 0.5)}
+                {renderEditableCard('mma_hours', <Dumbbell className="w-5 h-5 text-[hsl(var(--whoop-red))]" />, 'ساعات MMA', report.mma_hours, 'bg-[hsl(var(--whoop-red)_/_0.1)]', ' ساعة', 0.5)}
+                {renderEditableCard('walk_min', <Footprints className="w-5 h-5 text-[hsl(var(--whoop-green))]" />, 'دقائق المشي', report.walk_min, 'bg-[hsl(var(--whoop-green)_/_0.1)]', ' دقيقة', 1)}
+              </div>
+
+              {/* Sales */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <OryxaCard>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                      منح دراسية
+                    </span>
+                    <div className="w-10 h-10 rounded-full bg-[hsl(var(--whoop-green)_/_0.1)] flex items-center justify-center">
+                      <Award className="w-5 h-5 text-[hsl(var(--whoop-green))]" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-sm text-muted-foreground">الربح</div>
+                    <div className="text-2xl font-bold text-[hsl(var(--whoop-green))]">${report.scholarship_profit || 0}</div>
+                  </div>
+                </OryxaCard>
+                
+                <OryxaCard>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                      فلل
+                    </span>
+                    <div className="w-10 h-10 rounded-full bg-[hsl(var(--whoop-blue)_/_0.1)] flex items-center justify-center">
+                      <Building className="w-5 h-5 text-[hsl(var(--whoop-blue))]" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-sm text-muted-foreground">الربح</div>
+                    <div className="text-2xl font-bold text-[hsl(var(--whoop-blue))]">${report.villa_profit || 0}</div>
+                  </div>
+                </OryxaCard>
+                
+                <OryxaCard>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                      أخرى
+                    </span>
+                    <div className="w-10 h-10 rounded-full bg-[hsl(var(--whoop-yellow)_/_0.1)] flex items-center justify-center">
+                      <DollarSign className="w-5 h-5 text-[hsl(var(--whoop-yellow))]" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-sm text-muted-foreground">الربح</div>
+                    <div className="text-2xl font-bold text-[hsl(var(--whoop-yellow))]">${report.other_profit || 0}</div>
+                  </div>
+                </OryxaCard>
+              </div>
+
+              {/* Charts */}
+              {period !== 'daily' && report.trend_data && report.trend_data.length > 0 && (
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">الأنشطة - {report.date}</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {renderEditableCard('work_hours', <Building className="w-5 h-5 text-primary" />, 'ساعات العمل', report.work_hours, 'bg-primary/10', ' ساعة', 0.5)}
-                    {renderEditableCard('study_hours', <BookOpen className="w-5 h-5 text-info" />, 'ساعات الدراسة', report.study_hours, 'bg-info/10', ' ساعة', 0.5)}
-                    {renderEditableCard('mma_hours', <Dumbbell className="w-5 h-5 text-warning" />, 'ساعات MMA', report.mma_hours, 'bg-warning/10', ' ساعة', 0.5)}
-                    {renderEditableCard('walk_min', <Footprints className="w-5 h-5 text-accent" />, 'دقائق المشي', report.walk_min, 'bg-accent/10', ' دقيقة', 1)}
-                  </div>
+                  <OryxaCard className="p-6">
+                    <h4 className="font-medium mb-4 flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-[hsl(var(--whoop-blue)_/_0.1)] flex items-center justify-center">
+                        <BarChart3 className="w-4 h-4 text-[hsl(var(--whoop-blue))]" />
+                      </div>
+                      الدخل والمصروفات
+                    </h4>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={report.trend_data}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" />
+                        <YAxis stroke="hsl(var(--muted-foreground))" />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'hsl(var(--card))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '0.75rem'
+                          }}
+                        />
+                        <Legend />
+                        <Line type="monotone" dataKey="income_usd" stroke="hsl(var(--whoop-green))" name="الدخل" strokeWidth={2} />
+                        <Line type="monotone" dataKey="spend_usd" stroke="hsl(var(--whoop-red))" name="المصروفات" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </OryxaCard>
+
+                  <OryxaCard className="p-6">
+                    <h4 className="font-medium mb-4 flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-[hsl(var(--whoop-blue)_/_0.1)] flex items-center justify-center">
+                        <BarChart3 className="w-4 h-4 text-[hsl(var(--whoop-blue))]" />
+                      </div>
+                      الأنشطة
+                    </h4>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={report.trend_data}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" />
+                        <YAxis stroke="hsl(var(--muted-foreground))" />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'hsl(var(--card))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '0.75rem'
+                          }}
+                        />
+                        <Legend />
+                        <Bar dataKey="work_hours" fill="hsl(var(--whoop-blue))" name="عمل" />
+                        <Bar dataKey="study_hours" fill="hsl(var(--whoop-yellow))" name="دراسة" />
+                        <Bar dataKey="mma_hours" fill="hsl(var(--whoop-red))" name="MMA" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </OryxaCard>
                 </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">المبيعات - {report.date}</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <OryxaCard>
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                          منح دراسية
-                        </span>
-                        <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
-                          <Award className="w-5 h-5 text-success" />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="text-sm text-muted-foreground">الربح</div>
-                        <div className="text-2xl font-bold text-success">${report.scholarship_profit || 0}</div>
-                      </div>
-                    </OryxaCard>
-                    
-                    <OryxaCard>
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                          فلل
-                        </span>
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Building className="w-5 h-5 text-primary" />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="text-sm text-muted-foreground">الربح</div>
-                        <div className="text-2xl font-bold text-primary">${report.villa_profit || 0}</div>
-                      </div>
-                    </OryxaCard>
-                    
-                    <OryxaCard>
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                          أخرى
-                        </span>
-                        <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
-                          <DollarSign className="w-5 h-5 text-accent" />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="text-sm text-muted-foreground">الربح</div>
-                        <div className="text-2xl font-bold text-accent">${report.other_profit || 0}</div>
-                      </div>
-                    </OryxaCard>
-                  </div>
-                </div>
-
-                {period !== 'daily' && report.trend_data && report.trend_data.length > 0 && (
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                      <BarChart3 className="w-5 h-5" />
-                      الرسوم البيانية
-                    </h3>
-                    
-                    <OryxaCard className="p-6">
-                      <h4 className="font-medium mb-4">الدخل والمصروفات</h4>
-                      <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={report.trend_data}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                          <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" />
-                          <YAxis stroke="hsl(var(--muted-foreground))" />
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: 'hsl(var(--card))',
-                              border: '1px solid hsl(var(--border))',
-                              borderRadius: '0.75rem'
-                            }}
-                          />
-                          <Legend />
-                          <Line type="monotone" dataKey="income_usd" stroke="hsl(var(--whoop-green))" name="الدخل" strokeWidth={2} />
-                          <Line type="monotone" dataKey="spend_usd" stroke="hsl(var(--whoop-red))" name="المصروفات" strokeWidth={2} />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </OryxaCard>
-
-                    <OryxaCard className="p-6">
-                      <h4 className="font-medium mb-4">الأنشطة</h4>
-                      <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={report.trend_data}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                          <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" />
-                          <YAxis stroke="hsl(var(--muted-foreground))" />
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: 'hsl(var(--card))',
-                              border: '1px solid hsl(var(--border))',
-                              borderRadius: '0.75rem'
-                            }}
-                          />
-                          <Legend />
-                          <Bar dataKey="work_hours" fill="hsl(var(--whoop-blue))" name="عمل" />
-                          <Bar dataKey="study_hours" fill="hsl(var(--whoop-yellow))" name="دراسة" />
-                          <Bar dataKey="mma_hours" fill="hsl(var(--whoop-red))" name="MMA" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </OryxaCard>
-                  </div>
-                )}
-              </>
-            ) : (
-              <OryxaCard className="p-6 text-center">
-                <p className="text-muted-foreground">لا توجد بيانات لعرضها</p>
-              </OryxaCard>
-            )}
-          </section>
+              )}
+            </>
+          ) : (
+            <OryxaCard className="p-6 text-center">
+              <p className="text-muted-foreground">لا توجد بيانات لعرضها</p>
+            </OryxaCard>
+          )}
         </div>
 
         {toast && <Toast msg={toast} />}
