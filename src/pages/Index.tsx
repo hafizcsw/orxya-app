@@ -8,13 +8,18 @@ const Index = () => {
 
   useEffect(() => {
     if (!loading) {
-      if (user) {
-        console.log('[Index] User found, redirecting to /today')
-        navigate('/today');
-      } else {
-        console.log('[Index] No user, redirecting to /auth')
-        navigate('/auth');
-      }
+      // Small timeout to prevent race condition with auth state changes
+      const timeout = setTimeout(() => {
+        if (user) {
+          console.log('[Index] User found, redirecting to /today')
+          navigate('/today', { replace: true });
+        } else {
+          console.log('[Index] No user, redirecting to /auth')
+          navigate('/auth', { replace: true });
+        }
+      }, 50);
+      
+      return () => clearTimeout(timeout);
     }
   }, [user, loading, navigate]);
 

@@ -10,6 +10,7 @@ import type { User } from '@supabase/supabase-js'
 export function useUser() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [postLoginTasksRun, setPostLoginTasksRun] = useState(false)
 
   async function applyProfileFlags(uid: string | null) {
     if (!uid) { 
@@ -61,8 +62,10 @@ export function useUser() {
       identifyUser(u?.id ?? null, u ? { email: u.email } : undefined);
       await applyProfileFlags(u?.id ?? null);
       
-      // Post-login tasks (non-blocking)
-      if (u && event === 'SIGNED_IN') {
+      // Post-login tasks (non-blocking) - only run once per session
+      if (u && event === 'SIGNED_IN' && !postLoginTasksRun) {
+        setPostLoginTasksRun(true);
+        
         setTimeout(() => {
           console.log('[useUser] Running post-login tasks...');
           
@@ -94,6 +97,11 @@ export function useUser() {
             console.error('Calendar sync failed:', e);
           });
         }, 100);
+      }
+      
+      // Reset flag when user signs out
+      if (!u && event === 'SIGNED_OUT') {
+        setPostLoginTasksRun(false);
       }
     });
     

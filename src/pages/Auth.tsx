@@ -19,7 +19,7 @@ export default function Auth() {
   useEffect(() => {
     if (user) {
       console.log('[Auth] User already logged in, redirecting to /today')
-      navigate('/today')
+      navigate('/today', { replace: true })
     }
   }, [user, navigate])
 
@@ -30,8 +30,8 @@ export default function Auth() {
       if (mode === 'signin') {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
-        console.log('[Auth] Sign in successful, redirecting to /today')
-        navigate('/today')
+        console.log('[Auth] Sign in successful')
+        // Navigation will happen automatically via useEffect when user state changes
       } else {
         const { error } = await supabase.auth.signUp({ 
           email, 
@@ -40,8 +40,8 @@ export default function Auth() {
         })
         if (error) throw error
         setMsg('✅ تم إنشاء الحساب بنجاح! جاري تسجيل الدخول...')
-        console.log('[Auth] Sign up successful, redirecting to /today')
-        setTimeout(() => navigate('/today'), 1000)
+        console.log('[Auth] Sign up successful')
+        // Navigation will happen automatically via useEffect when user state changes
       }
     } catch (e: any) {
       setErr(e?.message ?? 'حدث خطأ')
