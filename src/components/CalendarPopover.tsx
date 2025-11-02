@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { zIndex } from '@/lib/z-index';
 
 interface CalendarPopoverProps {
   children: React.ReactNode;
@@ -73,7 +74,12 @@ export function CalendarPopover({ children, selectedDate, onDateChange }: Calend
       <PopoverTrigger asChild>
         {children}
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-4 bg-background/95 backdrop-blur-xl border border-border shadow-xl" align="center">
+      <PopoverContent 
+        className="w-80 p-4 bg-card border-2 border-border/50 shadow-2xl"
+        style={{ zIndex: zIndex.popover }}
+        align="center"
+        sideOffset={8}
+      >
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <button
