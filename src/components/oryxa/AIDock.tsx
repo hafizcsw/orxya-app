@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { X, Send, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { BottomNav } from "@/components/BottomNav";
 
 interface Message {
   role: "user" | "assistant";
@@ -123,24 +124,8 @@ export function AIDock() {
 
   return (
     <>
-      {/* Fixed W Icon - WHOOP Style */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={cn(
-          "fixed top-6 right-6 z-50",
-          "w-14 h-14 rounded-full",
-          "bg-[hsl(var(--whoop-blue))] text-white",
-          "flex items-center justify-center",
-          "font-bold text-3xl tracking-tight",
-          "shadow-lg hover:scale-110 transition-all duration-300",
-          "border-2 border-[hsl(var(--whoop-blue)_/_0.3)]"
-        )}
-        style={{
-          boxShadow: "var(--glow-blue)",
-        }}
-      >
-        W
-      </button>
+      {/* Bottom Navigation with AI Button */}
+      <BottomNav onAIClick={() => setIsOpen(!isOpen)} />
 
       {/* AI Chat Panel */}
       {isOpen && (
@@ -155,10 +140,10 @@ export function AIDock() {
             <div className="flex items-center justify-between p-4 border-b border-border">
               <div className="flex items-center gap-3">
                 <div 
-                  className="w-12 h-12 rounded-full bg-[hsl(var(--whoop-blue))] flex items-center justify-center font-bold text-2xl text-white"
-                  style={{ boxShadow: "var(--glow-blue)" }}
+                  className="w-12 h-12 rounded-full bg-primary flex items-center justify-center font-bold text-xl text-primary-foreground"
+                  style={{ boxShadow: "0 0 20px hsl(var(--primary) / 0.4)" }}
                 >
-                  W
+                  AI
                 </div>
                 <div>
                   <h3 className="font-semibold">Oryxa AI</h3>
