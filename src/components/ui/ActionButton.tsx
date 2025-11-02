@@ -3,11 +3,10 @@ import { Button, ButtonProps } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface ActionButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onClick'>, Omit<ButtonProps, 'onClick'> {
+interface ActionButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onClick'>, ButtonProps {
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => Promise<void> | void;
   loadingText?: string;
   icon?: ReactNode;
-  children: ReactNode;
 }
 
 export function ActionButton({
@@ -24,11 +23,17 @@ export function ActionButton({
   const [isLoading, setIsLoading] = useState(false);
 
   const handleClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (!onClick || isLoading || disabled) return;
+    if (!onClick) return;
+    if (isLoading || disabled) {
+      e.preventDefault();
+      return;
+    }
 
     try {
       setIsLoading(true);
       await onClick(e);
+    } catch (error) {
+      console.error('ActionButton error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -40,7 +45,7 @@ export function ActionButton({
       variant={variant}
       size={size}
       disabled={disabled || isLoading}
-      onClick={handleClick}
+      onClick={onClick ? handleClick : undefined}
       className={cn(className)}
     >
       {isLoading ? (

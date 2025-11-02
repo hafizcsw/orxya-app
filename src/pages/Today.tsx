@@ -44,8 +44,8 @@ const Today = () => {
       if (error) throw error
       setToast('تم الحفظ ✅')
       track('command_sent', { command })
-      fetchReport()
-    } catch {
+      await fetchReport()
+    } catch (error) {
       await enqueueCommand(command, payload)
       track('command_queued_offline', { command })
       setToast('تم الحفظ أوفلاين وسيُرفع بعد تسجيل الدخول/الاتصال 🔄')
@@ -167,8 +167,9 @@ const Today = () => {
                 mma_hours: Number(fd.get('mma_hours') || 0),
                 walk_min: Number(fd.get('walk_min') || 0),
                 notes: String(fd.get('notes') || '')
+              }).then(() => {
+                e.currentTarget.reset()
               })
-              e.currentTarget.reset()
             }}>
               <div className="card p-6 space-y-3">
                 <div className="flex items-center gap-3 mb-2">
@@ -182,7 +183,7 @@ const Today = () => {
                 <input name="mma_hours" placeholder="ساعات MMA" className="input" type="number" step="0.5" />
                 <input name="walk_min" placeholder="دقائق المشي" className="input" type="number" step="1" />
                 <input name="notes" placeholder="ملاحظات" className="input" />
-                <ActionButton type="submit" className="w-full" loadingText="جار الحفظ...">حفظ</ActionButton>
+                <button type="submit" className="btn btn-futuristic btn-gradient w-full">حفظ</button>
               </div>
             </form>
 
@@ -196,8 +197,9 @@ const Today = () => {
                 amount_usd: Number(fd.get('amount_usd') || 0),
                 category: String(fd.get('category') || ''),
                 note: String(fd.get('note') || '')
+              }).then(() => {
+                e.currentTarget.reset()
               })
-              e.currentTarget.reset()
             }}>
               <div className="card p-6 space-y-3">
                 <div className="flex items-center gap-3 mb-2">
@@ -213,7 +215,7 @@ const Today = () => {
                 <input name="amount_usd" placeholder="المبلغ USD" className="input" type="number" step="0.01" />
                 <input name="category" placeholder="تصنيف" className="input" />
                 <input name="note" placeholder="ملاحظة" className="input" />
-                <ActionButton type="submit" className="w-full" loadingText="جار الحفظ...">حفظ</ActionButton>
+                <button type="submit" className="btn btn-futuristic btn-gradient w-full">حفظ</button>
               </div>
             </form>
 
@@ -228,8 +230,9 @@ const Today = () => {
                 qty: Number(fd.get('qty') || 1),
                 price_usd: Number(fd.get('price_usd') || 0),
                 profit_usd: Number(fd.get('profit_usd') || 0),
+              }).then(() => {
+                e.currentTarget.reset()
               })
-              e.currentTarget.reset()
             }}>
               <div className="card p-6 space-y-3">
                 <div className="flex items-center gap-3 mb-2">
@@ -247,7 +250,7 @@ const Today = () => {
                 <input name="qty" placeholder="الكمية" className="input" type="number" min="1" />
                 <input name="price_usd" placeholder="السعر USD" className="input" type="number" step="0.01" />
                 <input name="profit_usd" placeholder="الربح USD" className="input" type="number" step="0.01" />
-                <ActionButton type="submit" className="w-full" loadingText="جار الحفظ...">حفظ</ActionButton>
+                <button type="submit" className="btn btn-futuristic btn-gradient w-full">حفظ</button>
               </div>
             </form>
           </div>
