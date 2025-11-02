@@ -33,12 +33,12 @@ export function OrchestratorPanel() {
     if (!user || !plan?.plan) return;
     
     try {
-      const { data } = await supabase.rpc('apply_orchestrator_plan', {
+      const { data } = await supabase.rpc('apply_orchestrator_plan' as any, {
         p_owner_id: user.id,
         p_run_id: crypto.randomUUID(),
         p_tasks: plan.plan.tasks || [],
         p_events: plan.plan.events || []
-      });
+      }) as { data: { tasks_created: number; events_created: number } | null };
       
       alert(`تم! ${data?.tasks_created || 0} مهام • ${data?.events_created || 0} أحداث`);
       setPlan(null);
