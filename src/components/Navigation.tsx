@@ -41,7 +41,8 @@ const Navigation = () => {
   const links = [
     { to: "/", label: "اليوم" },
     { to: "/calendar", label: "التقويم" },
-    { to: "/calendar-full", label: "التقويم الكامل" },
+    { to: "/calendar-simple", label: "تقويم بسيط" },
+    { to: "/settings/external", label: "التكاملات" },
     { to: "/projects", label: "المشاريع" },
     { to: "/reports", label: "التقارير" },
     { to: "/automation", label: "الأتمتة" },
