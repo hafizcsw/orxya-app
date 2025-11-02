@@ -76,6 +76,53 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_action_queue: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          error: string | null
+          finished_at: string | null
+          id: string
+          owner_id: string
+          payload: Json
+          run_at: string | null
+          session_id: string | null
+          status: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          owner_id: string
+          payload: Json
+          run_at?: string | null
+          session_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          owner_id?: string
+          payload?: Json
+          run_at?: string | null
+          session_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_action_queue_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "ai_sessions_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_actions: {
         Row: {
           created_at: string
@@ -111,6 +158,33 @@ export type Database = {
           },
         ]
       }
+      ai_consent: {
+        Row: {
+          expires_at: string | null
+          granted: boolean
+          granted_at: string | null
+          metadata: Json | null
+          owner_id: string
+          scope: string
+        }
+        Insert: {
+          expires_at?: string | null
+          granted?: boolean
+          granted_at?: string | null
+          metadata?: Json | null
+          owner_id: string
+          scope: string
+        }
+        Update: {
+          expires_at?: string | null
+          granted?: boolean
+          granted_at?: string | null
+          metadata?: Json | null
+          owner_id?: string
+          scope?: string
+        }
+        Relationships: []
+      }
       ai_messages: {
         Row: {
           content: Json
@@ -142,6 +216,41 @@ export type Database = {
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "ai_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_messages_v2: {
+        Row: {
+          content: Json
+          created_at: string | null
+          id: string
+          role: string
+          session_id: string
+          token_count: number | null
+        }
+        Insert: {
+          content: Json
+          created_at?: string | null
+          id?: string
+          role: string
+          session_id: string
+          token_count?: number | null
+        }
+        Update: {
+          content?: Json
+          created_at?: string | null
+          id?: string
+          role?: string
+          session_id?: string
+          token_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_messages_v2_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "ai_sessions_v2"
             referencedColumns: ["id"]
           },
         ]
@@ -208,6 +317,33 @@ export type Database = {
           is_archived?: boolean
           last_activity?: string
           owner_id?: string
+          title?: string | null
+        }
+        Relationships: []
+      }
+      ai_sessions_v2: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_active_at: string | null
+          owner_id: string
+          persona: string | null
+          title: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_active_at?: string | null
+          owner_id: string
+          persona?: string | null
+          title?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_active_at?: string | null
+          owner_id?: string
+          persona?: string | null
           title?: string | null
         }
         Relationships: []
@@ -1466,6 +1602,8 @@ export type Database = {
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
+      ai_action_status: "queued" | "running" | "done" | "failed"
+      ai_role: "system" | "user" | "assistant" | "tool"
       app_role: "admin" | "moderator" | "user"
       conflict_severity: "low" | "medium" | "high"
     }
@@ -1595,6 +1733,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      ai_action_status: ["queued", "running", "done", "failed"],
+      ai_role: ["system", "user", "assistant", "tool"],
       app_role: ["admin", "moderator", "user"],
       conflict_severity: ["low", "medium", "high"],
     },

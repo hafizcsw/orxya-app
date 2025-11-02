@@ -1,0 +1,9 @@
+{
+  "nodeModulesDir": "auto",
+  "imports": {
+    "zod": "https://esm.sh/zod@3.23.8"
+  },
+  "compilerOptions": {
+    "lib": ["deno.window"]
+  }
+}
