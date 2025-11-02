@@ -90,32 +90,32 @@ export function CalendarPopover({ children, selectedDate, onDateChange }: Calend
         </PopoverTrigger>
       <PopoverContent className="w-80 p-5 border-2 border-border shadow-2xl" align="center" sideOffset={8} style={{ backgroundColor: '#000000', zIndex: 1300 }}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-6">
           <button
             onClick={goToPreviousMonth}
-            className="w-9 h-9 rounded-lg bg-secondary hover:bg-secondary/80 flex items-center justify-center transition-all"
+            className="w-9 h-9 flex items-center justify-center transition-all text-gray-400 hover:text-white"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
           
-          <div className="text-base font-bold">
+          <div className="text-base font-bold text-white uppercase tracking-wide">
             {currentMonth.toLocaleDateString('ar-EG', { month: 'long', year: 'numeric' })}
           </div>
           
           <button
             onClick={goToNextMonth}
-            className="w-9 h-9 rounded-lg bg-secondary hover:bg-secondary/80 flex items-center justify-center transition-all"
+            className="w-9 h-9 flex items-center justify-center transition-all text-gray-400 hover:text-white"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
         </div>
 
         {/* Week Days */}
-        <div className="grid grid-cols-7 gap-1 mb-2">
+        <div className="grid grid-cols-7 gap-1 mb-3">
           {weekDays.map((day) => (
             <div
               key={day}
-              className="text-center text-xs font-semibold text-muted-foreground py-2"
+              className="text-center text-xs font-medium text-gray-500 py-2"
             >
               {day.slice(0, 3)}
             </div>
@@ -123,18 +123,18 @@ export function CalendarPopover({ children, selectedDate, onDateChange }: Calend
         </div>
 
         {/* Calendar Days */}
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-2">
           {days.map((day, index) => (
             <button
               key={index}
               onClick={() => day && handleDayClick(day)}
               disabled={!day}
               className={cn(
-                "aspect-square rounded-lg flex items-center justify-center text-sm font-medium transition-all",
+                "aspect-square rounded-full flex items-center justify-center text-sm font-medium transition-all",
                 !day && "invisible",
-                day && !isSelected(day) && !isToday(day) && "text-[hsl(var(--whoop-green))] hover:bg-secondary/60 hover:scale-110",
-                isToday(day) && !isSelected(day) && "bg-secondary/60 text-[hsl(var(--whoop-green))] font-bold ring-2 ring-primary/50",
-                isSelected(day) && "bg-[hsl(var(--whoop-blue))] text-white font-bold shadow-lg scale-110"
+                day && !isSelected(day) && !isToday(day) && "text-gray-400 hover:bg-gray-800 hover:text-white",
+                isToday(day) && !isSelected(day) && "text-gray-400 hover:bg-gray-800",
+                isSelected(day) && "bg-gray-700 text-white font-semibold"
               )}
             >
               {day}
