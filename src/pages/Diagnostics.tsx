@@ -20,6 +20,10 @@ const Diagnostics = () => {
   const [conflicts, setConflicts] = useState<ConflictRow[]>([])
   const [loadingLoc, setLoadingLoc] = useState(false)
   const [loadingConf, setLoadingConf] = useState(false)
+  const [pushPending, setPushPending] = useState<number>(0)
+  const [pushFailed, setPushFailed] = useState<number>(0)
+  const [pushLoading, setPushLoading] = useState(false)
+  const [pushMsg, setPushMsg] = useState<string | null>(null)
 
   async function loadData() {
     // Test DB connection
@@ -65,6 +69,9 @@ const Diagnostics = () => {
     
     // Load today's conflicts
     await loadTodayConflicts()
+    
+    // Load push stats
+    await refreshPushStats()
   }
 
   async function loadLastLocation() {
@@ -144,6 +151,45 @@ const Diagnostics = () => {
       console.error('Conflicts check failed:', e)
     } finally {
       setLoadingConf(false)
+    }
+  }
+
+  async function refreshPushStats() {
+    if (!user) {
+      setPushPending(0)
+      setPushFailed(0)
+      return
+    }
+    const { count: c1 } = await supabase
+      .from('events')
+      .select('id', { count: 'exact', head: true })
+      .eq('owner_id', user.id)
+      .eq('pending_push', true)
+    const { count: c2 } = await supabase
+      .from('events')
+      .select('id', { count: 'exact', head: true })
+      .eq('owner_id', user.id)
+      .eq('last_push_status', 'failed')
+    setPushPending(c1 ?? 0)
+    setPushFailed(c2 ?? 0)
+  }
+
+  async function retryNow() {
+    setPushLoading(true)
+    setPushMsg(null)
+    try {
+      const { data, error } = await supabase.functions.invoke('calendar-push-retry', {
+        body: { limit: 100 }
+      })
+      if (error) throw error
+      setPushMsg(
+        `تمت إعادة المحاولة: ${data?.processed ?? 0} (نجحت ${data?.succeeded ?? 0}، فشلت ${data?.failed ?? 0})`
+      )
+      await refreshPushStats()
+    } catch (e: any) {
+      setPushMsg(e?.message ?? 'خطأ عند إعادة المحاولة')
+    } finally {
+      setPushLoading(false)
     }
   }
 
@@ -301,6 +347,44 @@ const Diagnostics = () => {
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">لا توجد عينة موقع بعد</p>
+        )}
+      </div>
+
+      {/* Calendar Push Queue */}
+      <div className="p-4 bg-card border-2 rounded-3xl shadow-lg space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold text-lg">Calendar Push Queue</h2>
+          <button
+            onClick={refreshPushStats}
+            className="btn max-w-xs text-xs py-1.5 px-3"
+          >
+            تحديث
+          </button>
+        </div>
+        
+        <div className="text-sm text-muted-foreground space-y-1">
+          <div>
+            بانتظار الدفع: <b className="font-bold">{pushPending}</b>
+          </div>
+          <div>
+            حالات فاشلة: <b className="font-bold text-destructive">{pushFailed}</b>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            disabled={pushLoading}
+            onClick={retryNow}
+            className="btn max-w-xs text-xs py-2 px-4"
+          >
+            {pushLoading ? 'جاري إعادة المحاولة...' : 'إعادة المحاولة الآن'}
+          </button>
+        </div>
+
+        {pushMsg && (
+          <div className="text-xs text-muted-foreground p-2 bg-secondary/20 rounded">
+            {pushMsg}
+          </div>
         )}
       </div>
 

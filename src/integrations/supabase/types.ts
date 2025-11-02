@@ -396,14 +396,17 @@ export type Database = {
           google_event_id: string | null
           id: string
           is_ai_created: boolean | null
+          last_error: string | null
           last_google_sync_at: string | null
           last_push_at: string | null
           last_push_status: string | null
           last_write_origin: string | null
           location_lat: number | null
           location_lon: number | null
+          next_retry_at: string | null
           owner_id: string
           pending_push: boolean
+          retry_count: number
           source_id: string | null
           starts_at: string
           sync_to_google: boolean | null
@@ -426,14 +429,17 @@ export type Database = {
           google_event_id?: string | null
           id?: string
           is_ai_created?: boolean | null
+          last_error?: string | null
           last_google_sync_at?: string | null
           last_push_at?: string | null
           last_push_status?: string | null
           last_write_origin?: string | null
           location_lat?: number | null
           location_lon?: number | null
+          next_retry_at?: string | null
           owner_id: string
           pending_push?: boolean
+          retry_count?: number
           source_id?: string | null
           starts_at: string
           sync_to_google?: boolean | null
@@ -456,14 +462,17 @@ export type Database = {
           google_event_id?: string | null
           id?: string
           is_ai_created?: boolean | null
+          last_error?: string | null
           last_google_sync_at?: string | null
           last_push_at?: string | null
           last_push_status?: string | null
           last_write_origin?: string | null
           location_lat?: number | null
           location_lon?: number | null
+          next_retry_at?: string | null
           owner_id?: string
           pending_push?: boolean
+          retry_count?: number
           source_id?: string | null
           starts_at?: string
           sync_to_google?: boolean | null
@@ -867,6 +876,33 @@ export type Database = {
           priority?: string | null
           status?: string | null
           target?: string | null
+        }
+        Relationships: []
+      }
+      push_log: {
+        Row: {
+          attempted_at: string
+          error: string | null
+          event_id: string
+          id: number
+          owner_id: string
+          status: string
+        }
+        Insert: {
+          attempted_at?: string
+          error?: string | null
+          event_id: string
+          id?: number
+          owner_id: string
+          status: string
+        }
+        Update: {
+          attempted_at?: string
+          error?: string | null
+          event_id?: string
+          id?: number
+          owner_id?: string
+          status?: string
         }
         Relationships: []
       }
