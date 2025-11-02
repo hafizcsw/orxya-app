@@ -3,17 +3,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const Overlay = ({ isOpen }: { isOpen: boolean }) => {
-  if (!isOpen) return null;
-  return (
-    <div 
-      className="fixed inset-0 z-[1299] bg-black/90"
-      style={{ 
-        backdropFilter: 'blur(8px)',
-      }}
-    />
-  );
-};
 
 interface CalendarPopoverProps {
   children: React.ReactNode;
@@ -80,12 +69,10 @@ export function CalendarPopover({ children, selectedDate, onDateChange }: Calend
   const weekDays = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 
   return (
-    <>
-      <Overlay isOpen={open} />
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          {children}
-        </PopoverTrigger>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        {children}
+      </PopoverTrigger>
       <PopoverContent className="w-80 p-5 border-2 border-border shadow-2xl" align="center" sideOffset={8} style={{ backgroundColor: 'hsl(var(--card))', zIndex: 1300 }}>
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
@@ -139,8 +126,7 @@ export function CalendarPopover({ children, selectedDate, onDateChange }: Calend
             </button>
           ))}
         </div>
-        </PopoverContent>
-      </Popover>
-    </>
+      </PopoverContent>
+    </Popover>
   );
 }
