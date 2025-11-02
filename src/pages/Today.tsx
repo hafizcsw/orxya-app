@@ -49,6 +49,7 @@ const Today = () => {
   const [loading, setLoading] = useState(false)
   const [report, setReport] = useState<any | null>(null)
   const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('daily')
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10))
   const [toast, setToast] = useState<string | null>(null)
   const [editingField, setEditingField] = useState<string | null>(null)
   const [editValue, setEditValue] = useState<any>('')
@@ -61,11 +62,14 @@ const Today = () => {
     setLoading(true)
     try {
       const { data, error } = await supabase.functions.invoke('report-daily', {
-        body: { period }
+        body: { 
+          period,
+          date: selectedDate 
+        }
       })
       if (error) throw error
       setReport(data?.report ?? null)
-      track('report_daily_loaded', { hasReport: !!data?.report, period })
+      track('report_daily_loaded', { hasReport: !!data?.report, period, date: selectedDate })
     } catch (e: any) {
       setReport(null)
     } finally { setLoading(false) }
@@ -75,7 +79,7 @@ const Today = () => {
     if (user) {
       fetchReport()
     }
-  }, [user?.id, period])
+  }, [user?.id, period, selectedDate])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -277,15 +281,45 @@ const Today = () => {
       <div className="min-h-screen bg-background pb-24">
         <AIDock />
         
-        {/* Sticky Header - Period Selection Only */}
+        {/* Sticky Header - Period Selection & Date */}
         <div className={cn(
           "sticky top-14 z-30 bg-background/95 backdrop-blur-xl border-b border-border transition-all duration-300 px-6 py-3",
           isScrolled && "shadow-lg bg-background/98"
         )}>
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="max-w-7xl mx-auto">
+            {/* Date Selector */}
+            <div className="mb-3 flex items-center justify-center gap-3">
+              <button
+                onClick={() => {
+                  const newDate = new Date(selectedDate);
+                  newDate.setDate(newDate.getDate() - 1);
+                  setSelectedDate(newDate.toISOString().slice(0, 10));
+                }}
+                className="w-8 h-8 rounded-full bg-secondary hover:bg-secondary/80 flex items-center justify-center"
+              >
+                ←
+              </button>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="input text-center"
+              />
+              <button
+                onClick={() => {
+                  const newDate = new Date(selectedDate);
+                  newDate.setDate(newDate.getDate() + 1);
+                  setSelectedDate(newDate.toISOString().slice(0, 10));
+                }}
+                className="w-8 h-8 rounded-full bg-secondary hover:bg-secondary/80 flex items-center justify-center"
+              >
+                →
+              </button>
+            </div>
+            
             {/* Period Selection */}
             <div className={cn(
-              "flex gap-2 mx-auto transition-all duration-300",
+              "flex gap-2 mx-auto justify-center transition-all duration-300",
               isScrolled && "opacity-0 translate-y-[-20px] pointer-events-none"
             )}>
               <button
