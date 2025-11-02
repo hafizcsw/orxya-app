@@ -42,177 +42,37 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Core Colors */
-    --background: 220 20% 97%;
-    --foreground: 222 47% 11%;
-    
-    --primary: 260 70% 55%;
-    --primary-foreground: 0 0% 100%;
-    --primary-glow: 260 80% 65%;
-    --primary-dim: 260 60% 45%;
-    
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-    
-    --accent: 280 65% 60%;
-    --accent-foreground: 0 0% 100%;
-    --accent-glow: 280 75% 70%;
-    
-    --success: 142 76% 36%;
-    --success-foreground: 0 0% 100%;
-    --success-glow: 142 76% 46%;
-    
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    --warning-glow: 38 92% 60%;
-    
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    
-    --info: 199 89% 48%;
-    --info-foreground: 0 0% 100%;
-    --info-glow: 199 89% 58%;
-    
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 260 70% 55%;
-    
-    /* Sidebar */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 260 70% 55%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 96%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 260 70% 55%;
+    /* WHOOP colors are now defined in whoop.css and imported above */
+    /* Keep only non-color tokens here */
     
     /* Advanced Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(260 70% 55%), hsl(280 65% 60%));
-    --gradient-secondary: linear-gradient(135deg, hsl(210 40% 96%), hsl(220 40% 92%));
-    --gradient-accent: linear-gradient(135deg, hsl(280 65% 60%), hsl(300 70% 65%));
+    --gradient-primary: linear-gradient(135deg, hsl(217 100% 50%), hsl(217 100% 60%));
+    --gradient-secondary: linear-gradient(135deg, hsl(210 15% 15%), hsl(210 15% 18%));
+    --gradient-accent: linear-gradient(135deg, hsl(166 100% 50%), hsl(45 100% 50%));
     --gradient-success: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 46%));
     --gradient-warning: linear-gradient(135deg, hsl(38 92% 50%), hsl(38 92% 60%));
-    --gradient-animated: linear-gradient(270deg, hsl(260 70% 55%), hsl(280 65% 60%), hsl(300 70% 65%));
+    --gradient-animated: linear-gradient(270deg, hsl(217 100% 50%), hsl(166 100% 50%), hsl(45 100% 50%));
     --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.1), hsl(0 0% 100% / 0.05));
-    --gradient-holographic: linear-gradient(135deg, hsl(260 70% 55% / 0.3), hsl(280 65% 60% / 0.2), hsl(300 70% 65% / 0.3));
+    --gradient-holographic: linear-gradient(135deg, hsl(217 100% 50% / 0.3), hsl(166 100% 50% / 0.2), hsl(45 100% 50% / 0.3));
     
     /* Glassmorphism */
-    --glass-bg: hsl(0 0% 100% / 0.7);
-    --glass-border: hsl(0 0% 100% / 0.18);
-    --glass-shadow: 0 8px 32px 0 hsl(0 0% 0% / 0.1);
-    --glass-blur: blur(12px);
-    
-    /* Elevation System */
-    --elev-1: 0 1px 3px 0 hsl(0 0% 0% / 0.1);
-    --elev-2: 0 4px 6px -1px hsl(0 0% 0% / 0.1), 0 2px 4px -2px hsl(0 0% 0% / 0.1);
-    --elev-3: 0 10px 15px -3px hsl(0 0% 0% / 0.1), 0 4px 6px -4px hsl(0 0% 0% / 0.1);
-    --elev-4: 0 20px 25px -5px hsl(0 0% 0% / 0.1), 0 8px 10px -6px hsl(0 0% 0% / 0.1);
-    
-    /* Glow Effects */
-    --glow-primary: 0 0 20px hsl(260 70% 55% / 0.5);
-    --glow-accent: 0 0 20px hsl(280 65% 60% / 0.5);
-    --glow-success: 0 0 20px hsl(142 76% 36% / 0.5);
-    --glow-neon: 0 0 30px hsl(260 70% 55% / 0.8), 0 0 60px hsl(260 70% 55% / 0.4);
-    
-    /* Ring Focus */
-    --ring-focus: 0 0 0 3px hsl(260 70% 55% / 0.3);
-    
-    /* Button Shadows */
-    --btn-shadow: 0 8px 20px -6px hsl(260 70% 55% / 0.4);
-    --btn-shadow-hover: 0 12px 28px -8px hsl(260 70% 55% / 0.5);
-  }
-
-  [data-theme="dark"] {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-    
-    --primary: 260 80% 65%;
-    --primary-foreground: 0 0% 100%;
-    --primary-glow: 260 90% 75%;
-    --primary-dim: 260 70% 55%;
-    
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    
-    --accent: 280 75% 70%;
-    --accent-foreground: 0 0% 100%;
-    --accent-glow: 280 85% 80%;
-    
-    --success: 142 76% 46%;
-    --success-foreground: 0 0% 100%;
-    --success-glow: 142 76% 56%;
-    
-    --warning: 38 92% 60%;
-    --warning-foreground: 0 0% 100%;
-    --warning-glow: 38 92% 70%;
-    
-    --destructive: 0 84% 65%;
-    --destructive-foreground: 0 0% 100%;
-    
-    --info: 199 89% 58%;
-    --info-foreground: 0 0% 100%;
-    --info-glow: 199 89% 68%;
-    
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    
-    --card: 222 47% 13%;
-    --card-foreground: 210 40% 98%;
-    
-    --popover: 222 47% 13%;
-    --popover-foreground: 210 40% 98%;
-    
-    --border: 217 33% 22%;
-    --input: 217 33% 22%;
-    --ring: 260 80% 65%;
-    
-    /* Sidebar Dark */
-    --sidebar-background: 222 47% 9%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 260 80% 65%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 33% 17%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 22%;
-    --sidebar-ring: 260 80% 65%;
-    
-    /* Dark Mode Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(260 80% 65%), hsl(280 75% 70%));
-    --gradient-accent: linear-gradient(135deg, hsl(280 75% 70%), hsl(300 80% 75%));
-    --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.05), hsl(0 0% 100% / 0.02));
-    --gradient-holographic: linear-gradient(135deg, hsl(260 80% 65% / 0.4), hsl(280 75% 70% / 0.3), hsl(300 80% 75% / 0.4));
-    
-    /* Dark Glassmorphism */
-    --glass-bg: hsl(222 47% 13% / 0.7);
+    --glass-bg: hsl(210 20% 8% / 0.7);
     --glass-border: hsl(0 0% 100% / 0.1);
     --glass-shadow: 0 8px 32px 0 hsl(0 0% 0% / 0.3);
     --glass-blur: blur(16px);
     
-    /* Dark Elevation */
+    /* Elevation System */
     --elev-1: 0 1px 3px 0 hsl(0 0% 0% / 0.3);
     --elev-2: 0 4px 6px -1px hsl(0 0% 0% / 0.4);
     --elev-3: 0 10px 15px -3px hsl(0 0% 0% / 0.5);
     --elev-4: 0 20px 25px -5px hsl(0 0% 0% / 0.6);
     
-    /* Dark Glow (stronger) */
-    --glow-primary: 0 0 25px hsl(260 80% 65% / 0.6), 0 0 50px hsl(260 80% 65% / 0.3);
-    --glow-accent: 0 0 25px hsl(280 75% 70% / 0.6);
-    --glow-success: 0 0 25px hsl(142 76% 46% / 0.6);
-    --glow-neon: 0 0 40px hsl(260 80% 65% / 0.9), 0 0 80px hsl(260 80% 65% / 0.5);
+    /* Ring Focus */
+    --ring-focus: 0 0 0 3px hsl(217 100% 50% / 0.3);
     
-    /* Dark Button Shadows */
-    --btn-shadow: 0 8px 24px -6px hsl(260 80% 65% / 0.6);
-    --btn-shadow-hover: 0 12px 32px -8px hsl(260 80% 65% / 0.7);
+    /* Button Shadows */
+    --btn-shadow: 0 8px 20px -6px hsl(217 100% 50% / 0.4);
+    --btn-shadow-hover: 0 12px 28px -8px hsl(217 100% 50% / 0.5);
   }
 }
 
