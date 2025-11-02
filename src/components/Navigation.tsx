@@ -5,7 +5,7 @@ import AuthSheet from "@/components/AuthSheet";
 import { useUser } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/telemetry";
-import { Menu, X, User, Calendar } from "lucide-react";
+import { User, ChevronLeft, ChevronRight } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const Navigation = () => {
@@ -15,10 +15,10 @@ const Navigation = () => {
   const [authOpen, setAuthOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [currentDate, setCurrentDate] = useState(new Date());
   const isMobile = useIsMobile();
 
   const handleSignOut = async () => {
-    // Prevent multiple signout calls
     if (isSigningOut) {
       console.log('[Navigation] Sign out already in progress');
       return;
@@ -31,24 +31,45 @@ const Navigation = () => {
       track('auth_signout');
       
       console.log('[Navigation] Signing out from Supabase...');
-      // Use 'global' scope to clear all sessions
       await supabase.auth.signOut({ scope: 'global' });
       
       console.log('[Navigation] Sign out successful, redirecting...');
       
-      // Small delay to allow cleanup
       setTimeout(() => {
         navigate('/auth', { replace: true });
         setIsSigningOut(false);
       }, 300);
     } catch (err) {
       console.error('[Navigation] Sign out failed:', err);
-      // Still redirect on error
       setTimeout(() => {
         navigate('/auth', { replace: true });
         setIsSigningOut(false);
       }, 300);
     }
+  };
+
+  const goToPreviousDay = () => {
+    const newDate = new Date(currentDate);
+    newDate.setDate(newDate.getDate() - 1);
+    setCurrentDate(newDate);
+  };
+
+  const goToNextDay = () => {
+    const newDate = new Date(currentDate);
+    newDate.setDate(newDate.getDate() + 1);
+    setCurrentDate(newDate);
+  };
+
+  const formatDate = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const compareDate = new Date(date);
+    compareDate.setHours(0, 0, 0, 0);
+    
+    if (compareDate.getTime() === today.getTime()) {
+      return "TODAY";
+    }
+    return date.toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' });
   };
 
   const links = [
@@ -74,66 +95,54 @@ const Navigation = () => {
     <>
       <nav className="border-b bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 shadow-sm transition-all duration-300">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-4">
-            <Link to="/" className="flex items-center group">
-              <div className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-white font-bold text-xl transition-transform group-hover:scale-105">
-                Oryxa
-              </div>
-            </Link>
-            
-            {/* Desktop Navigation */}
-            {!isMobile && (
-              <div className="flex gap-2 mr-6">
-                {links.map((link) => (
-                  <Link
-                    key={link.to}
-                    to={link.to}
-                    className={cn(
-                      "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 relative",
-                      location.pathname === link.to
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                    )}
-                  >
-                    {link.label}
-                    {location.pathname === link.to && (
-                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-primary/50 rounded-full" />
-                    )}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-          
-          {/* Calendar Icon + Avatar */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/calendar')}
-              className="w-9 h-9 rounded-full bg-secondary/50 hover:bg-secondary flex items-center justify-center transition-all hover:scale-110 duration-300"
-              title="التقويم"
-            >
-              <Calendar className="w-4 h-4" />
-            </button>
-            
+          {/* Left: Avatar */}
+          <div className="flex items-center">
             {user && (
               <div className="relative">
                 <button
                   onClick={() => navigate('/profile')}
-                  className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white font-semibold shadow-lg hover:scale-110 transition-all duration-300 border-2 border-primary/30"
+                  className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white font-semibold shadow-lg hover:scale-110 transition-all duration-300 border-2 border-primary/30"
                   style={{
                     boxShadow: "0 0 20px hsl(var(--primary) / 0.3)",
                   }}
                   title="الملف الشخصي"
                 >
-                  {user?.email?.[0]?.toUpperCase() || <User className="w-5 h-5" />}
+                  {user?.email?.[0]?.toUpperCase() || <User className="w-6 h-6" />}
                 </button>
                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
               </div>
             )}
           </div>
 
-        </div>
+          {/* Center: Calendar Navigation */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={goToPreviousDay}
+              className="w-10 h-10 rounded-full bg-secondary/50 hover:bg-secondary flex items-center justify-center transition-all hover:scale-110 duration-300"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            
+            <button
+              onClick={() => navigate('/calendar')}
+              className="px-6 py-2.5 rounded-full bg-secondary/80 hover:bg-secondary transition-all"
+            >
+              <span className="font-bold text-sm tracking-wider">{formatDate(currentDate)}</span>
+            </button>
+            
+            <button
+              onClick={goToNextDay}
+              className="w-10 h-10 rounded-full bg-secondary/50 hover:bg-secondary flex items-center justify-center transition-all hover:scale-110 duration-300"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
 
+          {/* Right: Empty for balance */}
+          <div className="w-12">
+            {/* Placeholder for right side icons if needed */}
+          </div>
+        </div>
       </nav>
       
       <AuthSheet open={authOpen} onClose={() => setAuthOpen(false)} />
