@@ -41,3 +41,12 @@ verify_jwt = true
 
 [functions.oauth-gcal-callback]
 verify_jwt = false
+
+[functions.planner-agent]
+verify_jwt = true
+
+[functions.notify-dispatch]
+verify_jwt = true
+
+[functions.notify-cron]
+verify_jwt = false
