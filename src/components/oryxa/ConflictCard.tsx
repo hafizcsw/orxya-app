@@ -110,18 +110,21 @@ export function ConflictCard({
               الحلول المقترحة:
             </div>
             <div className="flex flex-wrap gap-2">
-              {conflict.suggestedActions.map((action, i) => (
-                <OryxaButton
-                  key={i}
-                  size="sm"
-                  variant={i === 0 ? 'primary' : 'secondary'}
-                  onClick={() => onResolve(action.action)}
-                  icon={action.icon}
-                  className="flex-1 sm:flex-none"
-                >
-                  {action.label}
-                </OryxaButton>
-              ))}
+              {conflict.suggestedActions.map((action, i) => {
+                const ActionIcon = action.icon as any;
+                return (
+                  <OryxaButton
+                    key={i}
+                    size="sm"
+                    variant={i === 0 ? 'primary' : 'secondary'}
+                    onClick={() => onResolve(action.action)}
+                    className="flex-1 sm:flex-none gap-2"
+                  >
+                    {ActionIcon && <ActionIcon className="w-4 h-4" />}
+                    {action.label}
+                  </OryxaButton>
+                );
+              })}
             </div>
           </div>
         </div>

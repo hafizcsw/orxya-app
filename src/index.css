@@ -4,6 +4,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import WHOOP theme */
+@import './styles/whoop.css';
+
+@layer utilities {
+  .shimmer-slide {
+    animation: shimmer-slide 2s infinite linear;
+  }
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap');
 
 :root {
