@@ -30,6 +30,7 @@ export default function Profile() {
   const [longitude, setLongitude] = useState<string>('');
   const [aiConsents, setAIConsents] = useState<{id?:string; consent_read_calendar:boolean; consent_write_calendar:boolean; consent_write_tasks:boolean} | null>(null);
   const [aiMsg, setAIMsg] = useState<string>("");
+  const [calendarWriteback, setCalendarWriteback] = useState(false);
 
   const tzList = useMemo(() => [
     'Asia/Dubai', 'UTC', 'Europe/Helsinki', 'Europe/London', 
@@ -41,7 +42,7 @@ export default function Profile() {
       if (!user) return;
       const { data } = await supabase
         .from('profiles')
-        .select('full_name,currency,timezone,telemetry_enabled,prayer_method,latitude,longitude')
+        .select('full_name,currency,timezone,telemetry_enabled,prayer_method,latitude,longitude,calendar_writeback')
         .eq('id', user.id)
         .maybeSingle();
       if (data) {
@@ -53,6 +54,7 @@ export default function Profile() {
         setPrayerMethod(data.prayer_method ?? 'MWL');
         setLatitude(data.latitude?.toString() ?? '');
         setLongitude(data.longitude?.toString() ?? '');
+        setCalendarWriteback(!!data.calendar_writeback);
       }
       const q = await getQueued();
       setPendingCount(q.length);
@@ -83,7 +85,8 @@ export default function Profile() {
         telemetry_enabled: telemetry,
         prayer_method: prayerMethod,
         latitude: latitude ? parseFloat(latitude) : null,
-        longitude: longitude ? parseFloat(longitude) : null
+        longitude: longitude ? parseFloat(longitude) : null,
+        calendar_writeback: calendarWriteback
       });
       if (error) throw error;
       setTelemetryOn(telemetry);
@@ -399,6 +402,23 @@ export default function Profile() {
           <p className="text-xs text-muted-foreground">
             يُستخدم الوصول «قراءة فقط» في هذه المرحلة. يمكن توسيع الأذونات لاحقًا للإنشاء/التعديل.
           </p>
+
+          {status === 'connected' && (
+            <label className="flex items-center gap-3 cursor-pointer pt-3 border-t">
+              <input 
+                type="checkbox" 
+                className="w-4 h-4 rounded border-input" 
+                checked={calendarWriteback} 
+                onChange={e => setCalendarWriteback(e.target.checked)} 
+              />
+              <div className="flex-1">
+                <span className="text-sm font-medium">السماح للتطبيق بتعديل أحداث Google Calendar</span>
+                <p className="text-xs text-muted-foreground mt-1">
+                  عند التفعيل، سيتم تطبيق حلول التعارضات المقبولة تلقائيًا على تقويمك في Google
+                </p>
+              </div>
+            </label>
+          )}
         </div>
 
         {status === 'connected' && (

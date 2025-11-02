@@ -397,16 +397,20 @@ export type Database = {
           id: string
           is_ai_created: boolean | null
           last_google_sync_at: string | null
+          last_push_at: string | null
+          last_push_status: string | null
           last_write_origin: string | null
           location_lat: number | null
           location_lon: number | null
           owner_id: string
+          pending_push: boolean
           source_id: string | null
           starts_at: string
           sync_to_google: boolean | null
           tags: string[] | null
           title: string
           updated_at: string | null
+          version: number
         }
         Insert: {
           created_at?: string | null
@@ -423,16 +427,20 @@ export type Database = {
           id?: string
           is_ai_created?: boolean | null
           last_google_sync_at?: string | null
+          last_push_at?: string | null
+          last_push_status?: string | null
           last_write_origin?: string | null
           location_lat?: number | null
           location_lon?: number | null
           owner_id: string
+          pending_push?: boolean
           source_id?: string | null
           starts_at: string
           sync_to_google?: boolean | null
           tags?: string[] | null
           title: string
           updated_at?: string | null
+          version?: number
         }
         Update: {
           created_at?: string | null
@@ -449,16 +457,20 @@ export type Database = {
           id?: string
           is_ai_created?: boolean | null
           last_google_sync_at?: string | null
+          last_push_at?: string | null
+          last_push_status?: string | null
           last_write_origin?: string | null
           location_lat?: number | null
           location_lon?: number | null
           owner_id?: string
+          pending_push?: boolean
           source_id?: string | null
           starts_at?: string
           sync_to_google?: boolean | null
           tags?: string[] | null
           title?: string
           updated_at?: string | null
+          version?: number
         }
         Relationships: []
       }
@@ -741,6 +753,7 @@ export type Database = {
       profiles: {
         Row: {
           accent_color: string | null
+          calendar_writeback: boolean
           created_at: string | null
           currency: string | null
           density_pref: string | null
@@ -766,6 +779,7 @@ export type Database = {
         }
         Insert: {
           accent_color?: string | null
+          calendar_writeback?: boolean
           created_at?: string | null
           currency?: string | null
           density_pref?: string | null
@@ -791,6 +805,7 @@ export type Database = {
         }
         Update: {
           accent_color?: string | null
+          calendar_writeback?: boolean
           created_at?: string | null
           currency?: string | null
           density_pref?: string | null

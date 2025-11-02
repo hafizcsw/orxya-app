@@ -141,6 +141,32 @@ serve(async (req) => {
       });
     }
 
+    // Attempt write-back to Google Calendar if enabled
+    try {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("calendar_writeback")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (prof?.calendar_writeback && ev.external_source === "google") {
+        await supabase.functions.invoke("calendar-push", {
+          body: { mode: "apply_suggestion", conflict_id: id }
+        });
+      }
+    } catch (pushErr) {
+      console.error("calendar writeback failed:", pushErr);
+      await supabase
+        .from("events")
+        .update({
+          pending_push: true,
+          last_push_status: "failed",
+          last_push_at: new Date().toISOString()
+        })
+        .eq("id", ev.id)
+        .eq("owner_id", user.id);
+    }
+
     await supabase
       .from("conflicts")
       .update({
