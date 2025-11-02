@@ -3,6 +3,12 @@ project_id = "gcjggazmatipzqnxixhp"
 [functions.agent]
 verify_jwt = true
 
+[functions.conflict-autopilot]
+verify_jwt = true
+
+[functions.autopilot-undo]
+verify_jwt = true
+
 [functions.agent-hub]
 verify_jwt = true
 

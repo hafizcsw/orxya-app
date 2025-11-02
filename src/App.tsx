@@ -25,8 +25,41 @@ import PlannerChat from "./pages/PlannerChat";
 import OAuthGoogle from "./pages/OAuthGoogle";
 import NotFound from "./pages/NotFound";
 import { Protected } from "./components/Protected";
+import { useAutopilotNotifications } from "./hooks/useAutopilotNotifications";
 
 const queryClient = new QueryClient();
+
+function AppContent() {
+  useAutopilotNotifications();
+  
+  return (
+    <>
+      <Navigation />
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/today" element={<Protected><Today /></Protected>} />
+        <Route path="/projects" element={<Projects />} />
+        <Route path="/reports" element={<Protected><Reports /></Protected>} />
+        <Route path="/automation" element={<Protected><Automation /></Protected>} />
+        <Route path="/ai" element={<AI />} />
+        <Route path="/assistant" element={<Protected><Assistant /></Protected>} />
+        <Route path="/calendar" element={<Protected><Calendar /></Protected>} />
+        <Route path="/calendar-full" element={<Protected><CalendarFull /></Protected>} />
+        <Route path="/calendar-simple" element={<Protected><CalendarSimple /></Protected>} />
+        <Route path="/settings/external" element={<Protected><SettingsExternal /></Protected>} />
+        <Route path="/settings/notifications" element={<Protected><SettingsNotifications /></Protected>} />
+        <Route path="/planner" element={<Protected><PlannerChat /></Protected>} />
+        <Route path="/oauth/google" element={<OAuthGoogle />} />
+        <Route path="/diagnostics" element={<Protected><Diagnostics /></Protected>} />
+        <Route path="/seed" element={<Seed />} />
+        <Route path="/profile" element={<Protected><Profile /></Protected>} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
+  );
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -34,29 +67,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Navigation />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/today" element={<Protected><Today /></Protected>} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/reports" element={<Protected><Reports /></Protected>} />
-          <Route path="/automation" element={<Protected><Automation /></Protected>} />
-          <Route path="/ai" element={<AI />} />
-          <Route path="/assistant" element={<Protected><Assistant /></Protected>} />
-          <Route path="/calendar" element={<Protected><Calendar /></Protected>} />
-          <Route path="/calendar-full" element={<Protected><CalendarFull /></Protected>} />
-          <Route path="/calendar-simple" element={<Protected><CalendarSimple /></Protected>} />
-          <Route path="/settings/external" element={<Protected><SettingsExternal /></Protected>} />
-          <Route path="/settings/notifications" element={<Protected><SettingsNotifications /></Protected>} />
-          <Route path="/planner" element={<Protected><PlannerChat /></Protected>} />
-          <Route path="/oauth/google" element={<OAuthGoogle />} />
-          <Route path="/diagnostics" element={<Protected><Diagnostics /></Protected>} />
-          <Route path="/seed" element={<Seed />} />
-          <Route path="/profile" element={<Protected><Profile /></Protected>} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AppContent />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

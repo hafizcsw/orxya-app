@@ -212,6 +212,45 @@ export type Database = {
         }
         Relationships: []
       }
+      autopilot_actions: {
+        Row: {
+          action: string
+          applied_at: string
+          confidence: number | null
+          conflict_id: number
+          id: number
+          owner_id: string
+          patch_after: Json | null
+          patch_before: Json | null
+          suggested_action: string | null
+          undo_token: string | null
+        }
+        Insert: {
+          action: string
+          applied_at?: string
+          confidence?: number | null
+          conflict_id: number
+          id?: number
+          owner_id: string
+          patch_after?: Json | null
+          patch_before?: Json | null
+          suggested_action?: string | null
+          undo_token?: string | null
+        }
+        Update: {
+          action?: string
+          applied_at?: string
+          confidence?: number | null
+          conflict_id?: number
+          id?: number
+          owner_id?: string
+          patch_after?: Json | null
+          patch_before?: Json | null
+          suggested_action?: string | null
+          undo_token?: string | null
+        }
+        Relationships: []
+      }
       calendar_mapping: {
         Row: {
           calendar_id: string
@@ -268,13 +307,17 @@ export type Database = {
       }
       conflicts: {
         Row: {
+          applied_event_patch: Json | null
           buffer_min: number | null
+          confidence: number | null
           created_at: string | null
           date_iso: string
           decided_action: string | null
           decided_at: string | null
+          decided_by: string | null
           event_id: string | null
           id: string
+          notification_id: number | null
           object_id: string | null
           object_kind: string
           overlap_min: number
@@ -283,22 +326,30 @@ export type Database = {
           prayer_name: string
           prayer_start: string
           prayer_time: string | null
+          requires_consent: boolean | null
           resolution: string | null
           severity: string | null
           snooze_until: string | null
           status: string | null
+          suggested_action: string | null
+          suggested_change: Json | null
           suggested_start_iso: string | null
           suggestion: Json | null
+          undo_patch: Json | null
           updated_at: string | null
         }
         Insert: {
+          applied_event_patch?: Json | null
           buffer_min?: number | null
+          confidence?: number | null
           created_at?: string | null
           date_iso: string
           decided_action?: string | null
           decided_at?: string | null
+          decided_by?: string | null
           event_id?: string | null
           id?: string
+          notification_id?: number | null
           object_id?: string | null
           object_kind: string
           overlap_min: number
@@ -307,22 +358,30 @@ export type Database = {
           prayer_name: string
           prayer_start: string
           prayer_time?: string | null
+          requires_consent?: boolean | null
           resolution?: string | null
           severity?: string | null
           snooze_until?: string | null
           status?: string | null
+          suggested_action?: string | null
+          suggested_change?: Json | null
           suggested_start_iso?: string | null
           suggestion?: Json | null
+          undo_patch?: Json | null
           updated_at?: string | null
         }
         Update: {
+          applied_event_patch?: Json | null
           buffer_min?: number | null
+          confidence?: number | null
           created_at?: string | null
           date_iso?: string
           decided_action?: string | null
           decided_at?: string | null
+          decided_by?: string | null
           event_id?: string | null
           id?: string
+          notification_id?: number | null
           object_id?: string | null
           object_kind?: string
           overlap_min?: number
@@ -331,12 +390,16 @@ export type Database = {
           prayer_name?: string
           prayer_start?: string
           prayer_time?: string | null
+          requires_consent?: boolean | null
           resolution?: string | null
           severity?: string | null
           snooze_until?: string | null
           status?: string | null
+          suggested_action?: string | null
+          suggested_change?: Json | null
           suggested_start_iso?: string | null
           suggestion?: Json | null
+          undo_patch?: Json | null
           updated_at?: string | null
         }
         Relationships: [
