@@ -39,52 +39,24 @@ serve(async (req) => {
 
     console.log("Generating report for:", reportDate, "user:", user.id);
 
-    // --- Finance aggregates ---
-    const { data: finRows, error: finErr } = await supabase
-      .from("finance_entries")
-      .select("type, amount_usd")
-      .eq("entry_date", reportDate)
-      .eq("owner_id", user.id);
-    if (finErr) throw finErr;
-
-    let income_usd = 0, spend_usd = 0;
-    for (const r of finRows ?? []) {
-      const amt = Number(r.amount_usd) || 0;
-      if (r.type === "income") income_usd += amt;
-      if (r.type === "spend") spend_usd += amt;
-    }
-    const net_usd = income_usd - spend_usd;
-
-    // --- Daily logs aggregates (sum across same date) ---
-    const { data: logRows, error: logErr } = await supabase
+    // --- Get daily_logs for the date ---
+    const { data: logRow, error: logErr } = await supabase
       .from("daily_logs")
-      .select("work_hours, study_hours, mma_hours, walk_min")
+      .select("work_hours, study_hours, mma_hours, walk_min, income_usd, spend_usd, scholarships_sold, villas_sold")
       .eq("log_date", reportDate)
-      .eq("owner_id", user.id);
+      .eq("owner_id", user.id)
+      .maybeSingle();
     if (logErr) throw logErr;
 
-    let work_hours = 0, study_hours = 0, mma_hours = 0, walk_min = 0;
-    for (const r of logRows ?? []) {
-      work_hours += Number(r.work_hours) || 0;
-      study_hours += Number(r.study_hours) || 0;
-      mma_hours += Number(r.mma_hours) || 0;
-      walk_min += Number(r.walk_min) || 0;
-    }
-
-    // --- Sales aggregates (sum qty by type) ---
-    const { data: saleRows, error: saleErr } = await supabase
-      .from("sales")
-      .select("type, qty")
-      .eq("sale_date", reportDate)
-      .eq("owner_id", user.id);
-    if (saleErr) throw saleErr;
-
-    let scholarships_sold = 0, villas_sold = 0;
-    for (const r of saleRows ?? []) {
-      const q = Number(r.qty) || 0;
-      if (r.type === "scholarship") scholarships_sold += q;
-      if (r.type === "villa") villas_sold += q;
-    }
+    const work_hours = Number(logRow?.work_hours) || 0;
+    const study_hours = Number(logRow?.study_hours) || 0;
+    const mma_hours = Number(logRow?.mma_hours) || 0;
+    const walk_min = Number(logRow?.walk_min) || 0;
+    const income_usd = Number(logRow?.income_usd) || 0;
+    const spend_usd = Number(logRow?.spend_usd) || 0;
+    const scholarships_sold = Number(logRow?.scholarships_sold) || 0;
+    const villas_sold = Number(logRow?.villas_sold) || 0;
+    const net_usd = income_usd - spend_usd;
 
     const report = {
       date: reportDate,

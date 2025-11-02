@@ -1,0 +1,6 @@
+-- Add financial fields to daily_logs table
+ALTER TABLE public.daily_logs 
+ADD COLUMN IF NOT EXISTS income_usd NUMERIC DEFAULT 0,
+ADD COLUMN IF NOT EXISTS spend_usd NUMERIC DEFAULT 0,
+ADD COLUMN IF NOT EXISTS scholarships_sold INTEGER DEFAULT 0,
+ADD COLUMN IF NOT EXISTS villas_sold INTEGER DEFAULT 0;

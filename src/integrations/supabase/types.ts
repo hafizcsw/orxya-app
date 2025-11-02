@@ -578,12 +578,16 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          income_usd: number | null
           log_date: string
           mma_hours: number | null
           notes: string | null
           owner_id: string
           project_focus: string | null
+          scholarships_sold: number | null
+          spend_usd: number | null
           study_hours: number | null
+          villas_sold: number | null
           walk_min: number | null
           weight_kg: number | null
           work_hours: number | null
@@ -591,12 +595,16 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
+          income_usd?: number | null
           log_date: string
           mma_hours?: number | null
           notes?: string | null
           owner_id: string
           project_focus?: string | null
+          scholarships_sold?: number | null
+          spend_usd?: number | null
           study_hours?: number | null
+          villas_sold?: number | null
           walk_min?: number | null
           weight_kg?: number | null
           work_hours?: number | null
@@ -604,12 +612,16 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          income_usd?: number | null
           log_date?: string
           mma_hours?: number | null
           notes?: string | null
           owner_id?: string
           project_focus?: string | null
+          scholarships_sold?: number | null
+          spend_usd?: number | null
           study_hours?: number | null
+          villas_sold?: number | null
           walk_min?: number | null
           weight_kg?: number | null
           work_hours?: number | null

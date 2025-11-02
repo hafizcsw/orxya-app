@@ -82,36 +82,34 @@ const Today = () => {
         return
       }
 
-      // Daily log fields only
-      if (field.includes('hours') || field === 'walk_min') {
-        const { data: existing } = await supabase
+      // All fields update daily_logs
+      const { data: existing } = await supabase
+        .from('daily_logs')
+        .select('id')
+        .eq('owner_id', user.id)
+        .eq('log_date', today)
+        .maybeSingle()
+      
+      if (existing) {
+        const { error } = await supabase
           .from('daily_logs')
-          .select('id')
-          .eq('owner_id', user.id)
-          .eq('log_date', today)
-          .maybeSingle()
-        
-        if (existing) {
-          const { error } = await supabase
-            .from('daily_logs')
-            .update({ [field]: parsedValue })
-            .eq('id', existing.id)
-          if (error) throw error
-        } else {
-          const { error } = await supabase
-            .from('daily_logs')
-            .insert({
-              owner_id: user.id,
-              log_date: today,
-              [field]: parsedValue
-            })
-          if (error) throw error
-        }
-        
-        setToast('تم التحديث ✅')
-        setEditingField(null)
-        await fetchReport()
+          .update({ [field]: parsedValue })
+          .eq('id', existing.id)
+        if (error) throw error
+      } else {
+        const { error } = await supabase
+          .from('daily_logs')
+          .insert({
+            owner_id: user.id,
+            log_date: today,
+            [field]: parsedValue
+          })
+        if (error) throw error
       }
+      
+      setToast('تم التحديث ✅')
+      setEditingField(null)
+      await fetchReport()
     } catch (error: any) {
       setToast('❌ حدث خطأ في التحديث')
     }
@@ -285,18 +283,8 @@ const Today = () => {
                 label="التاريخ"
                 value={report.date}
               />
-              <StatCardFuturistic
-                icon={<TrendingUp className="w-5 h-5 text-success" />}
-                label="الدخل"
-                value={`$${report.income_usd}`}
-                iconBgClass="bg-success/10"
-              />
-              <StatCardFuturistic
-                icon={<TrendingDown className="w-5 h-5 text-destructive" />}
-                label="المصروف"
-                value={`$${report.spend_usd}`}
-                iconBgClass="bg-destructive/10"
-              />
+              {renderEditableCard('income_usd', <TrendingUp className="w-5 h-5 text-success" />, 'الدخل', report.income_usd, 'bg-success/10', '$', 1)}
+              {renderEditableCard('spend_usd', <TrendingDown className="w-5 h-5 text-destructive" />, 'المصروف', report.spend_usd, 'bg-destructive/10', '$', 1)}
               <StatCardFuturistic
                 icon={<DollarSign className="w-5 h-5 text-primary" />}
                 label="الصافي"
@@ -309,18 +297,8 @@ const Today = () => {
               {renderEditableCard('work_hours', <Clock className="w-5 h-5 text-accent" />, 'عمل', report.work_hours, 'bg-accent/10', 'س', 0.5)}
               {renderEditableCard('walk_min', <Footprints className="w-5 h-5 text-success" />, 'المشي', report.walk_min, 'bg-success/10', 'د', 5)}
               
-              <StatCardFuturistic
-                icon={<Award className="w-5 h-5 text-warning" />}
-                label="منح"
-                value={report.scholarships_sold}
-                iconBgClass="bg-warning/10"
-              />
-              <StatCardFuturistic
-                icon={<Building className="w-5 h-5 text-primary" />}
-                label="فلل"
-                value={report.villas_sold}
-                iconBgClass="bg-primary/10"
-              />
+              {renderEditableCard('scholarships_sold', <Award className="w-5 h-5 text-warning" />, 'منح', report.scholarships_sold, 'bg-warning/10', '', 1)}
+              {renderEditableCard('villas_sold', <Building className="w-5 h-5 text-primary" />, 'فلل', report.villas_sold, 'bg-primary/10', '', 1)}
             </div>
           ) : (
             <GlassPanel className="p-8 text-center">
