@@ -37,7 +37,7 @@ serve(async (req) => {
     const { data: { user }, error: userErr } = await supabase.auth.getUser();
     if (userErr || !user) return json({ ok: false, error: "UNAUTHENTICATED" }, 401);
 
-    // Get user's initial balance
+    // Get user's current balance (not calculated, manually set)
     const { data: profile, error: profileErr } = await supabase
       .from("profiles")
       .select("initial_balance_usd")
@@ -45,7 +45,7 @@ serve(async (req) => {
       .maybeSingle();
     if (profileErr) throw profileErr;
     
-    const initial_balance = Number(profile?.initial_balance_usd) || 0;
+    const current_balance = Number(profile?.initial_balance_usd) || 0;
 
     console.log("Generating report for:", reportDate, "user:", user.id);
 
@@ -68,7 +68,7 @@ serve(async (req) => {
     const villas_sold = Number(logRow?.villas_sold) || 0;
     const net_usd = income_usd - spend_usd;
 
-    // --- Get totals from daily_logs ---
+    // --- Get totals from daily_logs (for tracking only) ---
     const { data: allDailyLogs, error: allLogsErr } = await supabase
       .from("daily_logs")
       .select("income_usd, spend_usd")
@@ -80,16 +80,14 @@ serve(async (req) => {
       total_income += Number(r.income_usd) || 0;
       total_spend += Number(r.spend_usd) || 0;
     }
-    
-    // الرصيد الحالي = الرصيد الأولي + إجمالي الدخل - إجمالي المصروف
-    const total_balance = initial_balance + total_income - total_spend;
 
     const report = {
       date: reportDate,
       income_usd, spend_usd, net_usd,
       study_hours, mma_hours, work_hours, walk_min,
       scholarships_sold, villas_sold,
-      total_income, total_spend, total_balance, initial_balance
+      total_income, total_spend, 
+      current_balance // الرصيد الحقيقي (يدوي)
     };
 
     console.log("Report generated:", report);
