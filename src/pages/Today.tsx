@@ -18,6 +18,7 @@ import { Bell, Calendar, DollarSign, TrendingUp, TrendingDown, Clock, Dumbbell, 
 import { useNavigate } from 'react-router-dom'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { z } from 'zod'
+import { useSelectedDate } from '@/contexts/DateContext'
 
 // Validation schemas
 const dailyLogSchema = z.object({
@@ -46,10 +47,10 @@ const salesSchema = z.object({
 const Today = () => {
   const { user } = useUser()
   const navigate = useNavigate()
+  const { selectedDate } = useSelectedDate()
   const [loading, setLoading] = useState(false)
   const [report, setReport] = useState<any | null>(null)
   const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('daily')
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10))
   const [toast, setToast] = useState<string | null>(null)
   const [editingField, setEditingField] = useState<string | null>(null)
   const [editValue, setEditValue] = useState<any>('')
@@ -61,15 +62,16 @@ const Today = () => {
     if (!user) return
     setLoading(true)
     try {
+      const dateStr = selectedDate.toISOString().slice(0, 10)
       const { data, error } = await supabase.functions.invoke('report-daily', {
         body: { 
           period,
-          date: selectedDate 
+          date: dateStr 
         }
       })
       if (error) throw error
       setReport(data?.report ?? null)
-      track('report_daily_loaded', { hasReport: !!data?.report, period, date: selectedDate })
+      track('report_daily_loaded', { hasReport: !!data?.report, period, date: dateStr })
     } catch (e: any) {
       setReport(null)
     } finally { setLoading(false) }

@@ -8,6 +8,7 @@ import { track } from "@/lib/telemetry";
 import { User, ChevronLeft, ChevronRight } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CalendarPopover } from "@/components/CalendarPopover";
+import { useSelectedDate } from "@/contexts/DateContext";
 
 const Navigation = () => {
   const location = useLocation();
@@ -16,7 +17,7 @@ const Navigation = () => {
   const [authOpen, setAuthOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const { selectedDate, setSelectedDate } = useSelectedDate();
   const isMobile = useIsMobile();
 
   const handleSignOut = async () => {
@@ -50,15 +51,15 @@ const Navigation = () => {
   };
 
   const goToPreviousDay = () => {
-    const newDate = new Date(currentDate);
+    const newDate = new Date(selectedDate);
     newDate.setDate(newDate.getDate() - 1);
-    setCurrentDate(newDate);
+    setSelectedDate(newDate);
   };
 
   const goToNextDay = () => {
-    const newDate = new Date(currentDate);
+    const newDate = new Date(selectedDate);
     newDate.setDate(newDate.getDate() + 1);
-    setCurrentDate(newDate);
+    setSelectedDate(newDate);
   };
 
   const formatDate = (date: Date) => {
@@ -122,11 +123,11 @@ const Navigation = () => {
             </button>
             
             <CalendarPopover 
-              selectedDate={currentDate}
-              onDateChange={(date) => setCurrentDate(date)}
+              selectedDate={selectedDate}
+              onDateChange={(date) => setSelectedDate(date)}
             >
               <button className="px-5 py-1.5 rounded-lg bg-secondary/60 hover:bg-secondary/80 transition-all">
-                <span className="font-bold text-sm tracking-wide">{formatDate(currentDate)}</span>
+                <span className="font-bold text-sm tracking-wide">{formatDate(selectedDate)}</span>
               </button>
             </CalendarPopover>
             

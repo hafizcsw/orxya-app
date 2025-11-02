@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
+import { DateProvider } from "./contexts/DateContext";
 import Navigation from "./components/Navigation";
 import Index from "./pages/Index";
 import Today from "./pages/Today";
@@ -79,7 +80,9 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AppContent />
+          <DateProvider>
+            <AppContent />
+          </DateProvider>
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
