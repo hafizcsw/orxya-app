@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/telemetry";
 import { User, ChevronLeft, ChevronRight } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { CalendarPopover } from "@/components/CalendarPopover";
 
 const Navigation = () => {
   const location = useLocation();
@@ -112,25 +113,30 @@ const Navigation = () => {
           )}
 
           {/* Center: Calendar Navigation */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <button
-              onClick={goToPreviousDay}
-              className="w-8 h-8 rounded-lg bg-secondary/60 hover:bg-secondary/80 flex items-center justify-center transition-all"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-            
-            <div className="px-5 py-1.5 rounded-lg bg-secondary/60">
-              <span className="font-bold text-sm tracking-wide">{formatDate(currentDate)}</span>
+          <CalendarPopover 
+            selectedDate={currentDate}
+            onDateChange={(date) => setCurrentDate(date)}
+          >
+            <div className="flex items-center gap-2 flex-shrink-0 cursor-pointer">
+              <button
+                onClick={goToPreviousDay}
+                className="w-8 h-8 rounded-lg bg-secondary/60 hover:bg-secondary/80 flex items-center justify-center transition-all"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+              
+              <div className="px-5 py-1.5 rounded-lg bg-secondary/60 hover:bg-secondary/80 transition-all">
+                <span className="font-bold text-sm tracking-wide">{formatDate(currentDate)}</span>
+              </div>
+              
+              <button
+                onClick={goToNextDay}
+                className="w-8 h-8 rounded-lg bg-secondary/60 hover:bg-secondary/80 flex items-center justify-center transition-all"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
             </div>
-            
-            <button
-              onClick={goToNextDay}
-              className="w-8 h-8 rounded-lg bg-secondary/60 hover:bg-secondary/80 flex items-center justify-center transition-all"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-          </div>
+          </CalendarPopover>
 
           {/* Right: Logo - MUST BE VISIBLE */}
           <Link
