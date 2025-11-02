@@ -47,9 +47,8 @@ const Today = () => {
   const [loading, setLoading] = useState(false)
   const [report, setReport] = useState<any | null>(null)
   const [toast, setToast] = useState<string | null>(null)
-  const [editingLog, setEditingLog] = useState<any>(null)
-  const [editingFinance, setEditingFinance] = useState<any>(null)
-  const [editingSale, setEditingSale] = useState<any>(null)
+  const [editingField, setEditingField] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState<any>('')
 
   async function fetchReport() {
     if (!user) return
@@ -64,29 +63,59 @@ const Today = () => {
     } finally { setLoading(false) }
   }
 
-  // Fetch existing data for editing
-  async function loadTodayData() {
-    if (!user) return
-    
-    const today = new Date().toISOString().slice(0, 10)
-    
-    // Load today's log
-    const { data: logData } = await supabase
-      .from('daily_logs')
-      .select('*')
-      .eq('owner_id', user.id)
-      .eq('log_date', today)
-      .maybeSingle()
-    
-    if (logData) setEditingLog(logData)
-  }
-
   useEffect(() => { 
     if (user) {
       fetchReport()
-      loadTodayData()
     }
   }, [user?.id])
+
+  async function updateField(field: string, value: any) {
+    if (!user) return
+    const today = new Date().toISOString().slice(0, 10)
+    
+    try {
+      // Update based on field type
+      if (field.includes('hours') || field === 'walk_min') {
+        // Daily log fields
+        const parsedValue = Number(value)
+        if (isNaN(parsedValue) || parsedValue < 0) {
+          setToast('❌ قيمة غير صحيحة')
+          return
+        }
+        
+        // Check if log exists
+        const { data: existing } = await supabase
+          .from('daily_logs')
+          .select('id')
+          .eq('owner_id', user.id)
+          .eq('log_date', today)
+          .maybeSingle()
+        
+        if (existing) {
+          const { error } = await supabase
+            .from('daily_logs')
+            .update({ [field]: parsedValue })
+            .eq('id', existing.id)
+          if (error) throw error
+        } else {
+          const { error } = await supabase
+            .from('daily_logs')
+            .insert({
+              owner_id: user.id,
+              log_date: today,
+              [field]: parsedValue
+            })
+          if (error) throw error
+        }
+      }
+      
+      setToast('تم التحديث ✅')
+      setEditingField(null)
+      await fetchReport()
+    } catch (error: any) {
+      setToast('❌ حدث خطأ في التحديث')
+    }
+  }
 
   async function sendCommand(command: 'add_daily_log' | 'add_finance' | 'add_sale', payload: any) {
     try {
@@ -106,7 +135,6 @@ const Today = () => {
       setToast('تم الحفظ ✅')
       track('command_sent', { command })
       await fetchReport()
-      await loadTodayData()
     } catch (error: any) {
       if (error.name === 'ZodError') {
         setToast('❌ البيانات المدخلة غير صحيحة')
@@ -118,27 +146,74 @@ const Today = () => {
     }
   }
 
-  async function updateDailyLog(data: any) {
-    try {
-      dailyLogSchema.parse(data)
-      const { error } = await supabase
-        .from('daily_logs')
-        .update(data)
-        .eq('id', editingLog.id)
-        .eq('owner_id', user!.id)
-      
-      if (error) throw error
-      setToast('تم التحديث ✅')
-      setEditingLog(null)
-      await fetchReport()
-      await loadTodayData()
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        setToast('❌ البيانات المدخلة غير صحيحة')
-        return
-      }
-      setToast('❌ حدث خطأ في التحديث')
-    }
+  const renderEditableCard = (field: string, icon: any, label: string, value: any, iconBgClass: string) => {
+    const isEditing = editingField === field
+    
+    return (
+      <div className="card group relative overflow-hidden p-6">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+              {label}
+            </span>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 duration-300 ${iconBgClass}`}>
+              {icon}
+            </div>
+          </div>
+          
+          {isEditing ? (
+            <div className="space-y-2">
+              <input
+                type="number"
+                step="0.5"
+                min="0"
+                max={field === 'walk_min' ? '1440' : '24'}
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                className="input w-full text-2xl font-bold"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    updateField(field, editValue)
+                  } else if (e.key === 'Escape') {
+                    setEditingField(null)
+                  }
+                }}
+              />
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => updateField(field, editValue)}
+                  className="flex-1"
+                >
+                  حفظ
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setEditingField(null)}
+                  className="flex-1"
+                >
+                  إلغاء
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div
+              className="text-3xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text cursor-pointer hover:scale-105 transition-transform"
+              onClick={() => {
+                setEditingField(field)
+                setEditValue(value || 0)
+              }}
+            >
+              {value}{field === 'walk_min' ? 'د' : 'س'}
+            </div>
+          )}
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -220,37 +295,12 @@ const Today = () => {
                 className="cursor-pointer hover:scale-105 transition-transform"
                 onClick={() => document.getElementById('finance-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
               />
-              <StatCardFuturistic
-                icon={<BookOpen className="w-5 h-5 text-primary" />}
-                label="دراسة"
-                value={`${report.study_hours}س`}
-                className="cursor-pointer hover:scale-105 transition-transform"
-                onClick={() => document.getElementById('daily-log-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-              />
-              <StatCardFuturistic
-                icon={<Dumbbell className="w-5 h-5 text-warning" />}
-                label="MMA"
-                value={`${report.mma_hours}س`}
-                iconBgClass="bg-warning/10"
-                className="cursor-pointer hover:scale-105 transition-transform"
-                onClick={() => document.getElementById('daily-log-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-              />
-              <StatCardFuturistic
-                icon={<Clock className="w-5 h-5 text-accent" />}
-                label="عمل"
-                value={`${report.work_hours}س`}
-                iconBgClass="bg-accent/10"
-                className="cursor-pointer hover:scale-105 transition-transform"
-                onClick={() => document.getElementById('daily-log-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-              />
-              <StatCardFuturistic
-                icon={<Footprints className="w-5 h-5 text-success" />}
-                label="المشي"
-                value={`${report.walk_min}د`}
-                iconBgClass="bg-success/10"
-                className="cursor-pointer hover:scale-105 transition-transform"
-                onClick={() => document.getElementById('daily-log-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-              />
+              
+              {renderEditableCard('study_hours', <BookOpen className="w-5 h-5 text-primary" />, 'دراسة', report.study_hours, 'bg-primary/10')}
+              {renderEditableCard('mma_hours', <Dumbbell className="w-5 h-5 text-warning" />, 'MMA', report.mma_hours, 'bg-warning/10')}
+              {renderEditableCard('work_hours', <Clock className="w-5 h-5 text-accent" />, 'عمل', report.work_hours, 'bg-accent/10')}
+              {renderEditableCard('walk_min', <Footprints className="w-5 h-5 text-success" />, 'المشي', report.walk_min, 'bg-success/10')}
+              
               <StatCardFuturistic
                 icon={<Award className="w-5 h-5 text-warning" />}
                 label="منح"
@@ -282,41 +332,23 @@ const Today = () => {
             <form id="daily-log-form" onSubmit={(e: any) => {
               e.preventDefault()
               const fd = new FormData(e.currentTarget)
-              const data = {
+              sendCommand('add_daily_log', {
+                log_date: new Date().toISOString().slice(0, 10),
                 work_hours: Number(fd.get('work_hours') || 0),
                 study_hours: Number(fd.get('study_hours') || 0),
                 mma_hours: Number(fd.get('mma_hours') || 0),
                 walk_min: Number(fd.get('walk_min') || 0),
                 notes: String(fd.get('notes') || '')
-              }
-              
-              if (editingLog) {
-                updateDailyLog(data).then(() => e.currentTarget.reset())
-              } else {
-                sendCommand('add_daily_log', {
-                  log_date: new Date().toISOString().slice(0, 10),
-                  ...data
-                }).then(() => e.currentTarget.reset())
-              }
+              }).then(() => {
+                e.currentTarget.reset()
+              })
             }}>
               <GlassPanel className="space-y-3">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-lg">📝</span>
-                    </div>
-                    <div className="font-semibold">سجل اليوم</div>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-lg">📝</span>
                   </div>
-                  {editingLog && (
-                    <Button 
-                      type="button" 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => setEditingLog(null)}
-                    >
-                      إلغاء التعديل
-                    </Button>
-                  )}
+                  <div className="font-semibold">سجل اليوم</div>
                 </div>
                 <input 
                   name="work_hours" 
@@ -326,7 +358,6 @@ const Today = () => {
                   step="0.5"
                   max="24"
                   min="0"
-                  defaultValue={editingLog?.work_hours || ''}
                 />
                 <input 
                   name="study_hours" 
@@ -336,7 +367,6 @@ const Today = () => {
                   step="0.5"
                   max="24"
                   min="0"
-                  defaultValue={editingLog?.study_hours || ''}
                 />
                 <input 
                   name="mma_hours" 
@@ -346,7 +376,6 @@ const Today = () => {
                   step="0.5"
                   max="24"
                   min="0"
-                  defaultValue={editingLog?.mma_hours || ''}
                 />
                 <input 
                   name="walk_min" 
@@ -356,18 +385,14 @@ const Today = () => {
                   step="1"
                   max="1440"
                   min="0"
-                  defaultValue={editingLog?.walk_min || ''}
                 />
                 <input 
                   name="notes" 
                   placeholder="ملاحظات (حد أقصى 500 حرف)" 
                   className="input"
                   maxLength={500}
-                  defaultValue={editingLog?.notes || ''}
                 />
-                <NeonButton type="submit" variant="primary" className="w-full">
-                  {editingLog ? 'تحديث' : 'حفظ'}
-                </NeonButton>
+                <NeonButton type="submit" variant="primary" className="w-full">حفظ</NeonButton>
               </GlassPanel>
             </form>
 
