@@ -58,11 +58,26 @@ serve(async (req) => {
     const villas_sold = Number(logRow?.villas_sold) || 0;
     const net_usd = income_usd - spend_usd;
 
+    // --- Get totals (all time) ---
+    const { data: allLogs, error: allLogsErr } = await supabase
+      .from("daily_logs")
+      .select("income_usd, spend_usd")
+      .eq("owner_id", user.id);
+    if (allLogsErr) throw allLogsErr;
+
+    let total_income = 0, total_spend = 0;
+    for (const r of allLogs ?? []) {
+      total_income += Number(r.income_usd) || 0;
+      total_spend += Number(r.spend_usd) || 0;
+    }
+    const total_balance = total_income - total_spend;
+
     const report = {
       date: reportDate,
       income_usd, spend_usd, net_usd,
       study_hours, mma_hours, work_hours, walk_min,
-      scholarships_sold, villas_sold
+      scholarships_sold, villas_sold,
+      total_income, total_spend, total_balance
     };
 
     console.log("Report generated:", report);

@@ -277,29 +277,85 @@ const Today = () => {
               <p className="mt-2 text-sm text-muted-foreground">جار التحميل…</p>
             </GlassPanel>
           ) : report ? (
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              <StatCardFuturistic
-                icon={<Clock className="w-5 h-5 text-muted-foreground" />}
-                label="التاريخ"
-                value={report.date}
-              />
-              {renderEditableCard('income_usd', <TrendingUp className="w-5 h-5 text-success" />, 'الدخل', report.income_usd, 'bg-success/10', '$', 1)}
-              {renderEditableCard('spend_usd', <TrendingDown className="w-5 h-5 text-destructive" />, 'المصروف', report.spend_usd, 'bg-destructive/10', '$', 1)}
-              <StatCardFuturistic
-                icon={<DollarSign className="w-5 h-5 text-primary" />}
-                label="الصافي"
-                value={`${report.net_usd >= 0 ? '✅' : '⚠️'} $${report.net_usd}`}
-                iconBgClass="bg-primary/10"
-              />
-              
-              {renderEditableCard('study_hours', <BookOpen className="w-5 h-5 text-primary" />, 'دراسة', report.study_hours, 'bg-primary/10', 'س', 0.5)}
-              {renderEditableCard('mma_hours', <Dumbbell className="w-5 h-5 text-warning" />, 'MMA', report.mma_hours, 'bg-warning/10', 'س', 0.5)}
-              {renderEditableCard('work_hours', <Clock className="w-5 h-5 text-accent" />, 'عمل', report.work_hours, 'bg-accent/10', 'س', 0.5)}
-              {renderEditableCard('walk_min', <Footprints className="w-5 h-5 text-success" />, 'المشي', report.walk_min, 'bg-success/10', 'د', 5)}
-              
-              {renderEditableCard('scholarships_sold', <Award className="w-5 h-5 text-warning" />, 'منح', report.scholarships_sold, 'bg-warning/10', '', 1)}
-              {renderEditableCard('villas_sold', <Building className="w-5 h-5 text-primary" />, 'فلل', report.villas_sold, 'bg-primary/10', '', 1)}
-            </div>
+            <>
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">اليوم - {report.date}</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {renderEditableCard('income_usd', <TrendingUp className="w-5 h-5 text-success" />, 'دخل اليوم', report.income_usd, 'bg-success/10', '$', 1)}
+                  {renderEditableCard('spend_usd', <TrendingDown className="w-5 h-5 text-destructive" />, 'مصروف اليوم', report.spend_usd, 'bg-destructive/10', '$', 1)}
+                  <StatCardFuturistic
+                    icon={<DollarSign className="w-5 h-5 text-primary" />}
+                    label="صافي اليوم"
+                    value={`${report.net_usd >= 0 ? '✅' : '⚠️'} $${report.net_usd}`}
+                    iconBgClass="bg-primary/10"
+                  />
+                  <StatCardFuturistic
+                    icon={<Clock className="w-5 h-5 text-muted-foreground" />}
+                    label="التاريخ"
+                    value={report.date}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">الإجماليات الكلية</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <HolographicCard variant="neon" className="p-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                        الرصيد الكلي
+                      </span>
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <DollarSign className="w-5 h-5 text-primary" />
+                      </div>
+                    </div>
+                    <div className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                      ${report.total_balance || 0}
+                    </div>
+                  </HolographicCard>
+                  
+                  <GlassPanel className="p-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                        إجمالي الدخل
+                      </span>
+                      <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
+                        <TrendingUp className="w-5 h-5 text-success" />
+                      </div>
+                    </div>
+                    <div className="text-3xl font-bold text-success">
+                      ${report.total_income || 0}
+                    </div>
+                  </GlassPanel>
+                  
+                  <GlassPanel className="p-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                        إجمالي المصروف
+                      </span>
+                      <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                        <TrendingDown className="w-5 h-5 text-destructive" />
+                      </div>
+                    </div>
+                    <div className="text-3xl font-bold text-destructive">
+                      ${report.total_spend || 0}
+                    </div>
+                  </GlassPanel>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">الأنشطة اليومية</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {renderEditableCard('study_hours', <BookOpen className="w-5 h-5 text-primary" />, 'دراسة', report.study_hours, 'bg-primary/10', 'س', 0.5)}
+                  {renderEditableCard('mma_hours', <Dumbbell className="w-5 h-5 text-warning" />, 'MMA', report.mma_hours, 'bg-warning/10', 'س', 0.5)}
+                  {renderEditableCard('work_hours', <Clock className="w-5 h-5 text-accent" />, 'عمل', report.work_hours, 'bg-accent/10', 'س', 0.5)}
+                  {renderEditableCard('walk_min', <Footprints className="w-5 h-5 text-success" />, 'المشي', report.walk_min, 'bg-success/10', 'د', 5)}
+                  {renderEditableCard('scholarships_sold', <Award className="w-5 h-5 text-warning" />, 'منح', report.scholarships_sold, 'bg-warning/10', '', 1)}
+                  {renderEditableCard('villas_sold', <Building className="w-5 h-5 text-primary" />, 'فلل', report.villas_sold, 'bg-primary/10', '', 1)}
+                </div>
+              </div>
+            </>
           ) : (
             <GlassPanel className="p-8 text-center">
               <p className="text-muted-foreground">لا توجد بيانات لليوم</p>
