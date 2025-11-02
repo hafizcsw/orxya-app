@@ -41,17 +41,31 @@ serve(async (req) => {
 
     const { latitude, longitude, accuracy, source }: LocationUpdate = await req.json();
 
-    console.log('📍 Location update:', { userId: user.id, latitude, longitude });
+    console.log('📍 Location update:', { userId: user.id, latitude, longitude, accuracy, source });
 
     // التحقق من موافقة المستخدم
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('allow_location')
       .eq('id', user.id)
       .maybeSingle();
 
-    if (!profile?.allow_location) {
-      throw new Error('Location tracking not enabled');
+    if (profileError) {
+      console.error('Profile query error:', profileError);
+      throw new Error(`Failed to fetch profile: ${profileError.message}`);
+    }
+
+    // If profile doesn't exist or allow_location is false, return silently
+    if (!profile || !profile.allow_location) {
+      console.log('ℹ️ Location tracking not enabled for user:', user.id);
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          message: 'Location tracking not enabled',
+          skipped: true
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // تحديث الموقع في الملف الشخصي
@@ -66,7 +80,7 @@ serve(async (req) => {
 
     if (updateError) {
       console.error('Profile update error:', updateError);
-      throw updateError;
+      throw new Error(`Failed to update location: ${updateError.message}`);
     }
 
     // تحديث مواقيت الصلاة (استدعاء prayer-sync)
@@ -76,6 +90,7 @@ serve(async (req) => {
 
     if (prayerError) {
       console.warn('Prayer sync failed:', prayerError);
+      // Don't throw - prayer sync failure shouldn't block location update
     }
 
     console.log('✅ Location updated successfully');
@@ -91,14 +106,16 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('❌ Location update error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const statusCode = errorMessage.includes('Unauthorized') ? 401 : 500;
+    
     return new Response(
       JSON.stringify({ 
         success: false, 
         error: errorMessage 
       }),
       { 
-        status: 500, 
+        status: statusCode, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
