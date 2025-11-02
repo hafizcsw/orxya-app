@@ -1,11 +1,14 @@
 import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { AlertCircle } from "lucide-react";
 
 export default function EventBubble({
   p,
   scale,
   onMove,
-  onResize
+  onResize,
+  onClick,
+  hasConflict = false
 }: {
   p: {
     event: any;
@@ -17,6 +20,8 @@ export default function EventBubble({
   scale: { pxPerHour: number; pxPerMin: number; dayStartMin: number; dayEndMin: number };
   onMove?: (to: { start_ts: string; end_ts: string }) => void | Promise<void>;
   onResize?: (to: { start_ts: string; end_ts: string }) => void | Promise<void>;
+  onClick?: () => void;
+  hasConflict?: boolean;
 }) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{ y: number; top: number } | null>(null);
@@ -36,6 +41,13 @@ export default function EventBubble({
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).dataset.handle) return;
+    
+    // Double click to open details
+    if (e.detail === 2) {
+      onClick?.();
+      return;
+    }
+
     setDragStart({ y: e.clientY, top: p.top });
     setIsDragging(true);
     e.stopPropagation();
@@ -82,8 +94,13 @@ export default function EventBubble({
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      <div className="p-2 h-full flex flex-col">
-        <div className="font-semibold text-sm truncate">
+      <div className="p-2 h-full flex flex-col relative">
+        {hasConflict && (
+          <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-destructive border-2 border-background animate-pulse" />
+        )}
+        
+        <div className="font-semibold text-sm truncate flex items-center gap-1">
+          {hasConflict && <AlertCircle className="w-3 h-3 flex-shrink-0" />}
           {p.event.title || "بدون عنوان"}
         </div>
         {p.event.location && (

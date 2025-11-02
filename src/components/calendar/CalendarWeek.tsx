@@ -1,7 +1,9 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { addDays, startOfWeek, endOfWeek, formatISO } from "date-fns";
 import { useCalendarData } from "@/hooks/useCalendarData";
 import CalendarDay from "./CalendarDay";
+import EventDetailsDrawer from "./EventDetailsDrawer";
+import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/telemetry";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -17,6 +19,13 @@ export default function CalendarWeek({
   startOn = 6,
   onDateChange 
 }: Props) {
+  const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [conflictData, setConflictData] = useState<{ hasConflict: boolean; conflictId: string | null }>({
+    hasConflict: false,
+    conflictId: null
+  });
+
   const start = startOfWeek(anchor, { weekStartsOn: startOn });
   const end = endOfWeek(anchor, { weekStartsOn: startOn });
 
@@ -44,6 +53,31 @@ export default function CalendarWeek({
 
   const goToToday = () => {
     onDateChange?.(new Date());
+  };
+
+  const handleEventClick = async (event: any) => {
+    setSelectedEvent(event);
+    
+    // Check for conflicts
+    const { data: conflicts } = await supabase
+      .from("conflicts")
+      .select("id, status")
+      .eq("event_id", event.id)
+      .eq("status", "open")
+      .maybeSingle();
+
+    setConflictData({
+      hasConflict: !!conflicts,
+      conflictId: conflicts?.id || null
+    });
+    
+    setDrawerOpen(true);
+  };
+
+  const handleDrawerClose = () => {
+    setDrawerOpen(false);
+    setSelectedEvent(null);
+    setConflictData({ hasConflict: false, conflictId: null });
   };
 
   return (
@@ -126,6 +160,7 @@ export default function CalendarWeek({
               events={dayEvents}
               prayers={prayers}
               onReload={reload}
+              onEventClick={handleEventClick}
               onCreate={(payload) => {
                 track("cal_create_drag", { durMin: payload.durationMin });
               }}
@@ -139,6 +174,16 @@ export default function CalendarWeek({
           );
         })}
       </div>
+
+      {/* Event Details Drawer */}
+      <EventDetailsDrawer
+        event={selectedEvent}
+        open={drawerOpen}
+        onClose={handleDrawerClose}
+        onUpdate={reload}
+        hasConflict={conflictData.hasConflict}
+        conflictId={conflictData.conflictId}
+      />
 
       {/* Footer status */}
       <div className="h-9 px-4 text-xs flex items-center justify-between border-t bg-muted/40">

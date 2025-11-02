@@ -470,6 +470,7 @@ export type Database = {
       }
       events: {
         Row: {
+          color: string | null
           created_at: string | null
           description: string | null
           duration_min: number | null
@@ -491,6 +492,7 @@ export type Database = {
           location_lat: number | null
           location_lon: number | null
           next_retry_at: string | null
+          notes: string | null
           owner_id: string
           pending_push: boolean
           retry_count: number
@@ -503,6 +505,7 @@ export type Database = {
           version: number
         }
         Insert: {
+          color?: string | null
           created_at?: string | null
           description?: string | null
           duration_min?: number | null
@@ -524,6 +527,7 @@ export type Database = {
           location_lat?: number | null
           location_lon?: number | null
           next_retry_at?: string | null
+          notes?: string | null
           owner_id: string
           pending_push?: boolean
           retry_count?: number
@@ -536,6 +540,7 @@ export type Database = {
           version?: number
         }
         Update: {
+          color?: string | null
           created_at?: string | null
           description?: string | null
           duration_min?: number | null
@@ -557,6 +562,7 @@ export type Database = {
           location_lat?: number | null
           location_lon?: number | null
           next_retry_at?: string | null
+          notes?: string | null
           owner_id?: string
           pending_push?: boolean
           retry_count?: number

@@ -3,6 +3,7 @@ import { layoutDay } from "@/lib/calendar-layout";
 import EventBubble from "./EventBubble";
 import PrayerBand from "./PrayerBand";
 import { supabase } from "@/integrations/supabase/client";
+import { checkPrayerConflict } from "@/lib/aiConflicts";
 import { cn } from "@/lib/utils";
 
 type CalEvent = {
@@ -30,6 +31,7 @@ type Props = {
   onMove?: (ev: CalEvent, target: { start_ts: string; end_ts: string }) => void;
   onResize?: (ev: CalEvent, target: { start_ts: string; end_ts: string }) => void;
   onReload?: () => void;
+  onEventClick?: (event: CalEvent) => void;
 };
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -41,7 +43,8 @@ export default function CalendarDay({
   onCreate,
   onMove,
   onResize,
-  onReload
+  onReload,
+  onEventClick
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<{ y0: number; y1: number } | null>(null);
@@ -135,35 +138,45 @@ export default function CalendarDay({
 
       {/* Events */}
       <div className="absolute inset-0 z-20">
-        {positioned.map((p) => (
-          <EventBubble
-            key={p.event.id}
-            p={p}
-            scale={scale}
-            onMove={async (to) => {
-              await supabase
-                .from("events")
-                .update({ starts_at: to.start_ts, ends_at: to.end_ts })
-                .eq("id", p.event.id);
-              onMove?.(p.event, to);
-              onReload?.();
-              await supabase.functions
-                .invoke("conflict-check", { body: { event_id: p.event.id } })
-                .catch(() => {});
-            }}
-            onResize={async (to) => {
-              await supabase
-                .from("events")
-                .update({ starts_at: to.start_ts, ends_at: to.end_ts })
-                .eq("id", p.event.id);
-              onResize?.(p.event, to);
-              onReload?.();
-              await supabase.functions
-                .invoke("conflict-check", { body: { event_id: p.event.id } })
-                .catch(() => {});
-            }}
-          />
-        ))}
+        {positioned.map((p) => {
+          const hasConflict = checkPrayerConflict(
+            p.event.starts_at,
+            p.event.ends_at,
+            prayers
+          );
+
+          return (
+            <EventBubble
+              key={p.event.id}
+              p={p}
+              scale={scale}
+              hasConflict={hasConflict}
+              onClick={() => onEventClick?.(p.event)}
+              onMove={async (to) => {
+                await supabase
+                  .from("events")
+                  .update({ starts_at: to.start_ts, ends_at: to.end_ts })
+                  .eq("id", p.event.id);
+                onMove?.(p.event, to);
+                onReload?.();
+                await supabase.functions
+                  .invoke("conflict-check", { body: { event_id: p.event.id } })
+                  .catch(() => {});
+              }}
+              onResize={async (to) => {
+                await supabase
+                  .from("events")
+                  .update({ starts_at: to.start_ts, ends_at: to.end_ts })
+                  .eq("id", p.event.id);
+                onResize?.(p.event, to);
+                onReload?.();
+                await supabase.functions
+                  .invoke("conflict-check", { body: { event_id: p.event.id } })
+                  .catch(() => {});
+              }}
+            />
+          );
+        })}
       </div>
 
       {/* Drag creation preview */}
