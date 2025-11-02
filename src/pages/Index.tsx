@@ -1,27 +1,38 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@/lib/auth';
 
 const Index = () => {
   const navigate = useNavigate();
   const { user, loading } = useUser();
+  const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
-    if (!loading) {
-      // Small timeout to prevent race condition with auth state changes
+    if (!loading && !isNavigating) {
+      // Longer timeout to prevent race conditions
       const timeout = setTimeout(() => {
+        const currentPath = window.location.pathname;
+        
         if (user) {
-          console.log('[Index] User found, redirecting to /today')
-          navigate('/today', { replace: true });
+          // Don't navigate if already on the target page
+          if (currentPath !== '/today') {
+            console.log('[Index] User found, redirecting to /today')
+            setIsNavigating(true);
+            navigate('/today', { replace: true });
+          }
         } else {
-          console.log('[Index] No user, redirecting to /auth')
-          navigate('/auth', { replace: true });
+          // Don't navigate if already on auth page
+          if (currentPath !== '/auth') {
+            console.log('[Index] No user, redirecting to /auth')
+            setIsNavigating(true);
+            navigate('/auth', { replace: true });
+          }
         }
-      }, 50);
+      }, 200);
       
       return () => clearTimeout(timeout);
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, isNavigating]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">

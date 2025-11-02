@@ -15,13 +15,21 @@ export default function Auth() {
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
+  const [hasNavigated, setHasNavigated] = useState(false)
 
   useEffect(() => {
-    if (user) {
+    // Only redirect if user is logged in and we haven't navigated yet
+    // and we're not in the middle of a login/signup operation
+    if (user && !hasNavigated && !loading) {
       console.log('[Auth] User already logged in, redirecting to /today')
-      navigate('/today', { replace: true })
+      setHasNavigated(true)
+      
+      // Small delay to prevent navigation loops
+      setTimeout(() => {
+        navigate('/today', { replace: true })
+      }, 100)
     }
-  }, [user, navigate])
+  }, [user, navigate, hasNavigated, loading])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

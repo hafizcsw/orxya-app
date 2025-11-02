@@ -14,27 +14,40 @@ const Navigation = () => {
   const { user } = useUser();
   const [authOpen, setAuthOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const isMobile = useIsMobile();
 
   const handleSignOut = async () => {
+    // Prevent multiple signout calls
+    if (isSigningOut) {
+      console.log('[Navigation] Sign out already in progress');
+      return;
+    }
+    
     console.log('[Navigation] Sign out clicked');
+    setIsSigningOut(true);
+    
     try {
       track('auth_signout');
       
       console.log('[Navigation] Signing out from Supabase...');
-      await supabase.auth.signOut({ scope: 'local' });
+      // Use 'global' scope to clear all sessions
+      await supabase.auth.signOut({ scope: 'global' });
       
-      console.log('[Navigation] Clearing storage...');
-      localStorage.clear();
-      sessionStorage.clear();
+      console.log('[Navigation] Sign out successful, redirecting...');
       
-      console.log('[Navigation] Redirecting to /auth...');
-      navigate('/auth', { replace: true });
+      // Small delay to allow cleanup
+      setTimeout(() => {
+        navigate('/auth', { replace: true });
+        setIsSigningOut(false);
+      }, 300);
     } catch (err) {
       console.error('[Navigation] Sign out failed:', err);
-      localStorage.clear();
-      sessionStorage.clear();
-      navigate('/auth', { replace: true });
+      // Still redirect on error
+      setTimeout(() => {
+        navigate('/auth', { replace: true });
+        setIsSigningOut(false);
+      }, 300);
     }
   };
 
