@@ -90,3 +90,35 @@ export async function setAIConsentsPreset(preset: "all_on" | "all_off") {
   return updateAIConsents(flags);
 }
 
+// Block 18: Orchestrator v1 helpers
+export type OrchestrateResult = {
+  ok: boolean;
+  session_id?: string;
+  reply?: string | null;
+  actions?: Array<{ type: string; payload: any }>;
+  results?: Array<{ type: string; ok: boolean; error?: string | null }>;
+};
+
+export async function orchestrate(message: string, sessionId?: string): Promise<OrchestrateResult> {
+  const body: any = { message };
+  if (sessionId) body.session_id = sessionId;
+  const { data, error } = await supabase.functions.invoke("orchestrate-ai", { body });
+  if (error) throw error;
+  return data as OrchestrateResult;
+}
+
+export async function grantScopes(scopes: string[]) {
+  const { data: sess } = await supabase.auth.getSession();
+  const uid = sess?.session?.user?.id;
+  if (!uid) return;
+
+  const rows = scopes.map(s => ({
+    owner_id: uid,
+    scope: s,
+    granted: true,
+    granted_at: new Date().toISOString(),
+    expires_at: null,
+    metadata: {}
+  }));
+  await supabase.from("ai_consent").upsert(rows);
+}

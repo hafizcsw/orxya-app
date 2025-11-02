@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { genIdem } from '@/lib/sync'
 import { useUser } from '@/lib/auth'
@@ -8,11 +8,17 @@ import { SessionBanner } from '@/components/SessionBanner'
 import { ensureNotificationPerms, rescheduleAllFromDB } from '@/lib/notify'
 import { getDeviceLocation } from '@/native/geo'
 import { syncPrayers, schedulePrayersFor } from '@/native/prayer'
+import { orchestrate, grantScopes } from '@/lib/ai'
+import { throttle } from '@/lib/throttle'
 
 const Automation = () => {
   const { user } = useUser()
   const [rows, setRows] = useState<any[]>([])
   const [toast, setToast] = useState<string | null>(null)
+  const [aiBusy, setAiBusy] = useState(false)
+  const [aiReply, setAiReply] = useState<string | null>(null)
+  const [aiSessionId, setAiSessionId] = useState<string | null>(null)
+  const [consentAsk, setConsentAsk] = useState<{scopes:string[], message:string} | null>(null)
 
   async function load() {
     if (!user) return setRows([])
@@ -87,6 +93,57 @@ const Automation = () => {
     }
   }
 
+  function buildDailyPlanPrompt() {
+    return [
+      "ابنِ خطة اليوم من تقويمي ومهامي مع احترام مواقيت الصلاة.",
+      "• راجع تعارضات الصلاة واقترح حلولًا إن وجدت.",
+      "• أنشئ/حدّث مهام بالوقت المناسب، وأضف تذكيرات محلية.",
+      "• إن لزم اسألني عن البيانات الناقصة فقط.",
+    ].join("\n");
+  }
+
+  const reloadTasksThrottled = useMemo(
+    () => throttle(() => {}, 300),
+    []
+  );
+
+  async function requestDailyPlan() {
+    setAiBusy(true);
+    setAiReply(null);
+
+    try {
+      track("ai_plan_today_request");
+      const msg = buildDailyPlanPrompt();
+      const data = await orchestrate(msg, aiSessionId || undefined);
+
+      if (data.session_id) setAiSessionId(data.session_id);
+      if (data.reply) setAiReply(data.reply);
+
+      const ask = (data.actions ?? []).find(a => a.type === "ask_consent") as any;
+      if (ask?.payload?.scopes?.length) {
+        setConsentAsk({ scopes: ask.payload.scopes, message: ask.payload.message || "أحتاج إذنك." });
+        track("ai_plan_today_consent_missing", { scopes: ask.payload.scopes });
+        return;
+      }
+
+      track("ai_plan_today_success");
+
+      await rescheduleAllFromDB();
+      reloadTasksThrottled();
+      const today = new Date().toISOString().slice(0,10);
+      await syncPrayers(today);
+      await schedulePrayersFor(today);
+
+      setToast("تم اقتراح خطة اليوم ✅");
+    } catch (e:any) {
+      setToast(`تعذّر توليد الخطة: ${e?.message ?? "خطأ"}`);
+      track("ai_plan_today_error");
+    } finally {
+      setAiBusy(false);
+    }
+  }
+
+
   return (
     <div className="p-4 space-y-4 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">الأتمتة والتذكيرات</h1>
@@ -117,6 +174,42 @@ const Automation = () => {
       </div>
 
       <div className="rounded-2xl border p-4 bg-white/70 space-y-3">
+        <div className="text-sm opacity-70 font-semibold">الذكاء الاصطناعي</div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            disabled={aiBusy}
+            onClick={requestDailyPlan}
+            className="btn disabled:opacity-50"
+          >
+            {aiBusy ? "جاري البناء…" : "اقترح خطة اليوم بالذكاء الصناعي"}
+          </button>
+          {aiReply && <span className="text-sm text-muted-foreground">ردّ المساعد: {aiReply}</span>}
+        </div>
+      </div>
+
+      {consentAsk && (
+        <div className="border rounded-xl p-4 space-y-3 bg-background">
+          <div className="font-medium">الموافقة مطلوبة</div>
+          <div className="text-sm text-muted-foreground">{consentAsk.message}</div>
+          <div className="text-sm">الصلاحيات: {consentAsk.scopes.join(", ")}</div>
+          <div className="flex gap-2">
+            <button
+              className="px-4 py-2 rounded bg-primary text-primary-foreground"
+              onClick={async () => {
+                await grantScopes(consentAsk.scopes);
+                setConsentAsk(null);
+                setToast("تم منح الصلاحيات. أعيد المحاولة…");
+                requestDailyPlan();
+              }}
+            >
+              سماح
+            </button>
+            <button className="px-4 py-2 rounded border" onClick={()=>setConsentAsk(null)}>إلغاء</button>
+          </div>
+        </div>
+      )}
+
+      <div className="rounded-2xl border p-4 bg-white/70 space-y-3">
         <div className="text-sm opacity-70 font-semibold">مواقيت الصلاة</div>
         <div className="flex gap-2 flex-wrap">
           <button 
@@ -133,7 +226,7 @@ const Automation = () => {
           </button>
         </div>
       </div>
-      
+
       {toast && <Toast msg={toast} />}
     </div>
   )
