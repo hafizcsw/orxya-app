@@ -19,6 +19,9 @@ const Automation = () => {
   const [aiReply, setAiReply] = useState<string | null>(null)
   const [aiSessionId, setAiSessionId] = useState<string | null>(null)
   const [consentAsk, setConsentAsk] = useState<{scopes:string[], message:string} | null>(null)
+  const [autoConflictCheck, setAutoConflictCheck] = useState(() => 
+    localStorage.getItem("conflict_auto_check") === "enabled"
+  );
 
   async function load() {
     if (!user) return setRows([])
@@ -106,6 +109,14 @@ const Automation = () => {
     () => throttle(() => {}, 300),
     []
   );
+
+  function toggleAutoConflictCheck() {
+    const newValue = !autoConflictCheck;
+    setAutoConflictCheck(newValue);
+    localStorage.setItem("conflict_auto_check", newValue ? "enabled" : "disabled");
+    setToast(newValue ? "التحقق التلقائي مُفعّل ✅" : "التحقق اليدوي مُفعّل 🔧");
+    track("conflict_auto_check_toggled", { enabled: newValue });
+  }
 
   async function requestDailyPlan() {
     setAiBusy(true);
@@ -210,7 +221,26 @@ const Automation = () => {
       )}
 
       <div className="rounded-2xl border p-4 bg-white/70 space-y-3">
-        <div className="text-sm opacity-70 font-semibold">مواقيت الصلاة</div>
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-sm opacity-70 font-semibold">مواقيت الصلاة</div>
+          <div className="flex items-center gap-3 text-sm">
+            <span className="text-muted-foreground">
+              {autoConflictCheck ? "تحقق تلقائي" : "تحقق يدوي"}
+            </span>
+            <button
+              onClick={toggleAutoConflictCheck}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                autoConflictCheck ? "bg-primary" : "bg-muted"
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  autoConflictCheck ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+        </div>
         <div className="flex gap-2 flex-wrap">
           <button 
             className="btn" 

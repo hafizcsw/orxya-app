@@ -23,13 +23,16 @@ startCalendarDailyScheduler();
 startLocationTracking(15); // Capture location every 15 minutes on native
 
 // Bootstrap: location + conflicts on visibility change (for web only, when user is logged in)
-// DISABLED temporarily to fix button issues - conflicts will be checked manually
-/*
+// Can be enabled/disabled from Automation settings
 (function bootstrapEnvAwarePingers() {
   const Cap = (window as any).Capacitor;
   if (!Cap?.isNativePlatform?.()) {
     document.addEventListener("visibilitychange", async () => {
       if (document.visibilityState === "visible") {
+        // Check if auto-check is enabled
+        const autoCheck = localStorage.getItem("conflict_auto_check");
+        if (autoCheck !== "enabled") return;
+        
         setTimeout(async () => {
           try {
             const { data: { session } } = await supabase.auth.getSession();
@@ -45,7 +48,6 @@ startLocationTracking(15); // Capture location every 15 minutes on native
     });
   }
 })();
-*/
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
