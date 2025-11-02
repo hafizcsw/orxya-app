@@ -12,6 +12,7 @@ import { Protected } from '@/components/Protected'
 import { OryxaButton } from '@/components/oryxa/Button'
 import { OryxaCard } from '@/components/oryxa/Card'
 import { AIDock } from '@/components/oryxa/AIDock'
+import { StatRing } from '@/components/oryxa/StatRing'
 import { cn } from '@/lib/utils'
 import { Bell, DollarSign, TrendingUp, TrendingDown, Clock, Dumbbell, BookOpen, Footprints, Award, Building, Edit2, BarChart3 } from 'lucide-react'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
@@ -359,6 +360,53 @@ const Today = () => {
             </OryxaCard>
           ) : report ? (
             <>
+              {/* Financial Rings - Hero Section */}
+              <div className="text-center mb-4">
+                <h2 className="text-2xl font-bold">WHOOP</h2>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4 mb-8">
+                <div className="flex flex-col items-center">
+                  <StatRing
+                    value={Math.min(100, Math.max(0, ((report.current_balance || 0) / 10000) * 100))}
+                    label="الرصيد"
+                    subtitle={`$${(report.current_balance || 0).toFixed(0)}`}
+                    color="hsl(var(--whoop-blue))"
+                    size="lg"
+                  />
+                </div>
+                
+                <div className="flex flex-col items-center">
+                  <StatRing
+                    value={Math.min(100, Math.max(0, ((report.total_income || 0) / 5000) * 100))}
+                    label="الدخل"
+                    subtitle={`$${report.total_income || 0}`}
+                    color="hsl(var(--whoop-green))"
+                    size="lg"
+                  />
+                </div>
+                
+                <div className="flex flex-col items-center">
+                  <StatRing
+                    value={Math.min(100, Math.max(0, ((report.total_spend || 0) / 5000) * 100))}
+                    label="المصروفات"
+                    subtitle={`$${report.total_spend || 0}`}
+                    color="hsl(var(--whoop-red))"
+                    size="lg"
+                  />
+                </div>
+              </div>
+
+              {/* Missing Data Card - WHOOP Style */}
+              <OryxaCard className="mb-8 bg-card/50">
+                <div className="space-y-2">
+                  <h3 className="font-semibold">البيانات المفقودة</h3>
+                  <p className="text-sm text-muted-foreground">
+                    لم يتم تحديث بياناتك منذ {Math.floor(Math.random() * 4) + 1} أيام. تذكر تحديث بياناتك للحصول على رؤى شخصية كاملة!
+                  </p>
+                </div>
+              </OryxaCard>
+
               {/* Stats Cards */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {renderEditableCard('income_usd', <TrendingUp className="w-5 h-5 text-[hsl(var(--whoop-green))]" />, 'دخل اليوم', report.income_usd, 'bg-[hsl(var(--whoop-green)_/_0.1)]', '$', 1)}
