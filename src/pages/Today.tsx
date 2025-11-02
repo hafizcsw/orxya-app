@@ -365,14 +365,14 @@ const Today = () => {
                 <h2 className="text-2xl font-bold">WHOOP</h2>
               </div>
               
-              <div className="grid grid-cols-3 gap-4 mb-8">
+              <div className="grid grid-cols-3 gap-2 mb-8 px-2">
                 <div className="flex flex-col items-center">
                   <StatRing
                     value={Math.min(100, Math.max(0, ((report.current_balance || 0) / 10000) * 100))}
                     label="الرصيد"
                     subtitle="BALANCE"
                     color="hsl(var(--whoop-blue))"
-                    size="lg"
+                    size="md"
                     customDisplay={`$${(report.current_balance || 0).toFixed(0)}`}
                   />
                 </div>
@@ -383,7 +383,7 @@ const Today = () => {
                     label="الدخل"
                     subtitle="INCOME"
                     color="hsl(var(--whoop-green))"
-                    size="lg"
+                    size="md"
                     customDisplay={`$${report.total_income || 0}`}
                   />
                 </div>
@@ -394,7 +394,7 @@ const Today = () => {
                     label="المصروفات"
                     subtitle="EXPENSES"
                     color="hsl(var(--whoop-red))"
-                    size="lg"
+                    size="md"
                     customDisplay={`$${report.total_spend || 0}`}
                   />
                 </div>

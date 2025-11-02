@@ -21,9 +21,9 @@ export function StatRing({
   customDisplay,
 }: StatRingProps) {
   const sizes = {
-    sm: { width: 120, strokeWidth: 8, fontSize: '1.5rem' },
-    md: { width: 160, strokeWidth: 10, fontSize: '2rem' },
-    lg: { width: 200, strokeWidth: 12, fontSize: '2.5rem' },
+    sm: { width: 100, strokeWidth: 6, fontSize: '1.25rem' },
+    md: { width: 120, strokeWidth: 8, fontSize: '1.5rem' },
+    lg: { width: 180, strokeWidth: 10, fontSize: '2rem' },
   };
 
   const { width, strokeWidth, fontSize } = sizes[size];
