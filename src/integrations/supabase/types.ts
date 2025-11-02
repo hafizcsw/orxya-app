@@ -430,6 +430,33 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_flags: {
+        Row: {
+          created_at: string | null
+          enabled: boolean | null
+          id: string
+          key: string
+          pilot_user_ids: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          key: string
+          pilot_user_ids?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          key?: string
+          pilot_user_ids?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       finance_entries: {
         Row: {
           amount_usd: number
@@ -501,31 +528,67 @@ export type Database = {
       }
       notifications: {
         Row: {
+          body: string | null
+          channel: string | null
           created_at: string | null
           enabled: boolean | null
+          entity_id: string | null
+          entity_type: string | null
+          error: string | null
           id: string
           label: string | null
+          mute_while_prayer: boolean | null
           owner_id: string
+          payload: Json | null
+          priority: number | null
           rrule: string | null
+          scheduled_at: string | null
+          sent_at: string | null
+          status: string | null
           time_local: string | null
+          title: string | null
         }
         Insert: {
+          body?: string | null
+          channel?: string | null
           created_at?: string | null
           enabled?: boolean | null
+          entity_id?: string | null
+          entity_type?: string | null
+          error?: string | null
           id?: string
           label?: string | null
+          mute_while_prayer?: boolean | null
           owner_id: string
+          payload?: Json | null
+          priority?: number | null
           rrule?: string | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string | null
           time_local?: string | null
+          title?: string | null
         }
         Update: {
+          body?: string | null
+          channel?: string | null
           created_at?: string | null
           enabled?: boolean | null
+          entity_id?: string | null
+          entity_type?: string | null
+          error?: string | null
           id?: string
           label?: string | null
+          mute_while_prayer?: boolean | null
           owner_id?: string
+          payload?: Json | null
+          priority?: number | null
           rrule?: string | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string | null
           time_local?: string | null
+          title?: string | null
         }
         Relationships: []
       }
@@ -577,48 +640,66 @@ export type Database = {
           created_at: string | null
           currency: string | null
           density_pref: string | null
+          dnd_enabled: boolean | null
+          dnd_end: string | null
+          dnd_start: string | null
           full_name: string | null
           id: string
           latitude: number | null
           location_updated_at: string | null
           longitude: number | null
           prayer_method: string | null
+          respect_prayer: boolean | null
           telemetry_enabled: boolean | null
           theme_pref: string | null
           timezone: string | null
           tz: string | null
+          wa_opt_in: boolean | null
+          wa_phone: string | null
         }
         Insert: {
           accent_color?: string | null
           created_at?: string | null
           currency?: string | null
           density_pref?: string | null
+          dnd_enabled?: boolean | null
+          dnd_end?: string | null
+          dnd_start?: string | null
           full_name?: string | null
           id?: string
           latitude?: number | null
           location_updated_at?: string | null
           longitude?: number | null
           prayer_method?: string | null
+          respect_prayer?: boolean | null
           telemetry_enabled?: boolean | null
           theme_pref?: string | null
           timezone?: string | null
           tz?: string | null
+          wa_opt_in?: boolean | null
+          wa_phone?: string | null
         }
         Update: {
           accent_color?: string | null
           created_at?: string | null
           currency?: string | null
           density_pref?: string | null
+          dnd_enabled?: boolean | null
+          dnd_end?: string | null
+          dnd_start?: string | null
           full_name?: string | null
           id?: string
           latitude?: number | null
           location_updated_at?: string | null
           longitude?: number | null
           prayer_method?: string | null
+          respect_prayer?: boolean | null
           telemetry_enabled?: boolean | null
           theme_pref?: string | null
           timezone?: string | null
           tz?: string | null
+          wa_opt_in?: boolean | null
+          wa_phone?: string | null
         }
         Relationships: []
       }
