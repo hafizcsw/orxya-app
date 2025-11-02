@@ -29,14 +29,9 @@ export function useUser() {
     
     console.log('[useUser] Initializing auth...')
     
-    // Initialize auth state using getSession (better for OAuth)
-    Promise.race([
-      supabase.auth.getSession(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Session timeout')), 5000))
-    ]).then(async (result: any) => {
+    // Initialize auth state using getSession
+    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
       if (!mounted) return;
-      
-      const { data: { session } = {}, error } = result || {};
       
       if (error) {
         console.error('[useUser] Session error:', error);
