@@ -108,15 +108,19 @@ const Navigation = () => {
           {/* Desktop and Mobile Auth - Avatar on Right */}
           <div className="flex items-center gap-3">
             {user && (
-              <button
-                onClick={() => navigate('/profile')}
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white font-semibold shadow-lg hover:scale-110 transition-all duration-300 border-2 border-primary/30"
-                style={{
-                  boxShadow: "0 0 20px hsl(var(--primary) / 0.3)",
-                }}
-              >
-                {user?.email?.[0]?.toUpperCase() || <User className="w-5 h-5" />}
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => navigate('/profile')}
+                  className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white font-semibold shadow-lg hover:scale-110 transition-all duration-300 border-2 border-primary/30"
+                  style={{
+                    boxShadow: "0 0 20px hsl(var(--primary) / 0.3)",
+                  }}
+                  title="الملف الشخصي"
+                >
+                  {user?.email?.[0]?.toUpperCase() || <User className="w-5 h-5" />}
+                </button>
+                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
+              </div>
             )}
           </div>
 

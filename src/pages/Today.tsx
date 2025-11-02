@@ -14,7 +14,7 @@ import { OryxaCard } from '@/components/oryxa/Card'
 import { AIDock } from '@/components/oryxa/AIDock'
 import { StatRing } from '@/components/oryxa/StatRing'
 import { cn } from '@/lib/utils'
-import { Bell, DollarSign, TrendingUp, TrendingDown, Clock, Dumbbell, BookOpen, Footprints, Award, Building, Edit2, BarChart3, User } from 'lucide-react'
+import { Bell, Calendar, DollarSign, TrendingUp, TrendingDown, Clock, Dumbbell, BookOpen, Footprints, Award, Building, Edit2, BarChart3, User } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { z } from 'zod'
@@ -54,6 +54,7 @@ const Today = () => {
   const [editValue, setEditValue] = useState<any>('')
   const [editingBalance, setEditingBalance] = useState(false)
   const [balanceValue, setBalanceValue] = useState('')
+  const [isScrolled, setIsScrolled] = useState(false)
 
   async function fetchReport() {
     if (!user) return
@@ -75,6 +76,19 @@ const Today = () => {
       fetchReport()
     }
   }, [user?.id, period])
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 50) {
+        setIsScrolled(true)
+      } else {
+        setIsScrolled(false)
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   async function updateField(field: string, value: any) {
     if (!user) return
@@ -264,10 +278,16 @@ const Today = () => {
         <AIDock />
         
         {/* Sticky Header - WHOOP Style */}
-        <div className="sticky top-0 z-30 bg-card/80 backdrop-blur-lg border-b border-border/50 px-6 py-4">
+        <div className={cn(
+          "sticky top-16 z-30 bg-background/95 backdrop-blur-xl border-b border-border transition-all duration-300 px-6 py-4",
+          isScrolled && "shadow-lg bg-background/98"
+        )}>
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             {/* Date Navigation */}
-            <div className="flex items-center gap-2">
+            <div className={cn(
+              "flex items-center gap-2 transition-all duration-300",
+              isScrolled && "opacity-0 translate-y-[-20px] pointer-events-none"
+            )}>
               <div className="text-center">
                 <div className="text-xs text-muted-foreground">التقرير</div>
                 <div className="text-sm font-semibold">
@@ -276,7 +296,10 @@ const Today = () => {
               </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className={cn(
+              "flex gap-2 transition-all duration-300",
+              isScrolled && "opacity-0 translate-y-[-20px] pointer-events-none"
+            )}>
               <button
                 onClick={() => setPeriod('daily')}
                 className={cn(
@@ -323,26 +346,38 @@ const Today = () => {
               </button>
             </div>
 
-            {/* Right side: Notification only */}
-            <button
-              onClick={async () => {
-                await ensureNotificationPerms();
-                const now = new Date(); 
-                now.setMinutes(now.getMinutes() + 1);
-                await LocalNotifications.schedule({
-                  notifications: [{
-                    id: 999001,
-                    title: 'اختبار Oryxa',
-                    body: 'إشعار بعد دقيقة',
-                    schedule: { at: now }
-                  }]
-                });
-                setToast('تم جدولة إشعار اختبار ⏰');
-              }}
-              className="w-10 h-10 rounded-full bg-secondary hover:bg-secondary/80 flex items-center justify-center transition-all"
-            >
-              <Bell className="w-5 h-5" />
-            </button>
+            {/* Right side: Calendar + Notification */}
+            <div className={cn(
+              "flex items-center gap-2 transition-all duration-300",
+              isScrolled && "opacity-0 translate-y-[-20px] pointer-events-none"
+            )}>
+              <button
+                onClick={() => navigate('/calendar')}
+                className="w-10 h-10 rounded-full bg-secondary hover:bg-secondary/80 flex items-center justify-center transition-all"
+              >
+                <Calendar className="w-5 h-5" />
+              </button>
+              
+              <button
+                onClick={async () => {
+                  await ensureNotificationPerms();
+                  const now = new Date(); 
+                  now.setMinutes(now.getMinutes() + 1);
+                  await LocalNotifications.schedule({
+                    notifications: [{
+                      id: 999001,
+                      title: 'اختبار Oryxa',
+                      body: 'إشعار بعد دقيقة',
+                      schedule: { at: now }
+                    }]
+                  });
+                  setToast('تم جدولة إشعار اختبار ⏰');
+                }}
+                className="w-10 h-10 rounded-full bg-secondary hover:bg-secondary/80 flex items-center justify-center transition-all"
+              >
+                <Bell className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
 

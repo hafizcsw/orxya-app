@@ -1,4 +1,4 @@
-import { Home, Heart, Users, Menu, X } from "lucide-react";
+import { Home, Heart, Users, Menu, X, Calendar, Bell, Settings, BarChart3, Zap, Brain, Bot, Activity } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -18,29 +18,29 @@ export function BottomNav({ onAIClick }: BottomNavProps) {
   ];
 
   const menuLinks = [
-    { to: "/", label: "اليوم" },
-    { to: "/calendar", label: "التقويم" },
-    { to: "/calendar-view", label: "تقويم ذكي" },
-    { to: "/inbox", label: "الإشعارات" },
-    { to: "/calendar-simple", label: "تقويم بسيط" },
-    { to: "/planner", label: "المخطط الذكي" },
-    { to: "/conflicts", label: "التعارضات" },
-    { to: "/settings/external", label: "التكاملات" },
-    { to: "/settings/notifications", label: "التنبيهات" },
-    { to: "/projects", label: "المشاريع" },
-    { to: "/reports", label: "التقارير" },
-    { to: "/automation", label: "الأتمتة" },
-    { to: "/ai", label: "الذكاء الاصطناعي" },
-    { to: "/assistant", label: "المساعد" },
-    { to: "/diagnostics", label: "التشخيص" },
-    { to: "/profile", label: "حسابي" },
+    { to: "/", label: "اليوم", icon: Home },
+    { to: "/calendar", label: "التقويم", icon: Calendar },
+    { to: "/calendar-view", label: "تقويم ذكي", icon: Calendar },
+    { to: "/inbox", label: "الإشعارات", icon: Bell },
+    { to: "/calendar-simple", label: "تقويم بسيط", icon: Calendar },
+    { to: "/planner", label: "المخطط الذكي", icon: Brain },
+    { to: "/conflicts", label: "التعارضات", icon: Zap },
+    { to: "/settings/external", label: "التكاملات", icon: Settings },
+    { to: "/settings/notifications", label: "التنبيهات", icon: Bell },
+    { to: "/projects", label: "المشاريع", icon: BarChart3 },
+    { to: "/reports", label: "التقارير", icon: BarChart3 },
+    { to: "/automation", label: "الأتمتة", icon: Zap },
+    { to: "/ai", label: "الذكاء الاصطناعي", icon: Brain },
+    { to: "/assistant", label: "المساعد", icon: Bot },
+    { to: "/diagnostics", label: "التشخيص", icon: Activity },
+    { to: "/profile", label: "حسابي", icon: Users },
   ];
 
   return (
     <>
       {/* Full Screen Menu */}
       {menuOpen && (
-        <div className="fixed inset-0 z-50 bg-background">
+        <div className="fixed inset-0 z-50 bg-background animate-fade-in">
           <div className="flex flex-col h-full">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-border">
@@ -55,21 +55,25 @@ export function BottomNav({ onAIClick }: BottomNavProps) {
 
             {/* Menu Items */}
             <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              {menuLinks.map((link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  onClick={() => setMenuOpen(false)}
-                  className={cn(
-                    "block px-4 py-3 rounded-lg transition-colors",
-                    location.pathname === link.to
-                      ? "bg-primary text-primary-foreground font-medium"
-                      : "text-muted-foreground hover:bg-accent"
-                  )}
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {menuLinks.map((link) => {
+                const Icon = link.icon;
+                return (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    onClick={() => setMenuOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                      location.pathname === link.to
+                        ? "bg-primary text-primary-foreground font-medium"
+                        : "text-muted-foreground hover:bg-accent"
+                    )}
+                  >
+                    <Icon className="w-5 h-5" />
+                    {link.label}
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </div>
