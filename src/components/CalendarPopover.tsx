@@ -88,7 +88,7 @@ export function CalendarPopover({ children, selectedDate, onDateChange }: Calend
         <PopoverTrigger asChild>
           {children}
         </PopoverTrigger>
-      <PopoverContent className="w-80 p-5 border-2 border-border shadow-2xl" align="center" sideOffset={8} style={{ backgroundColor: 'hsl(var(--card))', zIndex: 1300 }}>
+      <PopoverContent className="w-80 p-5 border-2 border-border shadow-2xl" align="center" sideOffset={8} style={{ backgroundColor: '#000000', zIndex: 1300 }}>
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <button
