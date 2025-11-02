@@ -135,11 +135,7 @@ const Navigation = () => {
           {/* Right: Logo - MUST BE VISIBLE */}
           <Link
             to="/"
-            className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent flex-shrink-0"
-            style={{
-              WebkitTextFillColor: 'transparent',
-              WebkitBackgroundClip: 'text',
-            }}
+            className="text-2xl font-bold text-foreground hover:text-primary transition-colors flex-shrink-0"
           >
             Oryxa
           </Link>
