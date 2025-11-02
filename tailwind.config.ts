@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import plugin from "tailwindcss/plugin";
 
 export default {
   darkMode: ['class', '[data-theme="dark"]'],
@@ -76,6 +77,23 @@ export default {
         xl: "1.5rem",
         "2xl": "1.75rem",
         "3xl": "2rem",
+        'card': 'var(--radius-card)',
+        'button': 'var(--radius-button)',
+        'pill': 'var(--radius-pill)',
+      },
+      boxShadow: {
+        'soft': 'var(--shadow-soft)',
+        'strong': 'var(--shadow-strong)',
+        'glow': 'var(--shadow-glow)',
+        'focus': 'var(--shadow-focus)',
+      },
+      transitionDuration: {
+        'fast': '150ms',
+        'base': '250ms',
+        'slow': '350ms',
+      },
+      transitionTimingFunction: {
+        'spring': 'cubic-bezier(0.34, 1.56, 0.64, 1)',
       },
       keyframes: {
         "accordion-down": {
@@ -158,5 +176,20 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    plugin(({ addUtilities }) => {
+      addUtilities({
+        '.transition-base': {
+          transition: 'all var(--transition-base)',
+        },
+        '.bg-gradient-primary': {
+          background: 'var(--gradient-primary)',
+        },
+        '.bg-gradient-surface': {
+          background: 'var(--gradient-surface)',
+        },
+      });
+    }),
+  ],
 } satisfies Config;
