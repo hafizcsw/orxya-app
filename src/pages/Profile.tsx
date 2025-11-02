@@ -31,6 +31,12 @@ export default function Profile() {
   const [aiConsents, setAIConsents] = useState<{id?:string; consent_read_calendar:boolean; consent_write_calendar:boolean; consent_write_tasks:boolean} | null>(null);
   const [aiMsg, setAIMsg] = useState<string>("");
   const [calendarWriteback, setCalendarWriteback] = useState(false);
+  const [calendars, setCalendars] = useState<any[]>([]);
+  const [defaultCal, setDefaultCal] = useState<string>('');
+  const [calLoading, setCalLoading] = useState(false);
+  const [calMap, setCalMap] = useState<Record<string,string>>({
+    task:'', meeting:'', ai_plan:'', prayer_block:''
+  });
 
   const tzList = useMemo(() => [
     'Asia/Dubai', 'UTC', 'Europe/Helsinki', 'Europe/London', 
@@ -42,7 +48,7 @@ export default function Profile() {
       if (!user) return;
       const { data } = await supabase
         .from('profiles')
-        .select('full_name,currency,timezone,telemetry_enabled,prayer_method,latitude,longitude,calendar_writeback')
+        .select('full_name,currency,timezone,telemetry_enabled,prayer_method,latitude,longitude,calendar_writeback,default_calendar_id,default_calendar_provider,default_calendar_name')
         .eq('id', user.id)
         .maybeSingle();
       if (data) {
@@ -55,6 +61,7 @@ export default function Profile() {
         setLatitude(data.latitude?.toString() ?? '');
         setLongitude(data.longitude?.toString() ?? '');
         setCalendarWriteback(!!data.calendar_writeback);
+        setDefaultCal(data.default_calendar_id ?? '');
       }
       const q = await getQueued();
       setPendingCount(q.length);
@@ -114,6 +121,74 @@ export default function Profile() {
       setErr(e?.message ?? 'خطأ في الموقع');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function fetchCalendars() {
+    setCalLoading(true);
+    try {
+      await supabase.functions.invoke('google-cal-list');
+      const { data } = await supabase
+        .from('external_calendars')
+        .select('*')
+        .eq('owner_id', user!.id)
+        .order('primary_flag', { ascending: false });
+      setCalendars(data ?? []);
+      
+      // Load existing mappings
+      const { data: mappings } = await supabase
+        .from('calendar_mapping')
+        .select('*')
+        .eq('owner_id', user!.id);
+      if (mappings) {
+        const map: Record<string, string> = {};
+        mappings.forEach((m: any) => {
+          map[m.kind] = m.calendar_id;
+        });
+        setCalMap(map);
+      }
+    } catch (e) {
+      console.error('Failed to fetch calendars:', e);
+    } finally {
+      setCalLoading(false);
+    }
+  }
+
+  async function saveDefaultCal() {
+    if (!defaultCal) return;
+    setCalLoading(true);
+    try {
+      const selected = calendars.find(c => c.calendar_id === defaultCal);
+      await supabase.functions.invoke('calendar-set-default', {
+        body: {
+          provider: 'google',
+          calendar_id: defaultCal,
+          calendar_name: selected?.calendar_name ?? null
+        }
+      });
+      setMsg('تم حفظ التقويم الافتراضي ✅');
+      setCalendarWriteback(true);
+      setTimeout(() => setMsg(null), 3000);
+    } catch (e: any) {
+      setErr(e?.message ?? 'فشل الحفظ');
+    } finally {
+      setCalLoading(false);
+    }
+  }
+
+  async function saveMappings() {
+    setCalLoading(true);
+    try {
+      const mappings = Object.keys(calMap)
+        .filter(k => !!calMap[k])
+        .map(k => ({ kind: k, calendar_id: calMap[k] }));
+      await supabase.functions.invoke('calendar-map-set', { body: { mappings } });
+      setMsg('تم حفظ الخرائط ✅');
+      setTimeout(() => setMsg(null), 3000);
+    } catch (e: any) {
+      setErr(e?.message ?? 'فشل الحفظ');
+    } finally {
+      setCalLoading(false);
     }
   }
 
@@ -418,6 +493,78 @@ export default function Profile() {
                 </p>
               </div>
             </label>
+          )}
+
+          {status === 'connected' && (
+            <div className="space-y-4 pt-4 border-t">
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium">إدارة التقاويم</h3>
+                <button
+                  onClick={fetchCalendars}
+                  disabled={calLoading}
+                  className="px-3 py-1.5 rounded-lg border bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50 text-xs"
+                >
+                  {calLoading ? '...' : 'جلب التقاويم'}
+                </button>
+              </div>
+
+              {calendars.length > 0 && (
+                <>
+                  <div className="space-y-2">
+                    <label className="block">
+                      <span className="text-sm font-medium">التقويم الافتراضي</span>
+                      <select
+                        value={defaultCal}
+                        onChange={e => setDefaultCal(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground mt-1"
+                      >
+                        <option value="">-- اختر --</option>
+                        {calendars.map(cal => (
+                          <option key={cal.calendar_id} value={cal.calendar_id}>
+                            {cal.calendar_name} {cal.primary_flag && '(الأساسي)'}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <button
+                      onClick={saveDefaultCal}
+                      disabled={!defaultCal || calLoading}
+                      className="w-full px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                    >
+                      حفظ التقويم الافتراضي
+                    </button>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium">خرائط أنواع الأحداث</h4>
+                    {['task', 'meeting', 'ai_plan', 'prayer_block'].map(kind => (
+                      <label key={kind} className="block">
+                        <span className="text-xs text-muted-foreground capitalize">{kind}</span>
+                        <select
+                          value={calMap[kind] || ''}
+                          onChange={e => setCalMap(prev => ({ ...prev, [kind]: e.target.value }))}
+                          className="w-full px-2 py-1.5 rounded border border-input bg-background text-foreground text-xs mt-1"
+                        >
+                          <option value="">-- استخدام الافتراضي --</option>
+                          {calendars.map(cal => (
+                            <option key={cal.calendar_id} value={cal.calendar_id}>
+                              {cal.calendar_name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    ))}
+                    <button
+                      onClick={saveMappings}
+                      disabled={calLoading}
+                      className="w-full px-4 py-2 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50"
+                    >
+                      حفظ الخرائط
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           )}
         </div>
 

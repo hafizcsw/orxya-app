@@ -212,6 +212,30 @@ export type Database = {
         }
         Relationships: []
       }
+      calendar_mapping: {
+        Row: {
+          calendar_id: string
+          id: number
+          kind: string
+          owner_id: string
+          provider: string
+        }
+        Insert: {
+          calendar_id: string
+          id?: number
+          kind: string
+          owner_id: string
+          provider?: string
+        }
+        Update: {
+          calendar_id?: string
+          id?: number
+          kind?: string
+          owner_id?: string
+          provider?: string
+        }
+        Relationships: []
+      }
       command_audit: {
         Row: {
           command_type: string
@@ -534,6 +558,45 @@ export type Database = {
         }
         Relationships: []
       }
+      external_calendars: {
+        Row: {
+          access_role: string | null
+          calendar_id: string
+          calendar_name: string
+          color: string | null
+          id: number
+          owner_id: string
+          primary_flag: boolean
+          provider: string
+          selected: boolean
+          synced_at: string
+        }
+        Insert: {
+          access_role?: string | null
+          calendar_id: string
+          calendar_name: string
+          color?: string | null
+          id?: number
+          owner_id: string
+          primary_flag?: boolean
+          provider?: string
+          selected?: boolean
+          synced_at?: string
+        }
+        Update: {
+          access_role?: string | null
+          calendar_id?: string
+          calendar_name?: string
+          color?: string | null
+          id?: number
+          owner_id?: string
+          primary_flag?: boolean
+          provider?: string
+          selected?: boolean
+          synced_at?: string
+        }
+        Relationships: []
+      }
       feature_flags: {
         Row: {
           created_at: string | null
@@ -765,6 +828,9 @@ export type Database = {
           calendar_writeback: boolean
           created_at: string | null
           currency: string | null
+          default_calendar_id: string | null
+          default_calendar_name: string | null
+          default_calendar_provider: string | null
           density_pref: string | null
           dnd_enabled: boolean | null
           dnd_end: string | null
@@ -791,6 +857,9 @@ export type Database = {
           calendar_writeback?: boolean
           created_at?: string | null
           currency?: string | null
+          default_calendar_id?: string | null
+          default_calendar_name?: string | null
+          default_calendar_provider?: string | null
           density_pref?: string | null
           dnd_enabled?: boolean | null
           dnd_end?: string | null
@@ -817,6 +886,9 @@ export type Database = {
           calendar_writeback?: boolean
           created_at?: string | null
           currency?: string | null
+          default_calendar_id?: string | null
+          default_calendar_name?: string | null
+          default_calendar_provider?: string | null
           density_pref?: string | null
           dnd_enabled?: boolean | null
           dnd_end?: string | null
