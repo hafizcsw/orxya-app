@@ -98,12 +98,13 @@ export function startLocationTracking(intervalMinutes: number = 15): () => void 
 
   console.log(`[Location] Starting periodic tracking every ${intervalMinutes} minutes`);
   
-  // Initial capture
-  captureAndSendLocation();
-  
-  // Periodic capture
-  const interval = setInterval(() => {
-    captureAndSendLocation();
+  // Periodic capture (no initial capture - will be triggered by auth.ts after login)
+  const interval = setInterval(async () => {
+    // Check if user is authenticated before capturing
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      await captureAndSendLocation();
+    }
   }, intervalMinutes * 60 * 1000);
 
   // Return cleanup function
