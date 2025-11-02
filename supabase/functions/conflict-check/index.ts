@@ -1,201 +1,213 @@
-// deno-lint-ignore-file no-explicit-any
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.47.10";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+const cors = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "authorization, content-type",
 };
 
-function json(body: any, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "content-type": "application/json" }
-  });
-}
-
-type RequestBody = {
-  from?: string; // ISO date or datetime
-  to?: string;   // ISO date or datetime
+const addMin = (d: Date, m: number) => {
+  const x = new Date(d);
+  x.setMinutes(x.getMinutes() + m);
+  return x;
 };
 
-function toISODate(d: Date) {
-  return d.toISOString().slice(0, 10);
+function overlapMinutes(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date): number {
+  const s = Math.max(aStart.getTime(), bStart.getTime());
+  const e = Math.min(aEnd.getTime(), bEnd.getTime());
+  return Math.max(0, Math.round((e - s) / 60000));
 }
 
-function clampDateOnly(s?: string): Date | null {
-  if (!s) return null;
-  const t = new Date(s);
-  return Number.isNaN(+t) ? null : t;
+function severityFromMinutes(m: number): "low" | "medium" | "high" {
+  if (m >= 25) return "high";
+  if (m >= 10) return "medium";
+  return "low";
 }
 
-function overlaps(aStart: number, aEnd: number, bStart: number, bEnd: number) {
-  return aStart < bEnd && bStart < aEnd;
+function buildSuggestion(
+  ev: any,
+  pName: string,
+  pTime: Date,
+  pre: number,
+  post: number
+) {
+  const winStart = addMin(pTime, -pre);
+  const winEnd = addMin(pTime, +post);
+  const eStart = new Date(ev.starts_at);
+  const eEnd = new Date(ev.ends_at);
+  const durMin = Math.max(1, Math.round((eEnd.getTime() - eStart.getTime()) / 60000));
+
+  const title = (ev.title ?? "").toString().toLowerCase();
+  if (["prayer", "صلاة", "mosque", "masjid", "church", "كنيسة"].some((k) => title.includes(k))) {
+    return { type: "none" };
+  }
+
+  if (eStart <= winStart && eEnd >= winEnd && durMin >= pre + post) {
+    return {
+      type: "split",
+      explanation: "الحدث يغطي نافذة الصلاة بالكامل؛ نقترح تقسيمه إلى جزئين قبل/بعد الصلاة",
+      parts: [
+        { new_start: eStart.toISOString(), new_end: winStart.toISOString() },
+        { new_start: winEnd.toISOString(), new_end: eEnd.toISOString() },
+      ],
+    };
+  }
+
+  if (eStart < winStart && eEnd > winStart && eEnd <= winEnd) {
+    return {
+      type: "truncate_end",
+      explanation: "ينتهي الحدث داخل نافذة الصلاة؛ نقترح إنهاءه قبل بداية النافذة",
+      new_end: winStart.toISOString(),
+    };
+  }
+
+  if (eStart >= winStart && eStart < winEnd && eEnd > winEnd) {
+    return {
+      type: "delay_start",
+      explanation: "يبدأ الحدث داخل نافذة الصلاة؛ نقترح تأخيره لما بعد الصلاة",
+      new_start: winEnd.toISOString(),
+    };
+  }
+
+  return {
+    type: "mark_free",
+    explanation: "تعارض طفيف؛ نقترح جعله غير مُلزِم خلال نافذة الصلاة",
+  };
 }
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const authHeader = req.headers.get("Authorization") ?? "";
-    
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } }
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const auth = req.headers.get("Authorization") ?? "";
+    const supabase = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: auth } },
     });
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return json({ ok: false, error: "UNAUTHENTICATED" }, 401);
+      return new Response(JSON.stringify({ ok: false, error: "UNAUTHENTICATED" }), {
+        status: 401,
+        headers: { ...cors, "content-type": "application/json" },
+      });
     }
 
-    const body = await req.json().catch(() => ({})) as RequestBody;
-    const now = new Date();
-    const from = clampDateOnly(body.from) ?? new Date(toISODate(now));
-    const to = clampDateOnly(body.to) ?? new Date(+from + 24 * 60 * 60 * 1000); // +24 hours
-
-    // Get prayer buffer settings from profile
-    const { data: profile } = await supabase
+    const { data: prof } = await supabase
       .from("profiles")
-      .select("prayer_prebuffer_min, prayer_postbuffer_min")
+      .select("prayer_pre_buffer_min,prayer_post_buffer_min,religion")
       .eq("id", user.id)
       .maybeSingle();
 
-    const preBuf = Math.max(0, Number(profile?.prayer_prebuffer_min ?? 5));
-    const postBuf = Math.max(0, Number(profile?.prayer_postbuffer_min ?? 15));
-
-    // Generate date range
-    const dates: string[] = [];
-    const d0 = new Date(toISODate(from));
-    while (+d0 < +to) {
-      dates.push(toISODate(d0));
-      d0.setDate(d0.getDate() + 1);
+    if ((prof?.religion ?? "muslim") !== "muslim") {
+      return new Response(
+        JSON.stringify({ ok: true, checked: 0, created: 0, skipped: "non-muslim" }),
+        { headers: { ...cors, "content-type": "application/json" } }
+      );
     }
 
-    // Fetch prayer times for the date range
-    const { data: prayers } = await supabase
-      .from("prayer_times")
-      .select("date_iso, fajr, dhuhr, asr, maghrib, isha")
-      .eq("owner_id", user.id)
-      .in("date_iso", dates);
+    const pre = Number(prof?.prayer_pre_buffer_min ?? 10);
+    const post = Number(prof?.prayer_post_buffer_min ?? 20);
 
-    // Build prayer windows with buffers
-    type PrayerWindow = {
-      label: string;
-      start: number;
-      end: number;
-      date: string;
-      time: string;
-    };
+    const base = new Date();
+    const days = [0, 1];
+    let created = 0,
+      checked = 0;
 
-    const prayerWindows: PrayerWindow[] = [];
-    for (const p of prayers ?? []) {
-      const addWindow = (label: string, timeStr?: string | null) => {
-        if (!timeStr) return;
-        
-        // Parse HH:MM to timestamp
-        const [h, m] = timeStr.split(':').map(Number);
-        const prayerTime = new Date(p.date_iso + 'T00:00:00.000Z');
-        prayerTime.setUTCHours(h, m, 0, 0);
-        
-        const start = +prayerTime - preBuf * 60 * 1000;
-        const end = +prayerTime + postBuf * 60 * 1000;
-        
-        prayerWindows.push({
-          label,
-          start,
-          end,
-          date: p.date_iso,
-          time: timeStr
-        });
-      };
+    for (const add of days) {
+      const d = new Date(base);
+      d.setDate(d.getDate() + add);
+      const dateISO = d.toISOString().slice(0, 10);
 
-      addWindow("الفجر", p.fajr);
-      addWindow("الظهر", p.dhuhr);
-      addWindow("العصر", p.asr);
-      addWindow("المغرب", p.maghrib);
-      addWindow("العشاء", p.isha);
-    }
+      await supabase.functions.invoke("prayer-sync", {
+        body: { date: dateISO, days: 1 },
+      });
 
-    // Fetch events in the time range
-    const { data: events } = await supabase
-      .from("events")
-      .select("id, title, starts_at, ends_at")
-      .eq("owner_id", user.id)
-      .gte("starts_at", from.toISOString())
-      .lte("starts_at", to.toISOString());
+      const { data: pt } = await supabase
+        .from("prayer_times")
+        .select("fajr,dhuhr,asr,maghrib,isha")
+        .eq("owner_id", user.id)
+        .eq("date_iso", dateISO)
+        .maybeSingle();
 
-    let created = 0;
-    let updated = 0;
+      const prayersOrder = ["fajr", "dhuhr", "asr", "maghrib", "isha"] as const;
+      const pMap: Record<string, Date> = {};
 
-    // Check each event against prayer windows
-    for (const event of events ?? []) {
-      const eventStart = +new Date(event.starts_at);
-      const eventEnd = +new Date(event.ends_at ?? event.starts_at);
+      for (const name of prayersOrder) {
+        const t = (pt as any)?.[name];
+        if (t) {
+          const [hh, mm] = String(t).split(":").map((x) => parseInt(x, 10));
+          const px = new Date(dateISO + "T00:00:00.000Z");
+          px.setUTCHours(hh, mm, 0, 0);
+          pMap[name] = px;
+        }
+      }
 
-      for (const window of prayerWindows) {
-        if (overlaps(eventStart, eventEnd, window.start, window.end)) {
-          // Calculate overlap duration
-          const overlapStart = Math.max(eventStart, window.start);
-          const overlapEnd = Math.min(eventEnd, window.end);
-          const overlapMin = Math.round((overlapEnd - overlapStart) / 60000);
+      const dayStart = new Date(dateISO + "T00:00:00.000Z");
+      const dayEnd = new Date(dateISO + "T23:59:59.999Z");
 
-          const conflictData = {
+      const { data: events } = await supabase
+        .from("events")
+        .select("*")
+        .eq("owner_id", user.id)
+        .gte("starts_at", dayStart.toISOString())
+        .lte("starts_at", dayEnd.toISOString());
+
+      for (const ev of events ?? []) {
+        checked++;
+        for (const pname of prayersOrder) {
+          const pTime = pMap[pname];
+          if (!pTime) continue;
+
+          const winStart = addMin(pTime, -pre);
+          const winEnd = addMin(pTime, +post);
+
+          const eStart = new Date(ev.starts_at);
+          const eEnd = new Date(ev.ends_at);
+          if (eEnd <= winStart || eStart >= winEnd) continue;
+
+          const minutes = overlapMinutes(eStart, eEnd, winStart, winEnd);
+          if (minutes <= 0) continue;
+
+          const sev = severityFromMinutes(minutes);
+          const suggestion = buildSuggestion(ev, pname, pTime, pre, post);
+
+          const row = {
             owner_id: user.id,
-            event_id: event.id,
-            object_kind: 'event',
-            object_id: event.id,
-            prayer_name: window.label,
-            prayer_start: new Date(window.start).toISOString(),
-            prayer_end: new Date(window.end).toISOString(),
-            date_iso: window.date,
-            overlap_min: overlapMin,
-            severity: 'hard',
-            status: 'open',
-            buffer_min: preBuf + postBuf,
+            date_iso: dateISO,
+            prayer_name: pname,
+            prayer_time: pTime.toISOString(),
+            prayer_start: winStart.toISOString(),
+            prayer_end: winEnd.toISOString(),
+            event_id: ev.id,
+            object_id: ev.id,
+            object_kind: "event",
+            overlap_min: minutes,
+            buffer_min: pre + post,
+            severity: sev,
+            status: suggestion.type === "none" ? "ignored" : "proposed",
+            suggestion: suggestion,
           };
 
-          // Check if conflict already exists
-          const { data: existing } = await supabase
-            .from("conflicts")
-            .select("id")
-            .eq("owner_id", user.id)
-            .eq("event_id", event.id)
-            .eq("prayer_name", window.label)
-            .eq("date_iso", window.date)
-            .maybeSingle();
-
-          if (existing) {
-            const { error } = await supabase
-              .from("conflicts")
-              .update({
-                ...conflictData,
-                updated_at: new Date().toISOString()
-              })
-              .eq("id", existing.id);
-            
-            if (error) throw error;
-            updated++;
-          } else {
-            const { error } = await supabase
-              .from("conflicts")
-              .insert(conflictData);
-            
-            if (error) throw error;
-            created++;
-          }
+          const { error } = await supabase.from("conflicts").upsert(row, {
+            onConflict: "owner_id,event_id,prayer_name,date_iso",
+            ignoreDuplicates: false,
+          });
+          if (!error) created++;
         }
       }
     }
 
-    console.log(`Conflict check for user ${user.id}: ${created} created, ${updated} updated`);
-
-    return json({ ok: true, created, updated });
+    return new Response(JSON.stringify({ ok: true, checked, created }), {
+      headers: { ...cors, "content-type": "application/json" },
+    });
   } catch (e: any) {
     console.error("conflict-check error:", e);
-    return json({ ok: false, error: "SERVER_ERROR", details: String(e) }, 500);
+    return new Response(
+      JSON.stringify({ ok: false, error: "SERVER_ERROR", details: String(e?.message ?? e) }),
+      { status: 500, headers: { ...cors, "content-type": "application/json" } }
+    );
   }
 });

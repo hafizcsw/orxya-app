@@ -247,6 +247,8 @@ export type Database = {
           buffer_min: number | null
           created_at: string | null
           date_iso: string
+          decided_action: string | null
+          decided_at: string | null
           event_id: string | null
           id: string
           object_id: string | null
@@ -256,16 +258,21 @@ export type Database = {
           prayer_end: string
           prayer_name: string
           prayer_start: string
+          prayer_time: string | null
           resolution: string | null
           severity: string | null
+          snooze_until: string | null
           status: string | null
           suggested_start_iso: string | null
+          suggestion: Json | null
           updated_at: string | null
         }
         Insert: {
           buffer_min?: number | null
           created_at?: string | null
           date_iso: string
+          decided_action?: string | null
+          decided_at?: string | null
           event_id?: string | null
           id?: string
           object_id?: string | null
@@ -275,16 +282,21 @@ export type Database = {
           prayer_end: string
           prayer_name: string
           prayer_start: string
+          prayer_time?: string | null
           resolution?: string | null
           severity?: string | null
+          snooze_until?: string | null
           status?: string | null
           suggested_start_iso?: string | null
+          suggestion?: Json | null
           updated_at?: string | null
         }
         Update: {
           buffer_min?: number | null
           created_at?: string | null
           date_iso?: string
+          decided_action?: string | null
+          decided_at?: string | null
           event_id?: string | null
           id?: string
           object_id?: string | null
@@ -294,10 +306,13 @@ export type Database = {
           prayer_end?: string
           prayer_name?: string
           prayer_start?: string
+          prayer_time?: string | null
           resolution?: string | null
           severity?: string | null
+          snooze_until?: string | null
           status?: string | null
           suggested_start_iso?: string | null
+          suggestion?: Json | null
           updated_at?: string | null
         }
         Relationships: [
@@ -738,8 +753,9 @@ export type Database = {
           location_updated_at: string | null
           longitude: number | null
           prayer_method: string | null
-          prayer_postbuffer_min: number | null
-          prayer_prebuffer_min: number | null
+          prayer_post_buffer_min: number | null
+          prayer_pre_buffer_min: number | null
+          religion: string | null
           respect_prayer: boolean | null
           telemetry_enabled: boolean | null
           theme_pref: string | null
@@ -762,8 +778,9 @@ export type Database = {
           location_updated_at?: string | null
           longitude?: number | null
           prayer_method?: string | null
-          prayer_postbuffer_min?: number | null
-          prayer_prebuffer_min?: number | null
+          prayer_post_buffer_min?: number | null
+          prayer_pre_buffer_min?: number | null
+          religion?: string | null
           respect_prayer?: boolean | null
           telemetry_enabled?: boolean | null
           theme_pref?: string | null
@@ -786,8 +803,9 @@ export type Database = {
           location_updated_at?: string | null
           longitude?: number | null
           prayer_method?: string | null
-          prayer_postbuffer_min?: number | null
-          prayer_prebuffer_min?: number | null
+          prayer_post_buffer_min?: number | null
+          prayer_pre_buffer_min?: number | null
+          religion?: string | null
           respect_prayer?: boolean | null
           telemetry_enabled?: boolean | null
           theme_pref?: string | null
