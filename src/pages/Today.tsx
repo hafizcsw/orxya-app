@@ -49,6 +49,8 @@ const Today = () => {
   const [toast, setToast] = useState<string | null>(null)
   const [editingField, setEditingField] = useState<string | null>(null)
   const [editValue, setEditValue] = useState<any>('')
+  const [quickAddType, setQuickAddType] = useState<'income' | 'spend' | 'scholarship' | 'villa' | null>(null)
+  const [quickAddValue, setQuickAddValue] = useState('')
 
   async function fetchReport() {
     if (!user) return
@@ -114,6 +116,44 @@ const Today = () => {
       await fetchReport()
     } catch (error: any) {
       setToast('❌ حدث خطأ في التحديث')
+    }
+  }
+
+  async function quickAdd(type: 'income' | 'spend' | 'scholarship' | 'villa', value: string) {
+    if (!user || !value) return
+    const today = new Date().toISOString().slice(0, 10)
+    const amount = Number(value)
+    
+    if (isNaN(amount) || amount <= 0) {
+      setToast('❌ قيمة غير صحيحة')
+      return
+    }
+
+    try {
+      if (type === 'income' || type === 'spend') {
+        await sendCommand('add_finance', {
+          entry_date: today,
+          type,
+          amount_usd: amount,
+          category: type === 'income' ? 'دخل سريع' : 'مصروف سريع',
+          note: ''
+        })
+      } else {
+        await sendCommand('add_sale', {
+          sale_date: today,
+          type: type === 'scholarship' ? 'scholarship' : 'villa',
+          item: type === 'scholarship' ? 'منحة' : 'فيلا',
+          qty: 1,
+          price_usd: amount,
+          profit_usd: amount * 0.1
+        })
+      }
+      
+      setQuickAddType(null)
+      setQuickAddValue('')
+      await fetchReport()
+    } catch (error: any) {
+      setToast('❌ حدث خطأ في الإضافة')
     }
   }
 
@@ -216,6 +256,89 @@ const Today = () => {
     )
   }
 
+  const renderQuickAddCard = (
+    type: 'income' | 'spend' | 'scholarship' | 'villa',
+    icon: any,
+    label: string,
+    value: any,
+    iconBgClass: string
+  ) => {
+    const isAdding = quickAddType === type
+    
+    return (
+      <div className="card group relative overflow-hidden p-6">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+              {label}
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => {
+                  setQuickAddType(type)
+                  setQuickAddValue('')
+                }}
+              >
+                <Edit2 className="w-4 h-4" />
+              </Button>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 duration-300 ${iconBgClass}`}>
+                {icon}
+              </div>
+            </div>
+          </div>
+          
+          {isAdding ? (
+            <div className="space-y-2">
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="أدخل المبلغ"
+                value={quickAddValue}
+                onChange={(e) => setQuickAddValue(e.target.value)}
+                className="input w-full text-2xl font-bold"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    quickAdd(type, quickAddValue)
+                  } else if (e.key === 'Escape') {
+                    setQuickAddType(null)
+                  }
+                }}
+              />
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => quickAdd(type, quickAddValue)}
+                  className="flex-1"
+                >
+                  إضافة
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setQuickAddType(null)}
+                  className="flex-1"
+                >
+                  إلغاء
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="text-3xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
+              {type === 'scholarship' || type === 'villa' ? value : `$${value}`}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <Protected>
       <div className="p-4 space-y-6 max-w-6xl mx-auto">
@@ -271,29 +394,13 @@ const Today = () => {
                 label="التاريخ"
                 value={report.date}
               />
-              <StatCardFuturistic
-                icon={<TrendingUp className="w-5 h-5 text-success" />}
-                label="الدخل"
-                value={`$${report.income_usd}`}
-                iconBgClass="bg-success/10"
-                className="cursor-pointer hover:scale-105 transition-transform"
-                onClick={() => document.getElementById('finance-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-              />
-              <StatCardFuturistic
-                icon={<TrendingDown className="w-5 h-5 text-destructive" />}
-                label="المصروف"
-                value={`$${report.spend_usd}`}
-                iconBgClass="bg-destructive/10"
-                className="cursor-pointer hover:scale-105 transition-transform"
-                onClick={() => document.getElementById('finance-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-              />
+              {renderQuickAddCard('income', <TrendingUp className="w-5 h-5 text-success" />, 'الدخل', report.income_usd, 'bg-success/10')}
+              {renderQuickAddCard('spend', <TrendingDown className="w-5 h-5 text-destructive" />, 'المصروف', report.spend_usd, 'bg-destructive/10')}
               <StatCardFuturistic
                 icon={<DollarSign className="w-5 h-5 text-primary" />}
                 label="الصافي"
                 value={`${report.net_usd >= 0 ? '✅' : '⚠️'} $${report.net_usd}`}
                 iconBgClass="bg-primary/10"
-                className="cursor-pointer hover:scale-105 transition-transform"
-                onClick={() => document.getElementById('finance-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
               />
               
               {renderEditableCard('study_hours', <BookOpen className="w-5 h-5 text-primary" />, 'دراسة', report.study_hours, 'bg-primary/10')}
@@ -301,22 +408,8 @@ const Today = () => {
               {renderEditableCard('work_hours', <Clock className="w-5 h-5 text-accent" />, 'عمل', report.work_hours, 'bg-accent/10')}
               {renderEditableCard('walk_min', <Footprints className="w-5 h-5 text-success" />, 'المشي', report.walk_min, 'bg-success/10')}
               
-              <StatCardFuturistic
-                icon={<Award className="w-5 h-5 text-warning" />}
-                label="منح"
-                value={report.scholarships_sold}
-                iconBgClass="bg-warning/10"
-                className="cursor-pointer hover:scale-105 transition-transform"
-                onClick={() => document.getElementById('sales-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-              />
-              <StatCardFuturistic
-                icon={<Building className="w-5 h-5 text-primary" />}
-                label="فلل"
-                value={report.villas_sold}
-                iconBgClass="bg-primary/10"
-                className="cursor-pointer hover:scale-105 transition-transform"
-                onClick={() => document.getElementById('sales-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-              />
+              {renderQuickAddCard('scholarship', <Award className="w-5 h-5 text-warning" />, 'منح', report.scholarships_sold, 'bg-warning/10')}
+              {renderQuickAddCard('villa', <Building className="w-5 h-5 text-primary" />, 'فلل', report.villas_sold, 'bg-primary/10')}
             </div>
           ) : (
             <GlassPanel className="p-8 text-center">
