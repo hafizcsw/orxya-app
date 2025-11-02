@@ -31,8 +31,12 @@ All colors MUST be HSL.
     --muted-fg: 215 20% 35%;
     --sec: 210 16% 96%;
     --sec-fg: 222 47% 11%;
-    --accent-hex: #0ea5e9;
+    --accent-hsl: 199 89% 48%;
     --accent-fg: 0 0% 100%;
+    --success-hsl: 142 76% 36%;
+    --success-fg: 0 0% 100%;
+    --warning-hsl: 38 92% 50%;
+    --warning-fg: 0 0% 100%;
 
     --background: var(--bg);
     --foreground: var(--fg);
@@ -40,7 +44,7 @@ All colors MUST be HSL.
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: var(--accent-hex);
+    --primary: var(--accent-hsl);
     --primary-foreground: var(--accent-fg);
     --secondary: var(--sec);
     --secondary-foreground: var(--sec-fg);
@@ -50,19 +54,27 @@ All colors MUST be HSL.
     --accent-foreground: 222 47% 11%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
+    --success: var(--success-hsl);
+    --success-foreground: var(--success-fg);
+    --warning: var(--warning-hsl);
+    --warning-foreground: var(--warning-fg);
     --border: var(--border);
     --input: var(--border);
-    --ring: var(--accent-hex);
+    --ring: var(--accent-hsl);
     --radius: 1rem;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: var(--accent-hex);
+    --sidebar-primary: var(--accent-hsl);
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 210 16% 96%;
     --sidebar-accent-foreground: 222 47% 11%;
     --sidebar-border: 210 16% 90%;
-    --sidebar-ring: var(--accent-hex);
+    --sidebar-ring: var(--accent-hsl);
+    
+    /* Button shadows */
+    --btn-shadow: 0 4px 14px -2px hsla(var(--accent-hsl) / 0.25);
+    --btn-shadow-hover: 0 6px 20px -4px hsla(var(--accent-hsl) / 0.35);
   }
 
   [data-theme="dark"] {
@@ -73,6 +85,8 @@ All colors MUST be HSL.
     --muted-fg: 210 20% 80%;
     --sec: 217 33% 14%;
     --sec-fg: 210 40% 98%;
+    --success-hsl: 142 71% 45%;
+    --warning-hsl: 38 92% 55%;
 
     --background: var(--bg);
     --foreground: var(--fg);
@@ -88,6 +102,8 @@ All colors MUST be HSL.
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62% 50%;
     --destructive-foreground: 0 0% 98%;
+    --success: var(--success-hsl);
+    --warning: var(--warning-hsl);
     --border: var(--border);
     --input: var(--border);
 
@@ -96,6 +112,10 @@ All colors MUST be HSL.
     --sidebar-accent: 217 33% 15%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 217 33% 18%;
+    
+    /* Button shadows for dark mode */
+    --btn-shadow: 0 4px 14px -2px hsla(var(--accent-hsl) / 0.4);
+    --btn-shadow-hover: 0 6px 20px -4px hsla(var(--accent-hsl) / 0.5);
   }
 }
 
@@ -124,10 +144,10 @@ All colors MUST be HSL.
 
 /* تباين للثيم الداكن/الفاتح */
 :root { 
-  --focus-bg: color-mix(in oklab, var(--accent-hex) 18%, white); 
+  --focus-bg: color-mix(in oklab, hsl(var(--accent-hsl)) 18%, white); 
 }
 [data-theme="dark"] { 
-  --focus-bg: color-mix(in oklab, var(--accent-hex) 28%, black); 
+  --focus-bg: color-mix(in oklab, hsl(var(--accent-hsl)) 28%, black); 
 }
 
 /* عناصر تفاعلية قابلة للكيبورد */
@@ -154,7 +174,7 @@ textarea {
 :root {
   --elev-1: 0 1px 2px rgba(0,0,0,.06), 0 1px 1px rgba(0,0,0,.04);
   --elev-2: 0 3px 8px rgba(0,0,0,.10), 0 1px 1px rgba(0,0,0,.06);
-  --ring-focus: 0 0 0 3px color-mix(in oklab, var(--accent-hex) 40%, transparent);
+  --ring-focus: 0 0 0 3px color-mix(in oklab, hsl(var(--accent-hsl)) 40%, transparent);
 }
 
 .card {
