@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/lib/auth';
 import { track } from '@/lib/telemetry';
 import { Button } from '@/components/ui/button';
+import CalendarEventModal from '@/components/CalendarEventModal';
 
 type Ev = {
   id: string;
@@ -38,6 +39,13 @@ export default function CalendarSimplePage() {
   const [pt, setPT] = useState<PT | null>(null);
   const [conflictsCount, setConflictsCount] = useState<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const [qaTitle, setQATitle] = useState('');
+  const [qaDate, setQADate] = useState(new Date().toISOString().slice(0,10));
+  const [qaFrom, setQAFrom] = useState('09:00');
+  const [qaTo, setQATo] = useState('10:00');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState<Ev | null>(null);
 
   const range = useMemo(() => {
     const start = new Date(cursor);
@@ -120,7 +128,50 @@ export default function CalendarSimplePage() {
     const d = new Date(cursor);
     d.setDate(d.getDate() + deltaDays);
     setCursor(d);
+    setQADate(d.toISOString().slice(0,10));
     track('calendar_navigate', { view, delta: deltaDays });
+  }
+
+  function combineLocal(d:string, t:string){
+    const [h,m] = t.split(':').map(x=>parseInt(x,10));
+    const dt = new Date(d+'T00:00:00');
+    dt.setHours(h,m,0,0);
+    return dt.toISOString();
+  }
+
+  async function quickAdd() {
+    if (!user || !qaDate || !qaFrom) return;
+    const starts_at = combineLocal(qaDate, qaFrom);
+    const ends_at = qaTo ? combineLocal(qaDate, qaTo) : starts_at;
+
+    const temp: Ev = {
+      id: 'tmp_'+Math.random().toString(36).slice(2),
+      title: qaTitle || '(بدون عنوان)',
+      starts_at, ends_at, source_id:'local', description: null
+    };
+    setEvents(prev => [temp, ...prev].sort((a,b)=>+new Date(a.starts_at)-+new Date(b.starts_at)));
+
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .insert({
+          owner_id: user.id,
+          title: qaTitle || '(بدون عنوان)',
+          starts_at, ends_at,
+          source_id: 'local'
+        })
+        .select('id,title,starts_at,ends_at,source_id,description')
+        .single();
+      if (error) throw error;
+      setEvents(prev => [data as any, ...prev.filter(e=>e.id!==temp.id)]
+        .sort((a,b)=>+new Date(a.starts_at)-+new Date(b.starts_at)));
+      await supabase.functions.invoke('conflict-check', { body: { event_id: (data as any).id } }).catch(()=>{});
+      setQATitle('');
+      track('calendar_quick_add');
+      await loadConflicts();
+    } catch {
+      setEvents(prev => prev.filter(e=>e.id!==temp.id));
+    }
   }
 
   const prayerBands = useMemo(() => {
@@ -153,6 +204,52 @@ export default function CalendarSimplePage() {
 
   return (
     <div className="container max-w-6xl mx-auto p-4 space-y-4">
+      {/* Quick Add Bar */}
+      <div className="flex flex-wrap items-end gap-2 border rounded-2xl p-3 bg-card">
+        <div className="flex-1 min-w-[220px]">
+          <label className="text-xs font-medium mb-1 block">عنوان سريع</label>
+          <input 
+            value={qaTitle} 
+            onChange={e=>setQATitle(e.target.value)}
+            placeholder="مثال: اجتماع عميل"
+            className="w-full px-3 py-2 rounded-lg border bg-background"
+          />
+        </div>
+        <div>
+          <label className="text-xs font-medium mb-1 block">التاريخ</label>
+          <input 
+            type="date" 
+            value={qaDate}
+            onChange={e=>setQADate(e.target.value)}
+            className="px-2 py-2 rounded-lg border bg-background"
+          />
+        </div>
+        <div>
+          <label className="text-xs font-medium mb-1 block">من</label>
+          <input 
+            type="time" 
+            value={qaFrom}
+            onChange={e=>setQAFrom(e.target.value)}
+            className="px-2 py-2 rounded-lg border bg-background"
+          />
+        </div>
+        <div>
+          <label className="text-xs font-medium mb-1 block">إلى</label>
+          <input 
+            type="time" 
+            value={qaTo}
+            onChange={e=>setQATo(e.target.value)}
+            className="px-2 py-2 rounded-lg border bg-background"
+          />
+        </div>
+        <button 
+          onClick={quickAdd}
+          className="px-5 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+        >
+          إضافة
+        </button>
+      </div>
+
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Button onClick={() => shift(view === 'day' ? -1 : -7)} variant="outline" size="sm">
@@ -262,6 +359,8 @@ export default function CalendarSimplePage() {
                 className={`absolute left-16 right-4 border rounded-lg p-2 cursor-pointer hover:shadow-md transition-shadow ${color}`}
                 style={{ top, height: h }}
                 onClick={() => {
+                  setEditing(ev);
+                  setModalOpen(true);
                   track('calendar_event_clicked', { id: ev.id, source: ev.source_id });
                 }}
               >
@@ -377,6 +476,40 @@ export default function CalendarSimplePage() {
           <span>AI</span>
         </div>
       </div>
+
+      <CalendarEventModal
+        open={modalOpen}
+        onClose={()=>setModalOpen(false)}
+        initial={editing ? {
+          id: editing.id,
+          title: editing.title,
+          starts_at: editing.starts_at,
+          ends_at: editing.ends_at,
+          description: editing.description,
+          source: editing.source_id as any
+        } : null}
+        defaultDate={cursor}
+        onSaved={(e)=>{
+          const normalized: Ev = {
+            id: e.id!,
+            title: e.title,
+            starts_at: e.starts_at,
+            ends_at: e.ends_at ?? e.starts_at,
+            source_id: (e.source ?? 'local') as any,
+            description: e.description ?? null
+          };
+          setEvents(prev=>{
+            const exists = prev.some(x=>x.id===normalized.id);
+            const next = exists ? prev.map(x=>x.id===normalized.id? normalized : x) : [normalized, ...prev];
+            return next.sort((a,b)=>+new Date(a.starts_at)-+new Date(b.starts_at));
+          });
+          loadConflicts();
+        }}
+        onDeleted={(id)=>{
+          setEvents(prev=>prev.filter(x=>x.id!==id));
+          loadConflicts();
+        }}
+      />
     </div>
   );
 }
