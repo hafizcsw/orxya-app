@@ -370,10 +370,12 @@ export type Database = {
       external_accounts: {
         Row: {
           access_token_enc: string
+          account_email: string | null
           created_at: string | null
           expires_at: string | null
           last_sync_at: string | null
           owner_id: string
+          primary_calendar_id: string | null
           provider: string
           provider_user_id: string | null
           refresh_token_enc: string | null
@@ -384,10 +386,12 @@ export type Database = {
         }
         Insert: {
           access_token_enc: string
+          account_email?: string | null
           created_at?: string | null
           expires_at?: string | null
           last_sync_at?: string | null
           owner_id: string
+          primary_calendar_id?: string | null
           provider: string
           provider_user_id?: string | null
           refresh_token_enc?: string | null
@@ -398,10 +402,12 @@ export type Database = {
         }
         Update: {
           access_token_enc?: string
+          account_email?: string | null
           created_at?: string | null
           expires_at?: string | null
           last_sync_at?: string | null
           owner_id?: string
+          primary_calendar_id?: string | null
           provider?: string
           provider_user_id?: string | null
           refresh_token_enc?: string | null
