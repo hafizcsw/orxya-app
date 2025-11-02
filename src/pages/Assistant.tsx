@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { askAgent, getSessions, createSession, archiveSession } from '@/lib/agent';
+import { askAgentHub, quickConnect, quickSync, quickConflicts, quickLocationUpdate, type ActionResult } from '@/lib/agent-hub';
 import { useUser } from '@/lib/auth';
-import { Send, Sparkles, Loader2, Plus, Archive, MessageSquare } from 'lucide-react';
+import { Send, Sparkles, Loader2, Plus, Archive, MessageSquare, MapPin, Calendar, AlertTriangle, Link } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Message {
@@ -23,6 +24,8 @@ export default function Assistant() {
   const [isLoading, setIsLoading] = useState(false);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [actions, setActions] = useState<ActionResult[]>([]);
+  const [tips, setTips] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -90,50 +93,46 @@ export default function Assistant() {
     setMessages((prev) => [...prev, { role: 'user', text: msg }]);
     if (!quickAction) setInput('');
     setIsLoading(true);
+    setActions([]);
+    setTips([]);
 
     try {
-      const response = await askAgent(msg, { session_id: currentSessionId || undefined });
+      // Use new agent-hub
+      const response = await askAgentHub(msg);
       
       if (response.ok) {
-        if (response.session_id && !currentSessionId) {
-          setCurrentSessionId(response.session_id);
-          await loadSessions();
-        }
-
         setMessages((prev) => [
           ...prev,
-          { role: 'assistant', text: response.reply || 'تم التنفيذ بنجاح' },
+          { role: 'assistant', text: response.assistant_message || 'تم التنفيذ بنجاح' },
         ]);
 
-        // Check for conflict warnings
-        const conflicts = response.tool_outputs?.find(
-          (t: any) => t.name === 'conflict_check' || t.result?.summary === 'post-flight check'
+        setActions(response.applied_actions || []);
+        setTips(response.tips || []);
+
+        // Check for conflicts in actions
+        const conflictActions = response.applied_actions?.filter(a => 
+          a.action?.type === 'conflict_check' && a.result?.meta?.inserted > 0
         );
-        if (conflicts?.result?.count > 0) {
+        
+        if (conflictActions && conflictActions.length > 0) {
+          const totalConflicts = conflictActions.reduce((sum, a) => sum + (a.result?.meta?.inserted || 0), 0);
           toast({
-            title: '⛔️ تعارض مع مواقيت الصلاة',
-            description: `وُجدت ${conflicts.result.count} تعارضات`,
+            title: '⛔️ تعارضات مع مواقيت الصلاة',
+            description: `وُجدت ${totalConflicts} تعارضات`,
             variant: 'destructive',
           });
         }
 
-        // Check for template application
-        const templateResult = response.tool_outputs?.find(
-          (t: any) => t.name === 'apply_template'
+        // Check for successful sync
+        const syncActions = response.applied_actions?.filter(a => 
+          a.action?.type === 'sync_gcal' && a.result?.ok
         );
-        if (templateResult?.result?.inserted > 0) {
+        
+        if (syncActions && syncActions.length > 0) {
           toast({
-            title: '✅ تم تطبيق القالب',
-            description: `تم إضافة ${templateResult.result.inserted} حدث/أحداث`,
+            title: '✅ تمت المزامنة',
+            description: 'تم مزامنة التقويم بنجاح',
           });
-        }
-
-        // Check for summary
-        const summaryResult = response.tool_outputs?.find(
-          (t: any) => t.name === 'summarize_period'
-        );
-        if (summaryResult?.result?.summary) {
-          // Summary is shown in the chat message
         }
       } else {
         setMessages((prev) => [
@@ -158,12 +157,69 @@ export default function Assistant() {
     }
   }
 
+  async function handleQuickHub(action: 'connect' | 'sync' | 'conflicts' | 'loc') {
+    if (isLoading) return;
+    
+    setIsLoading(true);
+    setActions([]);
+    setTips([]);
+
+    try {
+      let response;
+      if (action === 'connect') response = await quickConnect();
+      else if (action === 'sync') response = await quickSync();
+      else if (action === 'conflicts') response = await quickConflicts();
+      else if (action === 'loc') response = await quickLocationUpdate();
+
+      if (!response) return;
+
+      const actionLabels = {
+        connect: 'ربط Google',
+        sync: 'مزامنة التقويم',
+        conflicts: 'فحص التعارضات',
+        loc: 'تحديث الموقع'
+      };
+
+      setMessages(prev => [
+        ...prev,
+        { role: 'user', text: actionLabels[action] },
+        { role: 'assistant', text: response.assistant_message || 'تم بنجاح' }
+      ]);
+
+      setActions(response.applied_actions || []);
+      setTips(response.tips || []);
+
+      if (!response.ok) {
+        toast({
+          title: 'خطأ',
+          description: response.error || 'فشلت العملية',
+          variant: 'destructive',
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: 'خطأ',
+        description: error.message || 'حدث خطأ غير متوقع',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
   };
+
+  const hubQuickActions = [
+    { key: 'connect', label: 'ربط Google', icon: <Link className="w-4 h-4" /> },
+    { key: 'sync', label: 'مزامنة الآن', icon: <Calendar className="w-4 h-4" /> },
+    { key: 'conflicts', label: 'فحص التعارضات', icon: <AlertTriangle className="w-4 h-4" /> },
+    { key: 'loc', label: 'تحديث موقعي', icon: <MapPin className="w-4 h-4" /> },
+  ] as const;
 
   const quickActions = [
     'خطة اليوم بعد العشاء',
@@ -251,6 +307,21 @@ export default function Assistant() {
         {/* Quick Actions */}
         <div className="mb-3 space-y-2">
           <div className="flex gap-2 flex-wrap">
+            <span className="text-sm font-medium text-muted-foreground">إجراءات سريعة:</span>
+            {hubQuickActions.map((action) => (
+              <button
+                key={action.key}
+                onClick={() => handleQuickHub(action.key)}
+                disabled={isLoading}
+                className="px-3 py-1.5 text-sm rounded-full bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+              >
+                {action.icon}
+                {action.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex gap-2 flex-wrap">
             <span className="text-sm font-medium text-muted-foreground">أسئلة سريعة:</span>
             {quickActions.map((action, idx) => (
               <button
@@ -336,6 +407,40 @@ export default function Assistant() {
 
           <div ref={messagesEndRef} />
         </div>
+
+        {/* Actions Display */}
+        {actions.length > 0 && (
+          <div className="mb-3 rounded-xl border-2 p-4 bg-card shadow-md">
+            <div className="font-semibold mb-2 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              الأفعال المُطبَّقة
+            </div>
+            <ul className="space-y-2 text-sm">
+              {actions.map((a, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <code className="px-2 py-0.5 rounded bg-muted text-xs">{a.action?.type}</code>
+                  {a.error ? (
+                    <span className="text-destructive">فشل: {a.error}</span>
+                  ) : (
+                    <span className="text-green-600">✓ تم بنجاح</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Tips Display */}
+        {tips.length > 0 && (
+          <div className="mb-3 rounded-xl border-2 p-4 bg-accent/10 shadow-md">
+            <div className="font-semibold mb-2">💡 اقتراحات</div>
+            <ul className="list-disc ms-6 text-sm space-y-1">
+              {tips.map((t, i) => (
+                <li key={i}>{t}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Input Area */}
         <div className="flex gap-2">

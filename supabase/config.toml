@@ -3,6 +3,9 @@ project_id = "gcjggazmatipzqnxixhp"
 [functions.agent]
 verify_jwt = true
 
+[functions.agent-hub]
+verify_jwt = true
+
 [functions.templates]
 verify_jwt = true
 
@@ -29,3 +32,12 @@ verify_jwt = true
 
 [functions.report-daily]
 verify_jwt = true
+
+[functions.gcal-sync]
+verify_jwt = true
+
+[functions.oauth-gcal-start]
+verify_jwt = true
+
+[functions.oauth-gcal-callback]
+verify_jwt = false
