@@ -148,6 +148,15 @@ export default function ConflictsPage() {
     const sug = c.suggested_change ?? c.suggestion ?? {};
     const patch = sug.patch ?? {};
     
+    if (sug.action === "move_event" && sug.shift_minutes) {
+      return `تحريك الحدث بمقدار ${Math.abs(sug.shift_minutes)} دقيقة`;
+    }
+    if (sug.action === "shorten_event") {
+      return `تقصير الحدث → ${fmt(sug.new_start)} - ${fmt(sug.new_end)}`;
+    }
+    if (sug.action === "cancel_event") {
+      return "إلغاء الحدث";
+    }
     if (patch.shift_minutes) {
       return `تأخير ${Math.abs(patch.shift_minutes)} دقيقة`;
     }
@@ -158,7 +167,35 @@ export default function ConflictsPage() {
       return "وضع الحدث كمؤقت";
     }
     
-    return sug.reason ?? "لا توجد تفاصيل";
+    return sug.reasoning ?? sug.reason ?? "لا توجد تفاصيل";
+  }
+
+  async function requestAISuggestion(conflictId: string) {
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-conflicts', {
+        body: { conflict_id: conflictId }
+      });
+
+      if (error || !data?.ok) {
+        throw error ?? new Error('AI request failed');
+      }
+
+      track('conflict_ai_request', { 
+        conflict_id: conflictId,
+        action: data.suggestion?.action,
+        confidence: data.suggestion?.confidence
+      });
+      
+      showToast('تم إنشاء اقتراح ذكي بنجاح ✨', 'success');
+      await load(); // Reload to show updated suggestion
+    } catch (e: any) {
+      console.error('AI suggestion error:', e);
+      showToast('تعذّر توليد الاقتراح الذكي', 'error');
+      track('conflict_ai_error', { conflict_id: conflictId, error: String(e) });
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function act(command: "apply" | "ignore" | "reopen" | "undo", ids: string[]) {
@@ -449,20 +486,51 @@ export default function ConflictsPage() {
                     </div>
 
                     {/* Suggestion */}
-                    <div className="rounded-lg bg-muted/50 p-3 text-sm">
-                      <div className="flex items-start gap-2">
-                        <AlertTriangle className="w-4 h-4 text-warning mt-0.5" />
-                        <div>
-                          <span className="font-medium">الاقتراح: </span>
-                          {getSuggestionText(c)}
+                    {(c.suggested_change || c.suggestion) ? (
+                      <div className="rounded-lg bg-gradient-to-r from-primary/5 to-transparent border border-primary/20 p-3 text-sm">
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle className="w-4 h-4 text-primary mt-0.5" />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-medium">الاقتراح الذكي:</span>
+                              {(c.suggested_change?.confidence || c.suggestion?.confidence) && (
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                                  ثقة: {Math.round((c.suggested_change?.confidence || c.suggestion?.confidence || 0) * 100)}%
+                                </span>
+                              )}
+                            </div>
+                            <div className="mb-2">{getSuggestionText(c)}</div>
+                            {(c.suggested_change?.reasoning || c.suggestion?.reasoning) && (
+                              <div className="text-xs text-muted-foreground">
+                                💡 {c.suggested_change?.reasoning || c.suggestion?.reasoning}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="rounded-lg bg-muted/30 p-3 text-sm text-center">
+                        <span className="text-muted-foreground">لا يوجد اقتراح بعد</span>
+                      </div>
+                    )}
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2 pt-2">
+                    <div className="flex items-center gap-2 pt-2 flex-wrap">
                       {c.status === "open" || c.status === "suggested" ? (
                         <>
+                          {!c.suggested_change && !c.suggestion && (
+                            <button
+                              disabled={busy}
+                              onClick={() => requestAISuggestion(c.id)}
+                              className="btn-ghost-glow px-4 py-2 text-sm flex items-center gap-2 group"
+                              title="استخدم الذكاء الاصطناعي لاقتراح أفضل حل"
+                            >
+                              <svg className="w-4 h-4 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                              </svg>
+                              اقترح حلًا (AI)
+                            </button>
+                          )}
                           <button
                             disabled={busy}
                             onClick={() => act("apply", [c.id])}
