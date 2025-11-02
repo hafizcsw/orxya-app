@@ -24,6 +24,7 @@ serve(async (req) => {
   try {
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
     const reportDate = body.date || todayDubaiISODate();
+    const period = body.period || 'daily'; // daily, weekly, monthly, yearly
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -90,13 +91,61 @@ serve(async (req) => {
       total_spend += Number(r.spend_usd) || 0;
     }
 
+    // --- Get period data based on period type ---
+    let periodData: any = {};
+    const currentDate = new Date(reportDate);
+    
+    if (period === 'weekly') {
+      // Get last 7 days
+      const weekStart = new Date(currentDate);
+      weekStart.setDate(weekStart.getDate() - 6);
+      
+      const { data: weekLogs } = await supabase
+        .from("daily_logs")
+        .select("log_date, income_usd, spend_usd, work_hours, study_hours, mma_hours, walk_min")
+        .eq("owner_id", user.id)
+        .gte("log_date", weekStart.toISOString().slice(0, 10))
+        .lte("log_date", reportDate)
+        .order("log_date");
+      
+      periodData = { type: 'weekly', data: weekLogs || [] };
+    } else if (period === 'monthly') {
+      // Get current month
+      const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      
+      const { data: monthLogs } = await supabase
+        .from("daily_logs")
+        .select("log_date, income_usd, spend_usd, work_hours, study_hours, mma_hours, walk_min")
+        .eq("owner_id", user.id)
+        .gte("log_date", monthStart.toISOString().slice(0, 10))
+        .lte("log_date", reportDate)
+        .order("log_date");
+      
+      periodData = { type: 'monthly', data: monthLogs || [] };
+    } else if (period === 'yearly') {
+      // Get current year
+      const yearStart = new Date(currentDate.getFullYear(), 0, 1);
+      
+      const { data: yearLogs } = await supabase
+        .from("daily_logs")
+        .select("log_date, income_usd, spend_usd, work_hours, study_hours, mma_hours, walk_min")
+        .eq("owner_id", user.id)
+        .gte("log_date", yearStart.toISOString().slice(0, 10))
+        .lte("log_date", reportDate)
+        .order("log_date");
+      
+      periodData = { type: 'yearly', data: yearLogs || [] };
+    }
+
     const report = {
       date: reportDate,
+      period,
       income_usd, spend_usd, net_usd,
       study_hours, mma_hours, work_hours, walk_min,
       scholarships_sold, villas_sold,
       total_income, total_spend, 
-      current_balance // الرصيد الحقيقي (يدوي)
+      current_balance,
+      periodData
     };
 
     console.log("Report generated:", report);

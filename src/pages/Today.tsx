@@ -15,7 +15,8 @@ import { StatCardFuturistic } from '@/components/ui/StatCardFuturistic'
 import { NeonButton } from '@/components/ui/NeonButton'
 import { GlassPanel } from '@/components/ui/GlassPanel'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
-import { Bell, DollarSign, TrendingUp, TrendingDown, Clock, Dumbbell, BookOpen, Footprints, Award, Building, Edit2 } from 'lucide-react'
+import { Bell, DollarSign, TrendingUp, TrendingDown, Clock, Dumbbell, BookOpen, Footprints, Award, Building, Edit2, BarChart3 } from 'lucide-react'
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { z } from 'zod'
 
 // Validation schemas
@@ -46,6 +47,7 @@ const Today = () => {
   const { user } = useUser()
   const [loading, setLoading] = useState(false)
   const [report, setReport] = useState<any | null>(null)
+  const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('daily')
   const [toast, setToast] = useState<string | null>(null)
   const [editingField, setEditingField] = useState<string | null>(null)
   const [editValue, setEditValue] = useState<any>('')
@@ -56,10 +58,12 @@ const Today = () => {
     if (!user) return
     setLoading(true)
     try {
-      const { data, error } = await supabase.functions.invoke('report-daily')
+      const { data, error } = await supabase.functions.invoke('report-daily', {
+        body: { period }
+      })
       if (error) throw error
       setReport(data?.report ?? null)
-      track('report_daily_loaded', { hasReport: !!data?.report })
+      track('report_daily_loaded', { hasReport: !!data?.report, period })
     } catch (e: any) {
       setReport(null)
     } finally { setLoading(false) }
@@ -69,7 +73,7 @@ const Today = () => {
     if (user) {
       fetchReport()
     }
-  }, [user?.id])
+  }, [user?.id, period])
 
   async function updateField(field: string, value: any) {
     if (!user) return
@@ -295,7 +299,39 @@ const Today = () => {
         </HolographicCard>
 
         <section className="space-y-4">
-          <h2 className="text-xl font-semibold">التقرير اليومي</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">التقرير</h2>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant={period === 'daily' ? 'default' : 'outline'}
+                onClick={() => setPeriod('daily')}
+              >
+                يومي
+              </Button>
+              <Button
+                size="sm"
+                variant={period === 'weekly' ? 'default' : 'outline'}
+                onClick={() => setPeriod('weekly')}
+              >
+                أسبوعي
+              </Button>
+              <Button
+                size="sm"
+                variant={period === 'monthly' ? 'default' : 'outline'}
+                onClick={() => setPeriod('monthly')}
+              >
+                شهري
+              </Button>
+              <Button
+                size="sm"
+                variant={period === 'yearly' ? 'default' : 'outline'}
+                onClick={() => setPeriod('yearly')}
+              >
+                سنوي
+              </Button>
+            </div>
+          </div>
           
           {loading ? (
             <GlassPanel className="p-6 text-center">
@@ -442,6 +478,49 @@ const Today = () => {
                   {renderEditableCard('villas_sold', <Building className="w-5 h-5 text-primary" />, 'فلل', report.villas_sold, 'bg-primary/10', '', 1)}
                 </div>
               </div>
+
+              {/* Charts for period view */}
+              {period !== 'daily' && report.periodData?.data?.length > 0 && (
+                <div className="space-y-4 mt-6">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5" />
+                    الاتجاهات - {period === 'weekly' ? 'الأسبوع' : period === 'monthly' ? 'الشهر' : 'السنة'}
+                  </h3>
+                  
+                  {/* Financial Chart */}
+                  <GlassPanel className="p-6">
+                    <h4 className="text-sm font-semibold mb-4">الدخل والمصروف</h4>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={report.periodData.data}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="log_date" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="income_usd" fill="hsl(var(--success))" name="الدخل" />
+                        <Bar dataKey="spend_usd" fill="hsl(var(--destructive))" name="المصروف" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </GlassPanel>
+
+                  {/* Activity Chart */}
+                  <GlassPanel className="p-6">
+                    <h4 className="text-sm font-semibold mb-4">الأنشطة اليومية</h4>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={report.periodData.data}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="log_date" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Line type="monotone" dataKey="study_hours" stroke="hsl(var(--primary))" name="دراسة (س)" />
+                        <Line type="monotone" dataKey="mma_hours" stroke="hsl(var(--warning))" name="MMA (س)" />
+                        <Line type="monotone" dataKey="work_hours" stroke="hsl(var(--accent))" name="عمل (س)" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </GlassPanel>
+                </div>
+              )}
             </>
           ) : (
             <GlassPanel className="p-8 text-center">
