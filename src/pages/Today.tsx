@@ -49,8 +49,8 @@ const Today = () => {
   const [toast, setToast] = useState<string | null>(null)
   const [editingField, setEditingField] = useState<string | null>(null)
   const [editValue, setEditValue] = useState<any>('')
-  const [quickAddType, setQuickAddType] = useState<'income' | 'spend' | 'scholarship' | 'villa' | null>(null)
-  const [quickAddValue, setQuickAddValue] = useState('')
+  const [editingBalance, setEditingBalance] = useState(false)
+  const [balanceValue, setBalanceValue] = useState('')
 
   async function fetchReport() {
     if (!user) return
@@ -112,6 +112,32 @@ const Today = () => {
       await fetchReport()
     } catch (error: any) {
       setToast('❌ حدث خطأ في التحديث')
+    }
+  }
+
+  async function updateBalance(value: string) {
+    if (!user) return
+    
+    const parsedAmount = Number(value);
+    if (isNaN(parsedAmount)) {
+      setToast('❌ قيمة غير صحيحة');
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ initial_balance_usd: parsedAmount })
+        .eq('id', user.id);
+      
+      if (error) throw error;
+      
+      setToast('تم تحديث الرصيد ✅');
+      setEditingBalance(false);
+      await fetchReport();
+    } catch (error: any) {
+      console.error('Error updating balance:', error);
+      setToast('❌ حدث خطأ في الحفظ');
     }
   }
 
@@ -300,56 +326,79 @@ const Today = () => {
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">الإجماليات الكلية</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div 
-                    className="p-6 group cursor-pointer rounded-lg border bg-card hover:shadow-lg transition-all"
-                    onClick={async () => {
-                      if (!user) {
-                        setToast('❌ يجب تسجيل الدخول أولاً');
-                        return;
-                      }
-                      
-                      const amount = prompt('تحديث الرصيد الحقيقي في البنك:', report.current_balance?.toString() || '0');
-                      if (amount === null) return;
-                      
-                      const parsedAmount = Number(amount);
-                      if (isNaN(parsedAmount)) {
-                        setToast('❌ قيمة غير صحيحة');
-                        return;
-                      }
-                      
-                      try {
-                        const { error } = await supabase
-                          .from('profiles')
-                          .update({ initial_balance_usd: parsedAmount })
-                          .eq('id', user.id);
-                        
-                        if (error) throw error;
-                        
-                        setToast('تم تحديث الرصيد ✅');
-                        await fetchReport();
-                      } catch (error: any) {
-                        console.error('Error updating balance:', error);
-                        setToast('❌ حدث خطأ في الحفظ');
-                      }
-                    }}
-                  >
+                  <div className="p-6 rounded-lg border bg-card group">
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
                         الرصيد الحقيقي
                       </span>
                       <div className="flex items-center gap-2">
-                        <Edit2 className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        {!editingBalance && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => {
+                              setEditingBalance(true);
+                              setBalanceValue(report.current_balance?.toString() || '0');
+                            }}
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </Button>
+                        )}
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                           <DollarSign className="w-5 h-5 text-primary" />
                         </div>
                       </div>
                     </div>
-                    <div className={`text-4xl font-bold ${(report.current_balance || 0) >= 0 ? 'text-success' : 'text-destructive'}`}>
-                      ${report.current_balance?.toFixed(2) || 0}
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-2">
-                      اضغط للتعديل
-                    </div>
+                    
+                    {editingBalance ? (
+                      <div className="space-y-2">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={balanceValue}
+                          onChange={(e) => setBalanceValue(e.target.value)}
+                          className="input w-full text-2xl font-bold"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              updateBalance(balanceValue);
+                            } else if (e.key === 'Escape') {
+                              setEditingBalance(false);
+                            }
+                          }}
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => updateBalance(balanceValue)}
+                            className="flex-1"
+                          >
+                            حفظ
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setEditingBalance(false)}
+                            className="flex-1"
+                          >
+                            إلغاء
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        className="text-4xl font-bold cursor-pointer hover:scale-105 transition-transform"
+                        style={{ color: (report.current_balance || 0) >= 0 ? 'var(--success)' : 'var(--destructive)' }}
+                        onClick={() => {
+                          setEditingBalance(true);
+                          setBalanceValue(report.current_balance?.toString() || '0');
+                        }}
+                      >
+                        ${report.current_balance?.toFixed(2) || 0}
+                      </div>
+                    )}
                   </div>
                   
                   <GlassPanel className="p-6">
