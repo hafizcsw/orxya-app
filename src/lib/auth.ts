@@ -30,8 +30,13 @@ export function useUser() {
     console.log('[useUser] Initializing auth...')
     
     // Initialize auth state using getSession (better for OAuth)
-    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
+    Promise.race([
+      supabase.auth.getSession(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Session timeout')), 5000))
+    ]).then(async (result: any) => {
       if (!mounted) return;
+      
+      const { data: { session } = {}, error } = result || {};
       
       if (error) {
         console.error('[useUser] Session error:', error);
@@ -67,52 +72,42 @@ export function useUser() {
         setTimeout(async () => {
           try {
             console.log('[useUser] Starting post-login tasks...');
-            flushQueueOnce();
-            rescheduleAllFromDB();
             
-            // تهيئة صلاة اليوم فور تسجيل الدخول
+            // Run these without blocking
+            Promise.all([
+              flushQueueOnce().catch(e => console.error('Flush failed:', e)),
+              rescheduleAllFromDB().catch(e => console.error('Reschedule failed:', e))
+            ]);
+            
+            // تهيئة صلاة اليوم فور تسجيل الدخول (مع timeout)
             const today = new Date().toISOString().slice(0, 10);
-            try {
-              await syncPrayers(today);
-              await schedulePrayersFor(today);
+            Promise.race([
+              (async () => {
+                await syncPrayers(today);
+                await schedulePrayersFor(today);
+              })(),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('Prayer sync timeout')), 3000))
+            ]).then(() => {
               console.log('[useUser] Prayer sync completed');
-            } catch (e) {
+            }).catch(e => {
               console.error('Error syncing prayers on login:', e);
-            }
+            });
 
-          // موقع + مزامنة صلاة + فحص تعارضات (معطل مؤقتاً حتى تنفيذ Block 16)
-          // try {
-          //   const { getDeviceLocation } = await import('@/native/geo');
-          //   const { pushLocationSample } = await import('@/lib/location');
-          //   const loc = await getDeviceLocation();
-          //   if (loc) {
-          //     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-          //     await supabase.functions.invoke('location-update', {
-          //       body: { lat: loc.lat, lon: loc.lon, tz, sampled_at: new Date().toISOString() }
-          //     });
-          //     
-          //     // فحص تعارضات اليوم
-          //     await supabase.functions.invoke('conflict-check', {
-          //       body: { date: new Date().toISOString().slice(0, 10) }
-          //     });
-          //   }
-          // } catch (e) {
-          //   console.error('Location/conflict check failed:', e);
-          // }
-
-            // بدء مزامنة التقويم الدورية
-            try {
-              startCalendarAutoSync(30);
+            // بدء مزامنة التقويم الدورية (مع timeout)
+            Promise.race([
+              startCalendarAutoSync(30),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('Calendar sync timeout')), 2000))
+            ]).then(() => {
               console.log('[useUser] Calendar auto-sync started');
-            } catch (e) {
+            }).catch(e => {
               console.error('Calendar sync failed:', e);
-            }
+            });
             
-            console.log('[useUser] Post-login tasks completed');
+            console.log('[useUser] Post-login tasks initiated');
           } catch (err) {
             console.error('[useUser] Post-login error:', err);
           }
-        }, 0);
+        }, 100);
       }
     });
     
