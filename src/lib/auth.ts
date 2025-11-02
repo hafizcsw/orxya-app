@@ -16,12 +16,16 @@ export function useUser() {
       setTelemetryOn(false); 
       return; 
     }
-    const { data } = await supabase
-      .from('profiles')
-      .select('telemetry_enabled')
-      .eq('id', uid)
-      .maybeSingle();
-    setTelemetryOn(data?.telemetry_enabled ?? false);
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('telemetry_enabled')
+        .eq('id', uid)
+        .maybeSingle();
+      setTelemetryOn(data?.telemetry_enabled ?? false);
+    } catch (e) {
+      console.error('Error loading profile flags:', e);
+    }
   }
 
   useEffect(() => {
@@ -29,22 +33,17 @@ export function useUser() {
     
     console.log('[useUser] Initializing auth...')
     
-    // Initialize auth state using getSession
-    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (!mounted) return;
-      
-      if (error) {
-        console.error('[useUser] Session error:', error);
-      }
-      
       const u = session?.user ?? null;
-      console.log('[useUser] Initial session:', u ? 'User found' : 'No user')
+      console.log('[useUser] Initial session:', u ? 'User found' : 'No user');
       setUser(u);
       setLoading(false);
       identifyUser(u?.id ?? null, u ? { email: u.email } : undefined);
-      await applyProfileFlags(u?.id ?? null);
+      applyProfileFlags(u?.id ?? null);
     }).catch((err) => {
-      console.error('[useUser] Auth initialization error:', err);
+      console.error('[useUser] Session error:', err);
       if (mounted) {
         setUser(null);
         setLoading(false);
@@ -52,63 +51,55 @@ export function useUser() {
     });
     
     // Listen for auth changes
-    const { data: sub } = supabase.auth.onAuthStateChange(async (event, sess) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
       
-      console.log('[useUser] Auth state changed:', event, sess?.user ? 'User present' : 'No user')
+      console.log('[useUser] Auth state changed:', event, session?.user ? 'User present' : 'No user')
       
-      const u = sess?.user ?? null;
+      const u = session?.user ?? null;
       setUser(u);
       identifyUser(u?.id ?? null, u ? { email: u.email } : undefined);
       await applyProfileFlags(u?.id ?? null);
       
-      // Flush queue and reschedule notifications after login
+      // Post-login tasks (non-blocking)
       if (u && event === 'SIGNED_IN') {
-        setTimeout(async () => {
-          try {
-            console.log('[useUser] Starting post-login tasks...');
-            
-            // Run these without blocking
-            Promise.all([
-              flushQueueOnce().catch(e => console.error('Flush failed:', e)),
-              rescheduleAllFromDB().catch(e => console.error('Reschedule failed:', e))
-            ]);
-            
-            // تهيئة صلاة اليوم فور تسجيل الدخول (مع timeout)
-            const today = new Date().toISOString().slice(0, 10);
-            Promise.race([
-              (async () => {
-                await syncPrayers(today);
-                await schedulePrayersFor(today);
-              })(),
-              new Promise((_, reject) => setTimeout(() => reject(new Error('Prayer sync timeout')), 3000))
-            ]).then(() => {
-              console.log('[useUser] Prayer sync completed');
-            }).catch(e => {
-              console.error('Error syncing prayers on login:', e);
-            });
+        setTimeout(() => {
+          console.log('[useUser] Running post-login tasks...');
+          
+          // Run without awaiting
+          Promise.all([
+            flushQueueOnce().catch(e => console.error('Flush failed:', e)),
+            rescheduleAllFromDB().catch(e => console.error('Reschedule failed:', e))
+          ]);
+          
+          // Prayer sync (with timeout)
+          const today = new Date().toISOString().slice(0, 10);
+          Promise.race([
+            (async () => {
+              await syncPrayers(today);
+              await schedulePrayersFor(today);
+            })(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Prayer timeout')), 3000))
+          ]).then(() => {
+            console.log('[useUser] Prayer sync done');
+          }).catch(e => {
+            console.error('Prayer sync failed:', e);
+          });
 
-            // بدء مزامنة التقويم الدورية (مع timeout)
-            Promise.race([
-              startCalendarAutoSync(30),
-              new Promise((_, reject) => setTimeout(() => reject(new Error('Calendar sync timeout')), 2000))
-            ]).then(() => {
-              console.log('[useUser] Calendar auto-sync started');
-            }).catch(e => {
-              console.error('Calendar sync failed:', e);
-            });
-            
-            console.log('[useUser] Post-login tasks initiated');
-          } catch (err) {
-            console.error('[useUser] Post-login error:', err);
-          }
+          // Calendar sync (with timeout)
+          Promise.race([
+            startCalendarAutoSync(30),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Calendar timeout')), 2000))
+          ]).catch(e => {
+            console.error('Calendar sync failed:', e);
+          });
         }, 100);
       }
     });
     
     return () => {
       mounted = false;
-      sub.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, []);
 
