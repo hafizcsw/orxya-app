@@ -41,7 +41,7 @@ export default function ConflictsPage() {
   const [events, setEvents] = useState<Record<string, EventRow>>({});
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<ConflictStatus | "all">("open");
-  const [severityFilter, setSeverityFilter] = useState<string>("all");
+  const [severityFilter, setSeverityFilter] = useState<"all" | "low" | "medium" | "high">("all");
   const [prayerFilter, setPrayerFilter] = useState<string>("all");
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [busy, setBusy] = useState(false);
@@ -77,7 +77,7 @@ export default function ConflictsPage() {
         .limit(200);
 
       if (statusFilter !== "all") q = q.eq("status", statusFilter);
-      if (severityFilter !== "all") q = q.eq("severity", severityFilter);
+      if (severityFilter !== "all") q = q.eq("severity", severityFilter as "low" | "medium" | "high");
       if (prayerFilter !== "all") q = q.eq("prayer_name", prayerFilter);
 
       const { data, error } = await q;
@@ -315,11 +315,10 @@ export default function ConflictsPage() {
                 <label className="text-sm text-muted-foreground mb-2 block">الخطورة</label>
                 <select
                   value={severityFilter}
-                  onChange={e => setSeverityFilter(e.target.value)}
+                  onChange={e => setSeverityFilter(e.target.value as "all" | "low" | "medium" | "high")}
                   className="input w-full"
                 >
                   <option value="all">كل المستويات</option>
-                  <option value="critical">حرجة</option>
                   <option value="high">عالية</option>
                   <option value="medium">متوسطة</option>
                   <option value="low">منخفضة</option>

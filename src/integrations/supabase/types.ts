@@ -317,6 +317,7 @@ export type Database = {
           decided_by: string | null
           event_id: string | null
           id: string
+          last_checked_at: string | null
           notification_id: number | null
           object_id: string | null
           object_kind: string
@@ -329,7 +330,7 @@ export type Database = {
           requires_consent: boolean | null
           resolution: string | null
           resolved_at: string | null
-          severity: string | null
+          severity: Database["public"]["Enums"]["conflict_severity"] | null
           snooze_until: string | null
           status: string | null
           suggested_action: string | null
@@ -350,6 +351,7 @@ export type Database = {
           decided_by?: string | null
           event_id?: string | null
           id?: string
+          last_checked_at?: string | null
           notification_id?: number | null
           object_id?: string | null
           object_kind: string
@@ -362,7 +364,7 @@ export type Database = {
           requires_consent?: boolean | null
           resolution?: string | null
           resolved_at?: string | null
-          severity?: string | null
+          severity?: Database["public"]["Enums"]["conflict_severity"] | null
           snooze_until?: string | null
           status?: string | null
           suggested_action?: string | null
@@ -383,6 +385,7 @@ export type Database = {
           decided_by?: string | null
           event_id?: string | null
           id?: string
+          last_checked_at?: string | null
           notification_id?: number | null
           object_id?: string | null
           object_kind?: string
@@ -395,7 +398,7 @@ export type Database = {
           requires_consent?: boolean | null
           resolution?: string | null
           resolved_at?: string | null
-          severity?: string | null
+          severity?: Database["public"]["Enums"]["conflict_severity"] | null
           snooze_until?: string | null
           status?: string | null
           suggested_action?: string | null
@@ -1218,10 +1221,39 @@ export type Database = {
           title: string | null
           updated_at: string | null
         }
+        Insert: {
+          conflict_open_count?: never
+          conflict_prayers?: never
+          created_at?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string | null
+          owner_id?: string | null
+          source_id?: string | null
+          starts_at?: string | null
+          tags?: string[] | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          conflict_open_count?: never
+          conflict_prayers?: never
+          created_at?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string | null
+          owner_id?: string | null
+          source_id?: string | null
+          starts_at?: string | null
+          tags?: string[] | null
+          title?: string | null
+          updated_at?: string | null
+        }
         Relationships: []
       }
       vw_events_with_conflicts: {
         Row: {
+          color: string | null
           conflict_level: number | null
           created_at: string | null
           description: string | null
@@ -1232,17 +1264,32 @@ export type Database = {
           external_event_id: string | null
           external_id: string | null
           external_source: string | null
+          google_calendar_id: string | null
+          google_event_id: string | null
           id: string | null
           is_ai_created: boolean | null
+          last_error: string | null
+          last_google_sync_at: string | null
+          last_push_at: string | null
+          last_push_status: string | null
           last_write_origin: string | null
+          location_lat: number | null
+          location_lon: number | null
+          next_retry_at: string | null
+          notes: string | null
           owner_id: string | null
+          pending_push: boolean | null
+          retry_count: number | null
           source_id: string | null
           starts_at: string | null
+          sync_to_google: boolean | null
           tags: string[] | null
           title: string | null
           updated_at: string | null
+          version: number | null
         }
         Insert: {
+          color?: string | null
           conflict_level?: never
           created_at?: string | null
           description?: string | null
@@ -1253,17 +1300,32 @@ export type Database = {
           external_event_id?: string | null
           external_id?: string | null
           external_source?: string | null
+          google_calendar_id?: string | null
+          google_event_id?: string | null
           id?: string | null
           is_ai_created?: boolean | null
+          last_error?: string | null
+          last_google_sync_at?: string | null
+          last_push_at?: string | null
+          last_push_status?: string | null
           last_write_origin?: string | null
+          location_lat?: number | null
+          location_lon?: number | null
+          next_retry_at?: string | null
+          notes?: string | null
           owner_id?: string | null
+          pending_push?: boolean | null
+          retry_count?: number | null
           source_id?: string | null
           starts_at?: string | null
+          sync_to_google?: boolean | null
           tags?: string[] | null
           title?: string | null
           updated_at?: string | null
+          version?: number | null
         }
         Update: {
+          color?: string | null
           conflict_level?: never
           created_at?: string | null
           description?: string | null
@@ -1274,15 +1336,29 @@ export type Database = {
           external_event_id?: string | null
           external_id?: string | null
           external_source?: string | null
+          google_calendar_id?: string | null
+          google_event_id?: string | null
           id?: string | null
           is_ai_created?: boolean | null
+          last_error?: string | null
+          last_google_sync_at?: string | null
+          last_push_at?: string | null
+          last_push_status?: string | null
           last_write_origin?: string | null
+          location_lat?: number | null
+          location_lon?: number | null
+          next_retry_at?: string | null
+          notes?: string | null
           owner_id?: string | null
+          pending_push?: boolean | null
+          retry_count?: number | null
           source_id?: string | null
           starts_at?: string | null
+          sync_to_google?: boolean | null
           tags?: string[] | null
           title?: string | null
           updated_at?: string | null
+          version?: number | null
         }
         Relationships: []
       }
@@ -1358,6 +1434,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      conflict_severity: "low" | "medium" | "high"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1486,6 +1563,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      conflict_severity: ["low", "medium", "high"],
     },
   },
 } as const

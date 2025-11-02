@@ -19,9 +19,12 @@ function overlapMinutes(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date): num
   return Math.max(0, Math.round((e - s) / 60000));
 }
 
-function severityFromMinutes(m: number): "low" | "medium" | "high" {
-  if (m >= 25) return "high";
-  if (m >= 10) return "medium";
+function severityFromMinutes(overlapMin: number, minutesToPrayer: number): "low" | "medium" | "high" {
+  // High severity: significant overlap OR very close to prayer time
+  if (overlapMin >= 25 || minutesToPrayer <= 60) return "high";
+  // Medium severity: moderate overlap OR approaching prayer time
+  if (overlapMin >= 10 || minutesToPrayer <= 90) return "medium";
+  // Low severity: minimal overlap or distant from prayer
   return "low";
 }
 
@@ -183,7 +186,11 @@ serve(async (req) => {
           const minutes = overlapMinutes(eStart, eEnd, winStart, winEnd);
           if (minutes <= 0) continue;
 
-          const sev = severityFromMinutes(minutes);
+          // Calculate minutes until prayer starts
+          const now = new Date();
+          const minutesUntilPrayer = Math.max(0, Math.round((pTime.getTime() - now.getTime()) / 60000));
+
+          const sev = severityFromMinutes(minutes, minutesUntilPrayer);
           const suggestion = buildSuggestion(ev, pname, pTime, buffers.pre, buffers.post);
 
           const row = {
@@ -201,7 +208,8 @@ serve(async (req) => {
             severity: sev,
             status: suggestion.type === "none" ? "ignored" : "proposed",
             suggestion: suggestion,
-            resolved_at: null
+            resolved_at: null,
+            last_checked_at: new Date().toISOString()
           };
 
           const { error } = await supabase.from("conflicts").upsert(row, {
@@ -209,6 +217,23 @@ serve(async (req) => {
             ignoreDuplicates: false,
           });
           if (!error) created++;
+          
+          // Send WhatsApp notification for high severity conflicts (optional)
+          if (!error && sev === "high" && minutesUntilPrayer > 0 && minutesUntilPrayer <= 60) {
+            try {
+              await supabase.functions.invoke("notify-dispatch", {
+                body: {
+                  owner_id: user.id,
+                  title: `⚠️ تعارض مع صلاة ${pname}`,
+                  body: `حدث "${ev.title}" يتعارض مع ${pname}. يبدأ خلال ${minutesUntilPrayer} دقيقة.`,
+                  channel: "local",
+                  priority: 2
+                }
+              });
+            } catch (e) {
+              console.warn("Failed to send notification:", e);
+            }
+          }
         }
       }
     }
