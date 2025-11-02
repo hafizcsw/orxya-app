@@ -75,8 +75,11 @@ export function CalendarPopover({ children, selectedDate, onDateChange }: Calend
         {children}
       </PopoverTrigger>
       <PopoverContent 
-        className="w-80 p-4 bg-card border-2 border-border/50 shadow-2xl"
-        style={{ zIndex: zIndex.popover }}
+        className="w-80 p-5 bg-card/100 border-2 border-border shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
+        style={{ 
+          zIndex: zIndex.popover,
+          backgroundColor: 'hsl(var(--card))',
+        }}
         align="center"
         sideOffset={8}
       >
@@ -84,20 +87,20 @@ export function CalendarPopover({ children, selectedDate, onDateChange }: Calend
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={goToPreviousMonth}
-            className="w-8 h-8 rounded-lg bg-secondary/60 hover:bg-secondary/80 flex items-center justify-center transition-all"
+            className="w-9 h-9 rounded-lg bg-secondary hover:bg-secondary/80 flex items-center justify-center transition-all"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-5 h-5" />
           </button>
           
-          <div className="text-lg font-bold">
+          <div className="text-base font-bold">
             {currentMonth.toLocaleDateString('ar-EG', { month: 'long', year: 'numeric' })}
           </div>
           
           <button
             onClick={goToNextMonth}
-            className="w-8 h-8 rounded-lg bg-secondary/60 hover:bg-secondary/80 flex items-center justify-center transition-all"
+            className="w-9 h-9 rounded-lg bg-secondary hover:bg-secondary/80 flex items-center justify-center transition-all"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-5 h-5" />
           </button>
         </div>
 
@@ -106,7 +109,7 @@ export function CalendarPopover({ children, selectedDate, onDateChange }: Calend
           {weekDays.map((day) => (
             <div
               key={day}
-              className="text-center text-xs font-medium text-muted-foreground py-2"
+              className="text-center text-xs font-semibold text-muted-foreground py-2"
             >
               {day.slice(0, 3)}
             </div>
@@ -121,11 +124,11 @@ export function CalendarPopover({ children, selectedDate, onDateChange }: Calend
               onClick={() => day && handleDayClick(day)}
               disabled={!day}
               className={cn(
-                "aspect-square rounded-lg flex items-center justify-center text-sm transition-all",
+                "aspect-square rounded-lg flex items-center justify-center text-sm font-medium transition-all",
                 !day && "invisible",
-                day && !isSelected(day) && !isToday(day) && "hover:bg-secondary/60",
-                isToday(day) && !isSelected(day) && "bg-secondary/40 font-semibold",
-                isSelected(day) && "bg-[hsl(var(--whoop-blue))] text-white font-bold shadow-[var(--glow-blue)]"
+                day && !isSelected(day) && !isToday(day) && "hover:bg-secondary/60 hover:scale-110",
+                isToday(day) && !isSelected(day) && "bg-secondary/60 font-bold ring-2 ring-primary/50",
+                isSelected(day) && "bg-[hsl(var(--whoop-blue))] text-white font-bold shadow-lg scale-110"
               )}
             >
               {day}
