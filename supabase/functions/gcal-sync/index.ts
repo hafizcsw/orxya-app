@@ -1,3 +1,4 @@
+import { serve } from "https://deno.land/std/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { decryptJson, encryptJson } from "../_shared/crypto.ts";
 
@@ -96,17 +97,18 @@ Deno.serve(async (req)=>{
         title: ev.summary ?? "(بدون عنوان)",
         starts_at: start,
         ends_at: end,
-        source_id: "external",
-        external_source: "google",
+        source_id: "google",
         external_id: ev.id,
         external_calendar_id: "primary",
         external_etag: ev.etag ?? null,
+        external_event_id: ev.id,
+        description: ev.description ?? null,
         updated_at: new Date().toISOString()
       };
 
       const { data: existed } = await supa.from("events")
         .select("id,external_etag").eq("owner_id", user.id)
-        .eq("external_source","google").eq("external_id", ev.id).maybeSingle();
+        .eq("source_id","google").eq("external_id", ev.id).maybeSingle();
 
       if (!existed) {
         const { error } = await supa.from("events").insert(row);

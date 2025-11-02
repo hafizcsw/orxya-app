@@ -1,53 +1,67 @@
+import { serve } from "https://deno.land/std/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+const cors = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const json = (b:any,s=200)=>new Response(JSON.stringify(b),{status:s,headers:{
-  "content-type":"application/json",...corsHeaders
-}});
-
-async function sha256(b:string){
-  const d=new TextEncoder().encode(b);
-  const h=await crypto.subtle.digest("SHA-256",d);
-  return btoa(String.fromCharCode(...new Uint8Array(h)))
-    .replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+function rand(n = 24) {
+  return crypto.randomUUID().replace(/-/g, "").slice(0, n);
 }
 
-Deno.serve(async (req)=>{
-  if (req.method==="OPTIONS") return new Response(null, { headers: corsHeaders });
-  
-  const supabaseUrl=Deno.env.get("SUPABASE_URL")!;
-  const supabaseAnonKey=Deno.env.get("SUPABASE_ANON_KEY")!;
-  const authHeader=req.headers.get("Authorization") ?? "";
-  const supabase=createClient(supabaseUrl,supabaseAnonKey,{
-    global:{headers:{Authorization:authHeader}}
-  });
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
 
-  const { data:{ user } } = await supabase.auth.getUser();
-  if (!user) return json({ ok:false, error:"UNAUTHENTICATED" }, 401);
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const auth = req.headers.get("Authorization") ?? "";
 
-  const clientId=Deno.env.get("GOOGLE_CLIENT_ID")!;
-  const redirectUri=Deno.env.get("GOOGLE_REDIRECT_URI")!;
-  const scope=encodeURIComponent([
-    "https://www.googleapis.com/auth/calendar.readonly"
-  ].join(" "));
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: auth } },
+    });
 
-  const codeVerifier=crypto.randomUUID()+crypto.randomUUID();
-  const codeChallenge=await sha256(codeVerifier);
-  const state=crypto.randomUUID();
+    const { data: { user }, error: userErr } = await supabase.auth.getUser();
+    if (userErr || !user) {
+      return new Response(JSON.stringify({ ok: false, error: "UNAUTHENTICATED" }), {
+        status: 401,
+        headers: { ...cors, "content-type": "application/json" },
+      });
+    }
 
-  await supabase.from("external_accounts").upsert({
-    owner_id: user.id, 
-    provider: "google",
-    status: "pending",
-    scopes: JSON.stringify({ state, codeVerifier }),
-    updated_at: new Date().toISOString()
-  }, { onConflict: "owner_id,provider" });
+    const clientId = Deno.env.get("GOOGLE_CLIENT_ID")!;
+    const redirectUri = Deno.env.get("GOOGLE_REDIRECT_URI")!;
+    const scope = encodeURIComponent([
+      "https://www.googleapis.com/auth/calendar.readonly",
+      "openid",
+      "email",
+      "profile",
+    ].join(" "));
 
-  const url=`https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&access_type=offline&include_granted_scopes=true&state=${state}&code_challenge=${codeChallenge}&code_challenge_method=S256&prompt=consent`;
+    const state = rand(32);
 
-  return json({ ok:true, url });
+    // Store state temporarily in external_accounts for validation
+    await supabase.from("external_accounts").upsert({
+      owner_id: user.id,
+      provider: "google",
+      scopes: JSON.stringify({ state, created_at: new Date().toISOString() }),
+      status: "pending",
+    }, { onConflict: "owner_id,provider" });
+
+    const authUrl =
+      `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+      `&response_type=code&access_type=offline&prompt=consent&scope=${scope}&state=${state}`;
+
+    return new Response(JSON.stringify({ ok: true, url: authUrl }), {
+      headers: { ...cors, "content-type": "application/json" },
+    });
+  } catch (e: any) {
+    console.error("oauth-gcal-start error:", e);
+    return new Response(JSON.stringify({ ok: false, error: String(e?.message ?? e) }), {
+      status: 500,
+      headers: { ...cors, "content-type": "application/json" },
+    });
+  }
 });

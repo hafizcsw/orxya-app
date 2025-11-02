@@ -8,7 +8,7 @@ import { rescheduleAllFromDB, ensureNotificationPerms } from '@/lib/notify';
 import { getDeviceLocation } from '@/native/geo';
 import ThemeControls from '@/components/ThemeControls';
 import { ensureAISession, getAIConsents, updateAIConsents, computeAIStatus } from '@/lib/ai';
-import { useGoogleAccount } from '@/hooks/useExternal';
+import { useGoogleAccount } from '@/hooks/useGoogleAccount';
 import CalendarList from '@/components/CalendarList';
 
 const tzGuess = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Dubai';
