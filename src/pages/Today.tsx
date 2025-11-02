@@ -302,13 +302,34 @@ const Today = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div 
                     className="p-6 group cursor-pointer rounded-lg border bg-card hover:shadow-lg transition-all"
-                    onClick={() => {
+                    onClick={async () => {
+                      if (!user) {
+                        setToast('❌ يجب تسجيل الدخول أولاً');
+                        return;
+                      }
+                      
                       const amount = prompt('تحديث الرصيد الحقيقي في البنك:', report.current_balance?.toString() || '0');
-                      if (amount !== null) {
-                        supabase.from('profiles').update({ initial_balance_usd: Number(amount) }).eq('id', user?.id).then(() => {
-                          setToast('تم تحديث الرصيد ✅');
-                          fetchReport();
-                        });
+                      if (amount === null) return;
+                      
+                      const parsedAmount = Number(amount);
+                      if (isNaN(parsedAmount)) {
+                        setToast('❌ قيمة غير صحيحة');
+                        return;
+                      }
+                      
+                      try {
+                        const { error } = await supabase
+                          .from('profiles')
+                          .update({ initial_balance_usd: parsedAmount })
+                          .eq('id', user.id);
+                        
+                        if (error) throw error;
+                        
+                        setToast('تم تحديث الرصيد ✅');
+                        await fetchReport();
+                      } catch (error: any) {
+                        console.error('Error updating balance:', error);
+                        setToast('❌ حدث خطأ في الحفظ');
                       }
                     }}
                   >
