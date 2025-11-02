@@ -37,17 +37,26 @@ serve(async (req) => {
     const { data: { user }, error: userErr } = await supabase.auth.getUser();
     if (userErr || !user) return json({ ok: false, error: "UNAUTHENTICATED" }, 401);
 
-    // Get user's current balance (not calculated, manually set)
-    const { data: profile, error: profileErr } = await supabase
+    // Get or create user's profile
+    let { data: profile, error: profileErr } = await supabase
       .from("profiles")
       .select("initial_balance_usd")
       .eq("id", user.id)
       .maybeSingle();
-    if (profileErr) throw profileErr;
+    
+    // Create profile if doesn't exist
+    if (!profile) {
+      const { error: insertErr } = await supabase
+        .from("profiles")
+        .insert({ id: user.id, initial_balance_usd: 0 });
+      
+      if (insertErr) console.error("Failed to create profile:", insertErr);
+      else profile = { initial_balance_usd: 0 };
+    }
     
     const current_balance = Number(profile?.initial_balance_usd) || 0;
 
-    console.log("Generating report for:", reportDate, "user:", user.id);
+    console.log("Generating report for:", reportDate, "user:", user.id, "balance:", current_balance);
 
     // --- Get daily_logs for the date ---
     const { data: logRow, error: logErr } = await supabase
