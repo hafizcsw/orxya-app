@@ -26,7 +26,14 @@ export async function captureAndSendLocation(): Promise<boolean> {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        // Ignore if location tracking is not enabled
+        if (error.message?.includes('Location tracking not enabled')) {
+          console.info('Location tracking not enabled in profile');
+          return false;
+        }
+        throw error;
+      }
       
       track('location_captured', {
         provider: 'capacitor',
@@ -53,7 +60,15 @@ export async function captureAndSendLocation(): Promise<boolean> {
                 }
               });
 
-              if (error) throw error;
+              if (error) {
+                // Ignore if location tracking is not enabled
+                if (error.message?.includes('Location tracking not enabled')) {
+                  console.info('Location tracking not enabled in profile');
+                  resolve(false);
+                  return;
+                }
+                throw error;
+              }
               
               track('location_captured', {
                 provider: 'browser',
