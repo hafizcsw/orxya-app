@@ -104,6 +104,10 @@ const UpdateEvent = z.object({
   location: z.string().optional(),
 });
 
+const DeleteEvent = z.object({
+  event_id: z.string().uuid(),
+});
+
 const BodySchema = z.object({
   command: z.enum([
     "add_daily_log",
@@ -118,6 +122,7 @@ const BodySchema = z.object({
     "move_event",
     "resize_event",
     "update_event",
+    "delete_event",
     "materialize_task_event",
   ]),
   idempotency_key: z.string().min(8),
@@ -305,6 +310,18 @@ serve(async (req) => {
         throw error;
       }
       savedIds = data?.map(d => d.id) ?? [];
+      
+      // فحص التعارضات
+      if (savedIds.length > 0) {
+        try {
+          await supabase.functions.invoke("conflict-check", { 
+            body: { event_id: savedIds[0] } 
+          });
+        } catch (e) {
+          console.warn("Failed to check conflicts:", e);
+        }
+      }
+      
       result = { table: "events", action: "created", count: savedIds.length };
     }
 
@@ -319,6 +336,18 @@ serve(async (req) => {
         .select("id");
       if (error) throw error;
       savedIds = data?.map((d) => d.id) ?? [];
+      
+      // فحص التعارضات
+      if (savedIds.length > 0) {
+        try {
+          await supabase.functions.invoke("conflict-check", { 
+            body: { event_id: p.event_id } 
+          });
+        } catch (e) {
+          console.warn("Failed to check conflicts:", e);
+        }
+      }
+      
       result = { table: "events", action: "moved", count: savedIds.length };
     }
 
@@ -333,6 +362,18 @@ serve(async (req) => {
         .select("id");
       if (error) throw error;
       savedIds = data?.map((d) => d.id) ?? [];
+      
+      // فحص التعارضات
+      if (savedIds.length > 0) {
+        try {
+          await supabase.functions.invoke("conflict-check", { 
+            body: { event_id: p.event_id } 
+          });
+        } catch (e) {
+          console.warn("Failed to check conflicts:", e);
+        }
+      }
+      
       result = { table: "events", action: "resized", count: savedIds.length };
     }
 
@@ -355,7 +396,44 @@ serve(async (req) => {
         .select("id");
       if (error) throw error;
       savedIds = data?.map((d) => d.id) ?? [];
+      
+      // فحص التعارضات
+      if (savedIds.length > 0) {
+        try {
+          await supabase.functions.invoke("conflict-check", { 
+            body: { event_id: p.event_id } 
+          });
+        } catch (e) {
+          console.warn("Failed to check conflicts:", e);
+        }
+      }
+      
       result = { table: "events", action: "updated", count: savedIds.length };
+    }
+
+    // ─────────────────────── delete_event ─────────────────────────
+    if (command === "delete_event") {
+      const p = DeleteEvent.parse(parsed.data.payload);
+      
+      // حل جميع التعارضات المفتوحة لهذا الحدث
+      await supabase.from("conflicts")
+        .update({ status: "resolved" })
+        .eq("owner_id", user.id)
+        .eq("event_id", p.event_id)
+        .eq("status", "open");
+      
+      const { data, error } = await supabase
+        .from("events")
+        .delete()
+        .eq("id", p.event_id)
+        .eq("owner_id", user.id)
+        .select("id");
+      if (error) {
+        console.error("DB error (delete_event):", error);
+        throw error;
+      }
+      savedIds = data?.map(d => d.id) ?? [];
+      result = { table: "events", action: "deleted", count: savedIds.length };
     }
 
     // ─────────────────────── materialize_task_event ─────────────────────────

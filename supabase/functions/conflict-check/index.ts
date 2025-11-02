@@ -14,203 +14,154 @@ function json(x: any, s = 200) {
   });
 }
 
-type PrayerTimes = {
-  fajr: string | null;
-  dhuhr: string | null;
-  asr: string | null;
-  maghrib: string | null;
-  isha: string | null;
-};
+type PT = { fajr?: string; dhuhr?: string; asr?: string; maghrib?: string; isha?: string };
+
+const WINDOWS = {
+  fajr:   { pre: -5,  post: 20 },
+  dhuhr:  { pre: -10, post: 30 },
+  asr:    { pre: -10, post: 30 },
+  maghrib:{ pre: -10, post: 30 },
+  isha:   { pre: -10, post: 30 },
+} as const;
+
+function hhmmToDate(hhmm: string, dateISO: string) {
+  const [h, m] = hhmm.split(":").map(n => parseInt(n, 10));
+  const d = new Date(dateISO + "T00:00:00.000Z");
+  d.setUTCHours(h, m, 0, 0);
+  return d;
+}
+
+function addMinutes(d: Date, mins: number) {
+  const t = new Date(d);
+  t.setMinutes(t.getMinutes() + mins);
+  return t;
+}
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  
   try {
-    const url = Deno.env.get("SUPABASE_URL")!;
-    const anon = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnon = Deno.env.get("SUPABASE_ANON_KEY")!;
     const auth = req.headers.get("Authorization") ?? "";
-    const sb = createClient(url, anon, {
-      global: { headers: { Authorization: auth } }
+    
+    const sb = createClient(supabaseUrl, supabaseAnon, { 
+      global: { headers: { Authorization: auth } } 
     });
-
-    const { data: { user } } = await sb.auth.getUser();
-    if (!user) {
-      return json({ ok: false, error: "UNAUTHENTICATED" }, 401);
-    }
-
-    const body = await req.json().catch(() => ({}));
-    const { probe_event, date_from, date_to, days_range } = body;
     
-    // Support range mode: check today ±days_range
-    let startDate: string;
-    let endDate: string;
-    
-    if (days_range !== undefined) {
-      const range = Math.max(0, Math.min(30, Number(days_range)));
-      const start = new Date();
-      start.setDate(start.getDate() - range);
-      const end = new Date();
-      end.setDate(end.getDate() + range);
-      startDate = start.toISOString().slice(0, 10);
-      endDate = end.toISOString().slice(0, 10);
+    const { data: { user }, error: userErr } = await sb.auth.getUser();
+    if (userErr || !user) return json({ ok: false, error: "UNAUTHENTICATED" }, 401);
+
+    const body = await req.json().catch(() => ({})) as {
+      date?: string; from?: string; to?: string; event_id?: string;
+    };
+
+    // نطاق الأيام
+    let dates: string[] = [];
+    if (body.event_id) {
+      const { data: ev, error: evErr } = await sb.from("events")
+        .select("id, starts_at, ends_at")
+        .eq("owner_id", user.id).eq("id", body.event_id).maybeSingle();
+      if (evErr) throw evErr;
+      if (!ev) return json({ ok: false, error: "EVENT_NOT_FOUND" }, 404);
+
+      const s = new Date(ev.starts_at);
+      const e = new Date(ev.ends_at ?? ev.starts_at);
+      for (let d = new Date(s); d <= e; d.setUTCDate(d.getUTCDate() + 1)) {
+        dates.push(d.toISOString().slice(0, 10));
+      }
     } else {
-      const day = date_from || (typeof body.date === "string" ? body.date : new Date().toISOString().slice(0, 10));
-      startDate = day;
-      endDate = date_to || day;
+      const base = body.date ?? new Date().toISOString().slice(0, 10);
+      const from = body.from ?? base;
+      const to = body.to ?? base;
+      const start = new Date(from);
+      const end = new Date(to);
+      for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
+        dates.push(d.toISOString().slice(0, 10));
+      }
     }
 
-    // Fetch prayer times for date range
-    const { data: prayerData } = await sb
-      .from("prayer_times")
-      .select("date_iso,fajr,dhuhr,asr,maghrib,isha")
-      .eq("owner_id", user.id)
-      .gte("date_iso", startDate)
-      .lte("date_iso", endDate)
-      .order("date_iso");
-    
-    if (!prayerData || prayerData.length === 0) {
-      return json({ ok: true, conflicts: 0, note: "NO_PRAYER_RECORDS" });
-    }
-
-    // Gather events to check
-    const list: Array<{ id: string; starts_at: string; ends_at: string; title: string }> = [];
-    
-    if (probe_event) {
-      list.push({
-        id: probe_event.id || "probe",
-        title: probe_event.title || "(Event)",
-        starts_at: probe_event.starts_at,
-        ends_at: probe_event.ends_at
-      });
+    // اجلب الأحداث
+    let events;
+    if (body.event_id) {
+      const { data, error } = await sb.from("events")
+        .select("*").eq("owner_id", user.id).eq("id", body.event_id);
+      if (error) throw error;
+      events = data ?? [];
     } else {
-      const { data: evs } = await sb
-        .from("events")
-        .select("id,title,starts_at,ends_at")
+      const fromISO = dates[0] + "T00:00:00.000Z";
+      const toISO = dates[dates.length - 1] + "T23:59:59.999Z";
+      const { data, error } = await sb.from("events")
+        .select("*")
         .eq("owner_id", user.id)
-        .gte("starts_at", `${startDate}T00:00:00`)
-        .lte("starts_at", `${endDate}T23:59:59`)
-        .order("starts_at");
-      
-      list.push(...((evs ?? []) as typeof list));
+        .lt("starts_at", toISO)
+        .gt("ends_at", fromISO);
+      if (error) throw error;
+      events = data ?? [];
     }
 
-    // Build prayer time windows (±10 minutes)
-    function toDate(day: string, hhmm: string) {
-      const [h, m] = hhmm.split(":").map(n => parseInt(n, 10));
-      const d = new Date(`${day}T00:00:00`);
-      d.setHours(h || 0, m || 0, 0, 0);
-      return d;
-    }
+    const results: Array<{ event_id: string; date_iso: string; overlaps: string[] }> = [];
 
-    const bufferMs = 10 * 60 * 1000; // 10 minutes
-    let inserted = 0;
-    const conflicts: any[] = [];
-    const suggestions: any[] = [];
-    
-    // Process each day
-    for (const dayData of prayerData) {
-      const day = dayData.date_iso;
-      const t = dayData as PrayerTimes & { date_iso: string };
+    for (const day of dates) {
+      const { data: pt } = await sb.from("prayer_times")
+        .select("fajr,dhuhr,asr,maghrib,isha")
+        .eq("owner_id", user.id)
+        .eq("date_iso", day)
+        .maybeSingle();
+
+      const times = (pt ?? {}) as PT;
+      const windows: Array<{ name: keyof PT; from: Date; to: Date }> = [];
       
-      const prayers: [string, string][] = [
-        ["fajr", t.fajr],
-        ["dhuhr", t.dhuhr],
-        ["asr", t.asr],
-        ["maghrib", t.maghrib],
-        ["isha", t.isha],
-      ].filter((x): x is [string, string] => !!x[1]);
-
-      // Get events for this day
-      const dayEvents = list.filter(e => {
-        const eventDay = e.starts_at.slice(0, 10);
-        return eventDay === day;
+      (["fajr", "dhuhr", "asr", "maghrib", "isha"] as const).forEach(name => {
+        const t = times[name];
+        if (!t) return;
+        const base = hhmmToDate(t, day);
+        const span = WINDOWS[name as keyof typeof WINDOWS];
+        windows.push({ name, from: addMinutes(base, span.pre), to: addMinutes(base, span.post) });
       });
 
-      for (const [prayerName, hhmm] of prayers) {
-        const center = toDate(day, hhmm);
-        const from = new Date(center.getTime() - bufferMs);
-        const to = new Date(center.getTime() + bufferMs);
+      if (!windows.length) continue;
 
-        for (const e of dayEvents) {
-          const es = new Date(e.starts_at).getTime();
-          const ee = new Date(e.ends_at).getTime();
-          const overlap = es <= to.getTime() && ee >= from.getTime();
-          
-          if (!overlap) continue;
+      const todays = events.filter((ev: any) => {
+        const s = new Date(ev.starts_at);
+        const e = new Date(ev.ends_at ?? ev.starts_at);
+        return e.toISOString().slice(0, 10) >= day && s.toISOString().slice(0, 10) <= day;
+      });
 
-          // Check if conflict already exists
-          const { data: existing } = await sb
-            .from("conflicts")
-            .select("id")
-            .eq("owner_id", user.id)
-            .eq("date_iso", day)
-            .eq("prayer_name", prayerName)
-            .eq("object_id", e.id)
-            .maybeSingle();
+      for (const ev of todays) {
+        const s = new Date(ev.starts_at);
+        const e = new Date(ev.ends_at ?? ev.starts_at);
+        const overlaps: string[] = [];
+        
+        for (const w of windows) {
+          if (e > w.from && s < w.to) overlaps.push(String(w.name));
+        }
 
-          if (existing) continue; // Already recorded
-
-          const overlapMin = Math.round(
-            (Math.min(ee, to.getTime()) - Math.max(es, from.getTime())) / 60000
-          );
-
-          // Create conflict record
-          conflicts.push({
-            event_id: e.id,
-            event_title: e.title,
-            event_start: e.starts_at,
-            event_end: e.ends_at,
-            prayer_name: prayerName,
-            prayer_date: day,
-            window_from: from.toISOString(),
-            window_to: to.toISOString()
-          });
-
-          // Create suggestion
-          const duration = ee - es;
-          const sugFrom = new Date(Math.max(to.getTime(), es));
-          const sugTo = new Date(sugFrom.getTime() + duration);
-          
-          suggestions.push({
-            event_id: e.id,
-            move_to: { from: sugFrom.toISOString(), to: sugTo.toISOString() },
-            message: `يتعارض مع ${prayerName}. اقترح نقله بعد نافذة الصلاة.`
-          });
-
-          const ins = await sb
-            .from("conflicts")
-            .insert({
+        if (overlaps.length) {
+          results.push({ event_id: ev.id, date_iso: day, overlaps });
+          for (const name of overlaps) {
+            await sb.from("conflicts").upsert({
               owner_id: user.id,
+              event_id: ev.id,
               date_iso: day,
-              prayer_name: prayerName,
-              prayer_start: from.toISOString(),
-              prayer_end: to.toISOString(),
-              object_kind: "event",
-              object_id: e.id === "probe" ? null : e.id,
-              overlap_min: overlapMin,
+              prayer_name: name,
               status: "open",
-              severity: overlapMin > 5 ? "hard" : "soft"
-            })
-            .select("id")
-            .single();
-
-          if (!ins.error) inserted++;
+              created_at: new Date().toISOString(),
+            }, { onConflict: "owner_id,event_id,prayer_name,date_iso" });
+          }
+        } else {
+          await sb.from("conflicts")
+            .update({ status: "resolved" })
+            .eq("owner_id", user.id)
+            .eq("event_id", ev.id)
+            .eq("date_iso", day)
+            .eq("status", "open");
         }
       }
     }
 
-    console.log(`Conflict check for ${startDate} to ${endDate}: ${inserted} new conflicts found`);
-
-    return json({ 
-      ok: true, 
-      conflicts, 
-      suggestions, 
-      inserted, 
-      date_from: startDate,
-      date_to: endDate
-    });
+    console.log(`Conflict check completed for user ${user.id}: ${results.length} conflicts found`);
+    return json({ ok: true, results });
   } catch (e: any) {
     console.error("conflict-check error:", e);
     return json({ ok: false, error: "SERVER_ERROR", details: String(e) }, 500);

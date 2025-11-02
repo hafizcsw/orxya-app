@@ -77,19 +77,24 @@ export function useUser() {
             console.error('Error syncing prayers on login:', e);
           }
 
-          // موقع + مزامنة صلاة تلقائيًا إن لزم
+          // موقع + مزامنة صلاة + فحص تعارضات
           try {
             const { getDeviceLocation } = await import('@/native/geo');
             const { pushLocationSample } = await import('@/lib/location');
             const loc = await getDeviceLocation();
             if (loc) {
-              const result = await pushLocationSample(loc.lat, loc.lon);
-              if (result.did_sync) {
-                console.log(`Location updated: moved ${result.moved_km}km, prayer sync triggered`);
-              }
+              const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+              await supabase.functions.invoke('location-update', {
+                body: { lat: loc.lat, lon: loc.lon, tz, sampled_at: new Date().toISOString() }
+              });
+              
+              // فحص تعارضات اليوم
+              await supabase.functions.invoke('conflict-check', {
+                body: { date: new Date().toISOString().slice(0, 10) }
+              });
             }
           } catch (e) {
-            console.error('Location push failed:', e);
+            console.error('Location/conflict check failed:', e);
           }
 
           // بدء مزامنة التقويم الدورية
