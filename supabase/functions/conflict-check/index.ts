@@ -1,94 +1,184 @@
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const cors = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "authorization, content-type",
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+interface ConflictCheckRequest {
+  date?: string;
+  event_id?: string;
+}
+
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const auth = req.headers.get("Authorization") ?? "";
-    const supabase = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: auth } },
-    });
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return new Response(JSON.stringify({ ok: false, error: "UNAUTH" }), {
-        status: 401, headers: { ...cors, "content-type": "application/json" }
-      });
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Missing authorization header');
     }
 
-    const body = await req.json().catch(() => ({}));
-    const dateISO = body.date ?? new Date().toISOString().slice(0, 10);
-
-    const { data: pt } = await supabase.from("prayer_times")
-      .select("fajr,dhuhr,asr,maghrib,isha")
-      .eq("owner_id", user.id).eq("date_iso", dateISO).maybeSingle();
-
-    if (!pt) return new Response(JSON.stringify({ ok: true, conflicts: [] }), { headers: cors });
-
-    const dayStart = new Date(`${dateISO}T00:00:00Z`);
-    const dayEnd = new Date(`${dateISO}T23:59:59Z`);
-
-    // استعلام موسّع للتداخل عبر منتصف الليل
-    const { data: events } = await supabase.from("events")
-      .select("id,title,starts_at,ends_at,status")
-      .eq("owner_id", user.id)
-      .is("deleted_at", null)
-      .or(`and(starts_at.gte.${dayStart.toISOString()},starts_at.lte.${dayEnd.toISOString()}),and(ends_at.gte.${dayStart.toISOString()},ends_at.lte.${dayEnd.toISOString()})`);
-
-    const slots = [
-      { name: "الفجر", time: pt.fajr, window: 35 },
-      { name: "الظهر", time: pt.dhuhr, window: 40 },
-      { name: "العصر", time: pt.asr, window: 40 },
-      { name: "المغرب", time: pt.maghrib, window: 30 },
-      { name: "العشاء", time: pt.isha, window: 35 },
-    ].map(s => {
-      const start = new Date(`${dateISO}T${s.time}:00Z`);
-      const end = new Date(start.getTime() + s.window * 60 * 1000);
-      return { ...s, start, end };
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+      global: { headers: { Authorization: authHeader } }
     });
 
-    const conflictsToUpsert: any[] = [];
+    const { data: { user }, error: userError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
 
-    for (const ev of (events ?? [])) {
-      const evStart = new Date(ev.starts_at);
-      const evEnd = new Date(ev.ends_at ?? ev.starts_at);
+    if (userError || !user) {
+      throw new Error('Unauthorized');
+    }
 
-      for (const s of slots) {
-        if (evStart < s.end && s.start < evEnd) {
-          const overlapMin = Math.floor(
-            (Math.min(evEnd.getTime(), s.end.getTime()) - 
-             Math.max(evStart.getTime(), s.start.getTime())) / 60000
-          );
+    const { date, event_id }: ConflictCheckRequest = await req.json();
+    const checkDate = date || new Date().toISOString().split('T')[0];
 
-          conflictsToUpsert.push({
-            owner_id: user.id, event_id: ev.id, conflict_date: dateISO,
-            slot_name: s.name, severity: ev.status === 'confirmed' ? 'warn' : 'block',
-            status: 'open', overlap_min: overlapMin, prayer_name: s.name,
-            prayer_start: s.start.toISOString(), prayer_end: s.end.toISOString(),
-            object_kind: 'event', object_id: ev.id, date_iso: dateISO
+    console.log('🔍 Conflict check:', { userId: user.id, date: checkDate });
+
+    // جلب مواقيت الصلاة لليوم
+    const { data: prayerTimes } = await supabase
+      .from('prayer_times')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('prayer_date', checkDate)
+      .maybeSingle();
+
+    if (!prayerTimes) {
+      console.log('No prayer times found for date:', checkDate);
+      return new Response(
+        JSON.stringify({ conflicts: [], message: 'No prayer times available' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // جلب الأحداث لليوم
+    let eventsQuery = supabase
+      .from('events')
+      .select('*')
+      .eq('owner_id', user.id)
+      .gte('starts_at', `${checkDate}T00:00:00`)
+      .lt('starts_at', `${checkDate}T23:59:59`);
+
+    if (event_id) {
+      eventsQuery = eventsQuery.eq('id', event_id);
+    }
+
+    const { data: events } = await eventsQuery;
+
+    if (!events || events.length === 0) {
+      console.log('No events found for date:', checkDate);
+      return new Response(
+        JSON.stringify({ conflicts: [], message: 'No events to check' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // فحص التعارضات
+    const conflicts = [];
+    const prayers = [
+      { name: 'fajr', time: prayerTimes.fajr, window: 15 },
+      { name: 'dhuhr', time: prayerTimes.dhuhr, window: 15 },
+      { name: 'asr', time: prayerTimes.asr, window: 15 },
+      { name: 'maghrib', time: prayerTimes.maghrib, window: 15 },
+      { name: 'isha', time: prayerTimes.isha, window: 15 }
+    ];
+
+    for (const event of events) {
+      const eventStart = new Date(event.starts_at);
+      const eventEnd = event.ends_at ? new Date(event.ends_at) : new Date(eventStart.getTime() + 60 * 60 * 1000);
+
+      for (const prayer of prayers) {
+        if (!prayer.time) continue;
+
+        const prayerTime = new Date(`${checkDate}T${prayer.time}`);
+        const prayerWindowStart = new Date(prayerTime.getTime() - prayer.window * 60 * 1000);
+        const prayerWindowEnd = new Date(prayerTime.getTime() + prayer.window * 60 * 1000);
+
+        const hasConflict = 
+          (eventStart >= prayerWindowStart && eventStart <= prayerWindowEnd) ||
+          (eventEnd >= prayerWindowStart && eventEnd <= prayerWindowEnd) ||
+          (eventStart <= prayerWindowStart && eventEnd >= prayerWindowEnd);
+
+        if (hasConflict) {
+          const conflict = {
+            id: `${event.id}_${prayer.name}`,
+            event_id: event.id,
+            event_title: event.title,
+            event_start: event.starts_at,
+            event_end: event.ends_at,
+            prayer_name: prayer.name,
+            prayer_time: prayer.time,
+            severity: calculateSeverity(eventStart, eventEnd, prayerTime),
+            suggestions: generateSuggestions(event, prayer, prayerTime)
+          };
+
+          conflicts.push(conflict);
+
+          await supabase.from('conflicts').upsert({
+            id: conflict.id,
+            user_id: user.id,
+            event_id: event.id,
+            conflict_type: 'prayer',
+            detected_at: new Date().toISOString(),
+            resolved: false,
+            metadata: conflict
           });
         }
       }
     }
 
-    if (conflictsToUpsert.length > 0) {
-      await supabase.from("conflicts").upsert(conflictsToUpsert, {
-        onConflict: 'owner_id,event_id,conflict_date,slot_name',
-        ignoreDuplicates: false
-      });
-    }
+    console.log(`✅ Found ${conflicts.length} conflicts`);
 
-    return new Response(JSON.stringify({ ok: true, count: conflictsToUpsert.length }), { headers: cors });
-  } catch (e) {
-    return new Response(JSON.stringify({ ok: false, error: String(e) }), { status: 500, headers: cors });
+    return new Response(
+      JSON.stringify({ 
+        success: true,
+        conflicts,
+        date: checkDate,
+        total: conflicts.length
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('❌ Conflict check error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: errorMessage 
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
   }
 });
+
+function calculateSeverity(eventStart: Date, eventEnd: Date, prayerTime: Date): 'high' | 'medium' | 'low' {
+  const startDiff = Math.abs(eventStart.getTime() - prayerTime.getTime()) / (60 * 1000);
+  const endDiff = Math.abs(eventEnd.getTime() - prayerTime.getTime()) / (60 * 1000);
+  const minDiff = Math.min(startDiff, endDiff);
+
+  if (minDiff <= 5) return 'high';
+  if (minDiff <= 10) return 'medium';
+  return 'low';
+}
+
+function generateSuggestions(event: any, prayer: any, prayerTime: Date): string[] {
+  const suggestions = [];
+  
+  suggestions.push(`تأجيل "${event.title}" لـ 15 دقيقة بعد ${prayer.name}`);
+  suggestions.push(`تقديم "${event.title}" لـ 30 دقيقة قبل ${prayer.name}`);
+  suggestions.push(`تقصير مدة "${event.title}" لإنهائه قبل ${prayer.name}`);
+  suggestions.push('تجاهل التعارض لهذا اليوم فقط');
+
+  return suggestions;
+}
