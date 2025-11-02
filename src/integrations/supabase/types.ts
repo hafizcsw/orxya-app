@@ -1099,6 +1099,7 @@ export type Database = {
       profiles: {
         Row: {
           accent_color: string | null
+          allow_location: boolean | null
           calendar_writeback: boolean
           created_at: string | null
           currency: string | null
@@ -1130,6 +1131,7 @@ export type Database = {
         }
         Insert: {
           accent_color?: string | null
+          allow_location?: boolean | null
           calendar_writeback?: boolean
           created_at?: string | null
           currency?: string | null
@@ -1161,6 +1163,7 @@ export type Database = {
         }
         Update: {
           accent_color?: string | null
+          allow_location?: boolean | null
           calendar_writeback?: boolean
           created_at?: string | null
           currency?: string | null

@@ -27,6 +27,7 @@ export default function Profile() {
   const [currency, setCurrency] = useState('USD');
   const [timezone, setTimezone] = useState(tzGuess);
   const [telemetry, setTelemetry] = useState(true);
+  const [allowLocation, setAllowLocation] = useState(false);
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [prayerMethod, setPrayerMethod] = useState('MWL');
   const [latitude, setLatitude] = useState<string>('');
@@ -51,7 +52,7 @@ export default function Profile() {
       if (!user) return;
       const { data } = await supabase
         .from('profiles')
-        .select('full_name,currency,timezone,telemetry_enabled,prayer_method,latitude,longitude,calendar_writeback,default_calendar_id,default_calendar_provider,default_calendar_name')
+        .select('full_name,currency,timezone,telemetry_enabled,allow_location,prayer_method,latitude,longitude,calendar_writeback,default_calendar_id,default_calendar_provider,default_calendar_name')
         .eq('id', user.id)
         .maybeSingle();
       if (data) {
@@ -60,6 +61,7 @@ export default function Profile() {
         setTimezone(data.timezone ?? tzGuess);
         setTelemetry(!!data.telemetry_enabled);
         setTelemetryOn(!!data.telemetry_enabled);
+        setAllowLocation(!!data.allow_location);
         setPrayerMethod(data.prayer_method ?? 'MWL');
         setLatitude(data.latitude?.toString() ?? '');
         setLongitude(data.longitude?.toString() ?? '');
@@ -93,6 +95,7 @@ export default function Profile() {
         currency,
         timezone,
         telemetry_enabled: telemetry,
+        allow_location: allowLocation,
         prayer_method: prayerMethod,
         latitude: latitude ? parseFloat(latitude) : null,
         longitude: longitude ? parseFloat(longitude) : null,
@@ -302,6 +305,16 @@ export default function Profile() {
               onChange={e => setTelemetry(e.target.checked)} 
             />
             <span className="text-sm">تفعيل القياس (PostHog)</span>
+          </label>
+
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input 
+              type="checkbox" 
+              className="w-4 h-4 rounded border-input" 
+              checked={allowLocation} 
+              onChange={e => setAllowLocation(e.target.checked)} 
+            />
+            <span className="text-sm">السماح بتتبع الموقع الجغرافي</span>
           </label>
 
           <div className="flex gap-3 pt-2">
