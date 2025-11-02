@@ -5,7 +5,12 @@ import { cn } from '@/lib/utils';
 
 const Overlay = ({ isOpen }: { isOpen: boolean }) => {
   if (!isOpen) return null;
-  return <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1299]" />;
+  return (
+    <div 
+      className="fixed inset-0 z-[1299] animate-in fade-in-0"
+      style={{ backgroundColor: 'rgba(0, 0, 0, 0.75)' }}
+    />
+  );
 };
 
 interface CalendarPopoverProps {
@@ -79,7 +84,7 @@ export function CalendarPopover({ children, selectedDate, onDateChange }: Calend
         <PopoverTrigger asChild>
           {children}
         </PopoverTrigger>
-      <PopoverContent className="w-80 p-5 bg-card border-2 border-border shadow-2xl" align="center" sideOffset={8}>
+      <PopoverContent className="w-80 p-5 border-2 border-border shadow-2xl" align="center" sideOffset={8} style={{ backgroundColor: 'hsl(var(--card))', zIndex: 1300 }}>
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <button
