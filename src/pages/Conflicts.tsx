@@ -1,239 +1,520 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
+import { track } from "@/lib/telemetry";
+import { throttle } from "@/lib/throttle";
+import { Protected } from "@/components/Protected";
+import { Loader2, AlertTriangle, CheckCircle, XCircle, RotateCcw, Filter } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+type ConflictStatus = "open" | "suggested" | "auto_applied" | "resolved" | "undone";
 
 type Conflict = {
   id: string;
-  date_iso: string;
+  owner_id: string;
+  event_id: string | null;
+  object_kind: string;
   prayer_name: string;
-  prayer_time: string;
-  event_id: string;
-  overlap_min: number;
-  severity: "low" | "medium" | "high";
-  status: "open" | "proposed" | "resolved" | "snoozed" | "ignored";
-  suggestion: any;
+  status: ConflictStatus;
+  severity: string;
+  suggested_change?: any;
+  suggestion?: any;
+  created_at: string;
+  decided_at?: string | null;
+  decided_action?: string | null;
+  resolution?: string | null;
 };
 
-type Event = {
+type EventRow = {
   id: string;
-  title: string;
-  starts_at: string;
-  ends_at: string;
-  external_source: string | null;
+  title: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
 };
 
-export default function Conflicts() {
+export default function ConflictsPage() {
   const { user } = useUser();
-  const [conflicts, setConflicts] = useState<(Conflict & { event: Event })[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [items, setItems] = useState<Conflict[]>([]);
+  const [events, setEvents] = useState<Record<string, EventRow>>({});
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<ConflictStatus | "all">("open");
+  const [severityFilter, setSeverityFilter] = useState<string>("all");
+  const [prayerFilter, setPrayerFilter] = useState<string>("all");
+  const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [busy, setBusy] = useState(false);
+  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+
+  const reload = useMemo(
+    () => throttle(async () => { if (user) await load(); }, 300),
+    [user?.id, statusFilter, severityFilter, prayerFilter]
+  );
+
+  useEffect(() => { 
+    if (user) {
+      track('conflict_list_open');
+      load();
+    }
+  }, [user?.id]);
+  
+  useEffect(() => { 
+    if (user) reload(); 
+  }, [statusFilter, severityFilter, prayerFilter]);
 
   async function load() {
     if (!user) return;
-    
     setLoading(true);
+    
     try {
-      const { data, error } = await supabase
+      let q = supabase
         .from("conflicts")
         .select("*")
-        .in("status", ["open", "proposed", "snoozed"])
-        .order("date_iso", { ascending: true })
-        .order("prayer_time", { ascending: true });
+        .eq("owner_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(200);
 
+      if (statusFilter !== "all") q = q.eq("status", statusFilter);
+      if (severityFilter !== "all") q = q.eq("severity", severityFilter);
+      if (prayerFilter !== "all") q = q.eq("prayer_name", prayerFilter);
+
+      const { data, error } = await q;
       if (error) throw error;
+      
+      setItems((data ?? []) as Conflict[]);
 
-      const conflictsWithEvents = await Promise.all(
-        (data || []).map(async (c) => {
-          const { data: event } = await supabase
-            .from("events")
-            .select("id,title,starts_at,ends_at,external_source")
-            .eq("id", c.event_id)
-            .maybeSingle();
-
-          return { ...c, event: event || { id: c.event_id, title: "(محذوف)", starts_at: "", ends_at: "", external_source: null } };
-        })
-      );
-
-      setConflicts(conflictsWithEvents as any);
+      // Prefetch events
+      const evIds = Array.from(new Set((data ?? []).map((c: any) => c.event_id).filter(Boolean)));
+      if (evIds.length) {
+        const { data: ev } = await supabase
+          .from("events")
+          .select("id, title, starts_at, ends_at")
+          .in("id", evIds as string[]);
+        
+        const map: Record<string, EventRow> = {};
+        (ev ?? []).forEach((e) => (map[e.id] = e as EventRow));
+        setEvents(map);
+      } else {
+        setEvents({});
+      }
     } catch (e: any) {
-      toast.error("فشل تحميل التعارضات: " + e.message);
+      showToast("تعذّر تحميل التعارضات", "error");
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => {
-    load();
-  }, [user?.id]);
+  function showToast(msg: string, type: "success" | "error" = "success") {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3000);
+  }
 
-  async function handleAction(id: string, action: "accept" | "ignore" | "snooze") {
+  const visible = useMemo(() => items, [items]);
+  const stats = useMemo(() => {
+    return {
+      total: items.length,
+      open: items.filter(c => c.status === "open").length,
+      resolved: items.filter(c => c.status === "resolved").length,
+      critical: items.filter(c => c.severity === "critical").length,
+    };
+  }, [items]);
+
+  const allSelected = useMemo(() =>
+    visible.length > 0 && visible.every(c => selected[c.id]), 
+    [visible, selected]
+  );
+
+  const toggleAll = () => {
+    const m: Record<string, boolean> = {};
+    if (!allSelected) visible.forEach(c => (m[c.id] = true));
+    setSelected(m);
+  };
+
+  function fmt(dt?: string | null) {
+    if (!dt) return "—";
     try {
-      const body: any = { id, action };
-      if (action === "snooze") {
-        body.snooze_until = new Date(Date.now() + 30 * 60000).toISOString();
-      }
+      const d = new Date(dt);
+      return d.toLocaleString("ar-EG", { 
+        month: "short", 
+        day: "numeric", 
+        hour: "2-digit", 
+        minute: "2-digit" 
+      });
+    } catch {
+      return dt;
+    }
+  }
 
-      const { data, error } = await supabase.functions.invoke("conflict-resolve", { body });
+  function getSuggestionText(c: Conflict) {
+    const sug = c.suggested_change ?? c.suggestion ?? {};
+    const patch = sug.patch ?? {};
+    
+    if (patch.shift_minutes) {
+      return `تأخير ${Math.abs(patch.shift_minutes)} دقيقة`;
+    }
+    if (patch.transparency === "transparent") {
+      return "جعل الحدث شفافًا (Free)";
+    }
+    if (patch.status === "tentative") {
+      return "وضع الحدث كمؤقت";
+    }
+    
+    return sug.reason ?? "لا توجد تفاصيل";
+  }
 
-      if (error || !data?.ok) {
-        throw new Error(data?.error || "فشل تنفيذ الإجراء");
-      }
+  async function act(command: "apply" | "ignore" | "reopen" | "undo", ids: string[]) {
+    if (!ids.length) return;
+    setBusy(true);
 
-      toast.success("تم التنفيذ بنجاح");
+    // Optimistic UI
+    const snapshot = [...items];
+    const newStatus: ConflictStatus = 
+      command === "apply" ? "resolved" :
+      command === "ignore" ? "resolved" :
+      "open";
+
+    setItems(prev =>
+      prev.map(c =>
+        ids.includes(c.id)
+          ? { ...c, status: newStatus, decided_action: command }
+          : c
+      )
+    );
+
+    try {
+      const { data, error } = await supabase.functions.invoke("conflicts", {
+        body: { command, ids },
+      });
+
+      if (error || !data?.ok) throw error ?? new Error("fn_failed");
+
+      track("conflict_action", { command, count: ids.length });
+      setSelected({});
+      showToast(`تم ${command === "apply" ? "التطبيق" : command === "ignore" ? "التجاهل" : "التحديث"} بنجاح`, "success");
+      
+      // Reload to get fresh data
       await load();
     } catch (e: any) {
-      toast.error(e.message);
+      // Rollback on error
+      setItems(snapshot);
+      showToast("تعذّر التنفيذ — تمت الاستعادة", "error");
+    } finally {
+      setBusy(false);
     }
   }
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case "high":
-        return "destructive";
-      case "medium":
-        return "default";
-      default:
-        return "secondary";
-    }
-  };
-
-  const getPrayerNameAr = (name: string) => {
-    const map: Record<string, string> = {
-      fajr: "الفجر",
-      dhuhr: "الظهر",
-      asr: "العصر",
-      maghrib: "المغرب",
-      isha: "العشاء",
-    };
-    return map[name] || name;
-  };
-
-  if (!user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">يرجى تسجيل الدخول</p>
-      </div>
-    );
-  }
+  const selectedIds = Object.keys(selected).filter(id => selected[id]);
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">تعارضات الصلاة</h1>
-        <Button onClick={load} disabled={loading} variant="outline">
-          {loading ? "جاري التحميل..." : "تحديث"}
-        </Button>
-      </div>
-
-      {loading && conflicts.length === 0 ? (
-        <div className="text-center text-muted-foreground py-12">جاري التحميل...</div>
-      ) : conflicts.length === 0 ? (
-        <Card className="p-12 text-center">
-          <p className="text-lg text-muted-foreground">
-            ✨ لا توجد تعارضات مفتوحة
-          </p>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {conflicts.map((c) => (
-            <Card key={c.id} className="p-6 space-y-4">
-              <div className="flex items-start justify-between">
-                <div className="space-y-2 flex-1">
-                  <div className="flex items-center gap-3">
-                    <h3 className="text-lg font-semibold">{c.event.title}</h3>
-                    <Badge variant={getSeverityColor(c.severity)}>
-                      {c.severity === "high" ? "عالٍ" : c.severity === "medium" ? "متوسط" : "منخفض"}
-                    </Badge>
-                    {c.event.external_source === "google" && (
-                      <Badge variant="outline">Google</Badge>
-                    )}
-                  </div>
-
-                  <div className="text-sm text-muted-foreground space-y-1">
-                    <p>
-                      صلاة <strong>{getPrayerNameAr(c.prayer_name)}</strong> —{" "}
-                      {new Date(c.prayer_time).toLocaleTimeString("ar", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                    <p>
-                      التاريخ: {new Date(c.date_iso).toLocaleDateString("ar")}
-                    </p>
-                    <p>التداخل: {c.overlap_min} دقيقة</p>
-                  </div>
-
-                  {c.suggestion?.explanation && (
-                    <div className="mt-3 p-3 bg-muted rounded-lg">
-                      <p className="text-sm font-medium mb-2">💡 المقترح:</p>
-                      <p className="text-sm text-muted-foreground">
-                        {c.suggestion.explanation}
-                      </p>
-
-                      {c.suggestion.type === "delay_start" && c.suggestion.new_start && (
-                        <p className="text-sm mt-2">
-                          بداية جديدة:{" "}
-                          {new Date(c.suggestion.new_start).toLocaleString("ar")}
-                        </p>
-                      )}
-
-                      {c.suggestion.type === "truncate_end" && c.suggestion.new_end && (
-                        <p className="text-sm mt-2">
-                          نهاية جديدة:{" "}
-                          {new Date(c.suggestion.new_end).toLocaleString("ar")}
-                        </p>
-                      )}
-
-                      {c.suggestion.type === "split" &&
-                        Array.isArray(c.suggestion.parts) && (
-                          <div className="text-sm mt-2 space-y-1">
-                            <p>
-                              الجزء الأول:{" "}
-                              {new Date(c.suggestion.parts[0].new_start).toLocaleTimeString("ar")} -{" "}
-                              {new Date(c.suggestion.parts[0].new_end).toLocaleTimeString("ar")}
-                            </p>
-                            <p>
-                              الجزء الثاني:{" "}
-                              {new Date(c.suggestion.parts[1].new_start).toLocaleTimeString("ar")} -{" "}
-                              {new Date(c.suggestion.parts[1].new_end).toLocaleTimeString("ar")}
-                            </p>
-                          </div>
-                        )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <Button
-                  onClick={() => handleAction(c.id, "accept")}
-                  size="sm"
-                  variant="default"
-                >
-                  قبول المقترح
-                </Button>
-                <Button
-                  onClick={() => handleAction(c.id, "snooze")}
-                  size="sm"
-                  variant="outline"
-                >
-                  تأجيل (30 دقيقة)
-                </Button>
-                <Button
-                  onClick={() => handleAction(c.id, "ignore")}
-                  size="sm"
-                  variant="ghost"
-                >
-                  تجاهل
-                </Button>
-              </div>
-            </Card>
-          ))}
+    <Protected>
+      <div className="p-6 max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              صندوق التعارضات
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">إدارة التعارضات بين الأحداث وأوقات الصلاة</p>
+          </div>
+          
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={cn(
+              "btn-ghost-glow px-4 py-2 rounded-xl flex items-center gap-2",
+              showFilters && "bg-primary/10"
+            )}
+          >
+            <Filter className="w-4 h-4" />
+            فلاتر
+          </button>
         </div>
-      )}
-    </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="card p-4">
+            <div className="text-xs text-muted-foreground mb-1">إجمالي</div>
+            <div className="text-2xl font-bold">{stats.total}</div>
+          </div>
+          <div className="card p-4 border-warning/30">
+            <div className="text-xs text-muted-foreground mb-1">مفتوحة</div>
+            <div className="text-2xl font-bold text-warning">{stats.open}</div>
+          </div>
+          <div className="card p-4 border-success/30">
+            <div className="text-xs text-muted-foreground mb-1">محلولة</div>
+            <div className="text-2xl font-bold text-success">{stats.resolved}</div>
+          </div>
+          <div className="card p-4 border-destructive/30">
+            <div className="text-xs text-muted-foreground mb-1">حرجة</div>
+            <div className="text-2xl font-bold text-destructive">{stats.critical}</div>
+          </div>
+        </div>
+
+        {/* Filters Panel */}
+        {showFilters && (
+          <div className="card-glass p-4 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="text-sm text-muted-foreground mb-2 block">الحالة</label>
+                <select
+                  value={statusFilter}
+                  onChange={e => setStatusFilter(e.target.value as any)}
+                  className="input w-full"
+                >
+                  <option value="all">كل الحالات</option>
+                  <option value="open">مفتوحة</option>
+                  <option value="suggested">مقترحة</option>
+                  <option value="auto_applied">مطبقة تلقائيًا</option>
+                  <option value="resolved">محلولة</option>
+                  <option value="undone">ملغية</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm text-muted-foreground mb-2 block">الخطورة</label>
+                <select
+                  value={severityFilter}
+                  onChange={e => setSeverityFilter(e.target.value)}
+                  className="input w-full"
+                >
+                  <option value="all">كل المستويات</option>
+                  <option value="critical">حرجة</option>
+                  <option value="high">عالية</option>
+                  <option value="medium">متوسطة</option>
+                  <option value="low">منخفضة</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm text-muted-foreground mb-2 block">الصلاة</label>
+                <select
+                  value={prayerFilter}
+                  onChange={e => setPrayerFilter(e.target.value)}
+                  className="input w-full"
+                >
+                  <option value="all">كل الصلوات</option>
+                  <option value="fajr">الفجر</option>
+                  <option value="dhuhr">الظهر</option>
+                  <option value="asr">العصر</option>
+                  <option value="maghrib">المغرب</option>
+                  <option value="isha">العشاء</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setStatusFilter("all");
+                  setSeverityFilter("all");
+                  setPrayerFilter("all");
+                }}
+                className="px-4 py-2 rounded-lg text-sm hover:bg-accent transition-colors"
+              >
+                مسح الفلاتر
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Bulk Actions Bar */}
+        {selectedIds.length > 0 && (
+          <div className="card-glass p-4 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium">{selectedIds.length} محدد</span>
+              <div className="h-4 w-px bg-border" />
+              <button
+                disabled={busy}
+                onClick={() => act("apply", selectedIds)}
+                className="btn-futuristic btn-gradient px-4 py-2 text-sm flex items-center gap-2"
+              >
+                <CheckCircle className="w-4 h-4" />
+                تطبيق
+              </button>
+              <button
+                disabled={busy}
+                onClick={() => act("ignore", selectedIds)}
+                className="btn-ghost-glow px-4 py-2 text-sm flex items-center gap-2"
+              >
+                <XCircle className="w-4 h-4" />
+                تجاهل
+              </button>
+              <button
+                disabled={busy}
+                onClick={() => act("undo", selectedIds)}
+                className="btn-ghost-glow px-4 py-2 text-sm flex items-center gap-2"
+              >
+                <RotateCcw className="w-4 h-4" />
+                تراجع
+              </button>
+            </div>
+            <button
+              onClick={() => setSelected({})}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              إلغاء التحديد
+            </button>
+          </div>
+        )}
+
+        {/* Select All Checkbox */}
+        {visible.length > 0 && (
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={allSelected}
+              onChange={toggleAll}
+              className="w-4 h-4 rounded border-input"
+            />
+            تحديد الكل
+          </label>
+        )}
+
+        {/* Conflicts List */}
+        {loading ? (
+          <div className="card-glass p-12 text-center">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+            <p className="mt-4 text-sm text-muted-foreground">جار التحميل...</p>
+          </div>
+        ) : visible.length === 0 ? (
+          <div className="card-glass p-12 text-center">
+            <CheckCircle className="w-16 h-16 mx-auto text-success/50" />
+            <p className="mt-4 text-lg font-medium">لا توجد تعارضات</p>
+            <p className="text-sm text-muted-foreground">لا توجد تعارضات مطابقة للفلاتر الحالية</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {visible.map(c => {
+              const ev = c.event_id ? events[c.event_id] : undefined;
+              return (
+                <div
+                  key={c.id}
+                  className={cn(
+                    "card group p-5 flex items-start gap-4 transition-all",
+                    selected[c.id] && "ring-2 ring-primary"
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    checked={!!selected[c.id]}
+                    onChange={e => setSelected(s => ({ ...s, [c.id]: e.target.checked }))}
+                    className="mt-1 w-4 h-4 rounded border-input"
+                  />
+
+                  <div className="flex-1 space-y-3">
+                    {/* Header */}
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={cn(
+                            "px-2 py-0.5 rounded text-xs font-medium",
+                            c.status === "open" && "bg-warning/10 text-warning",
+                            c.status === "suggested" && "bg-info/10 text-info",
+                            c.status === "auto_applied" && "bg-primary/10 text-primary",
+                            c.status === "resolved" && "bg-success/10 text-success",
+                            c.status === "undone" && "bg-muted text-muted-foreground"
+                          )}>
+                            {c.status === "open" ? "مفتوح" :
+                             c.status === "suggested" ? "مقترح" :
+                             c.status === "auto_applied" ? "مطبق تلقائيًا" :
+                             c.status === "resolved" ? "محلول" : "ملغي"}
+                          </span>
+                          
+                          <span className={cn(
+                            "px-2 py-0.5 rounded text-xs font-medium",
+                            c.severity === "critical" && "bg-destructive/10 text-destructive",
+                            c.severity === "high" && "bg-warning/10 text-warning",
+                            c.severity === "medium" && "bg-info/10 text-info",
+                            c.severity === "low" && "bg-muted text-muted-foreground"
+                          )}>
+                            {c.severity === "critical" ? "حرج" :
+                             c.severity === "high" ? "عالي" :
+                             c.severity === "medium" ? "متوسط" : "منخفض"}
+                          </span>
+
+                          <span className="px-2 py-0.5 rounded text-xs bg-primary/10 text-primary font-medium">
+                            🕌 {c.prayer_name}
+                          </span>
+                        </div>
+
+                        <h3 className="font-semibold text-lg">
+                          {ev?.title ?? "—"}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {fmt(ev?.starts_at)} → {fmt(ev?.ends_at)}
+                        </p>
+                      </div>
+
+                      <div className="text-xs text-muted-foreground">
+                        {fmt(c.created_at)}
+                      </div>
+                    </div>
+
+                    {/* Suggestion */}
+                    <div className="rounded-lg bg-muted/50 p-3 text-sm">
+                      <div className="flex items-start gap-2">
+                        <AlertTriangle className="w-4 h-4 text-warning mt-0.5" />
+                        <div>
+                          <span className="font-medium">الاقتراح: </span>
+                          {getSuggestionText(c)}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 pt-2">
+                      {c.status === "open" || c.status === "suggested" ? (
+                        <>
+                          <button
+                            disabled={busy}
+                            onClick={() => act("apply", [c.id])}
+                            className="btn-futuristic btn-gradient px-4 py-2 text-sm"
+                          >
+                            تطبيق
+                          </button>
+                          <button
+                            disabled={busy}
+                            onClick={() => act("ignore", [c.id])}
+                            className="btn-ghost-glow px-4 py-2 text-sm"
+                          >
+                            تجاهل
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            disabled={busy}
+                            onClick={() => act("reopen", [c.id])}
+                            className="btn-ghost-glow px-4 py-2 text-sm"
+                          >
+                            إعادة فتح
+                          </button>
+                          <button
+                            disabled={busy}
+                            onClick={() => act("undo", [c.id])}
+                            className="btn-ghost-glow px-4 py-2 text-sm"
+                          >
+                            تراجع
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Toast */}
+        {toast && (
+          <div className={cn(
+            "fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-xl shadow-lg backdrop-blur-xl z-50",
+            toast.type === "success" && "bg-success/10 border border-success/30 text-success",
+            toast.type === "error" && "bg-destructive/10 border border-destructive/30 text-destructive"
+          )}>
+            {toast.msg}
+          </div>
+        )}
+      </div>
+    </Protected>
   );
 }

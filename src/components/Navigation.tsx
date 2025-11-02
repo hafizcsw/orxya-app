@@ -56,6 +56,7 @@ const Navigation = () => {
     { to: "/calendar", label: "التقويم" },
     { to: "/calendar-simple", label: "تقويم بسيط" },
     { to: "/planner", label: "المخطط الذكي" },
+    { to: "/conflicts", label: "التعارضات" },
     { to: "/settings/external", label: "التكاملات" },
     { to: "/settings/notifications", label: "التنبيهات" },
     { to: "/projects", label: "المشاريع" },

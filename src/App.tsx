@@ -25,6 +25,7 @@ import PlannerChat from "./pages/PlannerChat";
 import OAuthGoogle from "./pages/OAuthGoogle";
 import NotFound from "./pages/NotFound";
 import AdminAutopilot from "./pages/AdminAutopilot";
+import Conflicts from "./pages/Conflicts";
 import { Protected } from "./components/Protected";
 import { useAutopilotNotifications } from "./hooks/useAutopilotNotifications";
 
@@ -50,6 +51,7 @@ function AppContent() {
         <Route path="/settings/external" element={<Protected><SettingsExternal /></Protected>} />
         <Route path="/settings/notifications" element={<Protected><SettingsNotifications /></Protected>} />
         <Route path="/planner" element={<Protected><PlannerChat /></Protected>} />
+        <Route path="/conflicts" element={<Protected><Conflicts /></Protected>} />
         <Route path="/oauth/google" element={<OAuthGoogle />} />
         <Route path="/admin/autopilot" element={<Protected><AdminAutopilot /></Protected>} />
         <Route path="/diagnostics" element={<Protected><Diagnostics /></Protected>} />
