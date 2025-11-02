@@ -97,7 +97,7 @@ serve(async (req) => {
 
     const { data: prof } = await supabase
       .from("profiles")
-      .select("prayer_pre_buffer_min,prayer_post_buffer_min,religion")
+      .select("prayer_buffers,religion")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -108,8 +108,14 @@ serve(async (req) => {
       );
     }
 
-    const pre = Number(prof?.prayer_pre_buffer_min ?? 10);
-    const post = Number(prof?.prayer_post_buffer_min ?? 20);
+    const prayerBuffers = prof?.prayer_buffers || {
+      fajr: { pre: 10, post: 20 },
+      dhuhr: { pre: 10, post: 20 },
+      asr: { pre: 10, post: 20 },
+      maghrib: { pre: 10, post: 20 },
+      isha: { pre: 10, post: 20 },
+      jumuah: { pre: 30, post: 45 }
+    };
 
     const base = new Date();
     const days = [0, 1];
@@ -132,11 +138,16 @@ serve(async (req) => {
         .eq("date_iso", dateISO)
         .maybeSingle();
 
-      const prayersOrder = ["fajr", "dhuhr", "asr", "maghrib", "isha"] as const;
+      // Check if Friday for Jumuah
+      const dayOfWeek = new Date(dateISO).getDay();
+      const prayersOrder = dayOfWeek === 5 
+        ? ["fajr", "jumuah", "asr", "maghrib", "isha"] 
+        : ["fajr", "dhuhr", "asr", "maghrib", "isha"];
       const pMap: Record<string, Date> = {};
 
       for (const name of prayersOrder) {
-        const t = (pt as any)?.[name];
+        const prayerKey = name === "jumuah" ? "dhuhr" : name;
+        const t = (pt as any)?.[prayerKey];
         if (t) {
           const [hh, mm] = String(t).split(":").map((x) => parseInt(x, 10));
           const px = new Date(dateISO + "T00:00:00.000Z");
@@ -161,8 +172,9 @@ serve(async (req) => {
           const pTime = pMap[pname];
           if (!pTime) continue;
 
-          const winStart = addMin(pTime, -pre);
-          const winEnd = addMin(pTime, +post);
+          const buffers = (prayerBuffers as any)[pname] || { pre: 10, post: 20 };
+          const winStart = addMin(pTime, -buffers.pre);
+          const winEnd = addMin(pTime, +buffers.post);
 
           const eStart = new Date(ev.starts_at);
           const eEnd = new Date(ev.ends_at);
@@ -172,7 +184,7 @@ serve(async (req) => {
           if (minutes <= 0) continue;
 
           const sev = severityFromMinutes(minutes);
-          const suggestion = buildSuggestion(ev, pname, pTime, pre, post);
+          const suggestion = buildSuggestion(ev, pname, pTime, buffers.pre, buffers.post);
 
           const row = {
             owner_id: user.id,
@@ -185,10 +197,11 @@ serve(async (req) => {
             object_id: ev.id,
             object_kind: "event",
             overlap_min: minutes,
-            buffer_min: pre + post,
+            buffer_min: buffers.pre + buffers.post,
             severity: sev,
             status: suggestion.type === "none" ? "ignored" : "proposed",
             suggestion: suggestion,
+            resolved_at: null
           };
 
           const { error } = await supabase.from("conflicts").upsert(row, {

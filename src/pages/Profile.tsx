@@ -10,6 +10,9 @@ import ThemeControls from '@/components/ThemeControls';
 import { ensureAISession, getAIConsents, updateAIConsents, computeAIStatus } from '@/lib/ai';
 import { useGoogleAccount } from '@/hooks/useGoogleAccount';
 import CalendarList from '@/components/CalendarList';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Bell, Calendar as CalendarIcon, Clock, ExternalLink, Loader2, LogOut, Moon, Sun } from 'lucide-react';
 
 const tzGuess = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Dubai';
 
@@ -422,6 +425,32 @@ export default function Profile() {
           الحالة الحالية: <strong>{aiConsents ? computeAIStatus(aiConsents as any) : "غير معروف"}</strong> —
           يمكنك إطفاء/تشغيل الكل سريعًا من صفحة المشاريع.
         </div>
+      </div>
+
+      {/* روابط سريعة للإعدادات */}
+      <div className="rounded-2xl border border-border p-6 bg-card space-y-3">
+        <div className="text-sm text-muted-foreground font-medium mb-2">إعدادات متقدمة</div>
+        
+        <Link to="/settings/notifications">
+          <Button variant="outline" className="w-full justify-start">
+            <Bell className="mr-2 h-4 w-4" />
+            إعدادات التنبيهات
+          </Button>
+        </Link>
+        
+        <Link to="/settings/prayer">
+          <Button variant="outline" className="w-full justify-start">
+            <Clock className="mr-2 h-4 w-4" />
+            هوامش مواقيت الصلاة
+          </Button>
+        </Link>
+
+        <Link to="/settings/external">
+          <Button variant="outline" className="w-full justify-start">
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            التكامل مع التقويمات الخارجية
+          </Button>
+        </Link>
       </div>
 
       {/* الحسابات الخارجية */}

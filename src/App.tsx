@@ -22,6 +22,7 @@ import CalendarFull from "./pages/CalendarFull";
 import CalendarSimple from "./pages/CalendarSimple";
 import SettingsExternal from "./pages/SettingsExternal";
 import SettingsNotifications from "./pages/SettingsNotifications";
+import SettingsPrayer from "./pages/SettingsPrayer";
 import PlannerChat from "./pages/PlannerChat";
 import OAuthGoogle from "./pages/OAuthGoogle";
 import NotFound from "./pages/NotFound";
@@ -51,6 +52,7 @@ function AppContent() {
         <Route path="/calendar-simple" element={<Protected><CalendarSimple /></Protected>} />
         <Route path="/settings/external" element={<Protected><SettingsExternal /></Protected>} />
         <Route path="/settings/notifications" element={<Protected><SettingsNotifications /></Protected>} />
+        <Route path="/settings/prayer" element={<Protected><SettingsPrayer /></Protected>} />
         <Route path="/planner" element={<Protected><PlannerChat /></Protected>} />
         <Route path="/conflicts" element={<Protected><Conflicts /></Protected>} />
         <Route path="/oauth/google" element={<OAuthGoogle />} />

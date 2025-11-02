@@ -328,6 +328,7 @@ export type Database = {
           prayer_time: string | null
           requires_consent: boolean | null
           resolution: string | null
+          resolved_at: string | null
           severity: string | null
           snooze_until: string | null
           status: string | null
@@ -360,6 +361,7 @@ export type Database = {
           prayer_time?: string | null
           requires_consent?: boolean | null
           resolution?: string | null
+          resolved_at?: string | null
           severity?: string | null
           snooze_until?: string | null
           status?: string | null
@@ -392,6 +394,7 @@ export type Database = {
           prayer_time?: string | null
           requires_consent?: boolean | null
           resolution?: string | null
+          resolved_at?: string | null
           severity?: string | null
           snooze_until?: string | null
           status?: string | null
@@ -909,6 +912,7 @@ export type Database = {
           latitude: number | null
           location_updated_at: string | null
           longitude: number | null
+          prayer_buffers: Json | null
           prayer_method: string | null
           prayer_post_buffer_min: number | null
           prayer_pre_buffer_min: number | null
@@ -938,6 +942,7 @@ export type Database = {
           latitude?: number | null
           location_updated_at?: string | null
           longitude?: number | null
+          prayer_buffers?: Json | null
           prayer_method?: string | null
           prayer_post_buffer_min?: number | null
           prayer_pre_buffer_min?: number | null
@@ -967,6 +972,7 @@ export type Database = {
           latitude?: number | null
           location_updated_at?: string | null
           longitude?: number | null
+          prayer_buffers?: Json | null
           prayer_method?: string | null
           prayer_post_buffer_min?: number | null
           prayer_pre_buffer_min?: number | null
