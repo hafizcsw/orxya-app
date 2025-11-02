@@ -281,45 +281,15 @@ const Today = () => {
       <div className="min-h-screen bg-background pb-24">
         <AIDock />
         
-        {/* Sticky Header - Period Selection & Date */}
+        {/* Sticky Header - Period Selection Only */}
         <div className={cn(
           "sticky top-14 z-30 bg-background/95 backdrop-blur-xl border-b border-border transition-all duration-300 px-6 py-3",
           isScrolled && "shadow-lg bg-background/98"
         )}>
-          <div className="max-w-7xl mx-auto">
-            {/* Date Selector */}
-            <div className="mb-3 flex items-center justify-center gap-3">
-              <button
-                onClick={() => {
-                  const newDate = new Date(selectedDate);
-                  newDate.setDate(newDate.getDate() - 1);
-                  setSelectedDate(newDate.toISOString().slice(0, 10));
-                }}
-                className="w-8 h-8 rounded-full bg-secondary hover:bg-secondary/80 flex items-center justify-center"
-              >
-                ←
-              </button>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="input text-center"
-              />
-              <button
-                onClick={() => {
-                  const newDate = new Date(selectedDate);
-                  newDate.setDate(newDate.getDate() + 1);
-                  setSelectedDate(newDate.toISOString().slice(0, 10));
-                }}
-                className="w-8 h-8 rounded-full bg-secondary hover:bg-secondary/80 flex items-center justify-center"
-              >
-                →
-              </button>
-            </div>
-            
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
             {/* Period Selection */}
             <div className={cn(
-              "flex gap-2 mx-auto justify-center transition-all duration-300",
+              "flex gap-2 mx-auto transition-all duration-300",
               isScrolled && "opacity-0 translate-y-[-20px] pointer-events-none"
             )}>
               <button
