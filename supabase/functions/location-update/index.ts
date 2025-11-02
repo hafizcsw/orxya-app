@@ -74,7 +74,7 @@ serve(async (req) => {
       .update({
         latitude,
         longitude,
-        last_location_update: new Date().toISOString()
+        location_updated_at: new Date().toISOString()
       })
       .eq('id', user.id);
 
