@@ -29,9 +29,9 @@ startLocationTracking(15); // Capture location every 15 minutes on native
   if (!Cap?.isNativePlatform?.()) {
     document.addEventListener("visibilitychange", async () => {
       if (document.visibilityState === "visible") {
-        // Check if auto-check is enabled
+        // Check if auto-check is enabled (enabled by default)
         const autoCheck = localStorage.getItem("conflict_auto_check");
-        if (autoCheck !== "enabled") return;
+        if (autoCheck === "disabled") return;
         
         setTimeout(async () => {
           try {
