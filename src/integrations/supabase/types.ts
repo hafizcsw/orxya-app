@@ -250,6 +250,13 @@ export type Database = {
             foreignKeyName: "conflicts_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: false
+            referencedRelation: "vw_events_conflicts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conflicts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
             referencedRelation: "vw_events_with_conflicts"
             referencedColumns: ["id"]
           },
@@ -721,6 +728,13 @@ export type Database = {
             foreignKeyName: "tasks_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: false
+            referencedRelation: "vw_events_conflicts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
             referencedRelation: "vw_events_with_conflicts"
             referencedColumns: ["id"]
           },
@@ -749,6 +763,23 @@ export type Database = {
       }
     }
     Views: {
+      vw_events_conflicts: {
+        Row: {
+          conflict_open_count: number | null
+          conflict_prayers: string[] | null
+          created_at: string | null
+          description: string | null
+          ends_at: string | null
+          id: string | null
+          owner_id: string | null
+          source_id: string | null
+          starts_at: string | null
+          tags: string[] | null
+          title: string | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
       vw_events_with_conflicts: {
         Row: {
           conflict_level: number | null
