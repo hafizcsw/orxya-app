@@ -660,6 +660,27 @@ export type Database = {
         }
         Relationships: []
       }
+      oauth_states: {
+        Row: {
+          code_verifier: string
+          created_at: string
+          owner_id: string
+          state: string
+        }
+        Insert: {
+          code_verifier: string
+          created_at?: string
+          owner_id: string
+          state: string
+        }
+        Update: {
+          code_verifier?: string
+          created_at?: string
+          owner_id?: string
+          state?: string
+        }
+        Relationships: []
+      }
       prayer_times: {
         Row: {
           asr: string | null
