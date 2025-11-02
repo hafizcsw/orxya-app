@@ -71,7 +71,7 @@ const Today = () => {
     }
   }, [user?.id])
 
-  async function updateField(field: string, value: any, increment: boolean = false) {
+  async function updateField(field: string, value: any) {
     if (!user) return
     const today = new Date().toISOString().slice(0, 10)
     
@@ -147,11 +147,6 @@ const Today = () => {
     }
   }
 
-  function incrementValue(field: string, currentValue: number, step: number) {
-    const newValue = Math.max(0, currentValue + step)
-    setEditValue(newValue)
-  }
-
   async function sendCommand(command: 'add_daily_log' | 'add_finance' | 'add_sale', payload: any) {
     try {
       // Validate based on command type
@@ -215,40 +210,22 @@ const Today = () => {
           
           {isEditing ? (
             <div className="space-y-2">
-              <div className="flex gap-2 items-center">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => incrementValue(field, Number(editValue), -step)}
-                  className="h-10 w-10 p-0"
-                >
-                  -
-                </Button>
-                <input
-                  type="number"
-                  step={step}
-                  min="0"
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  className="input flex-1 text-2xl font-bold text-center"
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      updateField(field, editValue)
-                    } else if (e.key === 'Escape') {
-                      setEditingField(null)
-                    }
-                  }}
-                />
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => incrementValue(field, Number(editValue), step)}
-                  className="h-10 w-10 p-0"
-                >
-                  +
-                </Button>
-              </div>
+              <input
+                type="number"
+                step={step}
+                min="0"
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                className="input w-full text-2xl font-bold"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    updateField(field, editValue)
+                  } else if (e.key === 'Escape') {
+                    setEditingField(null)
+                  }
+                }}
+              />
               <div className="flex gap-2">
                 <Button
                   size="sm"
