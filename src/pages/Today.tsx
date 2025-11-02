@@ -361,9 +361,6 @@ const Today = () => {
           ) : report ? (
             <>
               {/* Financial Rings - Hero Section */}
-              <div className="text-center mb-4">
-                <h2 className="text-2xl font-bold">WHOOP</h2>
-              </div>
               
               <div className="grid grid-cols-3 gap-1 mb-8">
                 <div className="flex flex-col items-center scale-75 md:scale-100">
@@ -400,15 +397,6 @@ const Today = () => {
                 </div>
               </div>
 
-              {/* Missing Data Card - WHOOP Style */}
-              <OryxaCard className="mb-8 bg-card/50">
-                <div className="space-y-2">
-                  <h3 className="font-semibold">البيانات المفقودة</h3>
-                  <p className="text-sm text-muted-foreground">
-                    لم يتم تحديث بياناتك منذ {Math.floor(Math.random() * 4) + 1} أيام. تذكر تحديث بياناتك للحصول على رؤى شخصية كاملة!
-                  </p>
-                </div>
-              </OryxaCard>
 
               {/* Stats Cards */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
