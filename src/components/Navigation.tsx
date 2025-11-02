@@ -54,6 +54,8 @@ const Navigation = () => {
   const links = [
     { to: "/", label: "اليوم" },
     { to: "/calendar", label: "التقويم" },
+    { to: "/calendar-view", label: "تقويم ذكي" },
+    { to: "/inbox", label: "الإشعارات" },
     { to: "/calendar-simple", label: "تقويم بسيط" },
     { to: "/planner", label: "المخطط الذكي" },
     { to: "/conflicts", label: "التعارضات" },

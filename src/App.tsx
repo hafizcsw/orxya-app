@@ -20,6 +20,8 @@ import Assistant from "./pages/Assistant";
 import Calendar from "./pages/Calendar";
 import CalendarFull from "./pages/CalendarFull";
 import CalendarSimple from "./pages/CalendarSimple";
+import CalendarView from "./pages/CalendarView";
+import Inbox from "./pages/Inbox";
 import SettingsExternal from "./pages/SettingsExternal";
 import SettingsNotifications from "./pages/SettingsNotifications";
 import SettingsPrayer from "./pages/SettingsPrayer";
@@ -48,6 +50,8 @@ function AppContent() {
         <Route path="/ai" element={<AI />} />
         <Route path="/assistant" element={<Protected><Assistant /></Protected>} />
         <Route path="/calendar" element={<Protected><Calendar /></Protected>} />
+        <Route path="/calendar-view" element={<Protected><CalendarView /></Protected>} />
+        <Route path="/inbox" element={<Protected><Inbox /></Protected>} />
         <Route path="/calendar-full" element={<Protected><CalendarFull /></Protected>} />
         <Route path="/calendar-simple" element={<Protected><CalendarSimple /></Protected>} />
         <Route path="/settings/external" element={<Protected><SettingsExternal /></Protected>} />

@@ -10,6 +10,7 @@ import { getDeviceLocation } from '@/native/geo'
 import { syncPrayers, schedulePrayersFor } from '@/native/prayer'
 import { orchestrate, grantScopes } from '@/lib/ai'
 import { throttle } from '@/lib/throttle'
+import { OrchestratorPanel } from '@/components/OrchestratorPanel'
 
 const Automation = () => {
   const { user } = useUser()
@@ -197,6 +198,9 @@ const Automation = () => {
           {aiReply && <span className="text-sm text-muted-foreground">ردّ المساعد: {aiReply}</span>}
         </div>
       </div>
+
+      {/* Orchestrator Panel */}
+      <OrchestratorPanel />
 
       {consentAsk && (
         <div className="border rounded-xl p-4 space-y-3 bg-background">

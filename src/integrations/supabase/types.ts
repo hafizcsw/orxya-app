@@ -446,6 +446,7 @@ export type Database = {
           applied_event_patch: Json | null
           buffer_min: number | null
           confidence: number | null
+          conflict_date: string | null
           created_at: string | null
           date_iso: string
           decided_action: string | null
@@ -467,6 +468,7 @@ export type Database = {
           resolution: string | null
           resolved_at: string | null
           severity: Database["public"]["Enums"]["conflict_severity"] | null
+          slot_name: string | null
           snooze_until: string | null
           status: string | null
           suggested_action: string | null
@@ -480,6 +482,7 @@ export type Database = {
           applied_event_patch?: Json | null
           buffer_min?: number | null
           confidence?: number | null
+          conflict_date?: string | null
           created_at?: string | null
           date_iso: string
           decided_action?: string | null
@@ -501,6 +504,7 @@ export type Database = {
           resolution?: string | null
           resolved_at?: string | null
           severity?: Database["public"]["Enums"]["conflict_severity"] | null
+          slot_name?: string | null
           snooze_until?: string | null
           status?: string | null
           suggested_action?: string | null
@@ -514,6 +518,7 @@ export type Database = {
           applied_event_patch?: Json | null
           buffer_min?: number | null
           confidence?: number | null
+          conflict_date?: string | null
           created_at?: string | null
           date_iso?: string
           decided_action?: string | null
@@ -535,6 +540,7 @@ export type Database = {
           resolution?: string | null
           resolved_at?: string | null
           severity?: Database["public"]["Enums"]["conflict_severity"] | null
+          slot_name?: string | null
           snooze_until?: string | null
           status?: string | null
           suggested_action?: string | null
@@ -612,9 +618,11 @@ export type Database = {
       }
       events: {
         Row: {
+          ai_confidence: number | null
           all_day: boolean | null
           color: string | null
           created_at: string | null
+          deleted_at: string | null
           description: string | null
           duration_min: number | null
           ends_at: string
@@ -629,6 +637,7 @@ export type Database = {
           google_event_id: string | null
           id: string
           is_ai_created: boolean | null
+          is_all_day: boolean | null
           last_error: string | null
           last_google_sync_at: string | null
           last_push_at: string | null
@@ -639,6 +648,7 @@ export type Database = {
           location_lon: number | null
           next_retry_at: string | null
           notes: string | null
+          notify_channel: string[] | null
           owner_id: string
           pending_push: boolean
           retry_count: number
@@ -653,9 +663,11 @@ export type Database = {
           version: number
         }
         Insert: {
+          ai_confidence?: number | null
           all_day?: boolean | null
           color?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           description?: string | null
           duration_min?: number | null
           ends_at: string
@@ -670,6 +682,7 @@ export type Database = {
           google_event_id?: string | null
           id?: string
           is_ai_created?: boolean | null
+          is_all_day?: boolean | null
           last_error?: string | null
           last_google_sync_at?: string | null
           last_push_at?: string | null
@@ -680,6 +693,7 @@ export type Database = {
           location_lon?: number | null
           next_retry_at?: string | null
           notes?: string | null
+          notify_channel?: string[] | null
           owner_id: string
           pending_push?: boolean
           retry_count?: number
@@ -694,9 +708,11 @@ export type Database = {
           version?: number
         }
         Update: {
+          ai_confidence?: number | null
           all_day?: boolean | null
           color?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           description?: string | null
           duration_min?: number | null
           ends_at?: string
@@ -711,6 +727,7 @@ export type Database = {
           google_event_id?: string | null
           id?: string
           is_ai_created?: boolean | null
+          is_all_day?: boolean | null
           last_error?: string | null
           last_google_sync_at?: string | null
           last_push_at?: string | null
@@ -721,6 +738,7 @@ export type Database = {
           location_lon?: number | null
           next_retry_at?: string | null
           notes?: string | null
+          notify_channel?: string[] | null
           owner_id?: string
           pending_push?: boolean
           retry_count?: number
@@ -1589,6 +1607,10 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      fn_refresh_conflicts_for_date: {
+        Args: { p_date: string; p_owner: string }
+        Returns: undefined
       }
       has_role: {
         Args: {
