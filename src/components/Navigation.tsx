@@ -132,66 +132,8 @@ const Navigation = () => {
             </div>
           )}
 
-          {/* Mobile Menu Button */}
-          {isMobile && (
-            <button 
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 hover:bg-accent rounded-lg transition-colors"
-            >
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
-          )}
         </div>
 
-        {/* Mobile Menu */}
-        {isMobile && mobileMenuOpen && (
-          <div className="border-t bg-background/95 backdrop-blur-xl">
-            <div className="container mx-auto px-4 py-4 space-y-2">
-              {links.map((link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={cn(
-                    "block px-4 py-3 rounded-lg transition-colors",
-                    location.pathname === link.to
-                      ? "bg-primary text-primary-foreground font-medium"
-                      : "text-muted-foreground hover:bg-accent"
-                  )}
-                >
-                  {link.label}
-                </Link>
-              ))}
-              
-              <div className="pt-2 border-t mt-2">
-                {user ? (
-                  <div className="space-y-2">
-                    <div className="text-sm text-muted-foreground px-4 py-2">
-                      {user.email}
-                    </div>
-                    <button 
-                      className="w-full px-4 py-3 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors text-sm" 
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        handleSignOut();
-                      }}
-                    >
-                      خروج
-                    </button>
-                  </div>
-                ) : (
-                  <Link
-                    to="/auth"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block w-full px-4 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm text-center" 
-                  >
-                    دخول
-                  </Link>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </nav>
       
       <AuthSheet open={authOpen} onClose={() => setAuthOpen(false)} />
