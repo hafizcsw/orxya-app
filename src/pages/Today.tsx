@@ -277,27 +277,15 @@ const Today = () => {
       <div className="min-h-screen bg-background pb-24">
         <AIDock />
         
-        {/* Sticky Header - WHOOP Style */}
+        {/* Sticky Header - Period Selection Only */}
         <div className={cn(
-          "sticky top-16 z-30 bg-background/95 backdrop-blur-xl border-b border-border transition-all duration-300 px-6 py-4",
+          "sticky top-14 z-30 bg-background/95 backdrop-blur-xl border-b border-border transition-all duration-300 px-6 py-3",
           isScrolled && "shadow-lg bg-background/98"
         )}>
           <div className="max-w-7xl mx-auto flex items-center justify-between">
-            {/* Date Navigation */}
+            {/* Period Selection */}
             <div className={cn(
-              "flex items-center gap-2 transition-all duration-300",
-              isScrolled && "opacity-0 translate-y-[-20px] pointer-events-none"
-            )}>
-              <div className="text-center">
-                <div className="text-xs text-muted-foreground">التقرير</div>
-                <div className="text-sm font-semibold">
-                  {period === 'daily' ? 'يومي' : period === 'weekly' ? 'أسبوعي' : period === 'monthly' ? 'شهري' : 'سنوي'}
-                </div>
-              </div>
-            </div>
-
-            <div className={cn(
-              "flex gap-2 transition-all duration-300",
+              "flex gap-2 mx-auto transition-all duration-300",
               isScrolled && "opacity-0 translate-y-[-20px] pointer-events-none"
             )}>
               <button
@@ -343,39 +331,6 @@ const Today = () => {
                 )}
               >
                 <span className="text-xs font-bold">Y</span>
-              </button>
-            </div>
-
-            {/* Right side: Calendar + Notification */}
-            <div className={cn(
-              "flex items-center gap-2 transition-all duration-300",
-              isScrolled && "opacity-0 translate-y-[-20px] pointer-events-none"
-            )}>
-              <button
-                onClick={() => navigate('/calendar')}
-                className="w-10 h-10 rounded-full bg-secondary hover:bg-secondary/80 flex items-center justify-center transition-all"
-              >
-                <Calendar className="w-5 h-5" />
-              </button>
-              
-              <button
-                onClick={async () => {
-                  await ensureNotificationPerms();
-                  const now = new Date(); 
-                  now.setMinutes(now.getMinutes() + 1);
-                  await LocalNotifications.schedule({
-                    notifications: [{
-                      id: 999001,
-                      title: 'اختبار Oryxa',
-                      body: 'إشعار بعد دقيقة',
-                      schedule: { at: now }
-                    }]
-                  });
-                  setToast('تم جدولة إشعار اختبار ⏰');
-                }}
-                className="w-10 h-10 rounded-full bg-secondary hover:bg-secondary/80 flex items-center justify-center transition-all"
-              >
-                <Bell className="w-5 h-5" />
               </button>
             </div>
           </div>

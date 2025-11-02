@@ -93,58 +93,56 @@ const Navigation = () => {
 
   return (
     <>
-      <nav className="border-b bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 shadow-sm transition-all duration-300">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+      <nav className="border-b bg-background/95 backdrop-blur-xl sticky top-0 z-50 shadow-sm">
+        <div className="max-w-7xl mx-auto flex h-14 items-center justify-between px-4">
           {/* Left: Avatar */}
-          <div className="flex items-center">
+          <div className="flex items-center w-12">
             {user && (
               <div className="relative">
                 <button
                   onClick={() => navigate('/profile')}
-                  className="w-11 h-11 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white font-semibold shadow-lg hover:scale-110 transition-all duration-300 border-2 border-primary/30"
+                  className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white font-semibold shadow-lg hover:scale-110 transition-all duration-300 border-2 border-primary/30"
                   style={{
-                    boxShadow: "0 0 20px hsl(var(--primary) / 0.3)",
+                    boxShadow: "0 0 15px hsl(var(--primary) / 0.3)",
                   }}
-                  title="الملف الشخصي"
                 >
                   {user?.email?.[0]?.toUpperCase() || <User className="w-5 h-5" />}
                 </button>
-                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
+                <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-background" />
               </div>
             )}
           </div>
 
           {/* Center: Calendar Navigation */}
-          <div className="flex items-center gap-1 md:gap-2">
+          <div className="flex items-center gap-2">
             <button
               onClick={goToPreviousDay}
-              className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-secondary/50 hover:bg-secondary flex items-center justify-center transition-all hover:scale-110 duration-300"
+              className="w-8 h-8 rounded-lg bg-secondary/60 hover:bg-secondary/80 flex items-center justify-center transition-all"
             >
-              <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
+              <ChevronRight className="w-4 h-4" />
             </button>
             
-            <button
-              onClick={() => navigate('/calendar')}
-              className="px-4 md:px-6 py-2 md:py-2.5 rounded-full bg-secondary/80 hover:bg-secondary transition-all min-w-[80px] md:min-w-[100px]"
-            >
-              <span className="font-bold text-xs md:text-sm tracking-wider">{formatDate(currentDate)}</span>
-            </button>
+            <div className="px-5 py-1.5 rounded-lg bg-secondary/60">
+              <span className="font-bold text-sm tracking-wide">{formatDate(currentDate)}</span>
+            </div>
             
             <button
               onClick={goToNextDay}
-              className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-secondary/50 hover:bg-secondary flex items-center justify-center transition-all hover:scale-110 duration-300"
+              className="w-8 h-8 rounded-lg bg-secondary/60 hover:bg-secondary/80 flex items-center justify-center transition-all"
             >
-              <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
+              <ChevronLeft className="w-4 h-4" />
             </button>
           </div>
 
           {/* Right: Logo */}
-          <Link
-            to="/"
-            className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary via-primary to-primary/80 bg-clip-text text-transparent hover:scale-105 transition-transform cursor-pointer"
-          >
-            Oryxa
-          </Link>
+          <div className="flex items-center justify-end w-12">
+            <Link
+              to="/"
+              className="text-lg font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent"
+            >
+              Oryxa
+            </Link>
+          </div>
         </div>
       </nav>
       
