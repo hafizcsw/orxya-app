@@ -72,9 +72,26 @@ All colors MUST be HSL.
     --sidebar-border: 210 16% 90%;
     --sidebar-ring: var(--accent-hsl);
     
+    /* Futuristic Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--accent-hsl)) 0%, hsl(199 89% 38%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(var(--success-hsl)) 0%, hsl(142 76% 26%) 100%);
+    --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(var(--accent-hsl) / 0.08) 0%, transparent 50%, hsl(var(--success-hsl) / 0.05) 100%);
+    
+    /* Status Colors */
+    --info: 210 100% 56%;
+    --info-foreground: 0 0% 100%;
+    
+    /* Glass Effect */
+    --glass-bg: rgba(255, 255, 255, 0.65);
+    --glass-border: rgba(255, 255, 255, 0.18);
+    --glass-blur: 20px;
+    
     /* Button shadows */
     --btn-shadow: 0 4px 14px -2px hsla(var(--accent-hsl) / 0.25);
-    --btn-shadow-hover: 0 6px 20px -4px hsla(var(--accent-hsl) / 0.35);
+    --btn-shadow-hover: 0 8px 24px -4px hsla(var(--accent-hsl) / 0.35);
+    --btn-glow: 0 0 30px hsla(var(--accent-hsl) / 0);
+    --btn-glow-hover: 0 0 35px hsla(var(--accent-hsl) / 0.3);
   }
 
   [data-theme="dark"] {
@@ -90,7 +107,7 @@ All colors MUST be HSL.
 
     --background: var(--bg);
     --foreground: var(--fg);
-    --card: 222 47% 11%;
+    --card: 222 47% 13%;
     --card-foreground: 210 40% 98%;
     --popover: 222 47% 11%;
     --popover-foreground: 210 40% 98%;
@@ -113,9 +130,16 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 217 33% 18%;
     
+    /* Glass effect for dark mode */
+    --glass-bg: rgba(0, 0, 0, 0.35);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-blur: 24px;
+    
     /* Button shadows for dark mode */
-    --btn-shadow: 0 4px 14px -2px hsla(var(--accent-hsl) / 0.4);
-    --btn-shadow-hover: 0 6px 20px -4px hsla(var(--accent-hsl) / 0.5);
+    --btn-shadow: 0 4px 14px -2px hsla(var(--accent-hsl) / 0.5);
+    --btn-shadow-hover: 0 8px 24px -4px hsla(var(--accent-hsl) / 0.6);
+    --btn-glow: 0 0 30px hsla(var(--accent-hsl) / 0);
+    --btn-glow-hover: 0 0 40px hsla(var(--accent-hsl) / 0.4);
   }
 }
 
@@ -172,16 +196,115 @@ textarea {
 
 /* Elevation tokens */
 :root {
-  --elev-1: 0 1px 2px rgba(0,0,0,.06), 0 1px 1px rgba(0,0,0,.04);
-  --elev-2: 0 3px 8px rgba(0,0,0,.10), 0 1px 1px rgba(0,0,0,.06);
+  --elev-1: 0 4px 24px -2px rgba(0,0,0,.06), 0 2px 8px -2px rgba(0,0,0,.04);
+  --elev-2: 0 12px 32px -4px rgba(0,0,0,.12), 0 4px 16px -4px rgba(0,0,0,.08);
+  --elev-3: 0 20px 48px -8px rgba(0,0,0,.16), 0 8px 24px -6px rgba(0,0,0,.1);
   --ring-focus: 0 0 0 3px color-mix(in oklab, hsl(var(--accent-hsl)) 40%, transparent);
 }
 
+/* Futuristic Card System */
 .card {
-  box-shadow: var(--elev-1);
-  border-radius: 1rem;
+  position: relative;
+  background: hsl(var(--card));
+  border-radius: 1.5rem;
+  border: 1px solid hsl(var(--border) / 0.4);
+  box-shadow: var(--elev-1), inset 0 1px 0 rgba(255,255,255,0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
 }
-.card:hover { box-shadow: var(--elev-2); }
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.3), transparent 50%, hsl(var(--primary) / 0.2));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--elev-2), 0 4px 16px -4px hsl(var(--primary) / 0.15), inset 0 1px 0 rgba(255,255,255,0.15);
+  border-color: hsl(var(--primary) / 0.3);
+}
+
+.card:hover::before {
+  opacity: 1;
+}
+
+/* Glass Card Variant */
+.card-glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+  border-radius: 1.5rem;
+}
+
+/* Futuristic Button System */
+.btn-futuristic {
+  position: relative;
+  padding: 0.75rem 1.5rem;
+  border-radius: 1rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--btn-shadow), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.btn-futuristic::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.btn-futuristic:hover::before {
+  left: 100%;
+}
+
+.btn-futuristic:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: var(--btn-shadow-hover), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+.btn-futuristic:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Gradient Button */
+.btn-gradient {
+  background: var(--gradient-primary);
+  border: none;
+  color: white;
+}
+
+/* Ghost Button with Glow */
+.btn-ghost-glow {
+  background: transparent;
+  border: 1.5px solid hsl(var(--primary) / 0.5);
+  color: hsl(var(--primary));
+  box-shadow: var(--btn-glow);
+  transition: all 0.3s ease;
+}
+
+.btn-ghost-glow:hover {
+  box-shadow: var(--btn-glow-hover);
+  border-color: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.05);
+}
 
 .btn:focus-visible,
 [role="button"]:focus-visible,

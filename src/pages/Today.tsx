@@ -54,11 +54,26 @@ const Today = () => {
       <div className="p-4 space-y-6 max-w-6xl mx-auto">
         <SessionBanner />
 
-        <section className="space-y-2">
+        {/* Hero Section */}
+        <div className="relative overflow-hidden rounded-3xl p-8 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20">
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary rounded-full blur-3xl" />
+            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-success rounded-full blur-3xl" />
+          </div>
+          
+          <div className="relative z-10">
+            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              مرحبًا بك في Oryxa
+            </h1>
+            <p className="text-muted-foreground">ابدأ يومك بإنتاجية عالية</p>
+          </div>
+        </div>
+
+        <section className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">التقرير اليومي</h2>
             <button 
-              className="px-3 py-1 text-sm rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors" 
+              className="btn-ghost-glow px-4 py-2 rounded-xl text-sm"
               onClick={async () => {
                 await ensureNotificationPerms();
                 const now = new Date(); 
@@ -77,26 +92,64 @@ const Today = () => {
               اختبار إشعار
             </button>
           </div>
-          <div className="p-4 rounded-2xl border bg-card">
-            {loading ? 'جار التحميل…' : report ? (
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
-                <div>التاريخ: <b>{report.date}</b></div>
-                <div>الدخل: <b className="text-green-600">${report.income_usd}</b></div>
-                <div>المصروف: <b className="text-red-600">${report.spend_usd}</b></div>
-                <div>الصافي: <b>{report.net_usd >= 0 ? '✅' : '⚠️'} ${report.net_usd}</b></div>
-                <div>دراسة: <b>{report.study_hours}س</b></div>
-                <div>MMA: <b>{report.mma_hours}س</b></div>
-                <div>عمل: <b>{report.work_hours}س</b></div>
-                <div>المشي: <b>{report.walk_min}د</b></div>
-                <div>منح: <b>{report.scholarships_sold}</b></div>
-                <div>فلل: <b>{report.villas_sold}</b></div>
+          
+          {loading ? (
+            <div className="card-glass p-6 text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <p className="mt-2 text-sm text-muted-foreground">جار التحميل…</p>
+            </div>
+          ) : report ? (
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="card group p-4">
+                <div className="text-xs text-muted-foreground mb-1">التاريخ</div>
+                <div className="text-lg font-bold">{report.date}</div>
               </div>
-            ) : 'لا توجد بيانات لليوم.'}
-          </div>
+              <div className="card group p-4 border-success/30">
+                <div className="text-xs text-muted-foreground mb-1">الدخل</div>
+                <div className="text-lg font-bold text-success">${report.income_usd}</div>
+              </div>
+              <div className="card group p-4 border-destructive/30">
+                <div className="text-xs text-muted-foreground mb-1">المصروف</div>
+                <div className="text-lg font-bold text-destructive">${report.spend_usd}</div>
+              </div>
+              <div className="card group p-4 border-primary/30">
+                <div className="text-xs text-muted-foreground mb-1">الصافي</div>
+                <div className="text-lg font-bold">{report.net_usd >= 0 ? '✅' : '⚠️'} ${report.net_usd}</div>
+              </div>
+              <div className="card group p-4">
+                <div className="text-xs text-muted-foreground mb-1">دراسة</div>
+                <div className="text-lg font-bold">{report.study_hours}س</div>
+              </div>
+              <div className="card group p-4">
+                <div className="text-xs text-muted-foreground mb-1">MMA</div>
+                <div className="text-lg font-bold">{report.mma_hours}س</div>
+              </div>
+              <div className="card group p-4">
+                <div className="text-xs text-muted-foreground mb-1">عمل</div>
+                <div className="text-lg font-bold">{report.work_hours}س</div>
+              </div>
+              <div className="card group p-4">
+                <div className="text-xs text-muted-foreground mb-1">المشي</div>
+                <div className="text-lg font-bold">{report.walk_min}د</div>
+              </div>
+              <div className="card group p-4">
+                <div className="text-xs text-muted-foreground mb-1">منح</div>
+                <div className="text-lg font-bold">{report.scholarships_sold}</div>
+              </div>
+              <div className="card group p-4">
+                <div className="text-xs text-muted-foreground mb-1">فلل</div>
+                <div className="text-lg font-bold">{report.villas_sold}</div>
+              </div>
+            </div>
+          ) : (
+            <div className="card-glass p-8 text-center">
+              <p className="text-muted-foreground">لا توجد بيانات لليوم</p>
+            </div>
+          )}
         </section>
 
-        <section className="space-y-3">
-          <h3 className="font-semibold">إجراءات سريعة</h3>
+        <section className="space-y-4">
+          <h3 className="font-semibold text-lg">إجراءات سريعة</h3>
           <div className="grid md:grid-cols-3 gap-4">
             {/* Daily Log */}
             <form onSubmit={(e: any) => {
@@ -112,14 +165,19 @@ const Today = () => {
               })
               e.currentTarget.reset()
             }}>
-              <div className="p-4 border rounded-2xl bg-white space-y-2">
-                <div className="font-medium">سجل اليوم</div>
+              <div className="card p-6 space-y-3">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-lg">📝</span>
+                  </div>
+                  <div className="font-semibold">سجل اليوم</div>
+                </div>
                 <input name="work_hours" placeholder="ساعات العمل" className="input" type="number" step="0.5" />
                 <input name="study_hours" placeholder="ساعات الدراسة" className="input" type="number" step="0.5" />
                 <input name="mma_hours" placeholder="ساعات MMA" className="input" type="number" step="0.5" />
                 <input name="walk_min" placeholder="دقائق المشي" className="input" type="number" step="1" />
                 <input name="notes" placeholder="ملاحظات" className="input" />
-                <button className="btn">حفظ</button>
+                <button className="btn btn-futuristic btn-gradient w-full">حفظ</button>
               </div>
             </form>
 
@@ -136,8 +194,13 @@ const Today = () => {
               })
               e.currentTarget.reset()
             }}>
-              <div className="p-4 border rounded-2xl bg-white space-y-2">
-                <div className="font-medium">مالية</div>
+              <div className="card p-6 space-y-3">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
+                    <span className="text-lg">💰</span>
+                  </div>
+                  <div className="font-semibold">مالية</div>
+                </div>
                 <select name="type" className="input">
                   <option value="income">دخل</option>
                   <option value="spend">مصروف</option>
@@ -145,7 +208,7 @@ const Today = () => {
                 <input name="amount_usd" placeholder="المبلغ USD" className="input" type="number" step="0.01" />
                 <input name="category" placeholder="تصنيف" className="input" />
                 <input name="note" placeholder="ملاحظة" className="input" />
-                <button className="btn">حفظ</button>
+                <button className="btn btn-futuristic btn-gradient w-full">حفظ</button>
               </div>
             </form>
 
@@ -163,8 +226,13 @@ const Today = () => {
               })
               e.currentTarget.reset()
             }}>
-              <div className="p-4 border rounded-2xl bg-white space-y-2">
-                <div className="font-medium">بيع</div>
+              <div className="card p-6 space-y-3">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center">
+                    <span className="text-lg">🏆</span>
+                  </div>
+                  <div className="font-semibold">بيع</div>
+                </div>
                 <select name="stype" className="input">
                   <option value="scholarship">منحة</option>
                   <option value="villa">فيلا</option>
@@ -174,7 +242,7 @@ const Today = () => {
                 <input name="qty" placeholder="الكمية" className="input" type="number" min="1" />
                 <input name="price_usd" placeholder="السعر USD" className="input" type="number" step="0.01" />
                 <input name="profit_usd" placeholder="الربح USD" className="input" type="number" step="0.01" />
-                <button className="btn">حفظ</button>
+                <button className="btn btn-futuristic btn-gradient w-full">حفظ</button>
               </div>
             </form>
           </div>

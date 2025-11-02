@@ -69,28 +69,33 @@ const Navigation = () => {
 
   return (
     <>
-      <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="container mx-auto flex h-14 items-center justify-between px-4">
+      <nav className="border-b bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 shadow-sm transition-all duration-300">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-4">
-            <Link to="/" className="flex items-center">
-              <span className="font-bold text-xl">Oryxa</span>
+            <Link to="/" className="flex items-center group">
+              <div className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-white font-bold text-xl transition-transform group-hover:scale-105">
+                Oryxa
+              </div>
             </Link>
             
             {/* Desktop Navigation */}
             {!isMobile && (
-              <div className="flex gap-4 md:gap-6 mr-6">
+              <div className="flex gap-2 mr-6">
                 {links.map((link) => (
                   <Link
                     key={link.to}
                     to={link.to}
                     className={cn(
-                      "text-sm font-medium transition-colors hover:text-primary",
+                      "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 relative",
                       location.pathname === link.to
-                        ? "text-foreground"
-                        : "text-muted-foreground"
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:bg-accent hover:text-foreground"
                     )}
                   >
                     {link.label}
+                    {location.pathname === link.to && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-primary/50 rounded-full" />
+                    )}
                   </Link>
                 ))}
               </div>
@@ -99,14 +104,15 @@ const Navigation = () => {
           
           {/* Desktop Auth */}
           {!isMobile && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               {user ? (
                 <>
-                  <span className="text-sm text-muted-foreground hidden md:inline">
+                  <div className="px-3 py-1.5 rounded-lg bg-muted/50 text-sm text-muted-foreground hidden md:flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
                     {user.email}
-                  </span>
+                  </div>
                   <button 
-                    className="px-4 py-2 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors text-sm" 
+                    className="btn-ghost-glow px-4 py-2 rounded-xl text-sm font-medium" 
                     onClick={handleSignOut}
                   >
                     خروج
@@ -115,7 +121,7 @@ const Navigation = () => {
               ) : (
                 <Link
                   to="/auth"
-                  className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm" 
+                  className="btn-futuristic btn-gradient px-6 py-2.5 rounded-xl text-sm font-medium" 
                 >
                   دخول
                 </Link>
@@ -136,7 +142,7 @@ const Navigation = () => {
 
         {/* Mobile Menu */}
         {isMobile && mobileMenuOpen && (
-          <div className="border-t bg-background">
+          <div className="border-t bg-background/95 backdrop-blur-xl">
             <div className="container mx-auto px-4 py-4 space-y-2">
               {links.map((link) => (
                 <Link
