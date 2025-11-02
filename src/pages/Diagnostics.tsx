@@ -3,8 +3,10 @@ import { supabase } from '@/integrations/supabase/client'
 import { useUser } from '@/lib/auth'
 import { getQueued } from '@/lib/localdb/dexie'
 import { flushQueueOnce } from '@/lib/sync'
-// import * as SentryCap from '@sentry/capacitor'
+import { captureAndSendLocation } from '@/native/location'
+import { conflictCheckToday } from '@/lib/conflicts'
 import { track } from '@/lib/telemetry'
+import type { ConflictRow, LocationSample } from '@/types/conflicts'
 
 const Diagnostics = () => {
   const { user } = useUser()
@@ -14,8 +16,10 @@ const Diagnostics = () => {
   const [syncing, setSyncing] = useState(false)
   const [syncResult, setSyncResult] = useState<string | null>(null)
   const [prayerCount, setPrayerCount] = useState(0)
-  const [conflictsCount, setConflictsCount] = useState<number | null>(null)
-  const [checkingConflicts, setCheckingConflicts] = useState(false)
+  const [lastLoc, setLastLoc] = useState<LocationSample | null>(null)
+  const [conflicts, setConflicts] = useState<ConflictRow[]>([])
+  const [loadingLoc, setLoadingLoc] = useState(false)
+  const [loadingConf, setLoadingConf] = useState(false)
 
   async function loadData() {
     // Test DB connection
@@ -55,6 +59,42 @@ const Diagnostics = () => {
         .eq('date_iso', today)
       setPrayerCount(count ?? 0)
     }
+
+    // Load last location
+    await loadLastLocation()
+    
+    // Load today's conflicts
+    await loadTodayConflicts()
+  }
+
+  async function loadLastLocation() {
+    if (!user) { setLastLoc(null); return; }
+    setLoadingLoc(true)
+    const { data } = await supabase
+      .from("location_samples")
+      .select("*")
+      .eq("owner_id", user.id)
+      .order("sampled_at", { ascending: false })
+      .limit(1)
+    setLastLoc(data?.[0] ?? null)
+    setLoadingLoc(false)
+  }
+
+  function todayISO() { 
+    return new Date().toISOString().slice(0, 10); 
+  }
+
+  async function loadTodayConflicts() {
+    if (!user) { setConflicts([]); return; }
+    setLoadingConf(true)
+    const { data } = await supabase
+      .from("conflicts")
+      .select("*")
+      .eq("owner_id", user.id)
+      .eq("date_iso", todayISO())
+      .order("created_at", { ascending: false })
+    setConflicts((data ?? []) as ConflictRow[])
+    setLoadingConf(false)
   }
 
   useEffect(() => {
@@ -81,19 +121,29 @@ const Diagnostics = () => {
     }
   }
 
-  async function handleConflictCheck() {
-    setCheckingConflicts(true)
-    setConflictsCount(null)
+  async function handleLocationUpdate() {
+    setLoadingLoc(true)
     try {
-      const { runConflictCheck } = await import('@/lib/location')
-      const result = await runConflictCheck({ days: 7, buffer_min: 30, upsert: true })
-      setConflictsCount(result.count)
-      track('conflict_check_run', { count: result.count })
-    } catch (e: any) {
-      console.error('Conflict check failed:', e)
-      setConflictsCount(-1)
+      await captureAndSendLocation()
+      await loadLastLocation()
+      track('diagnostics_location_ping')
+    } catch (e) {
+      console.error('Location update failed:', e)
     } finally {
-      setCheckingConflicts(false)
+      setLoadingLoc(false)
+    }
+  }
+
+  async function handleConflictsCheck() {
+    setLoadingConf(true)
+    try {
+      await conflictCheckToday()
+      await loadTodayConflicts()
+      track('diagnostics_conflicts_check')
+    } catch (e) {
+      console.error('Conflicts check failed:', e)
+    } finally {
+      setLoadingConf(false)
     }
   }
 
@@ -213,30 +263,105 @@ const Diagnostics = () => {
         )}
       </div>
 
-      {/* Conflict Check */}
+      {/* Location */}
       <div className="p-4 bg-card border-2 rounded-3xl shadow-lg">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-lg">فحص التعارضات</h2>
+          <h2 className="font-semibold text-lg">الموقع</h2>
           <button
-            onClick={handleConflictCheck}
-            disabled={checkingConflicts || !user}
+            onClick={handleLocationUpdate}
+            disabled={loadingLoc}
             className="btn max-w-xs text-xs py-2 px-4"
           >
-            {checkingConflicts ? 'جاري الفحص...' : 'فحص التعارضات (7 أيام)'}
+            {loadingLoc ? 'جاري التحديث...' : 'تحديث الموقع الآن'}
           </button>
         </div>
         
-        {conflictsCount !== null && (
-          <div className={`p-3 rounded-2xl text-sm ${
-            conflictsCount === 0 
-              ? 'bg-emerald-500/10 text-emerald-700 border-2 border-emerald-500/30' 
-              : conflictsCount > 0
-              ? 'bg-primary/10 text-primary border-2 border-primary/30'
-              : 'bg-destructive/10 text-destructive border-2 border-destructive/30'
-          }`}>
-            {conflictsCount === 0 && '✅ لا توجد تعارضات - جدولك متوافق مع مواقيت الصلاة'}
-            {conflictsCount > 0 && `⚠️ تم اكتشاف ${conflictsCount} تعارض مع مواقيت الصلاة`}
-            {conflictsCount === -1 && '❌ فشل الفحص - تحقق من الاتصال'}
+        {lastLoc ? (
+          <div className="text-sm space-y-1">
+            <div>
+              <span className="text-muted-foreground">آخر عينة:</span>{' '}
+              <code className="bg-secondary/50 px-2 py-0.5 rounded text-xs">
+                {new Date(lastLoc.sampled_at).toLocaleString('ar-EG')}
+              </code>
+            </div>
+            <div>
+              <span className="text-muted-foreground">الإحداثيات:</span>{' '}
+              <code className="bg-secondary/50 px-2 py-0.5 rounded text-xs">
+                lat {Number(lastLoc.latitude).toFixed(5)}, lon {Number(lastLoc.longitude).toFixed(5)}
+              </code>
+            </div>
+            {lastLoc.accuracy_m && (
+              <div>
+                <span className="text-muted-foreground">الدقة:</span>{' '}
+                <code className="bg-secondary/50 px-2 py-0.5 rounded text-xs">
+                  ~{Math.round(Number(lastLoc.accuracy_m))}m
+                </code>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">لا توجد عينة موقع بعد</p>
+        )}
+      </div>
+
+      {/* Conflicts */}
+      <div className="p-4 bg-card border-2 rounded-3xl shadow-lg">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-semibold text-lg">تعارضات اليوم</h2>
+          <button
+            onClick={handleConflictsCheck}
+            disabled={loadingConf || !user}
+            className="btn max-w-xs text-xs py-2 px-4"
+          >
+            {loadingConf ? 'جاري الفحص...' : 'فحص التعارضات الآن'}
+          </button>
+        </div>
+        
+        <div className="mb-3">
+          <span className="text-sm text-muted-foreground">
+            {conflicts.length} تعارض اليوم
+          </span>
+        </div>
+
+        {conflicts.length === 0 ? (
+          <div className="text-sm p-3 bg-emerald-500/10 text-emerald-700 border-2 border-emerald-500/30 rounded-2xl">
+            ✅ لا تعارضات اليوم - جدولك متوافق مع مواقيت الصلاة
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {conflicts.map((c) => (
+              <div key={c.id} className="border-2 rounded-2xl p-3 bg-secondary/20">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="font-medium">
+                    {c.object_kind === "event" ? "تعارض مع حدث" : c.object_kind}
+                  </div>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                    c.severity === "high" 
+                      ? "bg-red-500 text-white" 
+                      : c.severity === "medium" 
+                      ? "bg-amber-500 text-white" 
+                      : "bg-green-600 text-white"
+                  }`}>
+                    {c.severity}
+                  </span>
+                </div>
+                <div className="text-sm space-y-1">
+                  <div>
+                    <span className="text-muted-foreground">الصلاة:</span>{' '}
+                    <b>{c.prayer_name}</b>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">التداخل:</span>{' '}
+                    <code className="text-xs">{c.overlap_min} دقيقة</code>
+                  </div>
+                  {c.event_id && (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      مرتبط بالحدث: {c.event_id.slice(0, 8)}...
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
