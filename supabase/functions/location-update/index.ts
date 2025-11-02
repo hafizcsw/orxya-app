@@ -108,15 +108,44 @@ serve(async (req) => {
       })
       .eq("id", user.id);
 
+    // If moved significantly (>30km), trigger prayer sync and conflict check
+    let didSyncPrayer = false;
+    if (distance && distance > 30000) {
+      const today = new Date().toISOString().slice(0, 10);
+      const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+      
+      try {
+        await supabase.functions.invoke("prayer-sync", {
+          body: { date: today }
+        });
+        await supabase.functions.invoke("prayer-sync", {
+          body: { date: tomorrow }
+        });
+        didSyncPrayer = true;
+      } catch (e) {
+        console.warn("Failed to sync prayers after location change:", e);
+      }
+    }
+
     // Trigger conflict check for today
-    const today = new Date().toISOString().slice(0, 10);
-    await supabase.functions.invoke("conflict-check", {
-      body: { date: today }
-    });
+    try {
+      await supabase.functions.invoke("conflict-check", {
+        body: { days_range: 1 }
+      });
+    } catch (e) {
+      console.warn("Failed to trigger conflict-check:", e);
+    }
 
     console.log(`Location updated for user ${user.id}: ${latitude}, ${longitude}`);
 
-    return json({ ok: true, saved: true, saved_id: sample.id, last_distance_m: distance });
+    return json({ 
+      ok: true, 
+      saved: true, 
+      saved_id: sample.id, 
+      last_distance_m: distance,
+      moved_km: distance ? (distance / 1000).toFixed(2) : null,
+      did_sync_prayer: didSyncPrayer
+    });
   } catch (e: any) {
     console.error("location-update error:", e);
     return json({ ok: false, error: "SERVER_ERROR", details: String(e) }, 500);

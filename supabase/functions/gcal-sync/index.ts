@@ -130,5 +130,14 @@ Deno.serve(async (req)=>{
     }).eq("owner_id", user.id).eq("provider","google");
   }
 
+  // Trigger conflict check for recent events (today ±3 days)
+  try {
+    await supa.functions.invoke("conflict-check", {
+      body: { days_range: 3 }
+    });
+  } catch (e) {
+    console.warn("Failed to trigger conflict-check:", e);
+  }
+
   return json({ ok:true, added, updated, skipped, incremental: !!sync_token });
 });
