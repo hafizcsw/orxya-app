@@ -33,6 +33,7 @@ export function useUser() {
 
   useEffect(() => {
     let mounted = true;
+    let tasksRun = false;
     
     console.log('[useUser] Initializing auth...')
     
@@ -65,7 +66,8 @@ export function useUser() {
       await applyProfileFlags(u?.id ?? null);
       
       // Post-login tasks (non-blocking) - only run once per session
-      if (u && event === 'SIGNED_IN' && !postLoginTasksRun) {
+      if (u && event === 'SIGNED_IN' && !tasksRun) {
+        tasksRun = true;
         setPostLoginTasksRun(true);
         
         setTimeout(() => {
@@ -114,6 +116,7 @@ export function useUser() {
       
       // Reset flag when user signs out
       if (!u && event === 'SIGNED_OUT') {
+        tasksRun = false;
         setPostLoginTasksRun(false);
       }
     });
