@@ -21,6 +21,7 @@ import CalendarFull from "./pages/CalendarFull";
 import CalendarSimple from "./pages/CalendarSimple";
 import SettingsExternal from "./pages/SettingsExternal";
 import SettingsNotifications from "./pages/SettingsNotifications";
+import PlannerChat from "./pages/PlannerChat";
 import OAuthGoogle from "./pages/OAuthGoogle";
 import NotFound from "./pages/NotFound";
 import { Protected } from "./components/Protected";
@@ -47,6 +48,7 @@ const App = () => (
           <Route path="/calendar-simple" element={<Protected><CalendarSimple /></Protected>} />
           <Route path="/settings/external" element={<Protected><SettingsExternal /></Protected>} />
           <Route path="/settings/notifications" element={<Protected><SettingsNotifications /></Protected>} />
+          <Route path="/planner" element={<Protected><PlannerChat /></Protected>} />
           <Route path="/oauth/google" element={<OAuthGoogle />} />
           <Route path="/diagnostics" element={<Protected><Diagnostics /></Protected>} />
           <Route path="/seed" element={<Seed />} />

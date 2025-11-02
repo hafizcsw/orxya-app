@@ -14,6 +14,68 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_messages: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          owner_id: string
+          role: string
+          thread_id: string
+        }
+        Insert: {
+          content: Json
+          created_at?: string
+          id?: string
+          owner_id: string
+          role: string
+          thread_id: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          owner_id?: string
+          role?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "agent_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_threads: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          owner_id: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          owner_id: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          owner_id?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ai_actions: {
         Row: {
           created_at: string
