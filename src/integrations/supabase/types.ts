@@ -315,12 +315,16 @@ export type Database = {
           external_event_id: string | null
           external_id: string | null
           external_source: string | null
+          google_calendar_id: string | null
+          google_event_id: string | null
           id: string
           is_ai_created: boolean | null
+          last_google_sync_at: string | null
           last_write_origin: string | null
           owner_id: string
           source_id: string | null
           starts_at: string
+          sync_to_google: boolean | null
           tags: string[] | null
           title: string
           updated_at: string | null
@@ -335,12 +339,16 @@ export type Database = {
           external_event_id?: string | null
           external_id?: string | null
           external_source?: string | null
+          google_calendar_id?: string | null
+          google_event_id?: string | null
           id?: string
           is_ai_created?: boolean | null
+          last_google_sync_at?: string | null
           last_write_origin?: string | null
           owner_id: string
           source_id?: string | null
           starts_at: string
+          sync_to_google?: boolean | null
           tags?: string[] | null
           title: string
           updated_at?: string | null
@@ -355,12 +363,16 @@ export type Database = {
           external_event_id?: string | null
           external_id?: string | null
           external_source?: string | null
+          google_calendar_id?: string | null
+          google_event_id?: string | null
           id?: string
           is_ai_created?: boolean | null
+          last_google_sync_at?: string | null
           last_write_origin?: string | null
           owner_id?: string
           source_id?: string | null
           starts_at?: string
+          sync_to_google?: boolean | null
           tags?: string[] | null
           title?: string
           updated_at?: string | null

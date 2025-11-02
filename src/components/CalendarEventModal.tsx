@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/lib/auth';
 import { track } from '@/lib/telemetry';
+import { toast } from '@/hooks/use-toast';
 
 type Ev = {
   id?: string;
@@ -51,6 +52,8 @@ export default function CalendarEventModal({
   const [startTime, setStartTime] = useState(initial ? toLocalTime(initial.starts_at) : '09:00');
   const [endTime, setEndTime] = useState(initial?.ends_at ? toLocalTime(initial.ends_at) : '10:00');
   const [description, setDescription] = useState(initial?.description ?? '');
+  const [syncToGoogle, setSyncToGoogle] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string|null>(null);
 
@@ -79,7 +82,7 @@ export default function CalendarEventModal({
       const starts_at = combineLocal(date, startTime);
       const ends_at = endTime ? combineLocal(date, endTime) : starts_at;
       if (creating) {
-      const { data, error } = await supabase
+        const { data, error } = await supabase
           .from('events')
           .insert({
             owner_id: user.id,
@@ -91,11 +94,26 @@ export default function CalendarEventModal({
           .select('id,title,starts_at,ends_at,source_id,description')
           .single();
         if (error) throw error;
+        
+        // مزامنة مع Google إذا مطلوب
+        if (syncToGoogle) {
+          setSyncing(true);
+          const { error: syncErr } = await supabase.functions.invoke('gcal-write', {
+            body: { event_id: data.id, op: 'upsert' }
+          });
+          setSyncing(false);
+          if (syncErr) {
+            toast({ title: 'تحذير', description: 'تم حفظ الحدث محليًا لكن فشلت المزامنة مع Google', variant: 'destructive' });
+          } else {
+            toast({ title: 'تم الحفظ والمزامنة مع Google', variant: 'default' });
+          }
+        }
+        
         await supabase.functions.invoke('conflict-check', { body: { event_id: data.id } }).catch(()=>{});
-        track('calendar_event_created_local');
+        track('calendar_event_created_local', { synced: syncToGoogle });
         onSaved?.({ ...data, source: data.source_id } as any);
       } else {
-      const { data, error } = await supabase
+        const { data, error } = await supabase
           .from('events')
           .update({
             title: title || '(بدون عنوان)',
@@ -104,11 +122,26 @@ export default function CalendarEventModal({
           })
           .eq('id', initial!.id)
           .eq('owner_id', user.id)
-          .select('id,title,starts_at,ends_at,source_id,description')
+          .select('id,title,starts_at,ends_at,source_id,description,google_event_id')
           .single();
         if (error) throw error;
+        
+        // مزامنة مع Google إذا مطلوب
+        if (syncToGoogle) {
+          setSyncing(true);
+          const { error: syncErr } = await supabase.functions.invoke('gcal-write', {
+            body: { event_id: data.id, op: 'upsert' }
+          });
+          setSyncing(false);
+          if (syncErr) {
+            toast({ title: 'تحذير', description: 'تم حفظ الحدث محليًا لكن فشلت المزامنة مع Google', variant: 'destructive' });
+          } else {
+            toast({ title: 'تم التحديث والمزامنة مع Google', variant: 'default' });
+          }
+        }
+        
         await supabase.functions.invoke('conflict-check', { body: { event_id: data.id } }).catch(()=>{});
-        track('calendar_event_updated_local');
+        track('calendar_event_updated_local', { synced: syncToGoogle });
         onSaved?.({ ...data, source: data.source_id } as any);
       }
       onClose();
@@ -123,6 +156,15 @@ export default function CalendarEventModal({
     if (!user || creating || !initial?.id) return;
     setSaving(true); setErr(null);
     try {
+      // حذف من Google أولًا إذا كان مرتبطًا
+      if ((initial as any).google_event_id) {
+        await supabase.functions.invoke('gcal-write', {
+          body: { event_id: initial.id, op: 'delete' }
+        }).catch((e) => {
+          console.error('Failed to delete from Google:', e);
+        });
+      }
+      
       const { error } = await supabase
         .from('events')
         .delete()
@@ -136,6 +178,23 @@ export default function CalendarEventModal({
       setErr(e?.message ?? 'تعذر الحذف');
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function unsyncFromGoogle() {
+    if (!user || !initial?.id) return;
+    setSyncing(true);
+    try {
+      await supabase.functions.invoke('gcal-write', {
+        body: { event_id: initial.id, op: 'delete' }
+      });
+      toast({ title: 'تم إلغاء المزامنة مع Google', variant: 'default' });
+      track('calendar_event_unsynced');
+      onClose();
+    } catch (e: any) {
+      toast({ title: 'خطأ', description: 'فشل إلغاء المزامنة', variant: 'destructive' });
+    } finally {
+      setSyncing(false);
     }
   }
 
@@ -187,6 +246,25 @@ export default function CalendarEventModal({
             </div>
           </div>
 
+          <div className="flex items-center gap-2">
+            <input 
+              type="checkbox" 
+              id="sync-google" 
+              checked={syncToGoogle}
+              onChange={(e) => setSyncToGoogle(e.target.checked)}
+              className="w-4 h-4 rounded border-border"
+            />
+            <label htmlFor="sync-google" className="text-sm font-medium cursor-pointer">
+              مزامنة مع Google Calendar
+            </label>
+          </div>
+
+          {(initial as any)?.google_event_id && (
+            <div className="text-xs text-muted-foreground">
+              ✅ مرتبط بـ Google Calendar
+            </div>
+          )}
+
           <div>
             <label className="text-sm font-medium mb-1.5 block">ملاحظات</label>
             <textarea 
@@ -207,15 +285,26 @@ export default function CalendarEventModal({
         </div>
 
         <div className="flex items-center justify-between pt-2">
-          {!creating ? (
-            <button 
-              onClick={remove} 
-              disabled={saving}
-              className="px-4 py-2 rounded-lg border border-destructive text-destructive hover:bg-destructive/10 transition-colors"
-            >
-              حذف
-            </button>
-          ) : <div/>}
+          <div className="flex items-center gap-2">
+            {!creating && (
+              <button 
+                onClick={remove} 
+                disabled={saving || syncing}
+                className="px-4 py-2 rounded-lg border border-destructive text-destructive hover:bg-destructive/10 transition-colors"
+              >
+                حذف
+              </button>
+            )}
+            {(initial as any)?.google_event_id && (
+              <button 
+                onClick={unsyncFromGoogle} 
+                disabled={saving || syncing}
+                className="px-3 py-2 rounded-lg border hover:bg-secondary transition-colors text-sm"
+              >
+                إلغاء مزامنة Google
+              </button>
+            )}
+          </div>
           
           <div className="flex items-center gap-2">
             <button 
@@ -226,10 +315,10 @@ export default function CalendarEventModal({
             </button>
             <button 
               onClick={save} 
-              disabled={!valid || saving}
+              disabled={!valid || saving || syncing}
               className="px-5 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
             >
-              {saving ? 'جارٍ الحفظ...' : 'حفظ'}
+              {saving ? 'جارٍ الحفظ...' : syncing ? 'جارٍ المزامنة...' : 'حفظ'}
             </button>
           </div>
         </div>
