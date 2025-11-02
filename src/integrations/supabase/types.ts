@@ -1111,6 +1111,7 @@ export type Database = {
           dnd_start: string | null
           full_name: string | null
           id: string
+          initial_balance_usd: number | null
           latitude: number | null
           location_updated_at: string | null
           longitude: number | null
@@ -1141,6 +1142,7 @@ export type Database = {
           dnd_start?: string | null
           full_name?: string | null
           id?: string
+          initial_balance_usd?: number | null
           latitude?: number | null
           location_updated_at?: string | null
           longitude?: number | null
@@ -1171,6 +1173,7 @@ export type Database = {
           dnd_start?: string | null
           full_name?: string | null
           id?: string
+          initial_balance_usd?: number | null
           latitude?: number | null
           location_updated_at?: string | null
           longitude?: number | null

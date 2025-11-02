@@ -298,20 +298,44 @@ const Today = () => {
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">الإجماليات الكلية</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">الإجماليات الكلية</h3>
+                  {report.initial_balance === 0 && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const amount = prompt('أدخل الرصيد الأولي (المبلغ الموجود في حسابك البنكي):');
+                        if (amount) {
+                          supabase.from('profiles').update({ initial_balance_usd: Number(amount) }).eq('id', user?.id).then(() => {
+                            setToast('تم تحديث الرصيد الأولي ✅');
+                            fetchReport();
+                          });
+                        }
+                      }}
+                    >
+                      تعيين الرصيد الأولي
+                    </Button>
+                  )}
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <HolographicCard variant="neon" className="p-6">
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                        الرصيد الكلي
+                        الرصيد الحالي
                       </span>
                       <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                         <DollarSign className="w-5 h-5 text-primary" />
                       </div>
                     </div>
-                    <div className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                      ${report.total_balance || 0}
+                    <div className={`text-4xl font-bold ${report.total_balance >= 0 ? 'text-success' : 'text-destructive'}`}>
+                      ${report.total_balance?.toFixed(2) || 0}
                     </div>
+                    {report.initial_balance > 0 && (
+                      <div className="text-xs text-muted-foreground mt-2">
+                        الرصيد الأولي: ${report.initial_balance}
+                      </div>
+                    )}
                   </HolographicCard>
                   
                   <GlassPanel className="p-6">
