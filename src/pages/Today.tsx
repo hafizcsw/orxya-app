@@ -14,6 +14,7 @@ import { HolographicCard } from '@/components/ui/HolographicCard'
 import { StatCardFuturistic } from '@/components/ui/StatCardFuturistic'
 import { NeonButton } from '@/components/ui/NeonButton'
 import { GlassPanel } from '@/components/ui/GlassPanel'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { Bell, DollarSign, TrendingUp, TrendingDown, Clock, Dumbbell, BookOpen, Footprints, Award, Building } from 'lucide-react'
 
 const Today = () => {
@@ -69,26 +70,29 @@ const Today = () => {
               </h1>
               <p className="text-muted-foreground">ابدأ يومك بإنتاجية عالية</p>
             </div>
-            <Button 
-              variant="outline"
-              size="icon"
-              onClick={async () => {
-                await ensureNotificationPerms();
-                const now = new Date(); 
-                now.setMinutes(now.getMinutes() + 1);
-                await LocalNotifications.schedule({
-                  notifications: [{
-                    id: 999001,
-                    title: 'اختبار Oryxa',
-                    body: 'إشعار بعد دقيقة',
-                    schedule: { at: now }
-                  }]
-                });
-                setToast('تم جدولة إشعار اختبار بعد دقيقة ⏰');
-              }}
-            >
-              <Bell className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Button 
+                variant="outline"
+                size="icon"
+                onClick={async () => {
+                  await ensureNotificationPerms();
+                  const now = new Date(); 
+                  now.setMinutes(now.getMinutes() + 1);
+                  await LocalNotifications.schedule({
+                    notifications: [{
+                      id: 999001,
+                      title: 'اختبار Oryxa',
+                      body: 'إشعار بعد دقيقة',
+                      schedule: { at: now }
+                    }]
+                  });
+                  setToast('تم جدولة إشعار اختبار بعد دقيقة ⏰');
+                }}
+              >
+                <Bell className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </HolographicCard>
 
