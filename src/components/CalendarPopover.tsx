@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -10,7 +10,6 @@ interface CalendarPopoverProps {
 }
 
 export function CalendarPopover({ children, selectedDate, onDateChange }: CalendarPopoverProps) {
-  const [open, setOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date(selectedDate));
 
   const getDaysInMonth = (date: Date) => {
@@ -34,20 +33,17 @@ export function CalendarPopover({ children, selectedDate, onDateChange }: Calend
     return days;
   };
 
-  const goToPreviousMonth = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const goToPreviousMonth = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
   };
 
-  const goToNextMonth = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const goToNextMonth = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
   };
 
   const handleDayClick = (day: number) => {
     const newDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
     onDateChange(newDate);
-    setOpen(false);
   };
 
   const isToday = (day: number) => {
@@ -71,11 +67,11 @@ export function CalendarPopover({ children, selectedDate, onDateChange }: Calend
   const weekDays = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <Popover>
+      <PopoverTrigger asChild>
         {children}
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md bg-card border-2 border-border p-6">
+      </PopoverTrigger>
+      <PopoverContent className="w-80 p-5 bg-card border-2 border-border shadow-2xl" align="center" sideOffset={8}>
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <button
@@ -85,7 +81,7 @@ export function CalendarPopover({ children, selectedDate, onDateChange }: Calend
             <ChevronRight className="w-5 h-5" />
           </button>
           
-          <div className="text-lg font-bold">
+          <div className="text-base font-bold">
             {currentMonth.toLocaleDateString('ar-EG', { month: 'long', year: 'numeric' })}
           </div>
           
@@ -98,7 +94,7 @@ export function CalendarPopover({ children, selectedDate, onDateChange }: Calend
         </div>
 
         {/* Week Days */}
-        <div className="grid grid-cols-7 gap-2 mb-3">
+        <div className="grid grid-cols-7 gap-1 mb-2">
           {weekDays.map((day) => (
             <div
               key={day}
@@ -110,7 +106,7 @@ export function CalendarPopover({ children, selectedDate, onDateChange }: Calend
         </div>
 
         {/* Calendar Days */}
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-1">
           {days.map((day, index) => (
             <button
               key={index}
@@ -119,8 +115,8 @@ export function CalendarPopover({ children, selectedDate, onDateChange }: Calend
               className={cn(
                 "aspect-square rounded-lg flex items-center justify-center text-sm font-medium transition-all",
                 !day && "invisible",
-                day && !isSelected(day) && !isToday(day) && "hover:bg-secondary hover:scale-110",
-                isToday(day) && !isSelected(day) && "bg-secondary font-bold ring-2 ring-primary/50",
+                day && !isSelected(day) && !isToday(day) && "hover:bg-secondary/60 hover:scale-110",
+                isToday(day) && !isSelected(day) && "bg-secondary/60 font-bold ring-2 ring-primary/50",
                 isSelected(day) && "bg-[hsl(var(--whoop-blue))] text-white font-bold shadow-lg scale-110"
               )}
             >
@@ -128,7 +124,7 @@ export function CalendarPopover({ children, selectedDate, onDateChange }: Calend
             </button>
           ))}
         </div>
-      </DialogContent>
-    </Dialog>
+      </PopoverContent>
+    </Popover>
   );
 }
