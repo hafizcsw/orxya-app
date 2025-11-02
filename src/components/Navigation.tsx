@@ -117,7 +117,7 @@ const Navigation = () => {
             selectedDate={currentDate}
             onDateChange={(date) => setCurrentDate(date)}
           >
-            <div className="flex items-center gap-2 flex-shrink-0 cursor-pointer">
+            <button className="flex items-center gap-2 flex-shrink-0 cursor-pointer bg-transparent border-0 p-0">
               <button
                 onClick={goToPreviousDay}
                 className="w-8 h-8 rounded-lg bg-secondary/60 hover:bg-secondary/80 flex items-center justify-center transition-all"
@@ -135,7 +135,7 @@ const Navigation = () => {
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-            </div>
+            </button>
           </CalendarPopover>
 
           {/* Right: Logo - MUST BE VISIBLE */}
