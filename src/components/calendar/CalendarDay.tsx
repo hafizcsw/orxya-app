@@ -1,10 +1,11 @@
 import { useMemo, useRef, useState } from "react";
-import { layoutDay } from "@/lib/calendar-layout";
-import EventBubble from "./EventBubble";
+import { packEventsIntoLanes, getLanePosition } from "@/lib/eventPacking";
+import EventChip from "./EventChip";
 import PrayerBand from "./PrayerBand";
 import { supabase } from "@/integrations/supabase/client";
 import { checkPrayerConflict } from "@/lib/aiConflicts";
 import { cn } from "@/lib/utils";
+import { isEventVisible } from "@/hooks/useVisibleHours";
 
 type CalEvent = {
   id: string;
@@ -32,6 +33,8 @@ type Props = {
   onResize?: (ev: CalEvent, target: { start_ts: string; end_ts: string }) => void;
   onReload?: () => void;
   onEventClick?: (event: CalEvent) => void;
+  visibleRange?: { startHour: number; endHour: number };
+  pxPerHour?: number;
 };
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -44,16 +47,27 @@ export default function CalendarDay({
   onMove,
   onResize,
   onReload,
-  onEventClick
+  onEventClick,
+  visibleRange,
+  pxPerHour = 64
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<{ y0: number; y1: number } | null>(null);
   const iso = date.toISOString().slice(0, 10);
+  const pxPerMin = pxPerHour / 60;
 
-  const { positioned, scale } = useMemo(() => layoutDay(events, date), [events, date]);
+  const packedEvents = useMemo(() => {
+    const packed = packEventsIntoLanes(events ?? [], date, pxPerMin);
+    return packed.filter(p => !p.isAllDay);
+  }, [events, date, pxPerMin]);
+
+  const visibleEvents = useMemo(() => {
+    if (!visibleRange) return packedEvents;
+    return packedEvents.filter(p => isEventVisible(p, visibleRange));
+  }, [packedEvents, visibleRange]);
 
   const toTime = (y: number) => {
-    const minutes = Math.round(y / scale.pxPerMin);
+    const minutes = Math.round(y / pxPerMin);
     const d = new Date(date);
     d.setHours(0, minutes, 0, 0);
     return d.toISOString();
@@ -71,7 +85,7 @@ export default function CalendarDay({
     if (!drag) return;
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const y = Math.max(0, Math.min(e.clientY - rect.top, 24 * scale.pxPerHour));
+    const y = Math.max(0, Math.min(e.clientY - rect.top, 24 * pxPerHour));
     setDrag((d) => (d ? { ...d, y1: y } : d));
   };
 
@@ -80,7 +94,7 @@ export default function CalendarDay({
     const [minY, maxY] = drag.y0 < drag.y1 ? [drag.y0, drag.y1] : [drag.y1, drag.y0];
     const start_ts = toTime(minY);
     const end_ts = toTime(maxY);
-    const durMin = Math.max(15, Math.round((maxY - minY) / scale.pxPerMin));
+    const durMin = Math.max(15, Math.round((maxY - minY) / pxPerMin));
     setDrag(null);
 
     const { data: { user } } = await supabase.auth.getUser();
@@ -117,64 +131,57 @@ export default function CalendarDay({
         onMouseMove={handleMouseMoveCreate}
         onMouseUp={handleMouseUpCreate}
       >
-        {HOURS.map((h) => (
-          <div
-            key={h}
-            className={cn(
-              "border-b border-border/50 text-[10px] pr-1",
-              h === 0 && "border-t"
-            )}
-            style={{ height: scale.pxPerHour }}
-          >
-            <div className="opacity-40 text-right font-mono">
-              {h.toString().padStart(2, "0")}:00
+        {HOURS.map((h) => {
+          if (visibleRange && (h < visibleRange.startHour || h > visibleRange.endHour)) {
+            return null;
+          }
+          return (
+            <div
+              key={h}
+              className={cn(
+                "border-b border-border/50 text-[10px] pr-1",
+                h === 0 && "border-t"
+              )}
+              style={{ height: pxPerHour }}
+            >
+              <div className="opacity-40 text-right font-mono">
+                {h.toString().padStart(2, "0")}:00
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Prayer overlay */}
-      {prayers && <PrayerBand prayers={prayers} scale={scale} />}
+      {prayers && <PrayerBand prayers={prayers} scale={{ pxPerMin }} />}
 
       {/* Events */}
       <div className="absolute inset-0 z-20">
-        {positioned.map((p) => {
+        {visibleEvents.map((packed, idx) => {
           const hasConflict = checkPrayerConflict(
-            p.event.starts_at,
-            p.event.ends_at,
+            packed.event.starts_at,
+            packed.event.ends_at,
             prayers
           );
+          const position = getLanePosition(packed);
 
           return (
-            <EventBubble
-              key={p.event.id}
-              p={p}
-              scale={scale}
-              hasConflict={hasConflict}
-              onClick={() => onEventClick?.(p.event)}
-              onMove={async (to) => {
-                await supabase
-                  .from("events")
-                  .update({ starts_at: to.start_ts, ends_at: to.end_ts })
-                  .eq("id", p.event.id);
-                onMove?.(p.event, to);
-                onReload?.();
-                await supabase.functions
-                  .invoke("conflict-check", { body: { event_id: p.event.id } })
-                  .catch(() => {});
+            <div
+              key={packed.event.id ?? idx}
+              className="absolute"
+              style={{
+                top: packed.top,
+                height: packed.height,
+                left: position.left,
+                width: position.width
               }}
-              onResize={async (to) => {
-                await supabase
-                  .from("events")
-                  .update({ starts_at: to.start_ts, ends_at: to.end_ts })
-                  .eq("id", p.event.id);
-                onResize?.(p.event, to);
-                onReload?.();
-                await supabase.functions
-                  .invoke("conflict-check", { body: { event_id: p.event.id } })
-                  .catch(() => {});
-              }}
-            />
+            >
+              <EventChip
+                event={packed.event}
+                onClick={() => onEventClick?.(packed.event)}
+                hasConflict={hasConflict}
+              />
+            </div>
           );
         })}
       </div>

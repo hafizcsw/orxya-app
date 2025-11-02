@@ -1,12 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { addDays, startOfWeek, endOfWeek, formatISO } from "date-fns";
 import { useCalendarData } from "@/hooks/useCalendarData";
 import CalendarDay from "./CalendarDay";
 import EventDetailsDrawer from "./EventDetailsDrawer";
+import AllDayRow from "./AllDayRow";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/telemetry";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getCurrentTimePosition } from "@/lib/eventPacking";
+import { useVisibleHours } from "@/hooks/useVisibleHours";
 
 type Props = {
   anchor?: Date;
@@ -19,12 +22,18 @@ export default function CalendarWeek({
   startOn = 6,
   onDateChange 
 }: Props) {
+  const gridRef = useRef<HTMLDivElement>(null);
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const [conflictData, setConflictData] = useState<{ hasConflict: boolean; conflictId: string | null }>({
     hasConflict: false,
     conflictId: null
   });
+
+  const pxPerHour = 64;
+  const pxPerMin = pxPerHour / 60;
+  const visibleRange = useVisibleHours(gridRef, pxPerHour);
 
   const start = startOfWeek(anchor, { weekStartsOn: startOn });
   const end = endOfWeek(anchor, { weekStartsOn: startOn });
@@ -41,10 +50,23 @@ export default function CalendarWeek({
 
   const { events, prayersByDay, loading, reload, reloadThrottled } = useCalendarData(range);
 
+  // Collect all events for all-day row
+  const allEvents = useMemo(() => {
+    return Object.values(events).flat();
+  }, [events]);
+
   useEffect(() => {
     reloadThrottled();
     track("cal_view_range", { from: range.from, to: range.to });
   }, [range.from, range.to]);
+
+  // Update current time every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const navigateWeek = (direction: "prev" | "next") => {
     const newDate = addDays(anchor, direction === "next" ? 7 : -7);
@@ -57,6 +79,7 @@ export default function CalendarWeek({
 
   const handleEventClick = async (event: any) => {
     setSelectedEvent(event);
+    track("cal_open_from_week_chip", { event_id: event.id });
     
     // Check for conflicts
     const { data: conflicts } = await supabase
@@ -146,12 +169,20 @@ export default function CalendarWeek({
         })}
       </div>
 
+      {/* All-Day Row */}
+      <AllDayRow 
+        events={allEvents} 
+        days={days}
+        onEventClick={handleEventClick}
+      />
+
       {/* Week grid */}
-      <div className="flex-1 grid grid-cols-7 overflow-auto">
+      <div ref={gridRef} className="flex-1 grid grid-cols-7 overflow-auto relative">
         {days.map((d, i) => {
           const iso = d.toISOString().slice(0, 10);
           const dayEvents = events[iso] ?? [];
           const prayers = prayersByDay[iso] ?? null;
+          const isToday = d.toDateString() === new Date().toDateString();
 
           return (
             <CalendarDay
@@ -170,9 +201,24 @@ export default function CalendarWeek({
               onResize={(evt, to) => {
                 track("cal_resize", { id: evt.id, to_end: to.end_ts });
               }}
+              visibleRange={visibleRange}
+              pxPerHour={pxPerHour}
             />
           );
         })}
+
+        {/* Current time indicator */}
+        {days.some(d => d.toDateString() === new Date().toDateString()) && (
+          <div
+            className="absolute left-0 right-0 h-px bg-destructive z-10 pointer-events-none"
+            style={{
+              top: getCurrentTimePosition(pxPerMin),
+              boxShadow: "0 0 4px rgba(239, 68, 68, 0.6)"
+            }}
+          >
+            <div className="absolute -left-1 -top-1.5 w-3 h-3 rounded-full bg-destructive" />
+          </div>
+        )}
       </div>
 
       {/* Event Details Drawer */}
