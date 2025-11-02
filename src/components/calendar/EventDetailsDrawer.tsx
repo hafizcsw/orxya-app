@@ -10,10 +10,22 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { ActionButton } from "@/components/ui/ActionButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Loader2, Trash2, Save, Sparkles, AlertTriangle, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -51,11 +63,10 @@ export default function EventDetailsDrawer({
   const [tags, setTags] = useState("");
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<AISuggestion | null>(null);
   const [loadingAI, setLoadingAI] = useState(false);
-  const [applyingAI, setApplyingAI] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (event) {
@@ -75,7 +86,6 @@ export default function EventDetailsDrawer({
 
   const handleSave = async () => {
     if (!event) return;
-    setSaving(true);
 
     try {
       const tagsArray = tags
@@ -104,18 +114,21 @@ export default function EventDetailsDrawer({
         .invoke("conflict-check", { body: { event_id: event.id } })
         .catch(() => {});
 
+      toast({ title: "تم الحفظ بنجاح ✅" });
       onUpdate();
       onClose();
     } catch (e) {
       console.error("Failed to save event:", e);
-    } finally {
-      setSaving(false);
+      toast({ 
+        title: "فشل الحفظ", 
+        description: "حدث خطأ أثناء حفظ التعديلات",
+        variant: "destructive" 
+      });
     }
   };
 
   const handleDelete = async () => {
-    if (!event || !confirm("هل تريد حذف هذا الحدث؟")) return;
-    setDeleting(true);
+    if (!event) return;
 
     try {
       const { error } = await supabase
@@ -126,12 +139,17 @@ export default function EventDetailsDrawer({
       if (error) throw error;
 
       track("cal_event_delete", { event_id: event.id });
+      toast({ title: "تم حذف الحدث ✅" });
       onUpdate();
       onClose();
+      setShowDeleteDialog(false);
     } catch (e) {
       console.error("Failed to delete event:", e);
-    } finally {
-      setDeleting(false);
+      toast({ 
+        title: "فشل الحذف", 
+        description: "حدث خطأ أثناء حذف الحدث",
+        variant: "destructive" 
+      });
     }
   };
 
@@ -157,7 +175,6 @@ export default function EventDetailsDrawer({
 
   const handleApplySuggestion = async () => {
     if (!event || !aiSuggestion) return;
-    setApplyingAI(true);
 
     try {
       const updates: any = {};
@@ -184,13 +201,17 @@ export default function EventDetailsDrawer({
           });
         }
 
+        toast({ title: "تم تطبيق الاقتراح بنجاح ✨" });
         onUpdate();
         onClose();
       }
     } catch (e) {
       console.error("Failed to apply AI suggestion:", e);
-    } finally {
-      setApplyingAI(false);
+      toast({ 
+        title: "فشل التطبيق", 
+        description: "حدث خطأ أثناء تطبيق الاقتراح",
+        variant: "destructive" 
+      });
     }
   };
 
@@ -293,20 +314,16 @@ export default function EventDetailsDrawer({
                   <AlertTriangle className="w-5 h-5 text-warning" />
                   <span className="font-medium text-sm">تعارض مع وقت الصلاة</span>
                 </div>
-                <Button
+                <ActionButton
                   size="sm"
                   variant="outline"
                   onClick={handleRequestAI}
-                  disabled={loadingAI || !!aiSuggestion}
-                  className="gap-2"
+                  disabled={!!aiSuggestion}
+                  loadingText="جار التحليل..."
+                  icon={<Sparkles className="w-4 h-4" />}
                 >
-                  {loadingAI ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Sparkles className="w-4 h-4" />
-                  )}
                   اقتراح حل (AI)
-                </Button>
+                </ActionButton>
               </div>
 
               {aiSuggestion && (
@@ -350,18 +367,14 @@ export default function EventDetailsDrawer({
                     )}
                   </div>
 
-                  <Button
+                  <ActionButton
                     onClick={handleApplySuggestion}
-                    disabled={applyingAI}
-                    className="w-full gap-2"
+                    loadingText="جار التطبيق..."
+                    icon={<CheckCircle className="w-4 h-4" />}
+                    className="w-full"
                   >
-                    {applyingAI ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <CheckCircle className="w-4 h-4" />
-                    )}
                     تطبيق الاقتراح
-                  </Button>
+                  </ActionButton>
                 </div>
               )}
             </div>
@@ -369,34 +382,42 @@ export default function EventDetailsDrawer({
 
           {/* Actions */}
           <div className="flex gap-2 pt-4 border-t">
-            <Button
+            <ActionButton
               onClick={handleSave}
-              disabled={saving}
-              className="flex-1 gap-2"
+              loadingText="جار الحفظ..."
+              icon={<Save className="w-4 h-4" />}
+              className="flex-1"
             >
-              {saving ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
               حفظ
-            </Button>
-            <Button
-              onClick={handleDelete}
-              disabled={deleting}
+            </ActionButton>
+            <ActionButton
+              onClick={() => setShowDeleteDialog(true)}
               variant="destructive"
-              className="gap-2"
+              icon={<Trash2 className="w-4 h-4" />}
             >
-              {deleting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Trash2 className="w-4 h-4" />
-              )}
               حذف
-            </Button>
+            </ActionButton>
           </div>
         </div>
       </SheetContent>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم حذف الحدث "{event?.title}" بشكل نهائي. لا يمكن التراجع عن هذا الإجراء.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              حذف نهائياً
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sheet>
   );
 }

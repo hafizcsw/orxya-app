@@ -9,6 +9,9 @@ import { SessionBanner } from '@/components/SessionBanner'
 import { LocalNotifications } from '@capacitor/local-notifications'
 import { ensureNotificationPerms } from '@/lib/notify'
 import { Protected } from '@/components/Protected'
+import { ActionButton } from '@/components/ui/ActionButton'
+import { Button } from '@/components/ui/button'
+import { Bell } from 'lucide-react'
 
 const Today = () => {
   const { user } = useUser()
@@ -72,8 +75,10 @@ const Today = () => {
         <section className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">التقرير اليومي</h2>
-            <button 
-              className="btn-ghost-glow px-4 py-2 rounded-xl text-sm"
+            <ActionButton 
+              variant="ghost"
+              size="sm"
+              icon={<Bell className="w-4 h-4" />}
               onClick={async () => {
                 await ensureNotificationPerms();
                 const now = new Date(); 
@@ -90,7 +95,7 @@ const Today = () => {
               }}
             >
               اختبار إشعار
-            </button>
+            </ActionButton>
           </div>
           
           {loading ? (
@@ -177,7 +182,7 @@ const Today = () => {
                 <input name="mma_hours" placeholder="ساعات MMA" className="input" type="number" step="0.5" />
                 <input name="walk_min" placeholder="دقائق المشي" className="input" type="number" step="1" />
                 <input name="notes" placeholder="ملاحظات" className="input" />
-                <button className="btn btn-futuristic btn-gradient w-full">حفظ</button>
+                <ActionButton type="submit" className="w-full" loadingText="جار الحفظ...">حفظ</ActionButton>
               </div>
             </form>
 
@@ -208,7 +213,7 @@ const Today = () => {
                 <input name="amount_usd" placeholder="المبلغ USD" className="input" type="number" step="0.01" />
                 <input name="category" placeholder="تصنيف" className="input" />
                 <input name="note" placeholder="ملاحظة" className="input" />
-                <button className="btn btn-futuristic btn-gradient w-full">حفظ</button>
+                <ActionButton type="submit" className="w-full" loadingText="جار الحفظ...">حفظ</ActionButton>
               </div>
             </form>
 
@@ -242,7 +247,7 @@ const Today = () => {
                 <input name="qty" placeholder="الكمية" className="input" type="number" min="1" />
                 <input name="price_usd" placeholder="السعر USD" className="input" type="number" step="0.01" />
                 <input name="profit_usd" placeholder="الربح USD" className="input" type="number" step="0.01" />
-                <button className="btn btn-futuristic btn-gradient w-full">حفظ</button>
+                <ActionButton type="submit" className="w-full" loadingText="جار الحفظ...">حفظ</ActionButton>
               </div>
             </form>
           </div>

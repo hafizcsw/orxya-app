@@ -4,7 +4,10 @@ import { useUser } from "@/lib/auth";
 import { track } from "@/lib/telemetry";
 import { throttle } from "@/lib/throttle";
 import { Protected } from "@/components/Protected";
-import { Loader2, AlertTriangle, CheckCircle, XCircle, RotateCcw, Filter } from "lucide-react";
+import { ActionButton } from "@/components/ui/ActionButton";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, AlertTriangle, CheckCircle, XCircle, RotateCcw, Filter, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type ConflictStatus = "open" | "suggested" | "auto_applied" | "resolved" | "undone";
@@ -42,8 +45,8 @@ export default function ConflictsPage() {
   const [prayerFilter, setPrayerFilter] = useState<string>("all");
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [busy, setBusy] = useState(false);
-  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const { toast } = useToast();
 
   const reload = useMemo(
     () => throttle(async () => { if (user) await load(); }, 300),
@@ -97,15 +100,13 @@ export default function ConflictsPage() {
         setEvents({});
       }
     } catch (e: any) {
-      showToast("تعذّر تحميل التعارضات", "error");
+      toast({ 
+        title: "تعذّر تحميل التعارضات", 
+        variant: "destructive" 
+      });
     } finally {
       setLoading(false);
     }
-  }
-
-  function showToast(msg: string, type: "success" | "error" = "success") {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
   }
 
   const visible = useMemo(() => items, [items]);
@@ -187,11 +188,14 @@ export default function ConflictsPage() {
         confidence: data.suggestion?.confidence
       });
       
-      showToast('تم إنشاء اقتراح ذكي بنجاح ✨', 'success');
-      await load(); // Reload to show updated suggestion
+      toast({ title: 'تم إنشاء اقتراح ذكي بنجاح ✨' });
+      await load();
     } catch (e: any) {
       console.error('AI suggestion error:', e);
-      showToast('تعذّر توليد الاقتراح الذكي', 'error');
+      toast({ 
+        title: 'تعذّر توليد الاقتراح الذكي',
+        variant: 'destructive'
+      });
       track('conflict_ai_error', { conflict_id: conflictId, error: String(e) });
     } finally {
       setBusy(false);
@@ -226,14 +230,18 @@ export default function ConflictsPage() {
 
       track("conflict_action", { command, count: ids.length });
       setSelected({});
-      showToast(`تم ${command === "apply" ? "التطبيق" : command === "ignore" ? "التجاهل" : "التحديث"} بنجاح`, "success");
+      toast({ 
+        title: `تم ${command === "apply" ? "التطبيق" : command === "ignore" ? "التجاهل" : "التحديث"} بنجاح` 
+      });
       
-      // Reload to get fresh data
       await load();
     } catch (e: any) {
       // Rollback on error
       setItems(snapshot);
-      showToast("تعذّر التنفيذ — تمت الاستعادة", "error");
+      toast({ 
+        title: "تعذّر التنفيذ — تمت الاستعادة",
+        variant: "destructive"
+      });
     } finally {
       setBusy(false);
     }
@@ -253,16 +261,14 @@ export default function ConflictsPage() {
             <p className="text-sm text-muted-foreground mt-1">إدارة التعارضات بين الأحداث وأوقات الصلاة</p>
           </div>
           
-          <button
+          <Button
             onClick={() => setShowFilters(!showFilters)}
-            className={cn(
-              "btn-ghost-glow px-4 py-2 rounded-xl flex items-center gap-2",
-              showFilters && "bg-primary/10"
-            )}
+            variant={showFilters ? "secondary" : "ghost"}
+            size="sm"
           >
             <Filter className="w-4 h-4" />
             فلاتر
-          </button>
+          </Button>
         </div>
 
         {/* Stats Cards */}
@@ -338,16 +344,17 @@ export default function ConflictsPage() {
             </div>
 
             <div className="flex justify-end gap-2">
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => {
                   setStatusFilter("all");
                   setSeverityFilter("all");
                   setPrayerFilter("all");
                 }}
-                className="px-4 py-2 rounded-lg text-sm hover:bg-accent transition-colors"
               >
                 مسح الفلاتر
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -358,37 +365,44 @@ export default function ConflictsPage() {
             <div className="flex items-center gap-4">
               <span className="text-sm font-medium">{selectedIds.length} محدد</span>
               <div className="h-4 w-px bg-border" />
-              <button
-                disabled={busy}
+              <ActionButton
                 onClick={() => act("apply", selectedIds)}
-                className="btn-futuristic btn-gradient px-4 py-2 text-sm flex items-center gap-2"
+                disabled={busy}
+                loadingText="جار التطبيق..."
+                variant="default"
+                size="sm"
+                icon={<CheckCircle className="w-4 h-4" />}
               >
-                <CheckCircle className="w-4 h-4" />
                 تطبيق
-              </button>
-              <button
-                disabled={busy}
+              </ActionButton>
+              <ActionButton
                 onClick={() => act("ignore", selectedIds)}
-                className="btn-ghost-glow px-4 py-2 text-sm flex items-center gap-2"
-              >
-                <XCircle className="w-4 h-4" />
-                تجاهل
-              </button>
-              <button
                 disabled={busy}
-                onClick={() => act("undo", selectedIds)}
-                className="btn-ghost-glow px-4 py-2 text-sm flex items-center gap-2"
+                loadingText="جار التجاهل..."
+                variant="ghost"
+                size="sm"
+                icon={<XCircle className="w-4 h-4" />}
               >
-                <RotateCcw className="w-4 h-4" />
+                تجاهل
+              </ActionButton>
+              <ActionButton
+                onClick={() => act("undo", selectedIds)}
+                disabled={busy}
+                loadingText="جار التراجع..."
+                variant="ghost"
+                size="sm"
+                icon={<RotateCcw className="w-4 h-4" />}
+              >
                 تراجع
-              </button>
+              </ActionButton>
             </div>
-            <button
+            <Button
               onClick={() => setSelected({})}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              variant="ghost"
+              size="sm"
             >
               إلغاء التحديد
-            </button>
+            </Button>
           </div>
         )}
 
@@ -519,49 +533,59 @@ export default function ConflictsPage() {
                       {c.status === "open" || c.status === "suggested" ? (
                         <>
                           {!c.suggested_change && !c.suggestion && (
-                            <button
-                              disabled={busy}
+                            <ActionButton
                               onClick={() => requestAISuggestion(c.id)}
-                              className="btn-ghost-glow px-4 py-2 text-sm flex items-center gap-2 group"
-                              title="استخدم الذكاء الاصطناعي لاقتراح أفضل حل"
+                              disabled={busy}
+                              loadingText="جار التحليل..."
+                              variant="ghost"
+                              size="sm"
+                              icon={<Sparkles className="w-4 h-4" />}
                             >
-                              <svg className="w-4 h-4 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                              </svg>
                               اقترح حلًا (AI)
-                            </button>
+                            </ActionButton>
                           )}
-                          <button
-                            disabled={busy}
+                          <ActionButton
                             onClick={() => act("apply", [c.id])}
-                            className="btn-futuristic btn-gradient px-4 py-2 text-sm"
+                            disabled={busy}
+                            loadingText="جار التطبيق..."
+                            variant="default"
+                            size="sm"
+                            icon={<CheckCircle className="w-4 h-4" />}
                           >
                             تطبيق
-                          </button>
-                          <button
-                            disabled={busy}
+                          </ActionButton>
+                          <ActionButton
                             onClick={() => act("ignore", [c.id])}
-                            className="btn-ghost-glow px-4 py-2 text-sm"
+                            disabled={busy}
+                            loadingText="جار التجاهل..."
+                            variant="ghost"
+                            size="sm"
+                            icon={<XCircle className="w-4 h-4" />}
                           >
                             تجاهل
-                          </button>
+                          </ActionButton>
                         </>
                       ) : (
                         <>
-                          <button
-                            disabled={busy}
+                          <ActionButton
                             onClick={() => act("reopen", [c.id])}
-                            className="btn-ghost-glow px-4 py-2 text-sm"
+                            disabled={busy}
+                            loadingText="جار إعادة الفتح..."
+                            variant="ghost"
+                            size="sm"
                           >
                             إعادة فتح
-                          </button>
-                          <button
-                            disabled={busy}
+                          </ActionButton>
+                          <ActionButton
                             onClick={() => act("undo", [c.id])}
-                            className="btn-ghost-glow px-4 py-2 text-sm"
+                            disabled={busy}
+                            loadingText="جار التراجع..."
+                            variant="ghost"
+                            size="sm"
+                            icon={<RotateCcw className="w-4 h-4" />}
                           >
                             تراجع
-                          </button>
+                          </ActionButton>
                         </>
                       )}
                     </div>
@@ -572,16 +596,6 @@ export default function ConflictsPage() {
           </div>
         )}
 
-        {/* Toast */}
-        {toast && (
-          <div className={cn(
-            "fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-xl shadow-lg backdrop-blur-xl z-50",
-            toast.type === "success" && "bg-success/10 border border-success/30 text-success",
-            toast.type === "error" && "bg-destructive/10 border border-destructive/30 text-destructive"
-          )}>
-            {toast.msg}
-          </div>
-        )}
       </div>
     </Protected>
   );
