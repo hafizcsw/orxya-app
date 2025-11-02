@@ -65,17 +65,20 @@ export function useUser() {
       // Flush queue and reschedule notifications after login
       if (u && event === 'SIGNED_IN') {
         setTimeout(async () => {
-          flushQueueOnce();
-          rescheduleAllFromDB();
-          
-          // تهيئة صلاة اليوم فور تسجيل الدخول
-          const today = new Date().toISOString().slice(0, 10);
           try {
-            await syncPrayers(today);
-            await schedulePrayersFor(today);
-          } catch (e) {
-            console.error('Error syncing prayers on login:', e);
-          }
+            console.log('[useUser] Starting post-login tasks...');
+            flushQueueOnce();
+            rescheduleAllFromDB();
+            
+            // تهيئة صلاة اليوم فور تسجيل الدخول
+            const today = new Date().toISOString().slice(0, 10);
+            try {
+              await syncPrayers(today);
+              await schedulePrayersFor(today);
+              console.log('[useUser] Prayer sync completed');
+            } catch (e) {
+              console.error('Error syncing prayers on login:', e);
+            }
 
           // موقع + مزامنة صلاة + فحص تعارضات (معطل مؤقتاً حتى تنفيذ Block 16)
           // try {
@@ -97,8 +100,18 @@ export function useUser() {
           //   console.error('Location/conflict check failed:', e);
           // }
 
-          // بدء مزامنة التقويم الدورية
-          startCalendarAutoSync(30);
+            // بدء مزامنة التقويم الدورية
+            try {
+              startCalendarAutoSync(30);
+              console.log('[useUser] Calendar auto-sync started');
+            } catch (e) {
+              console.error('Calendar sync failed:', e);
+            }
+            
+            console.log('[useUser] Post-login tasks completed');
+          } catch (err) {
+            console.error('[useUser] Post-login error:', err);
+          }
         }, 0);
       }
     });
