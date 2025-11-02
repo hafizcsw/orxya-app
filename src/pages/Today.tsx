@@ -82,7 +82,7 @@ const Today = () => {
         return
       }
 
-      // Daily log fields
+      // Daily log fields only
       if (field.includes('hours') || field === 'walk_min') {
         const { data: existing } = await supabase
           .from('daily_logs')
@@ -107,41 +107,11 @@ const Today = () => {
             })
           if (error) throw error
         }
+        
+        setToast('تم التحديث ✅')
+        setEditingField(null)
+        await fetchReport()
       }
-      // Finance fields
-      else if (field === 'add_income' || field === 'add_spend') {
-        const type = field === 'add_income' ? 'income' : 'spend'
-        const { error } = await supabase
-          .from('finance_entries')
-          .insert({
-            owner_id: user.id,
-            entry_date: today,
-            type,
-            amount_usd: parsedValue,
-            category: type === 'income' ? 'دخل سريع' : 'مصروف سريع'
-          })
-        if (error) throw error
-      }
-      // Sales fields
-      else if (field === 'add_scholarship' || field === 'add_villa') {
-        const type = field === 'add_scholarship' ? 'scholarship' : 'villa'
-        const { error } = await supabase
-          .from('sales')
-          .insert({
-            owner_id: user.id,
-            sale_date: today,
-            type,
-            item: type === 'scholarship' ? 'منحة' : 'فيلا',
-            qty: 1,
-            price_usd: parsedValue,
-            profit_usd: parsedValue * 0.1
-          })
-        if (error) throw error
-      }
-      
-      setToast('تم التحديث ✅')
-      setEditingField(null)
-      await fetchReport()
     } catch (error: any) {
       setToast('❌ حدث خطأ في التحديث')
     }
@@ -315,8 +285,18 @@ const Today = () => {
                 label="التاريخ"
                 value={report.date}
               />
-              {renderEditableCard('add_income', <TrendingUp className="w-5 h-5 text-success" />, 'إضافة دخل', report.income_usd, 'bg-success/10', '$', 1)}
-              {renderEditableCard('add_spend', <TrendingDown className="w-5 h-5 text-destructive" />, 'إضافة مصروف', report.spend_usd, 'bg-destructive/10', '$', 1)}
+              <StatCardFuturistic
+                icon={<TrendingUp className="w-5 h-5 text-success" />}
+                label="الدخل"
+                value={`$${report.income_usd}`}
+                iconBgClass="bg-success/10"
+              />
+              <StatCardFuturistic
+                icon={<TrendingDown className="w-5 h-5 text-destructive" />}
+                label="المصروف"
+                value={`$${report.spend_usd}`}
+                iconBgClass="bg-destructive/10"
+              />
               <StatCardFuturistic
                 icon={<DollarSign className="w-5 h-5 text-primary" />}
                 label="الصافي"
@@ -329,8 +309,18 @@ const Today = () => {
               {renderEditableCard('work_hours', <Clock className="w-5 h-5 text-accent" />, 'عمل', report.work_hours, 'bg-accent/10', 'س', 0.5)}
               {renderEditableCard('walk_min', <Footprints className="w-5 h-5 text-success" />, 'المشي', report.walk_min, 'bg-success/10', 'د', 5)}
               
-              {renderEditableCard('add_scholarship', <Award className="w-5 h-5 text-warning" />, 'إضافة منحة', report.scholarships_sold, 'bg-warning/10', '', 1)}
-              {renderEditableCard('add_villa', <Building className="w-5 h-5 text-primary" />, 'إضافة فيلا', report.villas_sold, 'bg-primary/10', '', 1)}
+              <StatCardFuturistic
+                icon={<Award className="w-5 h-5 text-warning" />}
+                label="منح"
+                value={report.scholarships_sold}
+                iconBgClass="bg-warning/10"
+              />
+              <StatCardFuturistic
+                icon={<Building className="w-5 h-5 text-primary" />}
+                label="فلل"
+                value={report.villas_sold}
+                iconBgClass="bg-primary/10"
+              />
             </div>
           ) : (
             <GlassPanel className="p-8 text-center">
