@@ -3,6 +3,19 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+const Overlay = ({ isOpen }: { isOpen: boolean }) => {
+  if (!isOpen) return null;
+  return (
+    <div 
+      className="fixed inset-0 z-[1299]"
+      style={{ 
+        backgroundColor: '#000000',
+        opacity: 1,
+      }}
+    />
+  );
+};
+
 
 interface CalendarPopoverProps {
   children: React.ReactNode;
@@ -69,10 +82,12 @@ export function CalendarPopover({ children, selectedDate, onDateChange }: Calend
   const weekDays = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        {children}
-      </PopoverTrigger>
+    <>
+      <Overlay isOpen={open} />
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          {children}
+        </PopoverTrigger>
       <PopoverContent className="w-80 p-5 border-2 border-border shadow-2xl" align="center" sideOffset={8} style={{ backgroundColor: 'hsl(var(--card))', zIndex: 1300 }}>
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
@@ -117,8 +132,8 @@ export function CalendarPopover({ children, selectedDate, onDateChange }: Calend
               className={cn(
                 "aspect-square rounded-lg flex items-center justify-center text-sm font-medium transition-all",
                 !day && "invisible",
-                day && !isSelected(day) && !isToday(day) && "hover:bg-secondary/60 hover:scale-110",
-                isToday(day) && !isSelected(day) && "bg-secondary/60 font-bold ring-2 ring-primary/50",
+                day && !isSelected(day) && !isToday(day) && "text-[hsl(var(--whoop-green))] hover:bg-secondary/60 hover:scale-110",
+                isToday(day) && !isSelected(day) && "bg-secondary/60 text-[hsl(var(--whoop-green))] font-bold ring-2 ring-primary/50",
                 isSelected(day) && "bg-[hsl(var(--whoop-blue))] text-white font-bold shadow-lg scale-110"
               )}
             >
@@ -128,5 +143,6 @@ export function CalendarPopover({ children, selectedDate, onDateChange }: Calend
         </div>
       </PopoverContent>
     </Popover>
+    </>
   );
 }
