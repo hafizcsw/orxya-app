@@ -17,24 +17,24 @@ const Navigation = () => {
   const isMobile = useIsMobile();
 
   const handleSignOut = async () => {
+    console.log('[Navigation] Sign out clicked');
     try {
       track('auth_signout');
       
-      // Clear all local state immediately
-      localStorage.clear();
-      sessionStorage.clear();
-      
-      // Sign out from Supabase
+      console.log('[Navigation] Signing out from Supabase...');
       await supabase.auth.signOut({ scope: 'local' });
       
-      // Force reload to auth page
-      window.location.replace('/auth');
-    } catch (err) {
-      console.error('Sign out failed:', err);
-      // Force reload anyway
+      console.log('[Navigation] Clearing storage...');
       localStorage.clear();
       sessionStorage.clear();
-      window.location.replace('/auth');
+      
+      console.log('[Navigation] Redirecting to /auth...');
+      navigate('/auth', { replace: true });
+    } catch (err) {
+      console.error('[Navigation] Sign out failed:', err);
+      localStorage.clear();
+      sessionStorage.clear();
+      navigate('/auth', { replace: true });
     }
   };
 

@@ -12,7 +12,6 @@ import type { User } from '@supabase/supabase-js'
 export function useUser() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const [postLoginTasksRun, setPostLoginTasksRun] = useState(false)
 
   async function applyProfileFlags(uid: string | null) {
     if (!uid) { 
@@ -68,7 +67,6 @@ export function useUser() {
       // Post-login tasks (non-blocking) - only run once per session
       if (u && event === 'SIGNED_IN' && !tasksRun) {
         tasksRun = true;
-        setPostLoginTasksRun(true);
         
         setTimeout(() => {
           console.log('[useUser] Running post-login tasks...');
@@ -117,7 +115,6 @@ export function useUser() {
       // Reset flag when user signs out
       if (!u && event === 'SIGNED_OUT') {
         tasksRun = false;
-        setPostLoginTasksRun(false);
       }
     });
     
