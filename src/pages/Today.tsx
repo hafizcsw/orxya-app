@@ -352,243 +352,225 @@ const Today = () => {
             </OryxaCard>
           ) : report ? (
             <>
-              {/* Financial Rings - Hero Section with Editing */}
-              
-              <div className="grid grid-cols-3 gap-1 mb-8">
-                <div className="flex flex-col items-center scale-75 md:scale-100 group">
-                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                    <OryxaButton
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setEditingBalance(true);
-                        setBalanceValue(report.current_balance?.toString() || '0');
-                      }}
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </OryxaButton>
+              {/* Financial Rings - Enhanced with Animations */}
+              <div className="relative mb-12">
+                {/* Background Glow Effect */}
+                <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent blur-3xl -z-10" />
+                
+                <div className="grid grid-cols-3 gap-6 mb-12">
+                  <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '0ms' }}>
+                    <div className="relative">
+                      {/* Glow Ring Effect */}
+                      <div className="absolute inset-0 bg-[hsl(var(--whoop-blue))] opacity-20 blur-2xl rounded-full scale-150 group-hover:scale-[2] transition-transform duration-700" />
+                      
+                      <div 
+                        className="relative cursor-pointer transform transition-all duration-500 hover:scale-110"
+                        onClick={() => {
+                          setEditingBalance(true);
+                          setBalanceValue(report.current_balance?.toString() || '0');
+                        }}
+                      >
+                        <StatRing
+                          value={Math.min(100, Math.max(0, ((report.current_balance || 0) / 10000) * 100))}
+                          label="الرصيد"
+                          subtitle="BALANCE"
+                          color="hsl(var(--whoop-blue))"
+                          size="lg"
+                          customDisplay={`$${(report.current_balance || 0).toFixed(0)}`}
+                        />
+                      </div>
+                      
+                      {/* Edit Button Overlay */}
+                      <button
+                        onClick={() => {
+                          setEditingBalance(true);
+                          setBalanceValue(report.current_balance?.toString() || '0');
+                        }}
+                        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-[hsl(var(--whoop-blue))] hover:text-white shadow-lg"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                  <StatRing
-                    value={Math.min(100, Math.max(0, ((report.current_balance || 0) / 10000) * 100))}
-                    label="الرصيد"
-                    subtitle="BALANCE"
-                    color="hsl(var(--whoop-blue))"
-                    size="sm"
-                    customDisplay={`$${(report.current_balance || 0).toFixed(0)}`}
-                  />
+                  
+                  <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '100ms' }}>
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-[hsl(var(--whoop-green))] opacity-20 blur-2xl rounded-full scale-150 group-hover:scale-[2] transition-transform duration-700" />
+                      <div className="relative transform transition-all duration-500 hover:scale-110">
+                        <StatRing
+                          value={Math.min(100, Math.max(0, ((report.total_income || 0) / 5000) * 100))}
+                          label="الدخل"
+                          subtitle="INCOME"
+                          color="hsl(var(--whoop-green))"
+                          size="lg"
+                          customDisplay={`$${report.total_income || 0}`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '200ms' }}>
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-[hsl(var(--whoop-red))] opacity-20 blur-2xl rounded-full scale-150 group-hover:scale-[2] transition-transform duration-700" />
+                      <div className="relative transform transition-all duration-500 hover:scale-110">
+                        <StatRing
+                          value={Math.min(100, Math.max(0, ((report.total_spend || 0) / 5000) * 100))}
+                          label="المصروفات"
+                          subtitle="EXPENSES"
+                          color="hsl(var(--whoop-red))"
+                          size="lg"
+                          customDisplay={`$${report.total_spend || 0}`}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                
-                <div className="flex flex-col items-center scale-75 md:scale-100">
-                  <StatRing
-                    value={Math.min(100, Math.max(0, ((report.total_income || 0) / 5000) * 100))}
-                    label="الدخل"
-                    subtitle="INCOME"
-                    color="hsl(var(--whoop-green))"
-                    size="sm"
-                    customDisplay={`$${report.total_income || 0}`}
-                  />
-                </div>
-                
-                <div className="flex flex-col items-center scale-75 md:scale-100">
-                  <StatRing
-                    value={Math.min(100, Math.max(0, ((report.total_spend || 0) / 5000) * 100))}
-                    label="المصروفات"
-                    subtitle="EXPENSES"
-                    color="hsl(var(--whoop-red))"
-                    size="sm"
-                    customDisplay={`$${report.total_spend || 0}`}
-                  />
+
+                {/* Daily Stats Rings - Enhanced */}
+                <div className="grid grid-cols-3 gap-6">
+                  <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '300ms' }}>
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-[hsl(var(--whoop-green))] opacity-10 blur-xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-500" />
+                      <div className="relative transform transition-all duration-300 hover:scale-105">
+                        <StatRing
+                          value={Math.min(100, Math.max(0, ((report.income_usd || 0) / 1000) * 100))}
+                          label="دخل اليوم"
+                          subtitle="TODAY"
+                          color="hsl(var(--whoop-green))"
+                          size="sm"
+                          customDisplay={`$${report.income_usd || 0}`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '350ms' }}>
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-[hsl(var(--whoop-red))] opacity-10 blur-xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-500" />
+                      <div className="relative transform transition-all duration-300 hover:scale-105">
+                        <StatRing
+                          value={Math.min(100, Math.max(0, ((report.spend_usd || 0) / 1000) * 100))}
+                          label="مصروف اليوم"
+                          subtitle="TODAY"
+                          color="hsl(var(--whoop-red))"
+                          size="sm"
+                          customDisplay={`$${report.spend_usd || 0}`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '400ms' }}>
+                    <div className="relative">
+                      <div className={cn(
+                        "absolute inset-0 opacity-10 blur-xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-500",
+                        report.net_usd >= 0 ? "bg-[hsl(var(--whoop-green))]" : "bg-[hsl(var(--whoop-red))]"
+                      )} />
+                      <div className="relative transform transition-all duration-300 hover:scale-105">
+                        <StatRing
+                          value={Math.min(100, Math.max(0, ((Math.abs(report.net_usd || 0)) / 1000) * 100))}
+                          label="صافي اليوم"
+                          subtitle="NET"
+                          color={report.net_usd >= 0 ? "hsl(var(--whoop-green))" : "hsl(var(--whoop-red))"}
+                          size="sm"
+                          customDisplay={`${report.net_usd >= 0 ? '+' : ''}$${report.net_usd || 0}`}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Daily Stats Rings */}
-              <div className="grid grid-cols-3 gap-1 mb-8">
-                <div className="flex flex-col items-center scale-75 md:scale-100">
-                  <StatRing
-                    value={Math.min(100, Math.max(0, ((report.income_usd || 0) / 1000) * 100))}
-                    label="دخل اليوم"
-                    subtitle="TODAY INCOME"
-                    color="hsl(var(--whoop-green))"
-                    size="sm"
-                    customDisplay={`$${report.income_usd || 0}`}
-                  />
-                </div>
-                
-                <div className="flex flex-col items-center scale-75 md:scale-100">
-                  <StatRing
-                    value={Math.min(100, Math.max(0, ((report.spend_usd || 0) / 1000) * 100))}
-                    label="مصروف اليوم"
-                    subtitle="TODAY EXPENSES"
-                    color="hsl(var(--whoop-red))"
-                    size="sm"
-                    customDisplay={`$${report.spend_usd || 0}`}
-                  />
-                </div>
-                
-                <div className="flex flex-col items-center scale-75 md:scale-100">
-                  <StatRing
-                    value={Math.min(100, Math.max(0, ((Math.abs(report.net_usd || 0)) / 1000) * 100))}
-                    label="صافي اليوم"
-                    subtitle="TODAY NET"
-                    color={report.net_usd >= 0 ? "hsl(var(--whoop-green))" : "hsl(var(--whoop-red))"}
-                    size="sm"
-                    customDisplay={`${report.net_usd >= 0 ? '+' : ''}$${report.net_usd || 0}`}
-                  />
-                </div>
-              </div>
 
-
-              {/* Balance Edit Modal - Hidden but available */}
+              {/* Edit Modals - Enhanced with Animations */}
               {editingBalance && (
-                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-                  <OryxaCard className="max-w-md w-full">
-                    <h3 className="text-xl font-bold mb-4">تعديل الرصيد الحقيقي</h3>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={balanceValue}
-                      onChange={(e) => setBalanceValue(e.target.value)}
-                      className="input w-full text-2xl font-bold mb-4"
-                      autoFocus
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          updateBalance(balanceValue);
-                        } else if (e.key === 'Escape') {
-                          setEditingBalance(false);
-                        }
-                      }}
-                    />
-                    <div className="flex gap-2">
-                      <OryxaButton
-                        size="sm"
-                        variant="primary"
-                        onClick={() => updateBalance(balanceValue)}
-                        className="flex-1"
-                      >
-                        حفظ
-                      </OryxaButton>
-                      <OryxaButton
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setEditingBalance(false)}
-                        className="flex-1"
-                      >
-                        إلغاء
-                      </OryxaButton>
+                <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                  <OryxaCard className="max-w-md w-full animate-scale-in shadow-2xl border-2 border-primary/20">
+                    <div className="relative">
+                      <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-20 h-20 rounded-full bg-[hsl(var(--whoop-blue))] opacity-20 blur-2xl" />
+                      <h3 className="text-2xl font-bold mb-6 text-center bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+تعديل الرصيد الحقيقي
+                      </h3>
+                      <div className="relative mb-6">
+                        <div className="absolute inset-0 bg-primary/5 blur-xl rounded-lg" />
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={balanceValue}
+                          onChange={(e) => setBalanceValue(e.target.value)}
+                          className="input w-full text-3xl font-bold text-center relative z-10 bg-background/50 backdrop-blur-sm border-2 focus:border-primary transition-all"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              updateBalance(balanceValue);
+                            } else if (e.key === 'Escape') {
+                              setEditingBalance(false);
+                            }
+                          }}
+                        />
+                      </div>
+                      <div className="flex gap-3">
+                        <OryxaButton
+                          size="md"
+                          variant="primary"
+                          onClick={() => updateBalance(balanceValue)}
+                          className="flex-1 shadow-lg hover:shadow-xl transition-all"
+                        >
+                          حفظ
+                        </OryxaButton>
+                        <OryxaButton
+                          size="md"
+                          variant="ghost"
+                          onClick={() => setEditingBalance(false)}
+                          className="flex-1"
+                        >
+                          إلغاء
+                        </OryxaButton>
+                      </div>
                     </div>
                   </OryxaCard>
                 </div>
               )}
-
-              {/* Activities - Convert to Rings */}
-              <div className="grid grid-cols-2 gap-1 mb-8">
-                <div 
-                  className="flex flex-col items-center scale-75 md:scale-100 cursor-pointer"
-                  onClick={() => {
-                    setEditingField('work_hours')
-                    setEditValue(report.work_hours || 0)
-                  }}
-                >
-                  <StatRing
-                    value={Math.min(100, Math.max(0, ((report.work_hours || 0) / 12) * 100))}
-                    label="ساعات العمل"
-                    subtitle="WORK"
-                    color="hsl(var(--whoop-blue))"
-                    size="sm"
-                    customDisplay={`${report.work_hours || 0}h`}
-                  />
-                </div>
-                
-                <div 
-                  className="flex flex-col items-center scale-75 md:scale-100 cursor-pointer"
-                  onClick={() => {
-                    setEditingField('study_hours')
-                    setEditValue(report.study_hours || 0)
-                  }}
-                >
-                  <StatRing
-                    value={Math.min(100, Math.max(0, ((report.study_hours || 0) / 8) * 100))}
-                    label="ساعات الدراسة"
-                    subtitle="STUDY"
-                    color="hsl(var(--whoop-yellow))"
-                    size="sm"
-                    customDisplay={`${report.study_hours || 0}h`}
-                  />
-                </div>
-                
-                <div 
-                  className="flex flex-col items-center scale-75 md:scale-100 cursor-pointer"
-                  onClick={() => {
-                    setEditingField('mma_hours')
-                    setEditValue(report.mma_hours || 0)
-                  }}
-                >
-                  <StatRing
-                    value={Math.min(100, Math.max(0, ((report.mma_hours || 0) / 4) * 100))}
-                    label="ساعات MMA"
-                    subtitle="MMA"
-                    color="hsl(var(--whoop-red))"
-                    size="sm"
-                    customDisplay={`${report.mma_hours || 0}h`}
-                  />
-                </div>
-                
-                <div 
-                  className="flex flex-col items-center scale-75 md:scale-100 cursor-pointer"
-                  onClick={() => {
-                    setEditingField('walk_min')
-                    setEditValue(report.walk_min || 0)
-                  }}
-                >
-                  <StatRing
-                    value={Math.min(100, Math.max(0, ((report.walk_min || 0) / 120) * 100))}
-                    label="دقائق المشي"
-                    subtitle="WALK"
-                    color="hsl(var(--whoop-green))"
-                    size="sm"
-                    customDisplay={`${report.walk_min || 0}m`}
-                  />
-                </div>
-              </div>
-
-              {/* Edit Modal for Activity Fields */}
+              
               {editingField && editingField !== 'balance' && (
-                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-                  <OryxaCard className="max-w-md w-full">
-                    <h3 className="text-xl font-bold mb-4">
+                <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                  <OryxaCard className="max-w-md w-full animate-scale-in shadow-2xl border-2 border-primary/20">
+                    <h3 className="text-2xl font-bold mb-6 text-center">
                       {editingField === 'work_hours' && 'تعديل ساعات العمل'}
                       {editingField === 'study_hours' && 'تعديل ساعات الدراسة'}
                       {editingField === 'mma_hours' && 'تعديل ساعات MMA'}
                       {editingField === 'walk_min' && 'تعديل دقائق المشي'}
                     </h3>
-                    <input
-                      type="number"
-                      step={editingField === 'walk_min' ? '1' : '0.5'}
-                      min="0"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      className="input w-full text-2xl font-bold mb-4"
-                      autoFocus
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          updateField(editingField, editValue);
-                        } else if (e.key === 'Escape') {
-                          setEditingField(null);
-                        }
-                      }}
-                    />
-                    <div className="flex gap-2">
+                    <div className="relative mb-6">
+                      <input
+                        type="number"
+                        step={editingField === 'walk_min' ? '1' : '0.5'}
+                        min="0"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="input w-full text-3xl font-bold text-center bg-background/50 backdrop-blur-sm border-2 focus:border-primary transition-all"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            updateField(editingField, editValue);
+                          } else if (e.key === 'Escape') {
+                            setEditingField(null);
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="flex gap-3">
                       <OryxaButton
-                        size="sm"
+                        size="md"
                         variant="primary"
                         onClick={() => updateField(editingField, editValue)}
-                        className="flex-1"
+                        className="flex-1 shadow-lg hover:shadow-xl transition-all"
                       >
                         حفظ
                       </OryxaButton>
                       <OryxaButton
-                        size="sm"
+                        size="md"
                         variant="ghost"
                         onClick={() => setEditingField(null)}
                         className="flex-1"
@@ -599,6 +581,145 @@ const Today = () => {
                   </OryxaCard>
                 </div>
               )}
+
+              {/* Activities - Enhanced Rings with Interactions */}
+              <div className="relative mb-12">
+                <div className="absolute inset-0 bg-gradient-to-t from-secondary/20 via-transparent to-transparent blur-2xl -z-10" />
+                
+                <div className="grid grid-cols-2 gap-8">
+                  <div 
+                    className="flex flex-col items-center group cursor-pointer animate-fade-in"
+                    style={{ animationDelay: '450ms' }}
+                    onClick={() => {
+                      setEditingField('work_hours')
+                      setEditValue(report.work_hours || 0)
+                    }}
+                  >
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-[hsl(var(--whoop-blue))] opacity-15 blur-xl rounded-full scale-125 group-hover:scale-[1.8] transition-all duration-700" />
+                      <div className="relative transform transition-all duration-500 hover:scale-110 hover:rotate-2">
+                        <StatRing
+                          value={Math.min(100, Math.max(0, ((report.work_hours || 0) / 12) * 100))}
+                          label="ساعات العمل"
+                          subtitle="WORK"
+                          color="hsl(var(--whoop-blue))"
+                          size="md"
+                          customDisplay={`${report.work_hours || 0}h`}
+                        />
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingField('work_hours');
+                          setEditValue(report.work_hours || 0);
+                        }}
+                        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-[hsl(var(--whoop-blue))] hover:text-white shadow-lg z-10"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div 
+                    className="flex flex-col items-center group cursor-pointer animate-fade-in"
+                    style={{ animationDelay: '500ms' }}
+                    onClick={() => {
+                      setEditingField('study_hours')
+                      setEditValue(report.study_hours || 0)
+                    }}
+                  >
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-[hsl(var(--whoop-yellow))] opacity-15 blur-xl rounded-full scale-125 group-hover:scale-[1.8] transition-all duration-700" />
+                      <div className="relative transform transition-all duration-500 hover:scale-110 hover:rotate-2">
+                        <StatRing
+                          value={Math.min(100, Math.max(0, ((report.study_hours || 0) / 8) * 100))}
+                          label="ساعات الدراسة"
+                          subtitle="STUDY"
+                          color="hsl(var(--whoop-yellow))"
+                          size="md"
+                          customDisplay={`${report.study_hours || 0}h`}
+                        />
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingField('study_hours');
+                          setEditValue(report.study_hours || 0);
+                        }}
+                        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-[hsl(var(--whoop-yellow))] hover:text-white shadow-lg z-10"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div 
+                    className="flex flex-col items-center group cursor-pointer animate-fade-in"
+                    style={{ animationDelay: '550ms' }}
+                    onClick={() => {
+                      setEditingField('mma_hours')
+                      setEditValue(report.mma_hours || 0)
+                    }}
+                  >
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-[hsl(var(--whoop-red))] opacity-15 blur-xl rounded-full scale-125 group-hover:scale-[1.8] transition-all duration-700" />
+                      <div className="relative transform transition-all duration-500 hover:scale-110 hover:rotate-2">
+                        <StatRing
+                          value={Math.min(100, Math.max(0, ((report.mma_hours || 0) / 4) * 100))}
+                          label="ساعات MMA"
+                          subtitle="MMA"
+                          color="hsl(var(--whoop-red))"
+                          size="md"
+                          customDisplay={`${report.mma_hours || 0}h`}
+                        />
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingField('mma_hours');
+                          setEditValue(report.mma_hours || 0);
+                        }}
+                        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-[hsl(var(--whoop-red))] hover:text-white shadow-lg z-10"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div 
+                    className="flex flex-col items-center group cursor-pointer animate-fade-in"
+                    style={{ animationDelay: '600ms' }}
+                    onClick={() => {
+                      setEditingField('walk_min')
+                      setEditValue(report.walk_min || 0)
+                    }}
+                  >
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-[hsl(var(--whoop-green))] opacity-15 blur-xl rounded-full scale-125 group-hover:scale-[1.8] transition-all duration-700" />
+                      <div className="relative transform transition-all duration-500 hover:scale-110 hover:rotate-2">
+                        <StatRing
+                          value={Math.min(100, Math.max(0, ((report.walk_min || 0) / 120) * 100))}
+                          label="دقائق المشي"
+                          subtitle="WALK"
+                          color="hsl(var(--whoop-green))"
+                          size="md"
+                          customDisplay={`${report.walk_min || 0}m`}
+                        />
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingField('walk_min');
+                          setEditValue(report.walk_min || 0);
+                        }}
+                        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-[hsl(var(--whoop-green))] hover:text-white shadow-lg z-10"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               {/* Sales */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
