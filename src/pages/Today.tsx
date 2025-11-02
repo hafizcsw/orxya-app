@@ -475,13 +475,124 @@ const Today = () => {
                 </div>
               )}
 
-              {/* Activities */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {renderEditableCard('work_hours', <Building className="w-5 h-5 text-[hsl(var(--whoop-blue))]" />, 'ساعات العمل', report.work_hours, 'bg-[hsl(var(--whoop-blue)_/_0.1)]', ' ساعة', 0.5)}
-                {renderEditableCard('study_hours', <BookOpen className="w-5 h-5 text-[hsl(var(--whoop-yellow))]" />, 'ساعات الدراسة', report.study_hours, 'bg-[hsl(var(--whoop-yellow)_/_0.1)]', ' ساعة', 0.5)}
-                {renderEditableCard('mma_hours', <Dumbbell className="w-5 h-5 text-[hsl(var(--whoop-red))]" />, 'ساعات MMA', report.mma_hours, 'bg-[hsl(var(--whoop-red)_/_0.1)]', ' ساعة', 0.5)}
-                {renderEditableCard('walk_min', <Footprints className="w-5 h-5 text-[hsl(var(--whoop-green))]" />, 'دقائق المشي', report.walk_min, 'bg-[hsl(var(--whoop-green)_/_0.1)]', ' دقيقة', 1)}
+              {/* Activities - Convert to Rings */}
+              <div className="grid grid-cols-2 gap-1 mb-8">
+                <div 
+                  className="flex flex-col items-center scale-75 md:scale-100 cursor-pointer"
+                  onClick={() => {
+                    setEditingField('work_hours')
+                    setEditValue(report.work_hours || 0)
+                  }}
+                >
+                  <StatRing
+                    value={Math.min(100, Math.max(0, ((report.work_hours || 0) / 12) * 100))}
+                    label="ساعات العمل"
+                    subtitle="WORK"
+                    color="hsl(var(--whoop-blue))"
+                    size="sm"
+                    customDisplay={`${report.work_hours || 0}h`}
+                  />
+                </div>
+                
+                <div 
+                  className="flex flex-col items-center scale-75 md:scale-100 cursor-pointer"
+                  onClick={() => {
+                    setEditingField('study_hours')
+                    setEditValue(report.study_hours || 0)
+                  }}
+                >
+                  <StatRing
+                    value={Math.min(100, Math.max(0, ((report.study_hours || 0) / 8) * 100))}
+                    label="ساعات الدراسة"
+                    subtitle="STUDY"
+                    color="hsl(var(--whoop-yellow))"
+                    size="sm"
+                    customDisplay={`${report.study_hours || 0}h`}
+                  />
+                </div>
+                
+                <div 
+                  className="flex flex-col items-center scale-75 md:scale-100 cursor-pointer"
+                  onClick={() => {
+                    setEditingField('mma_hours')
+                    setEditValue(report.mma_hours || 0)
+                  }}
+                >
+                  <StatRing
+                    value={Math.min(100, Math.max(0, ((report.mma_hours || 0) / 4) * 100))}
+                    label="ساعات MMA"
+                    subtitle="MMA"
+                    color="hsl(var(--whoop-red))"
+                    size="sm"
+                    customDisplay={`${report.mma_hours || 0}h`}
+                  />
+                </div>
+                
+                <div 
+                  className="flex flex-col items-center scale-75 md:scale-100 cursor-pointer"
+                  onClick={() => {
+                    setEditingField('walk_min')
+                    setEditValue(report.walk_min || 0)
+                  }}
+                >
+                  <StatRing
+                    value={Math.min(100, Math.max(0, ((report.walk_min || 0) / 120) * 100))}
+                    label="دقائق المشي"
+                    subtitle="WALK"
+                    color="hsl(var(--whoop-green))"
+                    size="sm"
+                    customDisplay={`${report.walk_min || 0}m`}
+                  />
+                </div>
               </div>
+
+              {/* Edit Modal for Activity Fields */}
+              {editingField && editingField !== 'balance' && (
+                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+                  <OryxaCard className="max-w-md w-full">
+                    <h3 className="text-xl font-bold mb-4">
+                      {editingField === 'work_hours' && 'تعديل ساعات العمل'}
+                      {editingField === 'study_hours' && 'تعديل ساعات الدراسة'}
+                      {editingField === 'mma_hours' && 'تعديل ساعات MMA'}
+                      {editingField === 'walk_min' && 'تعديل دقائق المشي'}
+                    </h3>
+                    <input
+                      type="number"
+                      step={editingField === 'walk_min' ? '1' : '0.5'}
+                      min="0"
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      className="input w-full text-2xl font-bold mb-4"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          updateField(editingField, editValue);
+                        } else if (e.key === 'Escape') {
+                          setEditingField(null);
+                        }
+                      }}
+                    />
+                    <div className="flex gap-2">
+                      <OryxaButton
+                        size="sm"
+                        variant="primary"
+                        onClick={() => updateField(editingField, editValue)}
+                        className="flex-1"
+                      >
+                        حفظ
+                      </OryxaButton>
+                      <OryxaButton
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setEditingField(null)}
+                        className="flex-1"
+                      >
+                        إلغاء
+                      </OryxaButton>
+                    </div>
+                  </OryxaCard>
+                </div>
+              )}
 
               {/* Sales */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
