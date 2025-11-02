@@ -14,7 +14,8 @@ import { OryxaCard } from '@/components/oryxa/Card'
 import { AIDock } from '@/components/oryxa/AIDock'
 import { StatRing } from '@/components/oryxa/StatRing'
 import { cn } from '@/lib/utils'
-import { Bell, DollarSign, TrendingUp, TrendingDown, Clock, Dumbbell, BookOpen, Footprints, Award, Building, Edit2, BarChart3 } from 'lucide-react'
+import { Bell, DollarSign, TrendingUp, TrendingDown, Clock, Dumbbell, BookOpen, Footprints, Award, Building, Edit2, BarChart3, User } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { z } from 'zod'
 
@@ -44,6 +45,7 @@ const salesSchema = z.object({
 
 const Today = () => {
   const { user } = useUser()
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [report, setReport] = useState<any | null>(null)
   const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('daily')
@@ -264,15 +266,19 @@ const Today = () => {
         {/* Sticky Header - WHOOP Style */}
         <div className="sticky top-0 z-30 bg-card/80 backdrop-blur-lg border-b border-border/50 px-6 py-4">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
+            {/* User Avatar */}
+            <button
+              onClick={() => navigate('/profile')}
+              className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white font-semibold text-lg shadow-lg hover:scale-110 transition-all duration-300 border-2 border-primary/30"
+              style={{
+                boxShadow: "0 0 20px hsl(var(--primary) / 0.3)",
+              }}
+            >
+              {user?.email?.[0]?.toUpperCase() || <User className="w-6 h-6" />}
+            </button>
+
             {/* Date Navigation */}
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={() => setPeriod('daily')}
-                className="p-2 rounded-full hover:bg-secondary transition-colors"
-              >
-                <Clock className="w-5 h-5" />
-              </button>
-              
+            <div className="flex items-center gap-2">
               <div className="text-center">
                 <div className="text-xs text-muted-foreground">التقرير</div>
                 <div className="text-sm font-semibold">
