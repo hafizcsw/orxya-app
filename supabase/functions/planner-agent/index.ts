@@ -95,10 +95,10 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnon = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const openaiKey = Deno.env.get("OPENAI_API_KEY");
+    const lovableKey = Deno.env.get("LOVABLE_API_KEY");
     
-    if (!openaiKey) {
-      return json({ ok: false, error: "OPENAI_KEY_NOT_CONFIGURED" }, 500);
+    if (!lovableKey) {
+      return json({ ok: false, error: "LOVABLE_KEY_NOT_CONFIGURED" }, 500);
     }
 
     const auth = req.headers.get("Authorization") ?? "";
@@ -168,15 +168,15 @@ serve(async (req) => {
       }
     }
 
-    // استدعاء OpenAI
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    // استدعاء Lovable AI
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${openaiKey}`,
+        "Authorization": `Bearer ${lovableKey}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "google/gemini-2.5-flash",
         messages,
         tools: TOOLS,
         tool_choice: "auto"
@@ -185,8 +185,16 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error("OpenAI error:", response.status, errText);
-      return json({ ok: false, error: "OPENAI_ERROR", details: errText }, 500);
+      console.error("Lovable AI error:", response.status, errText);
+      
+      if (response.status === 429) {
+        return json({ ok: false, error: "RATE_LIMIT", details: "تم تجاوز الحد المسموح. حاول لاحقاً." }, 429);
+      }
+      if (response.status === 402) {
+        return json({ ok: false, error: "PAYMENT_REQUIRED", details: "يرجى إضافة رصيد إلى حساب Lovable AI." }, 402);
+      }
+      
+      return json({ ok: false, error: "AI_ERROR", details: errText }, 500);
     }
 
     const result = await response.json();
