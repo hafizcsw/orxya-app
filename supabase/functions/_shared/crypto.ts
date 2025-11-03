@@ -1,5 +1,21 @@
 export async function getKey(): Promise<CryptoKey> {
-  const raw = new TextEncoder().encode(Deno.env.get("TOKEN_ENC_KEY")!);
+  // Prefer vault secret, fallback to environment variable for backwards compatibility
+  let keyString = Deno.env.get("TOKEN_ENC_KEY");
+  
+  // TODO: When vault is fully migrated, use this instead:
+  // const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.38.4');
+  // const supabase = createClient(
+  //   Deno.env.get('SUPABASE_URL')!,
+  //   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  // );
+  // const { data } = await supabase.rpc('get_encryption_key');
+  // keyString = data;
+  
+  if (!keyString) {
+    throw new Error("Encryption key not found in environment or vault");
+  }
+  
+  const raw = new TextEncoder().encode(keyString);
   return await crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["encrypt","decrypt"]);
 }
 
