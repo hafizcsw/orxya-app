@@ -35,6 +35,7 @@ import NotFound from "./pages/NotFound";
 import AdminAutopilot from "./pages/AdminAutopilot";
 import Conflicts from "./pages/Conflicts";
 import TestConflicts from "./pages/TestConflicts";
+import Expenses from "./pages/Expenses";
 import { Protected } from "./components/Protected";
 import { useAutopilotNotifications } from "./hooks/useAutopilotNotifications";
 
@@ -71,6 +72,7 @@ function AppContent() {
         <Route path="/diagnostics" element={<Protected><Diagnostics /></Protected>} />
         <Route path="/seed" element={<Seed />} />
         <Route path="/profile" element={<Protected><Profile /></Protected>} />
+        <Route path="/expenses" element={<Protected><Expenses /></Protected>} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="*" element={<NotFound />} />

@@ -403,7 +403,11 @@ const Today = () => {
                     </div>
                   </div>
                     
-                    <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '200ms' }}>
+                    <div 
+                      className="flex flex-col items-center group animate-fade-in cursor-pointer" 
+                      style={{ animationDelay: '200ms' }}
+                      onClick={() => navigate('/expenses')}
+                    >
                       <div className="relative scale-75 md:scale-100">
                         <div className="absolute inset-0 bg-[hsl(var(--whoop-red))] opacity-20 blur-2xl rounded-full scale-150 group-hover:scale-[2] transition-transform duration-700" />
                         <div className="relative transform transition-all duration-500 hover:scale-110">

@@ -187,7 +187,22 @@ serve(async (req) => {
     }
 
     if (command === "add_finance") {
-      const payload = AddFinance.parse(parsed.data.payload);
+      let payload = AddFinance.parse(parsed.data.payload);
+      
+      // Auto-categorize if category is missing and note exists
+      if (!payload.category && payload.note) {
+        try {
+          const { data: catData } = await supabase.functions.invoke('categorize-expense', {
+            body: { text: payload.note }
+          });
+          if (catData?.category) {
+            payload = { ...payload, category: catData.category };
+          }
+        } catch (e) {
+          console.warn('Failed to auto-categorize expense:', e);
+        }
+      }
+      
       const { data, error } = await supabase.from("finance_entries")
         .insert({ ...payload, owner_id: user.id })
         .select("id");
