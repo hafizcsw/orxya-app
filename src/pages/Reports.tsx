@@ -21,6 +21,12 @@ type DayReport = {
   walk_min: number;
   scholarships_sold: number;
   villas_sold: number;
+  events?: Array<{
+    title: string;
+    starts_at: string;
+    ends_at: string;
+    location?: string;
+  }>;
 };
 
 async function fetchDaily(dateISO: string): Promise<DayReport | null> {
@@ -292,6 +298,7 @@ export default function Reports() {
                         <th className="text-right p-3 font-medium">مشي (د)</th>
                         <th className="text-right p-3 font-medium">منح</th>
                         <th className="text-right p-3 font-medium">فلل</th>
+                        <th className="text-right p-3 font-medium">أحداث</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -316,6 +323,25 @@ export default function Reports() {
                           <td className="p-3">{r.walk_min}</td>
                           <td className="p-3">{r.scholarships_sold}</td>
                           <td className="p-3">{r.villas_sold}</td>
+                          <td className="p-3">
+                            {r.events && r.events.length > 0 ? (
+                              <div className="space-y-1">
+                                {r.events.map((event, i) => (
+                                  <div key={i} className="text-xs">
+                                    <div className="font-medium">{event.title}</div>
+                                    <div className="text-muted-foreground">
+                                      {new Date(event.starts_at).toLocaleTimeString('ar-AE', { hour: '2-digit', minute: '2-digit' })} - {new Date(event.ends_at).toLocaleTimeString('ar-AE', { hour: '2-digit', minute: '2-digit' })}
+                                    </div>
+                                    {event.location && (
+                                      <div className="text-muted-foreground">📍 {event.location}</div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
