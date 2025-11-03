@@ -28,6 +28,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Loader2, Trash2, Save, Sparkles, AlertTriangle, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import EventColorPicker from "./EventColorPicker";
+import { type CalendarColor } from "@/lib/calendar-colors";
 
 type Event = {
   id: string;
@@ -63,6 +65,7 @@ export default function EventDetailsDrawer({
   const [tags, setTags] = useState("");
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
+  const [color, setColor] = useState<CalendarColor>("peacock");
   const [aiSuggestion, setAiSuggestion] = useState<AISuggestion | null>(null);
   const [loadingAI, setLoadingAI] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -76,6 +79,7 @@ export default function EventDetailsDrawer({
       setTags((event.tags || []).join(", "));
       setStartsAt(formatForInput(event.starts_at));
       setEndsAt(formatForInput(event.ends_at));
+      setColor((event.color as CalendarColor) || "peacock");
       setAiSuggestion(null);
     }
   }, [event]);
@@ -100,6 +104,7 @@ export default function EventDetailsDrawer({
           location,
           notes,
           tags: tagsArray,
+          color,
           starts_at: new Date(startsAt).toISOString(),
           ends_at: new Date(endsAt).toISOString(),
         })
@@ -304,6 +309,12 @@ export default function EventDetailsDrawer({
               placeholder="أضف ملاحظات..."
               rows={4}
             />
+          </div>
+
+          {/* Color Picker */}
+          <div className="space-y-2">
+            <Label>لون الحدث</Label>
+            <EventColorPicker value={color} onChange={setColor} />
           </div>
 
           {/* AI Suggestion Section */}

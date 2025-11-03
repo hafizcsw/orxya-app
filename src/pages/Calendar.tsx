@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { Protected } from "@/components/Protected";
 import CalendarWeek from "@/components/calendar/CalendarWeek";
-import { Calendar as CalendarIcon, Grid3x3 } from "lucide-react";
+import { Calendar as CalendarIcon, Grid3x3, Plus, Search, Settings, Menu } from "lucide-react";
 import MonthGrid from "@/components/calendar/MonthGrid";
 import { startOfMonth, endOfMonth, toISODate } from "@/lib/dates";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import CalendarSidebar from "@/components/calendar/CalendarSidebar";
+import QuickAddDialog from "@/components/calendar/QuickAddDialog";
+import { Button } from "@/components/ui/button";
+import { useCalendarShortcuts } from "@/hooks/useCalendarShortcuts";
 
 type DbEvent = { 
   id: string; 
@@ -32,6 +36,18 @@ export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const [eventsByDate, setEventsByDate] = useState<Record<string, DbEvent[]>>({});
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Keyboard shortcuts
+  useCalendarShortcuts({
+    onQuickAdd: () => setQuickAddOpen(true),
+    onToday: () => setCurrentDate(new Date()),
+    onWeekView: () => setMode("week"),
+    onMonthView: () => setMode("month"),
+    onEscape: () => setQuickAddOpen(false),
+  });
 
   async function loadMonthData() {
     if (!user) return;
@@ -60,58 +76,129 @@ export default function CalendarPage() {
 
   return (
     <Protected>
-      <div className="min-h-screen bg-background p-4">
-        <div className="max-w-4xl mx-auto space-y-4">
-          {/* Compact Header with Mode Switcher */}
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">التقويم</h1>
+      <div className="min-h-screen bg-background flex flex-col">
+        {/* Google Calendar Header */}
+        <header className="border-b border-border/30 bg-background px-4 py-2 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2 hover:bg-accent/50 rounded-lg transition-colors"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
             
-            <div className="flex items-center gap-1 bg-secondary/60 p-1 rounded-xl">
-              <button
-                onClick={() => setMode("week")}
-                className={cn(
-                  "px-3 py-1.5 rounded-lg transition-all text-xs font-medium flex items-center gap-1",
-                  mode === "week" 
-                    ? "bg-background shadow-sm" 
-                    : "hover:bg-background/50"
-                )}
-              >
-                <CalendarIcon className="w-3 h-3" />
-                أسبوع
-              </button>
-              <button
-                onClick={() => {
-                  setMode("month");
-                  loadMonthData();
-                }}
-                className={cn(
-                  "px-3 py-1.5 rounded-lg transition-all text-xs font-medium flex items-center gap-1",
-                  mode === "month" 
-                    ? "bg-background shadow-sm" 
-                    : "hover:bg-background/50"
-                )}
-              >
-                <Grid3x3 className="w-3 h-3" />
-                شهر
-              </button>
+            <div className="flex items-center gap-2">
+              <CalendarIcon className="w-6 h-6 text-[#1a73e8]" />
+              <h1 className="text-xl font-medium">التقويم</h1>
             </div>
           </div>
 
-          {/* Calendar View */}
-          {mode === "week" ? (
-            <CalendarWeek 
-              anchor={currentDate} 
-              startOn={6}
-              onDateChange={setCurrentDate}
-            />
-          ) : (
-            <MonthGrid 
-              anchor={currentDate} 
-              eventsByDate={eventsByDate}
-              onDayClick={(iso) => console.log("Day clicked:", iso)} 
+          <div className="flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-2 bg-accent/50 px-3 py-1.5 rounded-lg">
+              <Search className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">بحث...</span>
+            </div>
+            
+            <Button
+              onClick={() => setQuickAddOpen(true)}
+              className="bg-[#1a73e8] hover:bg-[#1557b0] text-white gap-2 shadow-md"
+            >
+              <Plus className="w-4 h-4" />
+              إنشاء
+            </Button>
+
+            <button className="p-2 hover:bg-accent/50 rounded-lg transition-colors">
+              <Settings className="w-5 h-5" />
+            </button>
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Sidebar */}
+          {sidebarOpen && (
+            <CalendarSidebar
+              selectedDate={currentDate}
+              onDateSelect={setCurrentDate}
             />
           )}
+
+          {/* Calendar Content */}
+          <div className="flex-1 overflow-auto">
+            <div className="p-4">
+              {/* View Controls */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => setCurrentDate(new Date())}
+                    variant="outline"
+                    size="sm"
+                  >
+                    اليوم
+                  </Button>
+                  
+                  <div className="text-lg font-medium">
+                    {currentDate.toLocaleDateString('ar', { month: 'long', year: 'numeric' })}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1 bg-secondary/60 p-1 rounded-lg">
+                  <button
+                    onClick={() => setMode("week")}
+                    className={cn(
+                      "px-3 py-1.5 rounded-md transition-all text-xs font-medium",
+                      mode === "week" 
+                        ? "bg-background shadow-sm" 
+                        : "hover:bg-background/50"
+                    )}
+                  >
+                    أسبوع
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMode("month");
+                      loadMonthData();
+                    }}
+                    className={cn(
+                      "px-3 py-1.5 rounded-md transition-all text-xs font-medium",
+                      mode === "month" 
+                        ? "bg-background shadow-sm" 
+                        : "hover:bg-background/50"
+                    )}
+                  >
+                    شهر
+                  </button>
+                </div>
+              </div>
+
+              {/* Calendar View */}
+              {mode === "week" ? (
+                <CalendarWeek 
+                  key={refreshKey}
+                  anchor={currentDate} 
+                  startOn={6}
+                  onDateChange={setCurrentDate}
+                />
+              ) : (
+                <MonthGrid 
+                  anchor={currentDate} 
+                  eventsByDate={eventsByDate}
+                  onDayClick={(iso) => setCurrentDate(new Date(iso))} 
+                />
+              )}
+            </div>
+          </div>
         </div>
+
+        {/* Quick Add Dialog */}
+        <QuickAddDialog
+          open={quickAddOpen}
+          onClose={() => setQuickAddOpen(false)}
+          onEventCreated={() => {
+            setRefreshKey(prev => prev + 1);
+            setQuickAddOpen(false);
+          }}
+        />
       </div>
     </Protected>
   );

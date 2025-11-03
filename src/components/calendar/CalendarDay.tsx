@@ -60,10 +60,17 @@ function CalendarDay({
     return packed.filter(p => !p.isAllDay);
   }, [events, date, pxPerMin]);
 
+  // Snap to 15-minute intervals
+  const snapToInterval = (minutes: number, interval: number = 15) => {
+    return Math.round(minutes / interval) * interval;
+  };
+
   const toTime = (y: number) => {
-    const minutes = Math.round(y / pxPerMin);
+    const minutes = snapToInterval(Math.round(y / pxPerMin), 15);
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
     const d = new Date(date);
-    d.setHours(0, minutes, 0, 0);
+    d.setHours(h, m, 0, 0);
     return d.toISOString();
   };
 

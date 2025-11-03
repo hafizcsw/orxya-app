@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { MapPin } from "lucide-react";
+import { GOOGLE_CALENDAR_COLORS, getColorForEvent } from "@/lib/calendar-colors";
 
 type Props = {
   event: any;
@@ -19,12 +20,33 @@ export default function EventChip({
   className 
 }: Props) {
   const getEventColor = () => {
-    if (event.is_cancelled) return "bg-muted/50 text-muted-foreground line-through border-muted";
-    if (hasConflict) return "bg-red-50 dark:bg-red-950/30 border-red-500 text-red-700 dark:text-red-300";
-    if (event.source === "google") return "bg-blue-50 dark:bg-blue-950/30 border-blue-500 text-blue-700 dark:text-blue-300";
-    if (event.color) return `bg-primary/10 border-primary text-primary`;
-    return "bg-primary/10 border-primary text-primary";
+    if (event.is_cancelled) {
+      return {
+        bg: "bg-muted/50",
+        border: "border-muted",
+        text: "text-muted-foreground line-through"
+      };
+    }
+    
+    if (hasConflict) {
+      return {
+        bg: "bg-[#d50000]/10",
+        border: "border-[#d50000]",
+        text: "text-[#d50000]"
+      };
+    }
+    
+    const colorKey = getColorForEvent(event.source, event.color);
+    const color = GOOGLE_CALENDAR_COLORS[colorKey];
+    
+    return {
+      bg: color.bg,
+      border: color.border,
+      text: color.text
+    };
   };
+  
+  const colors = getEventColor();
 
   const formatTime = (iso: string) => {
     const d = new Date(iso);
@@ -38,11 +60,14 @@ export default function EventChip({
         onClick();
       }}
       className={cn(
-        "w-full h-full rounded border-l-[3px] px-1.5 py-1 relative",
+        "w-full h-full rounded-md border-l-[4px] px-2 py-1 relative",
         "text-start text-xs overflow-hidden",
-        "transition-all hover:shadow-sm",
-        "focus:outline-none focus:ring-1 focus:ring-primary/30",
-        getEventColor(),
+        "transition-all duration-200",
+        "hover:shadow-md hover:scale-[1.02] hover:z-10",
+        "focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/30",
+        colors.bg,
+        colors.border,
+        colors.text,
         className
       )}
       style={style}
