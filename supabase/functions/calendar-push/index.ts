@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://esm.sh/zod@3.23.8";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -126,6 +127,25 @@ async function gcalInsertEvent(accessToken: string, calendarId: string, evt: any
   return await r.json();
 }
 
+// Input validation schemas
+const ApplySuggestionSchema = z.object({
+  mode: z.literal("apply_suggestion"),
+  conflict_id: z.string().uuid()
+});
+
+const PatchSchema = z.object({
+  mode: z.literal("patch"),
+  event_id: z.string().uuid(),
+  patch: z.object({
+    starts_at: z.string().datetime().optional(),
+    ends_at: z.string().datetime().optional(),
+    title: z.string().max(500).optional(),
+    description: z.string().max(5000).optional()
+  })
+});
+
+const BodySchema = z.union([ApplySuggestionSchema, PatchSchema]);
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return json({ ok: true });
 
@@ -153,10 +173,17 @@ serve(async (req) => {
       return json({ ok: false, error: "WRITEBACK_DISABLED" }, 400);
     }
 
-    const body = await req.json().catch(() => ({}));
-    const mode = (body.mode ?? "apply_suggestion") as
-      | "apply_suggestion"
-      | "patch";
+    const rawBody = await req.json().catch(() => ({}));
+    
+    // Validate input
+    const parseResult = BodySchema.safeParse(rawBody);
+    if (!parseResult.success) {
+      console.error("Validation error:", parseResult.error.flatten());
+      return json({ ok: false, error: "INVALID_INPUT", details: parseResult.error.flatten() }, 400);
+    }
+    
+    const body = parseResult.data;
+    const mode = body.mode;
     const tz = prof.timezone ?? "UTC";
 
     const access = await ensureAccessToken(supabase, user.id);

@@ -41,10 +41,25 @@ export default function AdminAutopilot() {
       try {
         track('admin_open', { user_id: user.id });
 
-        const { data: gate, error: e1 } = await supabase.rpc('admin_actions_daily' as any);
-        if (e1) throw e1;
+        // Check authorization first via user_roles table (server-side enforced)
+        const { data: roleCheck, error: roleError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .eq('role', 'admin')
+          .maybeSingle();
+        
+        if (roleError || !roleCheck) {
+          setIsAdmin(false);
+          setErr('Unauthorized - Admin access required');
+          track('admin_not_authorized', { reason: 'no_admin_role' });
+          setLoading(false);
+          return;
+        }
+
         setIsAdmin(true);
 
+        // Now fetch admin data (RPC functions enforce role check on server-side too)
         const [{ data: k }, { data: d }, { data: r }] = await Promise.all([
           supabase.rpc('admin_conflict_kpis' as any),
           supabase.rpc('admin_actions_daily' as any),

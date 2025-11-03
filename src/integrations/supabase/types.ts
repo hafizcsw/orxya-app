@@ -2409,50 +2409,32 @@ export type Database = {
       admin_actions_daily: {
         Args: never
         Returns: {
-          applied: number | null
-          day: string | null
-          total_actions: number | null
-          undone: number | null
+          applied: number
+          day: string
+          total_actions: number
+          undone: number
         }[]
-        SetofOptions: {
-          from: "*"
-          to: "v_admin_actions_daily"
-          isOneToOne: false
-          isSetofReturn: true
-        }
       }
       admin_conflict_kpis: {
         Args: never
         Returns: {
-          applied_7d: number | null
-          as_of_date: string | null
-          auto_applied_now: number | null
-          open_now: number | null
-          resolved_now: number | null
-          suggested_now: number | null
-          undo_rate_7d: number | null
-          undone_7d: number | null
-          undone_now: number | null
+          applied_7d: number
+          as_of_date: string
+          auto_applied_now: number
+          open_now: number
+          resolved_now: number
+          suggested_now: number
+          undo_rate_7d: number
+          undone_7d: number
+          undone_now: number
         }[]
-        SetofOptions: {
-          from: "*"
-          to: "v_admin_conflict_kpis"
-          isOneToOne: false
-          isSetofReturn: true
-        }
       }
       admin_top_reasons_30d: {
         Args: never
         Returns: {
-          cnt: number | null
-          reason: string | null
+          cnt: number
+          reason: string
         }[]
-        SetofOptions: {
-          from: "*"
-          to: "v_admin_top_reasons_30d"
-          isOneToOne: false
-          isSetofReturn: true
-        }
       }
       expand_instances: {
         Args: { p_from: string; p_to: string }
@@ -2513,13 +2495,15 @@ export type Database = {
         }
       }
       get_user_flags: { Args: { p_user_id: string }; Returns: Json }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
+      has_role:
+        | { Args: { _role: string; _user_id: string }; Returns: boolean }
+        | {
+            Args: {
+              _role: Database["public"]["Enums"]["app_role"]
+              _user_id: string
+            }
+            Returns: boolean
+          }
       ingest_financial_event: {
         Args: {
           p_amount: number

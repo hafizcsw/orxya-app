@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://esm.sh/zod@3.23.8";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -34,13 +35,25 @@ serve(async (req) => {
       });
     }
 
-    const { text } = await req.json();
-    if (!text) {
-      return new Response(JSON.stringify({ error: "no_text" }), {
+    // Validate input
+    const InputSchema = z.object({
+      text: z.string().min(1).max(500)
+    });
+    
+    const rawBody = await req.json();
+    const parseResult = InputSchema.safeParse(rawBody);
+    
+    if (!parseResult.success) {
+      return new Response(JSON.stringify({ 
+        error: "invalid_input",
+        details: parseResult.error.flatten()
+      }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
+    
+    const { text } = parseResult.data;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -136,15 +149,26 @@ serve(async (req) => {
     const duration = parsed.duration || 60;
     const endsAt = new Date(startsAt.getTime() + duration * 60 * 1000);
 
+    // Validate parsed data before insertion
+    const EventSchema = z.object({
+      title: z.string().min(1).max(500),
+      location: z.string().max(500).nullable().optional()
+    });
+    
+    const validatedEvent = EventSchema.parse({
+      title: parsed.title || text.substring(0, 500),
+      location: parsed.location || null
+    });
+    
     const { data: event, error: insertError } = await sb
       .from("events")
       .insert({
         owner_id: user.id,
-        title: parsed.title || text,
+        title: validatedEvent.title,
         starts_at: startsAt.toISOString(),
         ends_at: endsAt.toISOString(),
         duration_min: duration,
-        location: parsed.location || null,
+        location: validatedEvent.location,
         is_draft: true,
         source: 'local'
       })
