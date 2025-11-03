@@ -494,6 +494,54 @@ export type Database = {
         }
         Relationships: []
       }
+      calendars: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          id: string
+          is_primary: boolean | null
+          name: string
+          provider: string | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          name: string
+          provider?: string | null
+          source: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          name?: string
+          provider?: string | null
+          source?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendars_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "mv_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "calendars_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       command_audit: {
         Row: {
           command_type: string
@@ -645,6 +693,13 @@ export type Database = {
             foreignKeyName: "conflicts_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: false
+            referencedRelation: "mv_event_instances"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "conflicts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
             referencedRelation: "vw_events_conflicts"
             referencedColumns: ["id"]
           },
@@ -725,10 +780,63 @@ export type Database = {
         }
         Relationships: []
       }
+      event_attendees: {
+        Row: {
+          email: string
+          event_id: string
+          name: string | null
+          status: string | null
+        }
+        Insert: {
+          email: string
+          event_id: string
+          name?: string | null
+          status?: string | null
+        }
+        Update: {
+          email?: string
+          event_id?: string
+          name?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_attendees_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_attendees_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "mv_event_instances"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "event_attendees_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "vw_events_conflicts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_attendees_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "vw_events_with_conflicts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           ai_confidence: number | null
           all_day: boolean | null
+          buffer_after: number | null
+          buffer_before: number | null
+          calendar_id: string | null
           color: string | null
           created_at: string | null
           deleted_at: string | null
@@ -736,6 +844,7 @@ export type Database = {
           duration_min: number | null
           ends_at: string
           etag: string | null
+          exdates: string[] | null
           ext_id: string | null
           external_calendar_id: string | null
           external_etag: string | null
@@ -747,6 +856,7 @@ export type Database = {
           id: string
           is_ai_created: boolean | null
           is_all_day: boolean | null
+          is_draft: boolean | null
           last_error: string | null
           last_google_sync_at: string | null
           last_push_at: string | null
@@ -761,6 +871,7 @@ export type Database = {
           owner_id: string
           pending_push: boolean
           retry_count: number
+          rrule: string | null
           source: string | null
           source_id: string | null
           starts_at: string
@@ -768,12 +879,16 @@ export type Database = {
           sync_to_google: boolean | null
           tags: string[] | null
           title: string
+          travel_minutes: number | null
           updated_at: string | null
           version: number
         }
         Insert: {
           ai_confidence?: number | null
           all_day?: boolean | null
+          buffer_after?: number | null
+          buffer_before?: number | null
+          calendar_id?: string | null
           color?: string | null
           created_at?: string | null
           deleted_at?: string | null
@@ -781,6 +896,7 @@ export type Database = {
           duration_min?: number | null
           ends_at: string
           etag?: string | null
+          exdates?: string[] | null
           ext_id?: string | null
           external_calendar_id?: string | null
           external_etag?: string | null
@@ -792,6 +908,7 @@ export type Database = {
           id?: string
           is_ai_created?: boolean | null
           is_all_day?: boolean | null
+          is_draft?: boolean | null
           last_error?: string | null
           last_google_sync_at?: string | null
           last_push_at?: string | null
@@ -806,6 +923,7 @@ export type Database = {
           owner_id: string
           pending_push?: boolean
           retry_count?: number
+          rrule?: string | null
           source?: string | null
           source_id?: string | null
           starts_at: string
@@ -813,12 +931,16 @@ export type Database = {
           sync_to_google?: boolean | null
           tags?: string[] | null
           title: string
+          travel_minutes?: number | null
           updated_at?: string | null
           version?: number
         }
         Update: {
           ai_confidence?: number | null
           all_day?: boolean | null
+          buffer_after?: number | null
+          buffer_before?: number | null
+          calendar_id?: string | null
           color?: string | null
           created_at?: string | null
           deleted_at?: string | null
@@ -826,6 +948,7 @@ export type Database = {
           duration_min?: number | null
           ends_at?: string
           etag?: string | null
+          exdates?: string[] | null
           ext_id?: string | null
           external_calendar_id?: string | null
           external_etag?: string | null
@@ -837,6 +960,7 @@ export type Database = {
           id?: string
           is_ai_created?: boolean | null
           is_all_day?: boolean | null
+          is_draft?: boolean | null
           last_error?: string | null
           last_google_sync_at?: string | null
           last_push_at?: string | null
@@ -851,6 +975,7 @@ export type Database = {
           owner_id?: string
           pending_push?: boolean
           retry_count?: number
+          rrule?: string | null
           source?: string | null
           source_id?: string | null
           starts_at?: string
@@ -858,10 +983,18 @@ export type Database = {
           sync_to_google?: boolean | null
           tags?: string[] | null
           title?: string
+          travel_minutes?: number | null
           updated_at?: string | null
           version?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "events_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: false
+            referencedRelation: "calendars"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "events_owner_id_fkey"
             columns: ["owner_id"]
@@ -1692,6 +1825,13 @@ export type Database = {
             foreignKeyName: "tasks_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: false
+            referencedRelation: "mv_event_instances"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "tasks_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
             referencedRelation: "vw_events_conflicts"
             referencedColumns: ["id"]
           },
@@ -1821,6 +1961,102 @@ export type Database = {
           },
         ]
       }
+      working_hours: {
+        Row: {
+          created_at: string | null
+          fri: unknown
+          mon: unknown
+          sat: unknown
+          sun: unknown
+          thu: unknown
+          tue: unknown
+          tz: string
+          updated_at: string | null
+          user_id: string
+          wed: unknown
+        }
+        Insert: {
+          created_at?: string | null
+          fri?: unknown
+          mon?: unknown
+          sat?: unknown
+          sun?: unknown
+          thu?: unknown
+          tue?: unknown
+          tz?: string
+          updated_at?: string | null
+          user_id: string
+          wed?: unknown
+        }
+        Update: {
+          created_at?: string | null
+          fri?: unknown
+          mon?: unknown
+          sat?: unknown
+          sun?: unknown
+          thu?: unknown
+          tue?: unknown
+          tz?: string
+          updated_at?: string | null
+          user_id?: string
+          wed?: unknown
+        }
+        Relationships: [
+          {
+            foreignKeyName: "working_hours_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "mv_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "working_hours_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      working_locations: {
+        Row: {
+          created_at: string | null
+          today: string | null
+          tomorrow: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          today?: string | null
+          tomorrow?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          today?: string | null
+          tomorrow?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "working_locations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "mv_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "working_locations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
     }
     Views: {
       mv_daily_metrics: {
@@ -1864,6 +2100,47 @@ export type Database = {
           {
             foreignKeyName: "analytics_events_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      mv_event_instances: {
+        Row: {
+          buffer_after: number | null
+          buffer_before: number | null
+          calendar_id: string | null
+          event_id: string | null
+          instance_end: string | null
+          instance_start: string | null
+          is_draft: boolean | null
+          location: string | null
+          owner_id: string | null
+          provider: string | null
+          source: string | null
+          tags: string[] | null
+          title: string | null
+          travel_minutes: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: false
+            referencedRelation: "calendars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "mv_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "events_owner_id_fkey"
+            columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "vw_daily_metrics"
             referencedColumns: ["user_id"]
@@ -2176,6 +2453,10 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      expand_instances: {
+        Args: { p_from: string; p_to: string }
+        Returns: undefined
       }
       fn_refresh_conflicts_for_date: {
         Args: { p_date: string; p_owner: string }

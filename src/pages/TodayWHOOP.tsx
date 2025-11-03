@@ -8,6 +8,8 @@ import { format } from "date-fns";
 import { LegacyToday } from "@/components/LegacyToday";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/lib/auth";
+import NaturalInput from "@/components/calendar/NaturalInput";
+import { useCalendarInstances } from "@/hooks/useCalendarInstances";
 
 /**
  * TodayWHOOP v2.1 — UI Delta (non-destructive)
@@ -46,6 +48,12 @@ function useFlags() {
       ff_location_push: false,
       ff_finloc_link: false,
       ff_geocode_ondevice: false,
+      // Calendar Supercharged
+      ff_calendar_instances: true,
+      ff_calendar_nlp: true,
+      ff_calendar_find_time: false,
+      ff_calendar_overlays: true,
+      ff_calendar_mobile: false,
     };
     if (ffParam) {
       ffParam.split(",").forEach(k => (initial[k] = true));
@@ -454,9 +462,33 @@ export default function TodayWHOOP() {
     { key: "location", label: "Location", icon: <MapPin className="w-3 h-3" /> },
   ];
 
+  // إعداد نافذة التقويم (اليوم + غداً)
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const startISO = today.toISOString();
+  const endISO = tomorrow.toISOString();
+  
+  const { data: calendarData, loading: calLoading } = useCalendarInstances(startISO, endISO);
+
   return (
     <div className="mx-auto max-w-3xl flex flex-col gap-3 p-3 pb-24 min-h-screen">
       {/* المكونات الجديدة - WHOOP Style في الأعلى */}
+      
+      {/* Natural Language Input */}
+      {ff.ff_calendar_nlp && (
+        <Card className="backdrop-blur-md bg-card/50 border-border/50 shadow-lg">
+          <CardContent className="p-4">
+            <div className="font-medium mb-3 flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              <span>إضافة موعد سريع</span>
+            </div>
+            <NaturalInput onEventCreated={() => {
+              // إعادة تحميل التقويم
+            }} />
+          </CardContent>
+        </Card>
+      )}
       
       {/* Now / Next Strip */}
       {ff.ff_now_next_strip && <NowNextStrip now={now} next={next} />}
@@ -518,6 +550,39 @@ export default function TodayWHOOP() {
 
       {/* Health Rings - WHOOP Style */}
       {ff.ff_health_rings && <HealthRings sleep={healthData.sleep} strain={healthData.strain} recovery={healthData.recovery} />}
+
+      {/* Calendar Instances Summary */}
+      {ff.ff_calendar_instances && !calLoading && (
+        <Card className="backdrop-blur-md bg-card/50 border-border/50 shadow-lg">
+          <CardContent className="p-4">
+            <div className="font-medium mb-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                <span>مواعيد اليوم</span>
+              </div>
+              <Badge variant="secondary">{calendarData.instances.length}</Badge>
+            </div>
+            <div className="space-y-2">
+              {calendarData.instances.slice(0, 3).map((inst) => (
+                <div key={inst.event_id} className="text-sm flex items-center justify-between p-2 rounded-lg bg-background/40">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-3 h-3 text-muted-foreground" />
+                    <span>{new Date(inst.instance_start).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span className="font-medium">{inst.title}</span>
+                    {inst.is_draft && <Badge variant="outline" className="text-xs">مسودة</Badge>}
+                  </div>
+                  {inst.location && <MapPin className="w-3 h-3 text-muted-foreground" />}
+                </div>
+              ))}
+              {calendarData.instances.length > 3 && (
+                <div className="text-xs text-muted-foreground text-center pt-2">
+                  +{calendarData.instances.length - 3} موعد آخر
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Timeline with prayer overlay */}
       {ff.ff_timeline_inline && <TimelineInline items={items} now={"12:05"} prayerWindows={prayers} />}
