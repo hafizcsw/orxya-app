@@ -50,7 +50,7 @@ export const DailyReportCard = ({ date }: { date?: string }) => {
         
         const targetDate = date || new Date().toISOString().split('T')[0];
         const { data, error } = await supabase.functions.invoke('report-daily', {
-          body: { date: targetDate }
+          body: { start: targetDate, end: targetDate }
         });
 
         if (error) throw error;
