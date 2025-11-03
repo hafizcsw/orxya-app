@@ -38,7 +38,7 @@ export default function MiniCalendar({ selectedDate, onDateSelect, eventDates = 
 
   const days = [];
   for (let i = 0; i < startDayOfWeek; i++) {
-    days.push(<div key={`empty-${i}`} className="aspect-square" />);
+    days.push(<div key={`empty-${i}`} className="h-8" />);
   }
   for (let day = 1; day <= daysInMonth; day++) {
     days.push(
@@ -46,11 +46,11 @@ export default function MiniCalendar({ selectedDate, onDateSelect, eventDates = 
         key={day}
         onClick={() => onDateSelect(new Date(year, month, day))}
         className={cn(
-          "aspect-square rounded-full text-xs font-medium transition-all relative",
-          "hover:bg-accent/50",
-          isToday(day) && "ring-2 ring-[#1a73e8]",
-          isSelected(day) && "bg-[#1a73e8] text-white hover:bg-[#1557b0]",
-          !isSelected(day) && "text-foreground"
+          "h-8 rounded-full text-xs font-normal transition-all relative flex items-center justify-center",
+          "hover:bg-accent/70",
+          isToday(day) && !isSelected(day) && "font-bold",
+          isSelected(day) && "bg-[#1a73e8] text-white hover:bg-[#1557b0] font-medium shadow-sm",
+          !isSelected(day) && !isToday(day) && "text-foreground"
         )}
       >
         {day}
@@ -62,11 +62,12 @@ export default function MiniCalendar({ selectedDate, onDateSelect, eventDates = 
   }
 
   return (
-    <div className="p-3 bg-background rounded-lg border border-border/50">
-      <div className="flex items-center justify-between mb-3">
+    <div className="space-y-3">
+      <div className="flex items-center justify-between px-1">
         <button
           onClick={prevMonth}
-          className="p-1 hover:bg-accent/50 rounded transition-colors"
+          className="p-1.5 hover:bg-accent/50 rounded-full transition-colors"
+          aria-label="Previous month"
         >
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -75,21 +76,22 @@ export default function MiniCalendar({ selectedDate, onDateSelect, eventDates = 
         </div>
         <button
           onClick={nextMonth}
-          className="p-1 hover:bg-accent/50 rounded transition-colors"
+          className="p-1.5 hover:bg-accent/50 rounded-full transition-colors"
+          aria-label="Next month"
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 mb-1">
-        {['أح', 'إث', 'ثلا', 'أرب', 'خم', 'جم', 'سب'].map((day) => (
-          <div key={day} className="text-[10px] text-muted-foreground text-center font-medium">
+      <div className="grid grid-cols-7 gap-1 mb-2">
+        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+          <div key={i} className="text-[11px] text-muted-foreground text-center font-medium h-6 flex items-center justify-center">
             {day}
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-1">
+      <div className="grid grid-cols-7 gap-0.5">
         {days}
       </div>
     </div>

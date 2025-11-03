@@ -111,7 +111,7 @@ export default function CalendarPage() {
           </div>
 
           <div className="flex items-center gap-1 sm:gap-3">
-            <div className="hidden md:flex items-center gap-2 bg-accent/50 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-accent transition-colors">
+            <div className="hidden md:flex items-center gap-2 bg-muted/30 px-3 py-1.5 rounded-full cursor-pointer hover:bg-muted/50 transition-colors border border-border/30">
               <Search className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">بحث...</span>
             </div>
@@ -119,17 +119,18 @@ export default function CalendarPage() {
             <Button
               onClick={() => setQuickAddOpen(true)}
               size="sm"
-              className="bg-[#1a73e8] hover:bg-[#1557b0] text-white gap-1 sm:gap-2 shadow-md px-2 sm:px-4"
+              variant="outline"
+              className="bg-white dark:bg-background hover:bg-accent text-foreground gap-1 sm:gap-2 shadow-sm border border-border/50 font-medium px-3 sm:px-4"
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">إنشاء</span>
             </Button>
 
             <button 
-              className="hidden sm:flex p-2 hover:bg-accent/50 rounded-lg transition-colors"
+              className="hidden sm:flex p-2 hover:bg-accent/50 rounded-full transition-colors"
               aria-label="Settings"
             >
-              <Settings className="w-5 h-5" />
+              <Settings className="w-5 h-5 text-muted-foreground" />
             </button>
           </div>
         </header>

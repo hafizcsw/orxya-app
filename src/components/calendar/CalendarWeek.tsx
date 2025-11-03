@@ -104,38 +104,40 @@ export default function CalendarWeek({
   };
 
   return (
-    <div className="w-full h-[calc(100vh-200px)] sm:h-[calc(100vh-160px)] flex flex-col bg-background border border-border/50 rounded-lg shadow-sm overflow-hidden">
-      {/* Navigation header - Google Calendar style - Hidden on mobile, integrated in parent */}
-      <div className="hidden sm:flex items-center justify-between px-4 sm:px-6 py-2 sm:py-3 border-b border-border/60 bg-card">
+    <div className="w-full h-[calc(100vh-200px)] sm:h-[calc(100vh-160px)] flex flex-col bg-background rounded-lg overflow-hidden border border-border/20">
+      {/* Navigation header - Google Calendar style - Hidden on mobile */}
+      <div className="hidden sm:flex items-center justify-between px-4 sm:px-6 py-2 border-b border-border/20">
         <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={goToToday}
-            className="px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-md hover:bg-accent transition-colors"
+            className="px-4 py-1.5 text-sm font-medium rounded-md border border-border/40 hover:bg-accent/50 transition-colors"
           >
             اليوم
           </button>
           <button
             onClick={() => navigateWeek("prev")}
-            className="p-1.5 rounded-full hover:bg-accent transition-colors"
+            className="p-1.5 rounded-full hover:bg-accent/50 transition-colors"
+            aria-label="Previous week"
           >
-            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+            <ChevronRight className="w-5 h-5" />
           </button>
           <button
             onClick={() => navigateWeek("next")}
-            className="p-1.5 rounded-full hover:bg-accent transition-colors"
+            className="p-1.5 rounded-full hover:bg-accent/50 transition-colors"
+            aria-label="Next week"
           >
-            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+            <ChevronLeft className="w-5 h-5" />
           </button>
         </div>
 
-        <h2 className="text-base sm:text-xl font-normal text-foreground">
+        <h2 className="text-base sm:text-lg font-normal text-foreground">
           {start.toLocaleDateString("ar", { month: "long", year: "numeric" })}
         </h2>
 
         <button
           onClick={reload}
           disabled={loading}
-          className="px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-md hover:bg-accent transition-colors disabled:opacity-50"
+          className="px-4 py-1.5 text-sm font-medium rounded-md hover:bg-accent/50 transition-colors disabled:opacity-50"
         >
           {loading ? "..." : "تحديث"}
         </button>
@@ -187,19 +189,18 @@ export default function CalendarWeek({
           {/* Scrollable container */}
           <div className="flex-1 overflow-auto relative" ref={gridRef}>
             {/* Time gutter - Sticky on scroll */}
-            <div className="absolute left-0 top-0 w-12 sm:w-16 h-full flex-shrink-0 border-l border-border/40 bg-background z-10 sticky left-0">
+            <div className="absolute left-0 top-0 w-12 sm:w-16 h-full flex-shrink-0 bg-background z-10 sticky left-0">
               <div className="relative h-full">
                 {Array.from({ length: 24 }, (_, h) => (
                   <div
                     key={h}
-                    className="relative border-b border-border/30 text-right pr-1 sm:pr-2 bg-muted/20"
+                    className="relative text-right pr-2 sm:pr-3"
                     style={{ height: pxPerHour }}
                   >
-                    {h > 0 && (
-                      <span className="absolute -top-2.5 right-1 sm:right-2 text-[9px] sm:text-[10px] text-muted-foreground font-normal">
-                        {h.toString().padStart(2, "0")}
-                      </span>
-                    )}
+                    <span className="absolute -top-2.5 right-2 text-[10px] sm:text-[11px] text-muted-foreground font-normal">
+                      {h === 0 ? "" : `${h.toString().padStart(2, "0")}:00`}
+                    </span>
+                    <div className="absolute top-0 left-0 right-0 border-t border-border/20" />
                   </div>
                 ))}
               </div>

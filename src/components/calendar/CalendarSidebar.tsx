@@ -1,7 +1,8 @@
 import MiniCalendar from "./MiniCalendar";
-import { Calendar, ChevronDown } from "lucide-react";
+import { Calendar, ChevronDown, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 type CalendarItem = {
   id: string;
@@ -32,7 +33,17 @@ export default function CalendarSidebar({
   const [myCalendarsOpen, setMyCalendarsOpen] = useState(true);
 
   return (
-    <div className="w-full h-full border-l border-border/30 bg-background p-3 sm:p-4 space-y-4 overflow-y-auto">
+    <div className="w-full h-full bg-background p-4 space-y-6 overflow-y-auto">
+      {/* Create Button - Google Style */}
+      <Button
+        onClick={onCalendarToggle ? () => onCalendarToggle('create') : undefined}
+        variant="outline"
+        className="w-full justify-start gap-3 h-12 rounded-full shadow-md hover:shadow-lg transition-shadow border border-border/50 bg-white dark:bg-background font-medium text-sm"
+      >
+        <Plus className="w-5 h-5" />
+        إنشاء
+      </Button>
+
       {/* Mini Calendar */}
       <MiniCalendar
         selectedDate={selectedDate}
