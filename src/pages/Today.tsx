@@ -64,13 +64,13 @@ const Today = () => {
       const dateStr = selectedDate.toISOString().slice(0, 10)
       const { data, error } = await supabase.functions.invoke('report-daily', {
         body: { 
-          period,
-          date: dateStr 
+          start: dateStr,
+          end: dateStr
         }
       })
       if (error) throw error
-      setReport(data?.report ?? null)
-      track('report_daily_loaded', { hasReport: !!data?.report, period, date: dateStr })
+      setReport(data?.items?.[0] ?? null)
+      track('report_daily_loaded', { hasReport: !!data?.items?.[0], date: dateStr })
     } catch (e: any) {
       setReport(null)
     } finally { setLoading(false) }

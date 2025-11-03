@@ -54,8 +54,8 @@ export const DailyReportCard = ({ date }: { date?: string }) => {
         });
 
         if (error) throw error;
-        if (data?.ok && data?.report) {
-          setReport(data.report);
+        if (data?.items?.[0]) {
+          setReport(data.items[0]);
         } else {
           throw new Error("فشل في جلب التقرير");
         }

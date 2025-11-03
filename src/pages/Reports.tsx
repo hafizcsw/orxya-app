@@ -25,10 +25,10 @@ type DayReport = {
 
 async function fetchDaily(dateISO: string): Promise<DayReport | null> {
   const { data, error } = await supabase.functions.invoke('report-daily', {
-    body: { date: dateISO }
+    body: { start: dateISO, end: dateISO }
   });
-  if (error || !data?.ok) return null;
-  return data.report as DayReport;
+  if (error || !data?.items) return null;
+  return data.items[0] as DayReport;
 }
 
 function fmt(d: Date) { 
