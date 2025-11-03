@@ -168,7 +168,10 @@ export default function CalendarWeek({
                   </div>
                   <button
                     onClick={() => {
-                      onDateChange?.(d);
+                      console.log('Day clicked:', d);
+                      if (onDateChange) {
+                        onDateChange(d);
+                      }
                       setGlobalDate(d);
                     }}
                     className={cn(
@@ -176,7 +179,7 @@ export default function CalendarWeek({
                       "w-6 h-6 sm:w-7 sm:h-7 text-xs sm:text-sm",
                       isToday
                         ? "bg-[#1a73e8] text-white shadow-md hover:bg-[#1557b0]"
-                        : "text-foreground"
+                        : "text-foreground hover:bg-muted"
                     )}
                   >
                     {d.getDate()}
