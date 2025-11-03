@@ -156,7 +156,7 @@ export default function PlannerChat() {
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col">
+    <div className="h-[calc(100vh-4rem)] flex flex-col pb-16 md:pb-0">
       <header className="p-4 border-b flex items-center justify-between gap-3">
         <div>
           <div className="text-lg font-semibold flex items-center gap-2">
