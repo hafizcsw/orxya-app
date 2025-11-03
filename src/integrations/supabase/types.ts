@@ -1100,6 +1100,7 @@ export type Database = {
         Row: {
           accent_color: string | null
           allow_location: boolean | null
+          avatar_url: string | null
           calendar_writeback: boolean
           created_at: string | null
           currency: string | null
@@ -1132,6 +1133,7 @@ export type Database = {
         Insert: {
           accent_color?: string | null
           allow_location?: boolean | null
+          avatar_url?: string | null
           calendar_writeback?: boolean
           created_at?: string | null
           currency?: string | null
@@ -1164,6 +1166,7 @@ export type Database = {
         Update: {
           accent_color?: string | null
           allow_location?: boolean | null
+          avatar_url?: string | null
           calendar_writeback?: boolean
           created_at?: string | null
           currency?: string | null

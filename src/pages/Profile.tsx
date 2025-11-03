@@ -11,6 +11,7 @@ import { ensureAISession, getAIConsents, updateAIConsents, computeAIStatus } fro
 import { useGoogleAccount } from '@/hooks/useExternal';
 import CalendarList from '@/components/CalendarList';
 import GoogleCalendarCard from '@/components/GoogleCalendarCard';
+import { AvatarUpload } from '@/components/AvatarUpload';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Bell, Calendar as CalendarIcon, Clock, ExternalLink, Loader2, LogOut, Moon, Sun } from 'lucide-react';
@@ -41,6 +42,7 @@ export default function Profile() {
   const [calMap, setCalMap] = useState<Record<string,string>>({
     task:'', meeting:'', ai_plan:'', prayer_block:''
   });
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   const tzList = useMemo(() => [
     'Asia/Dubai', 'UTC', 'Europe/Helsinki', 'Europe/London', 
@@ -52,7 +54,7 @@ export default function Profile() {
       if (!user) return;
       const { data } = await supabase
         .from('profiles')
-        .select('full_name,currency,timezone,telemetry_enabled,allow_location,prayer_method,latitude,longitude,calendar_writeback,default_calendar_id,default_calendar_provider,default_calendar_name')
+        .select('full_name,currency,timezone,telemetry_enabled,allow_location,prayer_method,latitude,longitude,calendar_writeback,default_calendar_id,default_calendar_provider,default_calendar_name,avatar_url')
         .eq('id', user.id)
         .maybeSingle();
       if (data) {
@@ -67,6 +69,7 @@ export default function Profile() {
         setLongitude(data.longitude?.toString() ?? '');
         setCalendarWriteback(!!data.calendar_writeback);
         setDefaultCal(data.default_calendar_id ?? '');
+        setAvatarUrl(data.avatar_url ?? null);
       }
       const q = await getQueued();
       setPendingCount(q.length);
@@ -210,7 +213,25 @@ export default function Profile() {
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
-      <h1 className="text-3xl font-bold">حسابي</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">حسابي</h1>
+      </div>
+
+      {/* الصورة الشخصية */}
+      <div className="rounded-2xl border border-border p-6 bg-card">
+        <div className="text-sm text-muted-foreground font-medium mb-4">الصورة الشخصية</div>
+        <div className="flex flex-col items-center">
+          <AvatarUpload 
+            currentAvatarUrl={avatarUrl}
+            onAvatarUpdate={(url) => setAvatarUrl(url)}
+            size="lg"
+            showUploadButton={true}
+          />
+          <p className="text-xs text-muted-foreground mt-4 text-center">
+            يمكنك رفع صورة شخصية أو استخدام صورة Google الخاصة بك
+          </p>
+        </div>
+      </div>
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* البيانات الأساسية */}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import AuthSheet from "@/components/AuthSheet";
@@ -10,6 +10,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { CalendarPopover } from "@/components/CalendarPopover";
 import { useSelectedDate } from "@/contexts/DateContext";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Navigation = () => {
   const location = useLocation();
@@ -20,6 +21,22 @@ const Navigation = () => {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const { selectedDate, setSelectedDate } = useSelectedDate();
   const isMobile = useIsMobile();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => {
+          if (data?.avatar_url) {
+            setAvatarUrl(data.avatar_url);
+          }
+        });
+    }
+  }, [user?.id]);
 
   const handleSignOut = async () => {
     if (isSigningOut) {
@@ -103,14 +120,23 @@ const Navigation = () => {
             <div className="relative flex-shrink-0">
               <button
                 onClick={() => navigate('/profile')}
-                className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white font-semibold shadow-lg hover:scale-110 transition-all duration-300 border-2 border-primary/30 text-sm"
-                style={{
-                  boxShadow: "0 0 12px hsl(var(--primary) / 0.3)",
-                }}
+                className="group relative"
               >
-                {user?.email?.[0]?.toUpperCase() || <User className="w-4 h-4" />}
+                <Avatar className="w-9 h-9 ring-2 ring-primary/20 transition-all duration-300 hover:ring-primary/40 hover:scale-110">
+                  <AvatarImage 
+                    src={avatarUrl || user?.user_metadata?.avatar_url || undefined} 
+                    alt="Avatar"
+                  />
+                  <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-white text-sm font-semibold">
+                    {user?.user_metadata?.avatar_url ? (
+                      <img src={user.user_metadata.avatar_url} alt="Google" className="w-full h-full object-cover" />
+                    ) : (
+                      user?.email?.[0]?.toUpperCase() || <User className="w-4 h-4" />
+                    )}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border-2 border-background shadow-sm" />
               </button>
-              <div className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border-2 border-background" />
             </div>
           )}
 
