@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/lib/auth";
 import { track } from "@/lib/telemetry";
 import { throttle } from "@/lib/throttle";
-import { Bot, Send, User } from "lucide-react";
+import { Bot, Send, Sparkles, Calendar, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 type AgentMsg = {
   id: string;
@@ -156,70 +157,141 @@ export default function PlannerChat() {
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col pb-16 md:pb-0">
-      <header className="p-4 border-b flex items-center justify-between gap-3">
-        <div>
-          <div className="text-lg font-semibold flex items-center gap-2">
-            <Bot className="w-5 h-5" />
-            المخطِّط الذكي (Beta)
-          </div>
-          <div className="text-sm text-muted-foreground">يُحترم وقت الصلاة وDND تلقائيًا</div>
-        </div>
-        <Button onClick={newChat} variant="outline" size="sm">
-          محادثة جديدة
-        </Button>
-      </header>
-
-      <main className="flex-1 overflow-y-auto p-4 space-y-3">
-        {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
-            <Bot className="w-16 h-16 text-primary opacity-50" />
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 pb-16 md:pb-0">
+      {/* Header with gradient */}
+      <div className="sticky top-0 z-10 backdrop-blur-lg bg-background/80 border-b">
+        <div className="container max-w-4xl mx-auto p-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-primary/60">
+              <Sparkles className="w-6 h-6 text-primary-foreground" />
+            </div>
             <div>
-              <div className="text-lg font-medium mb-2">مرحبًا! كيف يمكنني مساعدتك اليوم؟</div>
-              <div className="text-sm text-muted-foreground max-w-md mx-auto">
-                جرّب أسئلة مثل:
+              <div className="text-lg font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                المخطِّط الذكي
               </div>
-              <div className="mt-3 space-y-2 text-sm">
-                <div className="p-2 bg-secondary rounded-lg">• "خطّط يومي"</div>
-                <div className="p-2 bg-secondary rounded-lg">• "أنشئ حدث تمرين مدته 45 دقيقة عصرًا"</div>
-                <div className="p-2 bg-secondary rounded-lg">• "متى أقرب فترة فارغة؟"</div>
+              <div className="text-xs text-muted-foreground flex items-center gap-1">
+                <Calendar className="w-3 h-3" />
+                يحترم أوقات الصلاة تلقائياً
               </div>
             </div>
           </div>
-        ) : (
-          messages.map(m => (
-            <div key={m.id} className={`max-w-[80%] rounded-2xl p-3 whitespace-pre-wrap leading-7
-              ${m.role === "user" ? "ml-auto bg-primary text-primary-foreground" :
-                 m.role === "assistant" ? "bg-muted" : "bg-amber-50 border border-amber-200 text-sm"}`}>
-              {renderMsg(m)}
-            </div>
-          ))
-        )}
-        <div ref={bottomRef} />
-      </main>
-
-      <footer className="p-4 border-t">
-        <div className="flex items-end gap-2">
-          <textarea
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={onKeyDown}
-            placeholder="اكتب ما تريد تنظيمه اليوم… مثل: 'رتّب تمرين 45 دقيقة بعد العصر وذكّرني قبل 15 دقيقة'"
-            className="flex-1 min-h-[48px] max-h-40 p-3 rounded-xl border bg-background resize-none"
-          />
-          <Button
-            onClick={send}
-            disabled={sending || !input.trim()}
-            size="lg"
-            className="px-6"
+          <Button 
+            onClick={newChat} 
+            variant="outline" 
+            size="sm"
+            className="hover:bg-primary/10"
           >
-            {sending ? "جارٍ…" : <Send className="w-5 h-5" />}
+            جديد
           </Button>
         </div>
-        <div className="mt-2 text-xs text-muted-foreground">
-          ↩︎ Enter للإرسال • Shift+Enter لسطر جديد
+      </div>
+
+      {/* Chat Container */}
+      <div className="container max-w-4xl mx-auto">
+        <main className="min-h-[calc(100vh-12rem)] p-4 space-y-4">
+          {messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6 animate-in fade-in duration-500">
+              <div className="relative">
+                <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
+                <Bot className="w-20 h-20 text-primary relative animate-pulse" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                  مرحباً! كيف أساعدك اليوم؟
+                </div>
+                <div className="text-sm text-muted-foreground max-w-md mx-auto mb-4">
+                  أنا هنا لمساعدتك في تنظيم يومك بذكاء
+                </div>
+              </div>
+              
+              {/* Example Cards */}
+              <div className="grid gap-3 w-full max-w-md">
+                {[
+                  { icon: Calendar, text: "خطّط يومي بالكامل" },
+                  { icon: Clock, text: "أنشئ حدث تمرين 45 دقيقة" },
+                  { icon: Sparkles, text: "متى أقرب فترة فارغة؟" }
+                ].map((item, i) => (
+                  <Card
+                    key={i}
+                    className="p-4 hover:bg-primary/5 hover:border-primary/50 transition-all cursor-pointer group"
+                    onClick={() => setInput(item.text)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <item.icon className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
+                      <span className="text-sm">{item.text}</span>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 animate-in fade-in duration-300">
+              {messages.map((m, idx) => (
+                <div 
+                  key={m.id}
+                  className={`flex gap-3 animate-in slide-in-from-bottom-2 duration-300`}
+                  style={{ animationDelay: `${idx * 50}ms` }}
+                >
+                  {m.role === "assistant" && (
+                    <div className="p-2 rounded-full bg-gradient-to-br from-primary to-primary/60 h-fit mt-1">
+                      <Bot className="w-4 h-4 text-primary-foreground" />
+                    </div>
+                  )}
+                  <div className={`flex-1 rounded-2xl p-4 ${
+                    m.role === "user" 
+                      ? "bg-primary text-primary-foreground ml-12" 
+                      : m.role === "assistant"
+                      ? "bg-muted mr-12"
+                      : "bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 text-sm"
+                  }`}>
+                    <div className="whitespace-pre-wrap leading-relaxed">
+                      {renderMsg(m)}
+                    </div>
+                  </div>
+                  {m.role === "user" && (
+                    <div className="p-2 rounded-full bg-primary/10 h-fit mt-1">
+                      <Sparkles className="w-4 h-4 text-primary" />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          <div ref={bottomRef} />
+        </main>
+
+        {/* Input Area */}
+        <div className="sticky bottom-0 p-4 bg-gradient-to-t from-background via-background to-transparent">
+          <Card className="p-2 shadow-lg">
+            <div className="flex items-end gap-2">
+              <textarea
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={onKeyDown}
+                placeholder="اكتب طلبك هنا..."
+                className="flex-1 min-h-[52px] max-h-40 p-3 bg-transparent border-0 outline-none resize-none placeholder:text-muted-foreground/60"
+              />
+              <Button
+                onClick={send}
+                disabled={sending || !input.trim()}
+                size="lg"
+                className="rounded-xl px-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+              >
+                {sending ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  </div>
+                ) : (
+                  <Send className="w-5 h-5" />
+                )}
+              </Button>
+            </div>
+            <div className="mt-2 px-3 text-xs text-muted-foreground">
+              اضغط Enter للإرسال
+            </div>
+          </Card>
         </div>
-      </footer>
+      </div>
     </div>
   );
 }
