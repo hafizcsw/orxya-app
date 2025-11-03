@@ -35,6 +35,7 @@ import NotFound from "./pages/NotFound";
 import PrivacyCenter from "./pages/PrivacyCenter";
 import FlagsConsole from "./pages/FlagsConsole";
 import EngagementDashboard from "./pages/EngagementDashboard";
+import GoLiveDashboard from "./pages/GoLiveDashboard";
 import AdminAutopilot from "./pages/AdminAutopilot";
 import Conflicts from "./pages/Conflicts";
 import TestConflicts from "./pages/TestConflicts";
@@ -81,6 +82,7 @@ function AppContent() {
         <Route path="/privacy" element={<Protected><PrivacyCenter /></Protected>} />
         <Route path="/flags" element={<Protected><FlagsConsole /></Protected>} />
         <Route path="/engagement" element={<Protected><EngagementDashboard /></Protected>} />
+        <Route path="/golive" element={<Protected><GoLiveDashboard /></Protected>} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="*" element={<NotFound />} />
