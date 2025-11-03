@@ -159,7 +159,7 @@ export default function Expenses() {
         )}
 
         {/* Filters */}
-        <Card className="p-5 bg-card backdrop-blur-sm border-border">
+        <Card className="p-5 bg-card backdrop-blur-sm border-border relative z-10">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground/60" size={20} />
