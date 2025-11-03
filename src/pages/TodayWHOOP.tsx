@@ -185,14 +185,27 @@ function timeToLeft(hm: string) {
 function PermissionsInline({ missing }: { missing: Array<{ key: string; label: string; icon?: React.ReactNode }> }) {
   if (!missing?.length) return null;
   return (
-    <Card className="bg-background/60 border">
-      <CardContent className="p-4 flex items-center gap-3">
-        <Info className="w-4 h-4" />
-        <div className="text-sm grow">Enable sources to unlock full experience</div>
-        <div className="flex items-center gap-2">
+    <Card className="backdrop-blur-md bg-card/50 border-border/50 shadow-lg hover:shadow-xl transition-all">
+      <CardContent className="p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div className="flex items-center gap-3 flex-1">
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 border border-primary/20">
+            <Info className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold">تفعيل المصادر</div>
+            <div className="text-xs text-muted-foreground mt-0.5">قم بتفعيل المصادر للحصول على التجربة الكاملة</div>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
           {missing.map(s => (
-            <Button key={s.key} size="sm" variant="outline" className="rounded-2xl inline-flex items-center gap-1">
-              {s.icon}{s.label}
+            <Button 
+              key={s.key} 
+              size="sm" 
+              variant="glass" 
+              className="rounded-2xl inline-flex items-center gap-2 hover:scale-105 transition-all"
+            >
+              {s.icon}
+              <span>{s.label}</span>
             </Button>
           ))}
         </div>
