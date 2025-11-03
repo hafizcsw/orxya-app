@@ -173,24 +173,25 @@ const CalendarView = () => {
         )}
 
         {/* Calendar Grid */}
-        <div className="border rounded-2xl bg-white overflow-hidden">
-          <div className="relative" style={{ height: "1440px" }}>
-            {/* Hour Labels */}
-            <div className="absolute right-0 top-0 w-16 border-l">
+        <div className="border rounded-2xl bg-white overflow-auto">
+          <div className="flex">
+            {/* Hour Labels - scrolls with content */}
+            <div className="w-16 flex-shrink-0 bg-background border-l">
               {hours.map(hour => (
                 <div
                   key={hour}
-                  className="h-[60px] border-b flex items-start justify-center pt-1 text-xs text-muted-foreground"
+                  className="h-[60px] border-b flex items-start pt-1 text-xs text-muted-foreground relative"
                 >
-                  {hour.toString().padStart(2, "0")}:00
+                  <span className="absolute -top-2.5 right-2">{hour === 0 ? "" : `${hour.toString().padStart(2, "0")}:00`}</span>
+                  <div className="absolute top-0 left-0 right-0 border-t border-border/10" />
                 </div>
               ))}
             </div>
 
             {/* Events */}
-            <div className="absolute right-16 left-0 top-0">
+            <div className="flex-1 relative">
               {hours.map(hour => (
-                <div key={hour} className="h-[60px] border-b" />
+                <div key={hour} className="h-[60px] border-b border-border/10" />
               ))}
 
               {events.map(event => {

@@ -136,85 +136,98 @@ export default function WeekView({ anchor, eventsByDate, prayersByDate, onEventC
   }
 
   return (
-    <div ref={gridRef} className="grid grid-cols-[80px,1fr,1fr,1fr,1fr,1fr,1fr,1fr] h-[72vh] border rounded-2xl overflow-auto">
-      <div className="border-r bg-muted/40 sticky left-0 z-10">
-        {Array.from({length:24}, (_,h)=>(
-          <div key={h} className="h-[calc(100%/24)] text-[10px] px-1 border-b flex items-start">{h}:00</div>
-        ))}
-      </div>
-      {days.map((d, idx) => {
-        const iso = toISODate(d);
-        const list = (eventsByDate[iso] ?? []).map(ev => optimisticEvents[ev.id] || ev);
-        const dayName = d.toLocaleDateString(undefined, { weekday: 'short' });
-        
-        return (
-          <div key={idx} className="relative border-r">
-            <div className="sticky top-0 bg-background border-b p-1 text-xs text-center font-medium z-10">
-              {dayName} {d.getDate()}
+    <div ref={gridRef} className="h-[72vh] border rounded-2xl overflow-auto">
+      <div className="flex">
+        {/* Time gutter - scrolls with content */}
+        <div className="w-16 flex-shrink-0 bg-background border-r">
+          {Array.from({length:24}, (_,h)=>(
+            <div key={h} className="h-16 text-[11px] pr-3 border-b flex items-start relative">
+              <span className="absolute -top-2.5 right-2 text-muted-foreground">{h === 0 ? "" : `${h.toString().padStart(2, "0")}:00`}</span>
+              <div className="absolute top-0 left-0 right-0 border-t border-border/10" />
             </div>
-            {Array.from({length:24}, (_,h)=>(
-              <div key={h} className="h-[calc((100%-28px)/24)] border-b" />
-            ))}
-            <DayPrayerOverlay {...(prayersByDate[iso] ?? {})} />
-            {list.map(ev => {
-              const startMin = minutesSinceMidnight(ev.starts_at);
-              const endMin = minutesSinceMidnight(ev.ends_at);
-              const top = ((startMin/(24*60))*100);
-              const height = Math.max(20, ((endMin-startMin)/(24*60))*100);
-              const conflicted = (ev.conflict_level ?? 0) > 0;
-              
-              return (
-                <div
-                  key={ev.id}
-                  className={`absolute left-1 right-1 rounded-md border p-1 text-xs overflow-hidden transition-opacity select-none
-                    ${conflicted 
-                      ? "border-destructive bg-destructive/15 text-destructive-foreground" 
-                      : ev.source === "ai" 
-                        ? "bg-purple-100 border-purple-300 text-purple-900 dark:bg-purple-900 dark:text-purple-200" 
-                        : "bg-primary/10 border-primary text-foreground"
-                    }
-                    ${drag?.id === ev.id ? "opacity-60" : "hover:opacity-90"}`}
-                  style={{ top: `calc(28px + ${top}%)`, height: `${height}%` }}
-                  title={ev.title}
-                >
-                  {/* Resize top handle */}
-                  <div
-                    className="absolute inset-x-1 top-0 h-1 cursor-n-resize rounded-sm bg-foreground/20 z-20"
-                    onPointerDown={(e) => { e.stopPropagation(); onPointerDown(e, ev, 'resize-top'); }}
-                  />
-                  
-                  {/* Main content - draggable */}
-                  <div
-                    className="absolute inset-0 cursor-grab active:cursor-grabbing p-1"
-                    onClick={(e)=>{ if (!drag) { e.stopPropagation(); onEventClick?.(ev.id); }}}
-                    onPointerDown={(e) => onPointerDown(e, ev, 'move')}
-                    onPointerMove={onPointerMove}
-                    onPointerUp={onPointerUp}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <div className="font-medium truncate flex-1">
-                        {ev.source === "ai" && "🧠 "}
-                        {ev.title}
-                      </div>
-                      {conflicted && (
-                        <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full bg-destructive/20 border border-destructive shrink-0">
-                          ⚠
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Resize bottom handle */}
-                  <div
-                    className="absolute inset-x-1 bottom-0 h-1 cursor-s-resize rounded-sm bg-foreground/20 z-20"
-                    onPointerDown={(e) => { e.stopPropagation(); onPointerDown(e, ev, 'resize-bottom'); }}
-                  />
+          ))}
+        </div>
+
+        {/* Days grid */}
+        <div className="grid grid-cols-7 flex-1">
+          {days.map((d, idx) => {
+            const iso = toISODate(d);
+            const list = (eventsByDate[iso] ?? []).map(ev => optimisticEvents[ev.id] || ev);
+            const dayName = d.toLocaleDateString(undefined, { weekday: 'short' });
+            
+            return (
+              <div key={idx} className="relative border-r">
+                <div className="sticky top-0 bg-background border-b p-1 text-xs text-center font-medium z-10">
+                  {dayName} {d.getDate()}
                 </div>
-              );
-            })}
-          </div>
-        );
-      })}
+                <div className="relative" style={{ height: '1536px' }}>
+                  {Array.from({length:24}, (_,h)=>(
+                    <div key={h} className="h-16 border-b border-border/10" />
+                  ))}
+                  <DayPrayerOverlay {...(prayersByDate[iso] ?? {})} />
+                  {list.map(ev => {
+                    const startMin = minutesSinceMidnight(ev.starts_at);
+                    const endMin = minutesSinceMidnight(ev.ends_at);
+                    const pxPerMin = 64 / 60;
+                    const top = startMin * pxPerMin;
+                    const height = Math.max(20, (endMin - startMin) * pxPerMin);
+                    const conflicted = (ev.conflict_level ?? 0) > 0;
+                    
+                    return (
+                      <div
+                        key={ev.id}
+                        className={`absolute left-1 right-1 rounded-md border p-1 text-xs overflow-hidden transition-opacity select-none
+                          ${conflicted 
+                            ? "border-destructive bg-destructive/15 text-destructive-foreground" 
+                            : ev.source === "ai" 
+                              ? "bg-purple-100 border-purple-300 text-purple-900 dark:bg-purple-900 dark:text-purple-200" 
+                              : "bg-primary/10 border-primary text-foreground"
+                          }
+                          ${drag?.id === ev.id ? "opacity-60" : "hover:opacity-90"}`}
+                        style={{ top: `${top}px`, height: `${height}px` }}
+                        title={ev.title}
+                      >
+                        {/* Resize top handle */}
+                        <div
+                          className="absolute inset-x-1 top-0 h-1 cursor-n-resize rounded-sm bg-foreground/20 z-20"
+                          onPointerDown={(e) => { e.stopPropagation(); onPointerDown(e, ev, 'resize-top'); }}
+                        />
+                        
+                        {/* Main content - draggable */}
+                        <div
+                          className="absolute inset-0 cursor-grab active:cursor-grabbing p-1"
+                          onClick={(e)=>{ if (!drag) { e.stopPropagation(); onEventClick?.(ev.id); }}}
+                          onPointerDown={(e) => onPointerDown(e, ev, 'move')}
+                          onPointerMove={onPointerMove}
+                          onPointerUp={onPointerUp}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <div className="font-medium truncate flex-1">
+                              {ev.source === "ai" && "🧠 "}
+                              {ev.title}
+                            </div>
+                            {conflicted && (
+                              <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full bg-destructive/20 border border-destructive shrink-0">
+                                ⚠
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Resize bottom handle */}
+                        <div
+                          className="absolute inset-x-1 bottom-0 h-1 cursor-s-resize rounded-sm bg-foreground/20 z-20"
+                          onPointerDown={(e) => { e.stopPropagation(); onPointerDown(e, ev, 'resize-bottom'); }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
