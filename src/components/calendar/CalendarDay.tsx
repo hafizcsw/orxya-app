@@ -1,11 +1,10 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, memo } from "react";
 import { packEventsIntoLanes, getLanePosition } from "@/lib/eventPacking";
 import EventChip from "./EventChip";
 import PrayerBand from "./PrayerBand";
 import { supabase } from "@/integrations/supabase/client";
 import { checkPrayerConflict } from "@/lib/aiConflicts";
 import { cn } from "@/lib/utils";
-import { isEventVisible } from "@/hooks/useVisibleHours";
 
 type CalEvent = {
   id: string;
@@ -39,7 +38,7 @@ type Props = {
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
-export default function CalendarDay({
+function CalendarDay({
   date,
   events,
   prayers,
@@ -60,11 +59,6 @@ export default function CalendarDay({
     const packed = packEventsIntoLanes(events ?? [], date, pxPerMin);
     return packed.filter(p => !p.isAllDay);
   }, [events, date, pxPerMin]);
-
-  const visibleEvents = useMemo(() => {
-    if (!visibleRange) return packedEvents;
-    return packedEvents.filter(p => isEventVisible(p, visibleRange));
-  }, [packedEvents, visibleRange]);
 
   const toTime = (y: number) => {
     const minutes = Math.round(y / pxPerMin);
@@ -123,7 +117,7 @@ export default function CalendarDay({
       className="relative border-l border-border/30 h-full select-none bg-background hover:bg-accent/5 transition-colors"
       onMouseLeave={() => drag && setDrag(null)}
     >
-      {/* Hour grid - Google Calendar style */}
+      {/* Hour grid - Fixed, no conditional rendering to prevent flicker */}
       <div
         className="absolute inset-0"
         ref={containerRef}
@@ -131,18 +125,13 @@ export default function CalendarDay({
         onMouseMove={handleMouseMoveCreate}
         onMouseUp={handleMouseUpCreate}
       >
-        {HOURS.map((h) => {
-          if (visibleRange && (h < visibleRange.startHour || h > visibleRange.endHour)) {
-            return null;
-          }
-          return (
-            <div
-              key={h}
-              className="border-b border-border/30 hover:bg-accent/10 transition-colors"
-              style={{ height: pxPerHour }}
-            />
-          );
-        })}
+        {HOURS.map((h) => (
+          <div
+            key={h}
+            className="border-b border-border/30 hover:bg-accent/10 transition-colors"
+            style={{ height: pxPerHour }}
+          />
+        ))}
       </div>
 
       {/* Prayer overlay */}
@@ -150,7 +139,7 @@ export default function CalendarDay({
 
       {/* Events */}
       <div className="absolute inset-0 z-20 px-1">
-        {visibleEvents.map((packed, idx) => {
+        {packedEvents.map((packed, idx) => {
           const hasConflict = checkPrayerConflict(
             packed.event.starts_at,
             packed.event.ends_at,
@@ -192,3 +181,5 @@ export default function CalendarDay({
     </div>
   );
 }
+
+export default memo(CalendarDay);
