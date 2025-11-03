@@ -18,15 +18,33 @@ export function ThemeToggle() {
 
   const applyTheme = (dark: boolean) => {
     const root = document.documentElement;
+    const body = document.body;
+    
+    // Remove all theme classes first
+    root.classList.remove('dark', 'light');
+    root.removeAttribute('data-theme');
+    
+    // Force a reflow to ensure classes are fully removed
+    void root.offsetHeight;
+    
     if (dark) {
-      root.classList.remove('light');
       root.classList.add('dark');
       root.setAttribute('data-theme', 'dark');
+      body.style.backgroundColor = '#000000';
+      body.style.color = '#FFFFFF';
     } else {
-      root.classList.remove('dark');
       root.classList.add('light');
       root.setAttribute('data-theme', 'light');
+      body.style.backgroundColor = '#FFFFFF';
+      body.style.color = '#000000';
     }
+    
+    // Force repaint
+    requestAnimationFrame(() => {
+      document.body.style.display = 'none';
+      void document.body.offsetHeight;
+      document.body.style.display = '';
+    });
   };
 
   const toggle = () => {

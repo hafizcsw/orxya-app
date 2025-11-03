@@ -142,6 +142,17 @@ textarea {
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Force correct backgrounds and text colors */
+  .dark body {
+    background-color: #000000 !important;
+    color: #FFFFFF !important;
+  }
+  
+  .light body {
+    background-color: #FFFFFF !important;
+    color: #000000 !important;
+  }
 }
 
 /* Elevation tokens */
