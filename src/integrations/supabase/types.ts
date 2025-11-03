@@ -212,6 +212,20 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "ai_messages_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "mv_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ai_messages_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "ai_messages_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
@@ -283,7 +297,22 @@ export type Database = {
           owner_id?: string
           prompt_tokens?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ai_runs_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "mv_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ai_runs_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       ai_sessions: {
         Row: {
@@ -319,7 +348,22 @@ export type Database = {
           owner_id?: string
           title?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ai_sessions_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "mv_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ai_sessions_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       ai_sessions_v2: {
         Row: {
@@ -572,6 +616,20 @@ export type Database = {
             referencedRelation: "vw_events_with_conflicts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "conflicts_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "mv_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "conflicts_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       daily_logs: {
@@ -764,7 +822,22 @@ export type Database = {
           updated_at?: string | null
           version?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "events_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "mv_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "events_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       external_accounts: {
         Row: {
@@ -830,7 +903,22 @@ export type Database = {
           sync_token?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "external_accounts_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "mv_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "external_accounts_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       external_calendars: {
         Row: {
@@ -934,6 +1022,117 @@ export type Database = {
         }
         Relationships: []
       }
+      financial_events: {
+        Row: {
+          amount: number
+          confidence: number
+          currency: string
+          direction: number
+          id: number
+          inserted_at: string
+          lat: number | null
+          lng: number | null
+          merchant: string | null
+          place_name: string | null
+          source_pkg: string | null
+          user_id: string
+          when_at: string
+        }
+        Insert: {
+          amount: number
+          confidence?: number
+          currency?: string
+          direction: number
+          id?: number
+          inserted_at?: string
+          lat?: number | null
+          lng?: number | null
+          merchant?: string | null
+          place_name?: string | null
+          source_pkg?: string | null
+          user_id: string
+          when_at: string
+        }
+        Update: {
+          amount?: number
+          confidence?: number
+          currency?: string
+          direction?: number
+          id?: number
+          inserted_at?: string
+          lat?: number | null
+          lng?: number | null
+          merchant?: string | null
+          place_name?: string | null
+          source_pkg?: string | null
+          user_id?: string
+          when_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "mv_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "financial_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      health_samples: {
+        Row: {
+          day: string
+          hr_avg: number | null
+          hr_max: number | null
+          meters: number
+          sleep_minutes: number | null
+          steps: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          day: string
+          hr_avg?: number | null
+          hr_max?: number | null
+          meters?: number
+          sleep_minutes?: number | null
+          steps?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          day?: string
+          hr_avg?: number | null
+          hr_max?: number | null
+          meters?: number
+          sleep_minutes?: number | null
+          steps?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_samples_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "mv_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "health_samples_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       location_samples: {
         Row: {
           accuracy_m: number | null
@@ -965,7 +1164,22 @@ export type Database = {
           sampled_at?: string | null
           source?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "location_samples_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "mv_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "location_samples_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -1052,7 +1266,22 @@ export type Database = {
           owner_id?: string
           state?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "oauth_states_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "mv_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "oauth_states_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       prayer_times: {
         Row: {
@@ -1380,10 +1609,42 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "mv_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
     }
     Views: {
+      mv_daily_metrics: {
+        Row: {
+          busy_minutes: number | null
+          conflicts_count: number | null
+          day: string | null
+          expenses_count: number | null
+          hr_avg: number | null
+          hr_max: number | null
+          incomes_count: number | null
+          meters_total: number | null
+          net_cashflow: number | null
+          sleep_minutes: number | null
+          steps_total: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       v_admin_actions_daily: {
         Row: {
           applied: number | null
@@ -1411,6 +1672,23 @@ export type Database = {
         Row: {
           cnt: number | null
           reason: string | null
+        }
+        Relationships: []
+      }
+      vw_daily_metrics: {
+        Row: {
+          busy_minutes: number | null
+          conflicts_count: number | null
+          day: string | null
+          expenses_count: number | null
+          hr_avg: number | null
+          hr_max: number | null
+          incomes_count: number | null
+          meters_total: number | null
+          net_cashflow: number | null
+          sleep_minutes: number | null
+          steps_total: number | null
+          user_id: string | null
         }
         Relationships: []
       }
@@ -1457,7 +1735,22 @@ export type Database = {
           title?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "events_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "mv_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "events_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       vw_events_with_conflicts: {
         Row: {
@@ -1568,7 +1861,22 @@ export type Database = {
           updated_at?: string | null
           version?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "events_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "mv_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "events_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       vw_productivity_daily: {
         Row: {
@@ -1577,7 +1885,22 @@ export type Database = {
           events_total: number | null
           owner_id: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "events_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "mv_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "events_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
     }
     Functions: {
@@ -1633,6 +1956,23 @@ export type Database = {
         Args: { p_date: string; p_owner: string }
         Returns: undefined
       }
+      get_daily_metrics: {
+        Args: { p_end: string; p_start: string; p_user_id: string }
+        Returns: {
+          busy_minutes: number
+          conflicts_count: number
+          day: string
+          expenses_count: number
+          hr_avg: number
+          hr_max: number
+          incomes_count: number
+          meters_total: number
+          net_cashflow: number
+          sleep_minutes: number
+          steps_total: number
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1640,7 +1980,26 @@ export type Database = {
         }
         Returns: boolean
       }
+      ingest_financial_event: {
+        Args: {
+          p_amount: number
+          p_currency?: string
+          p_direction: number
+          p_lat?: number
+          p_lng?: number
+          p_merchant?: string
+          p_place_name?: string
+          p_source_pkg?: string
+          p_user_id: string
+          p_when_at: string
+        }
+        Returns: undefined
+      }
       is_admin: { Args: { p_uid: string }; Returns: boolean }
+      refresh_daily_metrics: {
+        Args: { full_refresh?: boolean }
+        Returns: undefined
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
