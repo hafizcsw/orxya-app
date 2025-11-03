@@ -84,3 +84,9 @@ verify_jwt = true
 [functions.analytics-batch]
 verify_jwt = true
 
+[functions.calendar-instances]
+verify_jwt = true
+
+[functions.nlp-quickadd]
+verify_jwt = true
+
