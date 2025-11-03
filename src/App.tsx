@@ -34,6 +34,7 @@ import OAuthGoogle from "./pages/OAuthGoogle";
 import NotFound from "./pages/NotFound";
 import AdminAutopilot from "./pages/AdminAutopilot";
 import Conflicts from "./pages/Conflicts";
+import TestConflicts from "./pages/TestConflicts";
 import { Protected } from "./components/Protected";
 import { useAutopilotNotifications } from "./hooks/useAutopilotNotifications";
 
@@ -64,6 +65,7 @@ function AppContent() {
         <Route path="/settings/prayer" element={<Protected><SettingsPrayer /></Protected>} />
         <Route path="/planner" element={<Protected><PlannerChat /></Protected>} />
         <Route path="/conflicts" element={<Protected><Conflicts /></Protected>} />
+        <Route path="/test-conflicts" element={<Protected><TestConflicts /></Protected>} />
         <Route path="/oauth/google" element={<OAuthGoogle />} />
         <Route path="/admin/autopilot" element={<Protected><AdminAutopilot /></Protected>} />
         <Route path="/diagnostics" element={<Protected><Diagnostics /></Protected>} />
