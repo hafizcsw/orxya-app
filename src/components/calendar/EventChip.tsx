@@ -30,9 +30,9 @@ export default function EventChip({
     
     if (hasConflict) {
       return {
-        bg: "bg-[#d50000]/10",
+        bg: "bg-[#d50000]/20",
         border: "border-[#d50000]",
-        text: "text-[#d50000]"
+        text: "text-foreground"
       };
     }
     
@@ -42,7 +42,7 @@ export default function EventChip({
     return {
       bg: color.bg,
       border: color.border,
-      text: color.text
+      text: "text-foreground"
     };
   };
   
