@@ -33,10 +33,10 @@ export function BottomNav() {
     <>
       {/* Full Screen Menu */}
       {menuOpen && (
-        <div className="fixed inset-0 z-[100] bg-background animate-fade-in">
-          <div className="flex flex-col h-full bg-background">
+        <div className="fixed inset-0 z-[100] bg-background/98 backdrop-blur-xl animate-fade-in">
+          <div className="flex flex-col h-full">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-border">
+            <div className="flex items-center justify-between p-4 border-b border-border/50 bg-card/50">
               <h2 className="text-xl font-bold">القائمة</h2>
               <button
                 onClick={() => setMenuOpen(false)}
@@ -47,7 +47,7 @@ export function BottomNav() {
             </div>
 
             {/* Menu Items */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-background/95">
               {menuLinks.map((link) => {
                 const Icon = link.icon;
                 return (
