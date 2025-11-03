@@ -12,6 +12,7 @@ import QuickAddDialog from "@/components/calendar/QuickAddDialog";
 import { Button } from "@/components/ui/button";
 import { useCalendarShortcuts } from "@/hooks/useCalendarShortcuts";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { useSelectedDate } from "@/contexts/DateContext";
 
 type DbEvent = { 
   id: string; 
@@ -33,13 +34,19 @@ type PT = {
 
 export default function CalendarPage() {
   const { user } = useUser();
+  const { selectedDate: globalDate, setSelectedDate: setGlobalDate } = useSelectedDate();
   const [mode, setMode] = useState<"week" | "month">("week");
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(globalDate);
   const [loading, setLoading] = useState(false);
   const [eventsByDate, setEventsByDate] = useState<Record<string, DbEvent[]>>({});
   const [quickAddOpen, setQuickAddOpen] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // Start closed on mobile
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // Sync with global date from Navigation
+  useEffect(() => {
+    setCurrentDate(globalDate);
+  }, [globalDate]);
 
   // Detect screen size and manage sidebar
   useEffect(() => {
@@ -145,7 +152,10 @@ export default function CalendarPage() {
             {sidebarOpen && (
               <CalendarSidebar
                 selectedDate={currentDate}
-                onDateSelect={setCurrentDate}
+                onDateSelect={(date) => {
+                  setCurrentDate(date);
+                  setGlobalDate(date);
+                }}
               />
             )}
           </div>
@@ -157,6 +167,7 @@ export default function CalendarPage() {
                 selectedDate={currentDate}
                 onDateSelect={(date) => {
                   setCurrentDate(date);
+                  setGlobalDate(date);
                   if (window.innerWidth < 1024) setSidebarOpen(false);
                 }}
               />
@@ -170,7 +181,11 @@ export default function CalendarPage() {
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-2 sm:gap-4">
                 <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                   <Button
-                    onClick={() => setCurrentDate(new Date())}
+                    onClick={() => {
+                      const today = new Date();
+                      setCurrentDate(today);
+                      setGlobalDate(today);
+                    }}
                     variant="outline"
                     size="sm"
                     className="h-8 sm:h-9"
@@ -218,7 +233,10 @@ export default function CalendarPage() {
                   key={refreshKey}
                   anchor={currentDate} 
                   startOn={6}
-                  onDateChange={setCurrentDate}
+                  onDateChange={(date) => {
+                    setCurrentDate(date);
+                    setGlobalDate(date);
+                  }}
                 />
               ) : (
                 <MonthGrid 
