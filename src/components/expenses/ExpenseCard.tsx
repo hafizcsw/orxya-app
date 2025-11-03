@@ -18,11 +18,9 @@ export function ExpenseCard({ category, amount, note, date, source }: ExpenseCar
     <div className="group relative overflow-hidden">
       {/* Glass card with futuristic effects */}
       <div 
-        className="relative p-4 flex items-center gap-4 rounded-2xl backdrop-blur-xl transition-all duration-500 hover:scale-[1.02] border"
+        className="relative p-5 flex items-center gap-4 rounded-2xl backdrop-blur-xl transition-all duration-500 hover:scale-[1.02] border border-border/50 bg-card/50 hover:border-border hover:bg-card/70"
         style={{
-          background: 'var(--glass-bg)',
-          borderColor: 'var(--glass-border)',
-          boxShadow: 'var(--glass-shadow)',
+          boxShadow: 'var(--elev-1)',
         }}
       >
         {/* Gradient glow on hover */}
@@ -35,24 +33,20 @@ export function ExpenseCard({ category, amount, note, date, source }: ExpenseCar
         <CategoryIcon category={categoryKey} size={28} variant="glass" />
         
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-foreground transition-colors duration-300 group-hover:text-primary">
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="font-bold text-base text-card-foreground transition-colors duration-300">
               {category}
             </h3>
             {source === 'bank' && (
-              <span className="relative text-xs px-3 py-1 rounded-full overflow-hidden backdrop-blur-sm border border-primary/20">
-                <span className="relative z-10 font-medium" style={{ color: config.color }}>
+              <span className="relative text-xs px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20">
+                <span className="relative z-10 font-medium text-primary">
                   بنك
                 </span>
-                <div 
-                  className="absolute inset-0 opacity-20"
-                  style={{ background: config.gradient }}
-                />
               </span>
             )}
           </div>
           {note && (
-            <p className="text-sm text-muted-foreground truncate mt-1 transition-colors duration-300 group-hover:text-foreground">
+            <p className="text-sm text-muted-foreground truncate transition-colors duration-300">
               {note}
             </p>
           )}
@@ -60,15 +54,15 @@ export function ExpenseCard({ category, amount, note, date, source }: ExpenseCar
 
         <div className="text-left">
           <div 
-            className="text-xl font-bold transition-all duration-300"
+            className="text-2xl font-bold transition-all duration-300 mb-1"
             style={{ 
               color: config.color,
-              textShadow: `0 0 10px ${config.color}40`
+              filter: `drop-shadow(${config.glow})`
             }}
           >
             ${amount.toFixed(2)}
           </div>
-          <div className="text-xs text-muted-foreground transition-colors duration-300 group-hover:text-foreground">
+          <div className="text-xs font-medium text-muted-foreground/80 transition-colors duration-300">
             {format(new Date(date), 'dd MMM', { locale: ar })}
           </div>
         </div>

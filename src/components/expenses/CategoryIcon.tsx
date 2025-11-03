@@ -67,9 +67,9 @@ const CATEGORY_CONFIG = {
   },
   'أخرى': { 
     icon: HelpCircle, 
-    color: 'hsl(var(--muted-foreground))',
-    gradient: 'linear-gradient(135deg, hsl(var(--muted-foreground)), hsl(var(--muted)))',
-    glow: '0 0 20px hsl(var(--muted-foreground) / 0.3)'
+    color: 'hsl(220 9% 46%)',
+    gradient: 'linear-gradient(135deg, hsl(220 9% 46%), hsl(220 9% 36%))',
+    glow: '0 0 20px hsl(220 9% 46% / 0.3)'
   },
 } as const;
 
