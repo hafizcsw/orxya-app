@@ -33,7 +33,7 @@ export function BottomNav() {
     <>
       {/* Full Screen Menu */}
       {menuOpen && (
-        <div className="fixed inset-0 z-50 bg-background animate-fade-in">
+        <div className="fixed inset-0 z-[100] bg-background animate-fade-in" style={{ backgroundColor: 'hsl(var(--background))' }}>
           <div className="flex flex-col h-full">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-border">
