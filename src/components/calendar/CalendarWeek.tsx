@@ -10,6 +10,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCurrentTimePosition } from "@/lib/eventPacking";
 import { useVisibleHours } from "@/hooks/useVisibleHours";
+import { useSelectedDate } from "@/contexts/DateContext";
 
 type Props = {
   anchor?: Date;
@@ -22,6 +23,7 @@ export default function CalendarWeek({
   startOn = 6,
   onDateChange 
 }: Props) {
+  const { setSelectedDate: setGlobalDate } = useSelectedDate();
   const gridRef = useRef<HTMLDivElement>(null);
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -164,17 +166,21 @@ export default function CalendarWeek({
                   <div className="text-[9px] sm:text-[11px] text-muted-foreground font-normal">
                     {d.toLocaleDateString("ar", { weekday: "short" })}
                   </div>
-                  <div
+                  <button
+                    onClick={() => {
+                      onDateChange?.(d);
+                      setGlobalDate(d);
+                    }}
                     className={cn(
-                      "flex items-center justify-center rounded-full transition-all font-medium",
+                      "flex items-center justify-center rounded-full transition-all font-medium cursor-pointer hover:bg-accent",
                       "w-6 h-6 sm:w-7 sm:h-7 text-xs sm:text-sm",
                       isToday
-                        ? "bg-[#1a73e8] text-white shadow-md"
+                        ? "bg-[#1a73e8] text-white shadow-md hover:bg-[#1557b0]"
                         : "text-foreground"
                     )}
                   >
                     {d.getDate()}
-                  </div>
+                  </button>
                   </div>
                 );
               })}
