@@ -2,11 +2,9 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Bell, Calendar, Check, Clock, DollarSign, Info, Loader2, MapPin, RefreshCcw } from "lucide-react";
+import { AlertTriangle, Bell, Calendar, Check, Clock, Info, Loader2, MapPin, RefreshCcw, Activity, Heart, Moon, Zap } from "lucide-react";
 import { useEdgeActions } from "@/hooks/useEdgeActions";
 import { format } from "date-fns";
-import { generateMockFinancialEvents, calculateDailySummary } from "@/lib/financial-mock";
-import { MoneyPulseCard } from "@/components/financial/MoneyPulseCard";
 
 /**
  * TodayWHOOP v2.1 — UI Delta (non-destructive)
@@ -35,16 +33,13 @@ function useFlags() {
       ff_conflicts_first: true,
       ff_now_next_strip: true,
       ff_timeline_inline: true,
-      ff_money_pulse: true,
+      ff_health_rings: true,
       ff_micro_labels: true,
       ff_permissions_inline: true,
-      ff_financial_notifications: true,
-      ff_ondevice_parser: true,
-      ff_fin_push: false,
       // Epic 6
       ff_location_bg: true,
       ff_location_push: false,
-      ff_finloc_link: true,
+      ff_finloc_link: false,
       ff_geocode_ondevice: false,
     };
     if (ffParam) {
@@ -134,7 +129,104 @@ function NowNextStrip({ now, next }: { now?: { title: string; until: string }; n
   );
 }
 
-// Money Pulse moved to MoneyPulseCard component (Epic 5)
+// -----------------------------
+// Health Rings (Sleep, Strain, Recovery)
+// -----------------------------
+function HealthRings({ sleep, strain, recovery }: { sleep?: number; strain?: number; recovery?: number }) {
+  return (
+    <Card className="backdrop-blur-md bg-card/50 border-border/50 shadow-lg">
+      <CardContent className="p-6">
+        <div className="font-medium mb-4 flex items-center gap-2">
+          <Activity className="w-5 h-5 text-primary" />
+          <span>مؤشرات الصحة اليومية</span>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          {/* Sleep Ring */}
+          <div className="flex flex-col items-center gap-2">
+            <div className="relative w-20 h-20">
+              <svg className="w-full h-full transform -rotate-90">
+                <circle cx="40" cy="40" r="36" fill="none" stroke="hsl(var(--muted))" strokeWidth="6" />
+                <circle 
+                  cx="40" 
+                  cy="40" 
+                  r="36" 
+                  fill="none" 
+                  stroke="hsl(217 91% 60%)" 
+                  strokeWidth="6"
+                  strokeDasharray={`${2 * Math.PI * 36}`}
+                  strokeDashoffset={`${2 * Math.PI * 36 * (1 - (sleep || 0) / 100)}`}
+                  strokeLinecap="round"
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Moon className="w-6 h-6 text-blue-400" />
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold">{sleep || 0}%</div>
+              <div className="text-xs text-muted-foreground">النوم</div>
+            </div>
+          </div>
+
+          {/* Strain Ring */}
+          <div className="flex flex-col items-center gap-2">
+            <div className="relative w-20 h-20">
+              <svg className="w-full h-full transform -rotate-90">
+                <circle cx="40" cy="40" r="36" fill="none" stroke="hsl(var(--muted))" strokeWidth="6" />
+                <circle 
+                  cx="40" 
+                  cy="40" 
+                  r="36" 
+                  fill="none" 
+                  stroke="hsl(38 92% 50%)" 
+                  strokeWidth="6"
+                  strokeDasharray={`${2 * Math.PI * 36}`}
+                  strokeDashoffset={`${2 * Math.PI * 36 * (1 - (strain || 0) / 100)}`}
+                  strokeLinecap="round"
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Zap className="w-6 h-6 text-amber-400" />
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold">{strain || 0}%</div>
+              <div className="text-xs text-muted-foreground">الإجهاد</div>
+            </div>
+          </div>
+
+          {/* Recovery Ring */}
+          <div className="flex flex-col items-center gap-2">
+            <div className="relative w-20 h-20">
+              <svg className="w-full h-full transform -rotate-90">
+                <circle cx="40" cy="40" r="36" fill="none" stroke="hsl(var(--muted))" strokeWidth="6" />
+                <circle 
+                  cx="40" 
+                  cy="40" 
+                  r="36" 
+                  fill="none" 
+                  stroke="hsl(142 76% 36%)" 
+                  strokeWidth="6"
+                  strokeDasharray={`${2 * Math.PI * 36}`}
+                  strokeDashoffset={`${2 * Math.PI * 36 * (1 - (recovery || 0) / 100)}`}
+                  strokeLinecap="round"
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Heart className="w-6 h-6 text-green-400" />
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold">{recovery || 0}%</div>
+              <div className="text-xs text-muted-foreground">التعافي</div>
+            </div>
+          </div>
+        </div>
+        <MicroLabels source="Health" confidence="high" lastSync="تم التحديث الآن" />
+      </CardContent>
+    </Card>
+  );
+}
 
 // -----------------------------
 // Inline Timeline (day) + Prayer overlay
@@ -232,14 +324,12 @@ export default function TodayWHOOP() {
 
   const [loading, setLoading] = useState(false);
 
-  // Financial state (Epic 5)
-  const [financialEvents, setFinancialEvents] = useState(() => 
-    generateMockFinancialEvents(new Date().toISOString().split('T')[0])
-  );
-  const financialSummary = React.useMemo(() => 
-    calculateDailySummary(financialEvents), 
-    [financialEvents]
-  );
+  // Health mock data (يمكن ربطها بمصادر حقيقية لاحقاً)
+  const [healthData] = useState({
+    sleep: 85,
+    strain: 12.5,
+    recovery: 78
+  });
 
   // تحميل التعارضات الحقيقية عند تفعيل ff_conflicts_first
   useEffect(() => {
@@ -329,27 +419,6 @@ export default function TodayWHOOP() {
     } catch (e) {
       console.error("ignore failed", e);
     }
-  };
-
-  // Financial handlers (Epic 5)
-  const handleFinancialConfirm = (eventId: number) => {
-    setFinancialEvents(prev => 
-      prev.map(e => e.id === eventId ? { ...e, confirmed: true, confidence: 100 } : e)
-    );
-  };
-
-  const handleFinancialCorrect = (
-    eventId: number, 
-    amount: number, 
-    direction: 1 | -1, 
-    merchant?: string
-  ) => {
-    setFinancialEvents(prev => 
-      prev.map(e => e.id === eventId 
-        ? { ...e, amount, direction, merchant, confirmed: true, confidence: 100 }
-        : e
-      )
-    );
   };
 
   // Mock state (اربطها بالبيانات الحقيقية عند الربط)
@@ -445,14 +514,8 @@ export default function TodayWHOOP() {
         </Card>
       )}
 
-      {/* Money Pulse (Epic 5) */}
-      {ff.ff_money_pulse && ff.ff_financial_notifications && (
-        <MoneyPulseCard 
-          summary={financialSummary}
-          onConfirm={handleFinancialConfirm}
-          onCorrect={handleFinancialCorrect}
-        />
-      )}
+      {/* Health Rings - WHOOP Style */}
+      {ff.ff_health_rings && <HealthRings sleep={healthData.sleep} strain={healthData.strain} recovery={healthData.recovery} />}
 
       {/* Timeline with prayer overlay */}
       {ff.ff_timeline_inline && <TimelineInline items={items} now={"12:05"} prayerWindows={prayers} />}
@@ -460,12 +523,13 @@ export default function TodayWHOOP() {
       {/* Permissions Inline */}
       {ff.ff_permissions_inline && <PermissionsInline missing={missingPerms} />}
 
-      {/* Example micro labels on a generic card */}
+      {/* Health placeholder */}
       {ff.ff_micro_labels && (
-        <Card className="bg-background/60 border">
+        <Card className="backdrop-blur-md bg-card/50 border-border/50 shadow-lg">
           <CardContent className="p-4">
-            <div className="font-medium">Focus / Strain / Sleep Rings (placeholder)</div>
-            <MicroLabels source="Health" confidence="mid" lastSync="2m ago" />
+            <div className="font-medium mb-2">معدل ضربات القلب والنشاط</div>
+            <div className="text-sm text-muted-foreground mb-3">تتبع نشاطك اليومي ومعدل ضربات قلبك</div>
+            <MicroLabels source="Health Sensors" confidence="mid" lastSync="منذ دقيقتين" />
           </CardContent>
         </Card>
       )}
