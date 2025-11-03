@@ -1,4 +1,4 @@
-/* Theme removed - using whoop.css only */
+@import './styles/theme.css';
 
 @tailwind base;
 @tailwind components;
