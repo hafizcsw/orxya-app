@@ -33,14 +33,8 @@ export function BottomNav() {
     <>
       {/* Full Screen Menu */}
       {menuOpen && (
-        <div 
-          className="fixed inset-0 z-[100] animate-fade-in"
-          style={{ 
-            backgroundColor: 'var(--background, #000000)',
-            opacity: 1
-          }}
-        >
-          <div className="flex flex-col h-full">
+        <div className="fixed inset-0 z-[100] bg-background animate-fade-in">
+          <div className="flex flex-col h-full bg-background">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-border">
               <h2 className="text-xl font-bold">القائمة</h2>
