@@ -1,7 +1,15 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useUser } from '@/lib/auth';
+import { Protected } from '@/components/Protected';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader2, Database, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { track } from '@/lib/telemetry';
-import { Loader2 } from 'lucide-react';
+
+// ... keep existing code (project/task seed data)
 
 type ProjectSeed = {
   name: string;
@@ -128,12 +136,100 @@ const tasks: TaskSeed[] = [
 ];
 
 const Seed = () => {
+  const { user } = useUser();
   const [loading, setLoading] = useState(false);
   const [log, setLog] = useState<string[]>([]);
+  const [oryxaResult, setOryxaResult] = useState<any>(null);
 
   const addLog = (msg: string) => setLog(prev => [...prev, msg]);
 
-  const runSeed = async () => {
+  // Oryxa Seed (Calendar + Finance + Health)
+  const handleOryxaSeed = async (days: number = 3) => {
+    if (!user) {
+      toast.error('يرجى تسجيل الدخول أولاً');
+      return;
+    }
+
+    setLoading(true);
+    setOryxaResult(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('seed-data', {
+        body: {
+          action: 'seed',
+          days,
+          startDate: '2025-11-03',
+          tag: 'seed:oryxa-2025-11-03'
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        setOryxaResult(data);
+        toast.success(
+          `تم إضافة البيانات بنجاح!\n${data.results.events} أحداث، ${data.results.financial} مالية، ${data.results.health} صحة`,
+          { duration: 5000 }
+        );
+        track('oryxa_seed_success', { days });
+      } else {
+        throw new Error(data?.error || 'فشل في إضافة البيانات');
+      }
+    } catch (err: any) {
+      console.error('Seed error:', err);
+      toast.error(`خطأ: ${err.message}`);
+      setOryxaResult({ error: err.message });
+      track('oryxa_seed_error', { error: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOryxaRollback = async () => {
+    if (!user) {
+      toast.error('يرجى تسجيل الدخول أولاً');
+      return;
+    }
+
+    if (!confirm('هل أنت متأكد من حذف جميع بيانات الـ Oryxa Seed؟')) {
+      return;
+    }
+
+    setLoading(true);
+    setOryxaResult(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('seed-data', {
+        body: {
+          action: 'rollback',
+          tag: 'seed:oryxa-2025-11-03'
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        setOryxaResult(data);
+        toast.success(
+          `تم حذف البيانات بنجاح!\n${data.results.events} أحداث، ${data.results.financial} مالية`,
+          { duration: 5000 }
+        );
+        track('oryxa_rollback_success');
+      } else {
+        throw new Error(data?.error || 'فشل في حذف البيانات');
+      }
+    } catch (err: any) {
+      console.error('Rollback error:', err);
+      toast.error(`خطأ: ${err.message}`);
+      setOryxaResult({ error: err.message });
+      track('oryxa_rollback_error', { error: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Projects & Tasks Seed (existing code)
+  const runProjectsSeed = async () => {
     setLoading(true);
     setLog([]);
     addLog('🚀 بدء Seed...');
@@ -207,7 +303,6 @@ const Seed = () => {
         });
 
         if (data?.ok && t.tags?.length) {
-          // Update tags separately (not supported in commands yet)
           const taskId = data.saved_ids?.[0];
           if (taskId) {
             await supabase.from('tasks').update({ tags: t.tags }).eq('id', taskId);
@@ -231,7 +326,7 @@ const Seed = () => {
     }
   };
 
-  const clearData = async () => {
+  const clearProjectsData = async () => {
     if (!confirm('هل تريد حذف جميع المشاريع والمهام؟ هذا لا يمكن التراجع عنه!')) return;
 
     setLoading(true);
@@ -246,7 +341,6 @@ const Seed = () => {
         return;
       }
 
-      // Delete all tasks first (foreign key)
       const { error: tasksErr } = await supabase
         .from('tasks')
         .delete()
@@ -258,7 +352,6 @@ const Seed = () => {
         addLog('✅ تم حذف المهام');
       }
 
-      // Delete all projects
       const { error: projectsErr } = await supabase
         .from('projects')
         .delete()
@@ -281,59 +374,192 @@ const Seed = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 md:p-6 space-y-6">
-      <h1 className="text-3xl font-bold mb-6">بيانات تجريبية (Seed)</h1>
-
-      <div className="rounded-2xl border border-border p-6 bg-card space-y-4">
-        <div className="space-y-2">
-          <h2 className="text-lg font-semibold">إضافة مشاريع ومهام نموذجية</h2>
-          <p className="text-sm text-muted-foreground">
-            سيتم إضافة {projects.length} مشاريع و {tasks.length} مهمة تجريبية
+    <Protected>
+      <div className="max-w-4xl mx-auto p-4 space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">🌱 بيانات تجريبية (Seed)</h1>
+          <p className="text-muted-foreground">
+            إضافة بيانات تجريبية لاختبار التطبيق
           </p>
         </div>
 
-        <div className="flex gap-3">
-          <button
-            onClick={runSeed}
-            disabled={loading}
-            className="px-6 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2"
-          >
-            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            تشغيل Seed
-          </button>
+        <Tabs defaultValue="oryxa" className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="oryxa">Oryxa (أحداث + مالية)</TabsTrigger>
+            <TabsTrigger value="projects">مشاريع ومهام</TabsTrigger>
+          </TabsList>
 
-          <button
-            onClick={clearData}
-            disabled={loading}
-            className="px-6 py-2 rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50"
-          >
-            مسح جميع البيانات
-          </button>
-        </div>
+          <TabsContent value="oryxa" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Database className="h-5 w-5" />
+                  Oryxa Seed Data
+                </CardTitle>
+                <CardDescription>
+                  يضيف 3-7 أيام من البيانات (03-05 نوفمبر 2025) تشمل:
+                  <ul className="list-disc list-inside mt-2 space-y-1">
+                    <li>أحداث يومية (مشي، عمل، نوم)</li>
+                    <li>جلسة MMA يوم الأربعاء (لاختبار التعارضات)</li>
+                    <li>دخل ومصروفات واقعية بالدرهم</li>
+                    <li>بيانات صحة ونشاط (خطوات، نوم)</li>
+                  </ul>
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    onClick={() => handleOryxaSeed(3)}
+                    disabled={loading || !user}
+                  >
+                    {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Database className="h-4 w-4 mr-2" />}
+                    إضافة 3 أيام
+                  </Button>
 
-        {log.length > 0 && (
-          <div className="mt-4 p-4 rounded-lg bg-muted font-mono text-sm space-y-1 max-h-96 overflow-y-auto">
-            {log.map((line, i) => (
-              <div key={i}>{line}</div>
-            ))}
-          </div>
-        )}
+                  <Button
+                    onClick={() => handleOryxaSeed(7)}
+                    disabled={loading || !user}
+                    variant="secondary"
+                  >
+                    {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Database className="h-4 w-4 mr-2" />}
+                    إضافة 7 أيام
+                  </Button>
+
+                  <Button
+                    onClick={handleOryxaRollback}
+                    disabled={loading || !user}
+                    variant="destructive"
+                  >
+                    {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                    حذف البيانات
+                  </Button>
+                </div>
+
+                {!user && (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-900 dark:text-amber-200">
+                    <AlertCircle className="h-5 w-5" />
+                    <span className="text-sm">سجّل الدخول أولاً</span>
+                  </div>
+                )}
+
+                {oryxaResult && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        {oryxaResult.error ? (
+                          <>
+                            <AlertCircle className="h-5 w-5 text-destructive" />
+                            <span className="text-destructive">خطأ</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="h-5 w-5 text-green-600" />
+                            <span className="text-green-600">نجحت العملية</span>
+                          </>
+                        )}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {oryxaResult.error ? (
+                        <p className="text-destructive">{oryxaResult.error}</p>
+                      ) : (
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground">{oryxaResult.message}</p>
+                          {oryxaResult.results && (
+                            <div className="grid grid-cols-3 gap-4 mt-4">
+                              <div className="p-3 rounded-lg bg-muted">
+                                <div className="text-2xl font-bold">{oryxaResult.results.events}</div>
+                                <div className="text-xs text-muted-foreground">أحداث</div>
+                              </div>
+                              <div className="p-3 rounded-lg bg-muted">
+                                <div className="text-2xl font-bold">{oryxaResult.results.financial || 0}</div>
+                                <div className="text-xs text-muted-foreground">مالية</div>
+                              </div>
+                              <div className="p-3 rounded-lg bg-muted">
+                                <div className="text-2xl font-bold">{oryxaResult.results.health || 0}</div>
+                                <div className="text-xs text-muted-foreground">صحة</div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>📝 ملاحظات</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm text-muted-foreground">
+                <p>• جميع البيانات موسومة بـ <code className="px-1 py-0.5 rounded bg-muted">seed:oryxa-2025-11-03</code></p>
+                <p>• الحذف آمن ولا يؤثر على بياناتك الأصلية</p>
+                <p>• يمكنك إعادة الإدراج عدة مرات دون تكرار</p>
+                <p>• البيانات تشمل روتينك الكامل: 05:00 فجر → 22:00 نوم</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="projects" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>المشاريع والمهام</CardTitle>
+                <CardDescription>
+                  سيتم إضافة {projects.length} مشاريع و {tasks.length} مهمة تجريبية
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-3">
+                  <Button
+                    onClick={runProjectsSeed}
+                    disabled={loading}
+                  >
+                    {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                    تشغيل Seed
+                  </Button>
+
+                  <Button
+                    onClick={clearProjectsData}
+                    disabled={loading}
+                    variant="destructive"
+                  >
+                    مسح جميع البيانات
+                  </Button>
+                </div>
+
+                {log.length > 0 && (
+                  <div className="mt-4 p-4 rounded-lg bg-muted font-mono text-sm space-y-1 max-h-96 overflow-y-auto">
+                    {log.map((line, i) => (
+                      <div key={i}>{line}</div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>المشاريع المخطط لها</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 text-sm">
+                  {projects.map((p, i) => (
+                    <div key={i} className="border-b border-border pb-2 last:border-0">
+                      <div className="font-medium">{p.name}</div>
+                      <div className="text-muted-foreground">
+                        {p.priority} • {p.target} • {p.deadline}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
-
-      <div className="rounded-2xl border border-border p-6 bg-card">
-        <h2 className="text-lg font-semibold mb-3">المشاريع المخطط لها</h2>
-        <div className="space-y-2 text-sm">
-          {projects.map((p, i) => (
-            <div key={i} className="border-b border-border pb-2 last:border-0">
-              <div className="font-medium">{p.name}</div>
-              <div className="text-muted-foreground">
-                {p.priority} • {p.target} • {p.deadline}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+    </Protected>
   );
 };
 
