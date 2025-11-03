@@ -319,7 +319,7 @@ export default function EventDetailsDrawer({
 
           {/* AI Suggestion Section */}
           {hasConflict && conflictId && (
-            <div className="space-y-3 p-4 rounded-lg border border-warning/30 bg-warning/5">
+            <div className="space-y-3 p-4 rounded-lg border border-warning bg-warning text-warning-foreground">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5 text-warning" />
@@ -339,7 +339,7 @@ export default function EventDetailsDrawer({
 
               {aiSuggestion && (
                 <div className="space-y-3 mt-3">
-                  <div className="p-3 rounded-lg bg-background border">
+                  <div className="p-3 rounded-lg bg-card text-card-foreground border">
                     <div className="flex items-center gap-2 mb-2">
                       <CheckCircle className="w-4 h-4 text-success" />
                       <span className="font-medium text-sm">
