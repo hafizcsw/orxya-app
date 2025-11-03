@@ -157,9 +157,9 @@ export default function PlannerChat() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 pb-16 md:pb-0">
-      {/* Header with gradient */}
-      <div className="sticky top-0 z-10 backdrop-blur-lg bg-background/80 border-b">
+    <div className="h-screen flex flex-col bg-gradient-to-br from-background via-background to-primary/5">
+      {/* Header - Fixed */}
+      <div className="flex-none backdrop-blur-lg bg-background/80 border-b">
         <div className="container max-w-4xl mx-auto p-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-primary/60 shadow-lg">
@@ -186,11 +186,11 @@ export default function PlannerChat() {
         </div>
       </div>
 
-      {/* Chat Container */}
-      <div className="container max-w-4xl mx-auto">
-        <main className="min-h-[calc(100vh-12rem)] p-4 space-y-4">
+      {/* Chat Messages - Scrollable */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="container max-w-4xl mx-auto p-4 space-y-4">
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6 animate-in fade-in duration-500">
+            <div className="flex flex-col items-center justify-center min-h-full text-center space-y-6 animate-in fade-in duration-500">
               <div className="relative">
                 <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
                 <div className="relative p-4 rounded-2xl bg-gradient-to-br from-primary to-primary/60">
@@ -257,13 +257,15 @@ export default function PlannerChat() {
                   )}
                 </div>
               ))}
+              <div ref={bottomRef} />
             </div>
           )}
-          <div ref={bottomRef} />
-        </main>
+        </div>
+      </div>
 
-        {/* Input Area */}
-        <div className="sticky bottom-0 p-4 bg-gradient-to-t from-background via-background to-transparent">
+      {/* Input Area - Fixed at bottom */}
+      <div className="flex-none p-4 bg-background/95 backdrop-blur-lg border-t">
+        <div className="container max-w-4xl mx-auto">
           <Card className="p-2 shadow-lg">
             <div className="flex items-end gap-2">
               <textarea
@@ -271,7 +273,7 @@ export default function PlannerChat() {
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={onKeyDown}
                 placeholder="اكتب طلبك هنا..."
-                className="flex-1 min-h-[52px] max-h-40 p-3 bg-transparent border-0 outline-none resize-none placeholder:text-muted-foreground/60"
+                className="flex-1 min-h-[52px] max-h-32 p-3 bg-transparent border-0 outline-none resize-none placeholder:text-muted-foreground/60"
               />
               <Button
                 onClick={send}
