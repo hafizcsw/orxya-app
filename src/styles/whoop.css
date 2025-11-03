@@ -1,7 +1,7 @@
 /* WHOOP-Style Theme System */
 
 :root {
-  /* Base Colors - WHOOP Dark Theme */
+  /* Base Colors - WHOOP Dark Theme (Default) */
   --background: 210 20% 6%;          /* #0A0D12 - Very dark blue-black */
   --foreground: 0 0% 98%;            /* #FAFAFA - Almost white */
   
@@ -11,7 +11,7 @@
   --whoop-yellow: 45 100% 50%;       /* #FFD700 - Recovery ring */
   --whoop-red: 340 100% 50%;         /* #FF006E - Strain ring */
   
-  /* UI Colors */
+  /* UI Colors - Dark */
   --card: 210 20% 8%;                /* #0D1117 - Slightly lighter than bg */
   --card-foreground: 0 0% 98%;
   
@@ -44,6 +44,46 @@
   --glow-green: 0 0 25px hsl(166 100% 50% / 0.4);
   --glow-yellow: 0 0 25px hsl(45 100% 50% / 0.4);
   --glow-red: 0 0 25px hsl(340 100% 50% / 0.4);
+}
+
+/* Light Theme */
+.light,
+[data-theme="light"] {
+  /* Base Colors - Light Theme */
+  --background: 0 0% 100%;           /* #FFFFFF - Pure white */
+  --foreground: 210 20% 10%;         /* #0F1419 - Almost black */
+  
+  /* UI Colors - Light */
+  --card: 0 0% 98%;                  /* #FAFAFA - Off white */
+  --card-foreground: 210 20% 10%;
+  
+  --popover: 0 0% 100%;
+  --popover-foreground: 210 20% 10%;
+  
+  --primary: 217 100% 50%;           /* Keep WHOOP blue */
+  --primary-foreground: 0 0% 100%;
+  
+  --secondary: 210 10% 92%;          /* #E8EAED - Light gray */
+  --secondary-foreground: 210 20% 10%;
+  
+  --muted: 210 10% 95%;              /* #F1F3F4 - Very light gray */
+  --muted-foreground: 210 10% 40%;   /* #616B78 - Medium gray */
+  
+  --accent: 210 10% 88%;             /* #DDE1E6 - Light accent */
+  --accent-foreground: 210 20% 10%;
+  
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  
+  --border: 210 10% 88%;             /* #DDE1E6 - Light borders */
+  --input: 210 10% 88%;
+  --ring: 217 100% 50%;
+  
+  /* Glow Effects - Lighter for light mode */
+  --glow-blue: 0 0 15px hsl(217 100% 50% / 0.2);
+  --glow-green: 0 0 20px hsl(166 100% 50% / 0.25);
+  --glow-yellow: 0 0 20px hsl(45 100% 50% / 0.25);
+  --glow-red: 0 0 20px hsl(340 100% 50% / 0.25);
 }
 
 /* Shimmer Animation for Loading States */

@@ -1,42 +1,38 @@
 import { useEffect, useState } from 'react';
 import { Moon, Sun } from 'lucide-react';
 import { Button } from './button';
-import { applyTheme, isSystemDarkMode } from '@/lib/theme';
 
 export function ThemeToggle() {
-  const [isDark, setIsDark] = useState(isSystemDarkMode());
-
-  useEffect(() => {
+  const [isDark, setIsDark] = useState(() => {
     // Check localStorage first
     const stored = localStorage.getItem('theme');
-    if (stored) {
-      const dark = stored === 'dark';
-      setIsDark(dark);
-      applyTheme(stored as 'light' | 'dark');
-    } else {
-      // Use system preference
-      const systemDark = isSystemDarkMode();
-      setIsDark(systemDark);
-      applyTheme(systemDark ? 'dark' : 'light');
-    }
+    if (stored) return stored === 'dark';
+    // Default to dark mode (WHOOP style)
+    return true;
+  });
 
-    // Listen for system theme changes
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e: MediaQueryListEvent) => {
-      if (!localStorage.getItem('theme')) {
-        setIsDark(e.matches);
-        applyTheme(e.matches ? 'dark' : 'light');
-      }
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+  useEffect(() => {
+    // Apply theme on mount
+    applyTheme(isDark);
   }, []);
 
+  const applyTheme = (dark: boolean) => {
+    const root = document.documentElement;
+    if (dark) {
+      root.classList.remove('light');
+      root.classList.add('dark');
+      root.setAttribute('data-theme', 'dark');
+    } else {
+      root.classList.remove('dark');
+      root.classList.add('light');
+      root.setAttribute('data-theme', 'light');
+    }
+  };
+
   const toggle = () => {
-    const newTheme = isDark ? 'light' : 'dark';
-    setIsDark(!isDark);
-    localStorage.setItem('theme', newTheme);
+    const newTheme = !isDark;
+    setIsDark(newTheme);
+    localStorage.setItem('theme', newTheme ? 'dark' : 'light');
     applyTheme(newTheme);
   };
 
@@ -45,14 +41,15 @@ export function ThemeToggle() {
       variant="outline"
       size="icon"
       onClick={toggle}
-      className="rounded-full"
+      className="rounded-full w-9 h-9"
       title={isDark ? 'تبديل إلى الوضع النهاري' : 'تبديل إلى الوضع الليلي'}
     >
       {isDark ? (
-        <Sun className="w-4 h-4 text-warning" />
+        <Sun className="w-4 h-4" />
       ) : (
-        <Moon className="w-4 h-4 text-primary" />
+        <Moon className="w-4 h-4" />
       )}
     </Button>
   );
 }
+
