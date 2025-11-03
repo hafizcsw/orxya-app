@@ -12,19 +12,18 @@ export function BottomNav() {
   const navItems = [
     { icon: Home, label: "اليوم", path: "/" },
     { icon: Calendar, label: "التقويم", path: "/calendar" },
-    { icon: BarChart3, label: "المشاريع", path: "/projects" },
+    { icon: BarChart3, label: "التقارير", path: "/reports" },
   ];
 
   const menuLinks = [
-    { to: "/today-whoop", label: "WHOOP اليوم", icon: Sparkles },
-    { to: "/reports", label: "التقارير", icon: BarChart3 },
-    { to: "/inbox", label: "الإشعارات", icon: Bell },
-    { to: "/conflicts", label: "التعارضات", icon: Zap },
+    { to: "/projects", label: "المشاريع", icon: BarChart3 },
     { to: "/planner", label: "المخطط الذكي", icon: MessageSquare },
     { to: "/assistant", label: "المساعد", icon: Bot },
+    { to: "/conflicts", label: "التعارضات", icon: Zap },
+    { to: "/inbox", label: "الإشعارات", icon: Bell },
+    { to: "/automation", label: "الأتمتة", icon: Zap },
     { to: "/settings/external", label: "التكاملات", icon: Settings },
     { to: "/settings/notifications", label: "التنبيهات", icon: Bell },
-    { to: "/automation", label: "الأتمتة", icon: Zap },
     { to: "/diagnostics", label: "التشخيص", icon: Activity },
     { to: "/profile", label: "حسابي", icon: Settings },
   ];
