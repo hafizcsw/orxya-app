@@ -144,7 +144,7 @@ const Seed = () => {
   const addLog = (msg: string) => setLog(prev => [...prev, msg]);
 
   // Oryxa Seed (Calendar + Finance + Health)
-  const handleOryxaSeed = async (days: number = 3) => {
+  const handleOryxaSeed = async (days: number = 7) => {
     if (!user) {
       toast.error('يرجى تسجيل الدخول أولاً');
       return;
@@ -159,7 +159,7 @@ const Seed = () => {
           action: 'seed',
           days,
           startDate: '2025-11-03',
-          tag: 'seed:oryxa-2025-11-03'
+          tag: 'seed:oryxa-2025-w45'
         }
       });
 
@@ -202,7 +202,7 @@ const Seed = () => {
       const { data, error } = await supabase.functions.invoke('seed-data', {
         body: {
           action: 'rollback',
-          tag: 'seed:oryxa-2025-11-03'
+          tag: 'seed:oryxa-2025-w45'
         }
       });
 
@@ -394,15 +394,18 @@ const Seed = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Database className="h-5 w-5" />
-                  Oryxa Seed Data
+                  Oryxa Seed Data (أسبوع كامل)
                 </CardTitle>
                 <CardDescription>
-                  يضيف 3-7 أيام من البيانات (03-05 نوفمبر 2025) تشمل:
+                  يضيف أسبوع كامل من البيانات (Mon 3 → Sun 9 Nov 2025):
                   <ul className="list-disc list-inside mt-2 space-y-1">
-                    <li>أحداث يومية (مشي، عمل، نوم)</li>
-                    <li>جلسة MMA يوم الأربعاء (لاختبار التعارضات)</li>
-                    <li>دخل ومصروفات واقعية بالدرهم</li>
-                    <li>بيانات صحة ونشاط (خطوات، نوم)</li>
+                    <li>مشي يومي 05:00-07:30 (كل الأيام)</li>
+                    <li>عمل عميق 08:00-21:30 (الإثنين-الجمعة)</li>
+                    <li>MMA: الأربعاء 19:00-20:30 + السبت 18:30-20:00</li>
+                    <li>روتين نوم يومي 21:30-22:00</li>
+                    <li>قهوة يومية + coworking (أيام العمل)</li>
+                    <li>دخل: الثلاثاء 600 AED، الجمعة 1200 AED</li>
+                    <li>بيانات صحة متنوعة: 10k-20k خطوات، 7-7.5 ساعات نوم</li>
                   </ul>
                 </CardDescription>
               </CardHeader>
@@ -411,6 +414,7 @@ const Seed = () => {
                   <Button
                     onClick={() => handleOryxaSeed(3)}
                     disabled={loading || !user}
+                    variant="secondary"
                   >
                     {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Database className="h-4 w-4 mr-2" />}
                     إضافة 3 أيام
@@ -419,10 +423,9 @@ const Seed = () => {
                   <Button
                     onClick={() => handleOryxaSeed(7)}
                     disabled={loading || !user}
-                    variant="secondary"
                   >
                     {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Database className="h-4 w-4 mr-2" />}
-                    إضافة 7 أيام
+                    إضافة أسبوع كامل (7 أيام)
                   </Button>
 
                   <Button
@@ -494,10 +497,12 @@ const Seed = () => {
                 <CardTitle>📝 ملاحظات</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm text-muted-foreground">
-                <p>• جميع البيانات موسومة بـ <code className="px-1 py-0.5 rounded bg-muted">seed:oryxa-2025-11-03</code></p>
+                <p>• جميع البيانات موسومة بـ <code className="px-1 py-0.5 rounded bg-muted">seed:oryxa-2025-w45</code></p>
                 <p>• الحذف آمن ولا يؤثر على بياناتك الأصلية</p>
                 <p>• يمكنك إعادة الإدراج عدة مرات دون تكرار</p>
                 <p>• البيانات تشمل روتينك الكامل: 05:00 فجر → 22:00 نوم</p>
+                <p>• أسبوع كامل Mon–Sun مع جلستي MMA (Wed + Sat)</p>
+                <p>• بيانات مالية وصحية واقعية ومتنوعة</p>
               </CardContent>
             </Card>
           </TabsContent>

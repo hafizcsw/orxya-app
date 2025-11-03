@@ -8,9 +8,9 @@ const corsHeaders = {
 
 const SeedRequestSchema = z.object({
   action: z.enum(['seed', 'rollback']),
-  days: z.number().min(1).max(7).default(3),
+  days: z.number().min(1).max(7).default(7),
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).default('2025-11-03'),
-  tag: z.string().default('seed:oryxa-2025-11-03'),
+  tag: z.string().default('seed:oryxa-2025-w45'),
 });
 
 Deno.serve(async (req) => {
@@ -86,8 +86,9 @@ async function handleSeed(
     const date = new Date(baseDate);
     date.setDate(date.getDate() + day);
     const dateStr = date.toISOString().split('T')[0];
+    const dayOfWeek = date.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
 
-    // Daily routine events
+    // Daily walking routine (all days)
     events.push({
       owner_id: userId,
       title: 'Walking — Marina/JBR loop',
@@ -99,19 +100,22 @@ async function handleSeed(
       color: '#10b981',
     });
 
-    events.push({
-      owner_id: userId,
-      title: 'Deep Work — CRM/Bot (Malak)',
-      starts_at: `${dateStr}T08:00:00+04:00`,
-      ends_at: `${dateStr}T21:30:00+04:00`,
-      location: 'Workspace',
-      source: 'local',
-      external_source: tag,
-      color: '#3b82f6',
-    });
+    // Deep work Mon-Fri (1=Mon, 5=Fri)
+    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+      events.push({
+        owner_id: userId,
+        title: 'Deep Work — CRM/Bot (Malak)',
+        starts_at: `${dateStr}T08:00:00+04:00`,
+        ends_at: `${dateStr}T21:30:00+04:00`,
+        location: 'Workspace',
+        source: 'local',
+        external_source: tag,
+        color: '#3b82f6',
+      });
+    }
 
-    // MMA on day 3 (Wednesday)
-    if (day === 2) {
+    // MMA Training: Wednesday (3) and Saturday (6)
+    if (dayOfWeek === 3) {
       events.push({
         owner_id: userId,
         title: 'MMA Training',
@@ -122,8 +126,20 @@ async function handleSeed(
         external_source: tag,
         color: '#ef4444',
       });
+    } else if (dayOfWeek === 6) {
+      events.push({
+        owner_id: userId,
+        title: 'MMA Training',
+        starts_at: `${dateStr}T18:30:00+04:00`,
+        ends_at: `${dateStr}T20:00:00+04:00`,
+        location: 'Gym',
+        source: 'local',
+        external_source: tag,
+        color: '#ef4444',
+      });
     }
 
+    // Wind down routine (all days)
     events.push({
       owner_id: userId,
       title: 'Wind down & prep for sleep',
@@ -156,19 +172,21 @@ async function handleSeed(
     const date = new Date(baseDate);
     date.setDate(date.getDate() + day);
     const dateStr = date.toISOString().split('T')[0];
+    const dayOfWeek = date.getDay();
 
-    // Daily expenses
+    // Daily coffee
     financialEntries.push({
       owner_id: userId,
       entry_date: dateStr,
       type: 'expense',
-      amount_usd: (18 / 3.67).toFixed(2), // Convert AED to USD
+      amount_usd: (18 / 3.67).toFixed(2),
       category: 'Food & Drink',
       note: `coffee [${tag}]`,
       source: 'seed',
     });
 
-    if (day === 0) {
+    // Co-working Mon-Fri
+    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
       financialEntries.push({
         owner_id: userId,
         entry_date: dateStr,
@@ -178,6 +196,10 @@ async function handleSeed(
         note: `coworking [${tag}]`,
         source: 'seed',
       });
+    }
+
+    // Specific day expenses and income
+    if (day === 0) { // Monday
       financialEntries.push({
         owner_id: userId,
         entry_date: dateStr,
@@ -189,7 +211,7 @@ async function handleSeed(
       });
     }
 
-    if (day === 1) {
+    if (day === 1) { // Tuesday
       financialEntries.push({
         owner_id: userId,
         entry_date: dateStr,
@@ -201,7 +223,7 @@ async function handleSeed(
       });
     }
 
-    if (day === 2) {
+    if (day === 2) { // Wednesday
       financialEntries.push({
         owner_id: userId,
         entry_date: dateStr,
@@ -209,6 +231,42 @@ async function handleSeed(
         amount_usd: (35 / 3.67).toFixed(2),
         category: 'Transportation',
         note: `transport [${tag}]`,
+        source: 'seed',
+      });
+    }
+
+    if (day === 3) { // Thursday
+      financialEntries.push({
+        owner_id: userId,
+        entry_date: dateStr,
+        type: 'expense',
+        amount_usd: (45 / 3.67).toFixed(2),
+        category: 'Groceries',
+        note: `groceries [${tag}]`,
+        source: 'seed',
+      });
+    }
+
+    if (day === 4) { // Friday
+      financialEntries.push({
+        owner_id: userId,
+        entry_date: dateStr,
+        type: 'income',
+        amount_usd: (1200 / 3.67).toFixed(2),
+        category: 'Client Payment',
+        note: `milestone payment [${tag}]`,
+        source: 'seed',
+      });
+    }
+
+    if (day === 5) { // Saturday
+      financialEntries.push({
+        owner_id: userId,
+        entry_date: dateStr,
+        type: 'expense',
+        amount_usd: (65 / 3.67).toFixed(2),
+        category: 'Food & Drink',
+        note: `dinner [${tag}]`,
         source: 'seed',
       });
     }
@@ -228,22 +286,31 @@ async function handleSeed(
     console.log(`[seed-data] Inserted ${results.financial} financial entries`);
   }
 
-  // Generate health data
+  // Generate health data with varied values
   const healthEntries = [];
+  const weekData = [
+    { steps: 18000, meters: 13000, sleep: 420 }, // Mon
+    { steps: 17000, meters: 12000, sleep: 420 }, // Tue
+    { steps: 12000, meters: 8500, sleep: 420 },  // Wed (MMA day)
+    { steps: 15000, meters: 10500, sleep: 430 }, // Thu
+    { steps: 14000, meters: 9800, sleep: 420 },  // Fri
+    { steps: 20000, meters: 14500, sleep: 450 }, // Sat (MMA + weekend)
+    { steps: 10000, meters: 7200, sleep: 430 },  // Sun (rest day)
+  ];
+
   for (let day = 0; day < days; day++) {
     const date = new Date(baseDate);
     date.setDate(date.getDate() + day);
     const dateStr = date.toISOString().split('T')[0];
 
-    const steps = day === 0 ? 18000 : day === 1 ? 17000 : 12000;
-    const meters = day === 0 ? 13000 : day === 1 ? 12000 : 8500;
+    const dayData = weekData[day % 7];
 
     healthEntries.push({
       user_id: userId,
       day: dateStr,
-      steps: steps,
-      meters: meters,
-      sleep_minutes: 420, // 7 hours
+      steps: dayData.steps,
+      meters: dayData.meters,
+      sleep_minutes: dayData.sleep,
       hr_avg: 68 + Math.random() * 4, // 68-72
       hr_max: 140 + Math.random() * 20, // 140-160
     });
