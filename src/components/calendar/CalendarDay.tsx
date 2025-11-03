@@ -120,10 +120,10 @@ export default function CalendarDay({
 
   return (
     <div
-      className="relative border-l h-full select-none bg-background"
+      className="relative border-l border-border/30 h-full select-none bg-background hover:bg-accent/5 transition-colors"
       onMouseLeave={() => drag && setDrag(null)}
     >
-      {/* Hour grid */}
+      {/* Hour grid - Google Calendar style */}
       <div
         className="absolute inset-0"
         ref={containerRef}
@@ -138,16 +138,9 @@ export default function CalendarDay({
           return (
             <div
               key={h}
-              className={cn(
-                "border-b border-border/50 text-[10px] pr-1",
-                h === 0 && "border-t"
-              )}
+              className="border-b border-border/30 hover:bg-accent/10 transition-colors"
               style={{ height: pxPerHour }}
-            >
-              <div className="opacity-40 text-right font-mono">
-                {h.toString().padStart(2, "0")}:00
-              </div>
-            </div>
+            />
           );
         })}
       </div>
@@ -156,7 +149,7 @@ export default function CalendarDay({
       {prayers && <PrayerBand prayers={prayers} scale={{ pxPerMin }} />}
 
       {/* Events */}
-      <div className="absolute inset-0 z-20">
+      <div className="absolute inset-0 z-20 px-1">
         {visibleEvents.map((packed, idx) => {
           const hasConflict = checkPrayerConflict(
             packed.event.starts_at,
@@ -186,10 +179,10 @@ export default function CalendarDay({
         })}
       </div>
 
-      {/* Drag creation preview */}
+      {/* Drag creation preview - Google style */}
       {drag && (
         <div
-          className="absolute left-1 right-1 rounded-lg bg-primary/20 border-2 border-primary border-dashed z-30 pointer-events-none"
+          className="absolute left-1 right-1 rounded bg-primary/30 border border-primary z-30 pointer-events-none"
           style={{
             top: Math.min(drag.y0, drag.y1),
             height: Math.abs(drag.y1 - drag.y0)

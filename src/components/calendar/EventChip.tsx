@@ -19,11 +19,11 @@ export default function EventChip({
   className 
 }: Props) {
   const getEventColor = () => {
-    if (event.is_cancelled) return "bg-muted text-muted-foreground line-through";
-    if (hasConflict) return "bg-destructive/20 border-destructive/50 text-destructive";
-    if (event.source === "google") return "bg-blue-500/20 border-blue-500/50 text-blue-700 dark:text-blue-300";
-    if (event.color) return `bg-[${event.color}]/20 border-[${event.color}]/50`;
-    return "bg-primary/20 border-primary/50 text-primary";
+    if (event.is_cancelled) return "bg-muted/50 text-muted-foreground line-through border-muted";
+    if (hasConflict) return "bg-red-50 dark:bg-red-950/30 border-red-500 text-red-700 dark:text-red-300";
+    if (event.source === "google") return "bg-blue-50 dark:bg-blue-950/30 border-blue-500 text-blue-700 dark:text-blue-300";
+    if (event.color) return `bg-primary/10 border-primary text-primary`;
+    return "bg-primary/10 border-primary text-primary";
   };
 
   const formatTime = (iso: string) => {
@@ -38,32 +38,32 @@ export default function EventChip({
         onClick();
       }}
       className={cn(
-        "w-full h-full rounded-md border-l-4 px-2 py-1",
+        "w-full h-full rounded border-l-[3px] px-1.5 py-1 relative",
         "text-start text-xs overflow-hidden",
-        "transition-all hover:shadow-md hover:scale-[1.02]",
-        "focus:outline-none focus:ring-2 focus:ring-primary/50",
+        "transition-all hover:shadow-sm",
+        "focus:outline-none focus:ring-1 focus:ring-primary/30",
         getEventColor(),
         className
       )}
       style={style}
     >
       {hasConflict && (
-        <div className="w-1.5 h-1.5 rounded-full bg-destructive absolute -top-0.5 -right-0.5" />
+        <div className="w-1.5 h-1.5 rounded-full bg-red-500 absolute top-0.5 left-0.5 animate-pulse" />
       )}
       
-      <div className="font-medium truncate">
+      <div className="font-medium leading-tight truncate">
         {event.title || "بدون عنوان"}
       </div>
       
       {!isAllDay && event.starts_at && (
-        <div className="text-[10px] opacity-70">
+        <div className="text-[10px] opacity-80 leading-tight">
           {formatTime(event.starts_at)}
         </div>
       )}
       
       {event.location && (
-        <div className="flex items-center gap-1 text-[10px] opacity-60 truncate">
-          <MapPin className="w-2.5 h-2.5" />
+        <div className="flex items-center gap-0.5 text-[9px] opacity-60 truncate mt-0.5">
+          <MapPin className="w-2 h-2 flex-shrink-0" />
           <span className="truncate">{event.location}</span>
         </div>
       )}

@@ -104,121 +104,145 @@ export default function CalendarWeek({
   };
 
   return (
-    <div className="w-full h-[calc(100vh-140px)] flex flex-col card-futuristic overflow-hidden">
-      {/* Navigation header */}
-      <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-background to-muted/20">
+    <div className="w-full h-[calc(100vh-140px)] flex flex-col bg-background border border-border/50 rounded-lg shadow-sm overflow-hidden">
+      {/* Navigation header - Google Calendar style */}
+      <div className="flex items-center justify-between px-6 py-3 border-b border-border/60 bg-card">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigateWeek("prev")}
-            className="btn-ghost-glow p-2 rounded-lg"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-          <button
             onClick={goToToday}
-            className="btn-ghost-glow px-4 py-2 text-sm rounded-lg"
+            className="px-4 py-1.5 text-sm font-medium rounded-md hover:bg-accent transition-colors"
           >
             اليوم
           </button>
           <button
+            onClick={() => navigateWeek("prev")}
+            className="p-1.5 rounded-full hover:bg-accent transition-colors"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+          <button
             onClick={() => navigateWeek("next")}
-            className="btn-ghost-glow p-2 rounded-lg"
+            className="p-1.5 rounded-full hover:bg-accent transition-colors"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
         </div>
 
-        <h2 className="text-xl font-bold">
+        <h2 className="text-xl font-normal text-foreground">
           {start.toLocaleDateString("ar", { month: "long", year: "numeric" })}
         </h2>
 
         <button
           onClick={reload}
           disabled={loading}
-          className="btn-ghost-glow px-4 py-2 text-sm rounded-lg"
+          className="px-4 py-1.5 text-sm font-medium rounded-md hover:bg-accent transition-colors disabled:opacity-50"
         >
-          {loading ? "جار التحديث..." : "تحديث"}
+          {loading ? "..." : "تحديث"}
         </button>
       </div>
 
-      {/* Day headers */}
-      <div className="grid grid-cols-7 border-b bg-muted/30">
-        {days.map((d, i) => {
-          const isToday = d.toDateString() === new Date().toDateString();
-          return (
-            <div
-              key={i}
-              className={cn(
-                "p-3 text-sm font-medium text-center border-l",
-                isToday && "bg-primary/10"
-              )}
-            >
-              <div className="opacity-60">
-                {d.toLocaleDateString("ar", { weekday: "short" })}
-              </div>
+      {/* Week view container */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Time gutter - Google style */}
+        <div className="w-16 flex-shrink-0 border-l border-border/40 bg-muted/20">
+          <div className="h-12 border-b border-border/40" />
+          <div className="relative">
+            {Array.from({ length: 24 }, (_, h) => (
               <div
-                className={cn(
-                  "text-2xl mt-1",
-                  isToday && "w-10 h-10 mx-auto rounded-full bg-primary text-primary-foreground flex items-center justify-center"
-                )}
+                key={h}
+                className="relative border-b border-border/30 text-right pr-2"
+                style={{ height: pxPerHour }}
               >
-                {d.getDate()}
+                {h > 0 && (
+                  <span className="absolute -top-2.5 right-2 text-[10px] text-muted-foreground font-normal">
+                    {h.toString().padStart(2, "0")}
+                  </span>
+                )}
               </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* All-Day Row */}
-      <AllDayRow 
-        events={allEvents} 
-        days={days}
-        onEventClick={handleEventClick}
-      />
-
-      {/* Week grid */}
-      <div ref={gridRef} className="flex-1 grid grid-cols-7 overflow-auto relative">
-        {days.map((d, i) => {
-          const iso = d.toISOString().slice(0, 10);
-          const dayEvents = events[iso] ?? [];
-          const prayers = prayersByDay[iso] ?? null;
-          const isToday = d.toDateString() === new Date().toDateString();
-
-          return (
-            <CalendarDay
-              key={i}
-              date={d}
-              events={dayEvents}
-              prayers={prayers}
-              onReload={reload}
-              onEventClick={handleEventClick}
-              onCreate={(payload) => {
-                track("cal_create_drag", { durMin: payload.durationMin });
-              }}
-              onMove={(evt, to) => {
-                track("cal_move", { id: evt.id, to_start: to.start_ts });
-              }}
-              onResize={(evt, to) => {
-                track("cal_resize", { id: evt.id, to_end: to.end_ts });
-              }}
-              visibleRange={visibleRange}
-              pxPerHour={pxPerHour}
-            />
-          );
-        })}
-
-        {/* Current time indicator */}
-        {days.some(d => d.toDateString() === new Date().toDateString()) && (
-          <div
-            className="absolute left-0 right-0 h-px bg-destructive z-10 pointer-events-none"
-            style={{
-              top: getCurrentTimePosition(pxPerMin),
-              boxShadow: "0 0 4px rgba(239, 68, 68, 0.6)"
-            }}
-          >
-            <div className="absolute -left-1 -top-1.5 w-3 h-3 rounded-full bg-destructive" />
+            ))}
           </div>
-        )}
+        </div>
+
+        {/* Days grid */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Day headers */}
+          <div className="grid grid-cols-7 border-b border-border/40 bg-muted/20 h-12">
+            {days.map((d, i) => {
+              const isToday = d.toDateString() === new Date().toDateString();
+              return (
+                <div
+                  key={i}
+                  className={cn(
+                    "flex flex-col items-center justify-center gap-0.5 border-l border-border/30 text-center",
+                    i === 0 && "border-l-0"
+                  )}
+                >
+                  <div className="text-[11px] text-muted-foreground font-normal">
+                    {d.toLocaleDateString("ar", { weekday: "short" })}
+                  </div>
+                  <div
+                    className={cn(
+                      "text-2xl font-light",
+                      isToday && "w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium"
+                    )}
+                  >
+                    {d.getDate()}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* All-Day Row */}
+          <AllDayRow 
+            events={allEvents} 
+            days={days}
+            onEventClick={handleEventClick}
+          />
+
+          {/* Week grid with time slots */}
+          <div ref={gridRef} className="flex-1 grid grid-cols-7 overflow-auto relative bg-background">
+            {days.map((d, i) => {
+              const iso = d.toISOString().slice(0, 10);
+              const dayEvents = events[iso] ?? [];
+              const prayers = prayersByDay[iso] ?? null;
+
+              return (
+                <CalendarDay
+                  key={i}
+                  date={d}
+                  events={dayEvents}
+                  prayers={prayers}
+                  onReload={reload}
+                  onEventClick={handleEventClick}
+                  onCreate={(payload) => {
+                    track("cal_create_drag", { durMin: payload.durationMin });
+                  }}
+                  onMove={(evt, to) => {
+                    track("cal_move", { id: evt.id, to_start: to.start_ts });
+                  }}
+                  onResize={(evt, to) => {
+                    track("cal_resize", { id: evt.id, to_end: to.end_ts });
+                  }}
+                  visibleRange={visibleRange}
+                  pxPerHour={pxPerHour}
+                />
+              );
+            })}
+
+            {/* Current time indicator - red line */}
+            {days.some(d => d.toDateString() === new Date().toDateString()) && (
+              <div
+                className="absolute left-0 right-0 h-[2px] bg-red-500 z-30 pointer-events-none"
+                style={{
+                  top: getCurrentTimePosition(pxPerMin),
+                }}
+              >
+                <div className="absolute -right-1 -top-1.5 w-3 h-3 rounded-full bg-red-500 shadow-lg" />
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Event Details Drawer */}
@@ -230,24 +254,6 @@ export default function CalendarWeek({
         hasConflict={conflictData.hasConflict}
         conflictId={conflictData.conflictId}
       />
-
-      {/* Footer status */}
-      <div className="h-9 px-4 text-xs flex items-center justify-between border-t bg-muted/40">
-        <div className="flex items-center gap-2">
-          {loading && (
-            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-          )}
-          <span className="opacity-60">
-            {loading ? "جار التحديث..." : "جاهز"}
-          </span>
-        </div>
-        <div className="opacity-60">
-          {new Date().toLocaleTimeString("ar", {
-            hour: "2-digit",
-            minute: "2-digit"
-          })}
-        </div>
-      </div>
     </div>
   );
 }
