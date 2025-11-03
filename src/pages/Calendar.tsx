@@ -94,23 +94,24 @@ export default function CalendarPage() {
     <Protected>
       <div className="min-h-screen bg-background flex flex-col">
         {/* Google Calendar Header */}
-        <header className="border-b border-border/30 bg-background px-2 sm:px-4 py-2 flex items-center justify-between shadow-sm">
+        <header className="border-b border-border/30 bg-background px-2 sm:px-4 py-2 flex items-center justify-between shadow-sm sticky top-0 z-50">
           <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="p-2 hover:bg-accent/50 rounded-lg transition-colors"
+              aria-label="Toggle sidebar"
             >
               <Menu className="w-5 h-5" />
             </button>
             
             <div className="flex items-center gap-2">
               <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 text-[#1a73e8]" />
-              <h1 className="text-base sm:text-xl font-medium">التقويم</h1>
+              <h1 className="text-base sm:text-xl font-medium hidden sm:block">التقويم</h1>
             </div>
           </div>
 
           <div className="flex items-center gap-1 sm:gap-3">
-            <div className="hidden md:flex items-center gap-2 bg-accent/50 px-3 py-1.5 rounded-lg">
+            <div className="hidden md:flex items-center gap-2 bg-accent/50 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-accent transition-colors">
               <Search className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">بحث...</span>
             </div>
@@ -118,13 +119,16 @@ export default function CalendarPage() {
             <Button
               onClick={() => setQuickAddOpen(true)}
               size="sm"
-              className="bg-[#1a73e8] hover:bg-[#1557b0] text-white gap-1 sm:gap-2 shadow-md"
+              className="bg-[#1a73e8] hover:bg-[#1557b0] text-white gap-1 sm:gap-2 shadow-md px-2 sm:px-4"
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">إنشاء</span>
             </Button>
 
-            <button className="hidden sm:block p-2 hover:bg-accent/50 rounded-lg transition-colors">
+            <button 
+              className="hidden sm:flex p-2 hover:bg-accent/50 rounded-lg transition-colors"
+              aria-label="Settings"
+            >
               <Settings className="w-5 h-5" />
             </button>
           </div>
@@ -132,19 +136,22 @@ export default function CalendarPage() {
 
         {/* Main Content */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Desktop Sidebar */}
-          {sidebarOpen && (
-            <div className="hidden lg:block">
+          {/* Desktop Sidebar - Always visible on large screens */}
+          <div className={cn(
+            "hidden lg:block border-l border-border/30 bg-background transition-all",
+            sidebarOpen ? "w-64" : "w-0"
+          )}>
+            {sidebarOpen && (
               <CalendarSidebar
                 selectedDate={currentDate}
                 onDateSelect={setCurrentDate}
               />
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Mobile Sidebar as Sheet */}
           <Sheet open={sidebarOpen && window.innerWidth < 1024} onOpenChange={setSidebarOpen}>
-            <SheetContent side="right" className="w-[280px] p-0">
+            <SheetContent side="right" className="w-[280px] sm:w-[320px] p-0">
               <CalendarSidebar
                 selectedDate={currentDate}
                 onDateSelect={(date) => {
@@ -156,22 +163,23 @@ export default function CalendarPage() {
           </Sheet>
 
           {/* Calendar Content */}
-          <div className="flex-1 overflow-auto">
-            <div className="p-2 sm:p-4">
+          <div className="flex-1 overflow-auto bg-background">
+            <div className="p-2 sm:p-4 max-w-[1800px] mx-auto">
               {/* View Controls */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-2">
-                <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-2 sm:gap-4">
+                <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                   <Button
                     onClick={() => setCurrentDate(new Date())}
                     variant="outline"
                     size="sm"
+                    className="h-8 sm:h-9"
                   >
                     اليوم
                   </Button>
                    
-                  <div className="text-sm sm:text-lg font-medium">
+                  <h2 className="text-lg sm:text-xl font-medium">
                     {currentDate.toLocaleDateString('ar', { month: 'long', year: 'numeric' })}
-                  </div>
+                  </h2>
                 </div>
 
                 <div className="flex items-center gap-1 bg-secondary/60 p-1 rounded-lg">
