@@ -40,8 +40,8 @@ const CalendarView = () => {
   async function loadEvents() {
     if (!user) return;
     
-    const startDate = `${selectedDate}T00:00:00Z`;
-    const endDate = `${selectedDate}T23:59:59Z`;
+    const startDate = selectedDate + "T00:00:00Z";
+    const endDate = selectedDate + "T23:59:59Z";
 
     const { data, error } = await supabase
       .from("events")
@@ -85,10 +85,11 @@ const CalendarView = () => {
 
       if (error) throw error;
 
-      setToast(`تم الفحص: ${data?.count ?? 0} تعارض`);
+      const count = data?.count ?? 0;
+      setToast("تم الفحص: " + count + " تعارض");
       await loadConflicts();
     } catch (e: any) {
-      setToast(`خطأ: ${e.message}`);
+      setToast("خطأ: " + e.message);
       track("calendar_conflict_check_error");
     } finally {
       setLoading(false);
@@ -142,13 +143,13 @@ const CalendarView = () => {
         <div className="flex gap-2">
           <button
             onClick={() => setView("day")}
-            className={`px-4 py-2 rounded-lg ${view === "day" ? "bg-primary text-primary-foreground" : "bg-muted"}`}
+            className={"px-4 py-2 rounded-lg " + (view === "day" ? "bg-primary text-primary-foreground" : "bg-muted")}
           >
             يوم
           </button>
           <button
             onClick={() => setView("week")}
-            className={`px-4 py-2 rounded-lg ${view === "week" ? "bg-primary text-primary-foreground" : "bg-muted"}`}
+            className={"px-4 py-2 rounded-lg " + (view === "week" ? "bg-primary text-primary-foreground" : "bg-muted")}
           >
             أسبوع
           </button>
@@ -182,7 +183,7 @@ const CalendarView = () => {
                   key={hour}
                   className="h-[60px] border-b flex items-start pt-1 text-xs text-muted-foreground relative"
                 >
-                  <span className="absolute -top-2.5 right-2">{hour === 0 ? "" : `${hour.toString().padStart(2, "0")}:00`}</span>
+                  <span className="absolute -top-2.5 right-2">{hour === 0 ? "" : hour.toString().padStart(2, "0") + ":00"}</span>
                   <div className="absolute top-0 left-0 right-0 border-t border-border/10" />
                 </div>
               ))}
@@ -203,12 +204,12 @@ const CalendarView = () => {
                 return (
                   <div
                     key={event.id}
-                    className={`absolute right-2 left-2 rounded-lg p-2 ${
+                    className={"absolute right-2 left-2 rounded-lg p-2 " + (
                       conflict?.severity === "block" ? "bg-red-100 border-2 border-red-500" :
                       conflict?.severity === "warn" ? "bg-yellow-100 border-2 border-yellow-500" :
                       "bg-blue-100 border border-blue-300"
-                    }`}
-                    style={{ top: `${top}px`, height: `${height}px` }}
+                    )}
+                    style={{ top: top + "px", height: height + "px" }}
                   >
                     <div className="text-sm font-semibold truncate">{event.title}</div>
                     {conflict && (
