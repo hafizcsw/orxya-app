@@ -16,6 +16,7 @@ export function BottomNav() {
   ];
 
   const menuLinks = [
+    { to: "/today-whoop", label: "WHOOP اليوم", icon: Sparkles },
     { to: "/reports", label: "التقارير", icon: BarChart3 },
     { to: "/inbox", label: "الإشعارات", icon: Bell },
     { to: "/conflicts", label: "التعارضات", icon: Zap },

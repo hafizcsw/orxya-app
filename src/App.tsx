@@ -36,6 +36,7 @@ import AdminAutopilot from "./pages/AdminAutopilot";
 import Conflicts from "./pages/Conflicts";
 import TestConflicts from "./pages/TestConflicts";
 import Expenses from "./pages/Expenses";
+import TodayWHOOP from "./pages/TodayWHOOP";
 import { Protected } from "./components/Protected";
 import { useAutopilotNotifications } from "./hooks/useAutopilotNotifications";
 
@@ -51,6 +52,7 @@ function AppContent() {
         <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/today" element={<Protected><Today /></Protected>} />
+        <Route path="/today-whoop" element={<Protected><TodayWHOOP /></Protected>} />
         <Route path="/projects" element={<Projects />} />
         <Route path="/reports" element={<Protected><Reports /></Protected>} />
         <Route path="/automation" element={<Protected><Automation /></Protected>} />
