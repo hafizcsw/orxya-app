@@ -51,39 +51,45 @@
 [data-theme="light"] {
   /* Base Colors - Light Theme */
   --background: 0 0% 100%;           /* #FFFFFF - Pure white */
-  --foreground: 210 20% 10%;         /* #0F1419 - Almost black */
+  --foreground: 210 20% 15%;         /* Dark text for readability */
   
   /* UI Colors - Light */
-  --card: 0 0% 98%;                  /* #FAFAFA - Off white */
-  --card-foreground: 210 20% 10%;
+  --card: 0 0% 97%;                  /* #F7F7F7 - Very light gray */
+  --card-foreground: 210 20% 15%;
   
   --popover: 0 0% 100%;
-  --popover-foreground: 210 20% 10%;
+  --popover-foreground: 210 20% 15%;
   
   --primary: 217 100% 50%;           /* Keep WHOOP blue */
   --primary-foreground: 0 0% 100%;
   
-  --secondary: 210 10% 92%;          /* #E8EAED - Light gray */
-  --secondary-foreground: 210 20% 10%;
+  --secondary: 210 15% 90%;          /* #E3E5E8 - Light gray */
+  --secondary-foreground: 210 20% 15%;
   
-  --muted: 210 10% 95%;              /* #F1F3F4 - Very light gray */
-  --muted-foreground: 210 10% 40%;   /* #616B78 - Medium gray */
+  --muted: 210 10% 94%;              /* #EFEFEF - Very light gray */
+  --muted-foreground: 210 15% 35%;   /* #52606D - Medium gray */
   
-  --accent: 210 10% 88%;             /* #DDE1E6 - Light accent */
-  --accent-foreground: 210 20% 10%;
+  --accent: 210 15% 85%;             /* #D5D9DE - Light accent */
+  --accent-foreground: 210 20% 15%;
   
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
   
-  --border: 210 10% 88%;             /* #DDE1E6 - Light borders */
-  --input: 210 10% 88%;
+  --border: 210 15% 85%;             /* #D5D9DE - Light borders */
+  --input: 210 15% 90%;
   --ring: 217 100% 50%;
+  
+  /* Brand Colors - Same as dark */
+  --whoop-blue: 217 100% 50%;
+  --whoop-green: 166 100% 40%;       /* Darker for light mode */
+  --whoop-yellow: 45 100% 45%;       /* Darker for light mode */
+  --whoop-red: 340 100% 45%;         /* Darker for light mode */
   
   /* Glow Effects - Lighter for light mode */
   --glow-blue: 0 0 15px hsl(217 100% 50% / 0.2);
-  --glow-green: 0 0 20px hsl(166 100% 50% / 0.25);
-  --glow-yellow: 0 0 20px hsl(45 100% 50% / 0.25);
-  --glow-red: 0 0 20px hsl(340 100% 50% / 0.25);
+  --glow-green: 0 0 20px hsl(166 100% 40% / 0.25);
+  --glow-yellow: 0 0 20px hsl(45 100% 45% / 0.25);
+  --glow-red: 0 0 20px hsl(340 100% 45% / 0.25);
 }
 
 /* Shimmer Animation for Loading States */
