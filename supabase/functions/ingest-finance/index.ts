@@ -1,4 +1,4 @@
-// Epic 7: Financial Events Ingestion Edge Function
+// Epic 7: Financial Data Ingestion Edge Function
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -23,14 +22,12 @@ serve(async (req) => {
     }
 
     const url = Deno.env.get("SUPABASE_URL")!;
-    const key = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const supabase = createClient(url, key, { 
-      global: { headers: { Authorization: `Bearer ${jwt}` } } 
-    });
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(url, serviceKey);
 
-    const { data: { user }, error: uerr } = await supabase.auth.getUser();
-    if (uerr || !user) {
-      console.error("Auth error:", uerr);
+    const { data: { user }, error: authError } = await supabase.auth.getUser(jwt);
+    if (authError || !user) {
+      console.error("Auth error:", authError);
       return new Response(
         JSON.stringify({ error: "bad_user" }), 
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -45,56 +42,34 @@ serve(async (req) => {
       );
     }
 
-    // Support single event or array of events
-    const items = Array.isArray(payload) ? payload : [payload];
-    const results = [];
+    const { when_at, direction, amount, currency = 'AED', merchant = null, 
+            source_pkg = null, place_name = null, lat = null, lng = null } = payload;
 
-    for (const it of items) {
-      const {
-        when_at,
-        direction,
-        amount,
-        currency = "AED",
-        merchant = null,
-        source_pkg = null,
-        place_name = null,
-        lat = null,
-        lng = null
-      } = it;
+    console.log(`[ingest-finance] user=${user.id} when=${when_at} amount=${amount}`);
 
-      console.log(`[ingest-finance] user=${user.id} when=${when_at} dir=${direction} amt=${amount}`);
+    const { error } = await supabase.rpc("ingest_financial_event", {
+      p_user_id: user.id,
+      p_when_at: when_at,
+      p_direction: direction,
+      p_amount: amount,
+      p_currency: currency,
+      p_merchant: merchant,
+      p_source_pkg: source_pkg,
+      p_place_name: place_name,
+      p_lat: lat,
+      p_lng: lng
+    });
 
-      const { error } = await supabase.rpc("ingest_financial_event", {
-        p_user_id: user.id,
-        p_when_at: when_at,
-        p_direction: direction,
-        p_amount: amount,
-        p_currency: currency,
-        p_merchant: merchant,
-        p_source_pkg: source_pkg,
-        p_place_name: place_name,
-        p_lat: lat,
-        p_lng: lng
-      });
-
-      if (error) {
-        console.error("Ingest error:", error);
-        results.push({ error: error.message, when_at });
-      } else {
-        results.push({ ok: true, when_at });
-      }
-    }
-
-    const failed = results.filter(r => r.error);
-    if (failed.length > 0) {
+    if (error) {
+      console.error("Upsert error:", error);
       return new Response(
-        JSON.stringify({ partial: true, total: items.length, failed: failed.length, errors: failed }), 
-        { status: 207, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: error.message }), 
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     return new Response(
-      JSON.stringify({ ok: true, count: items.length, user_id: user.id }), 
+      JSON.stringify({ ok: true, user_id: user.id, when_at }), 
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {

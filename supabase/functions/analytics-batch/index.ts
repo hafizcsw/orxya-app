@@ -1,5 +1,5 @@
 // Epic 10: Analytics Batch Ingestion
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -16,10 +15,10 @@ serve(async (req) => {
   try {
     const jwt = req.headers.get("Authorization")?.replace("Bearer ", "");
     if (!jwt) {
-      return new Response(JSON.stringify({ error: "no_auth" }), { 
-        status: 401, 
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
-      });
+      return new Response(
+        JSON.stringify({ error: "no_auth" }), 
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const url = Deno.env.get("SUPABASE_URL")!;
@@ -30,48 +29,48 @@ serve(async (req) => {
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: "bad_user" }), { 
-        status: 401, 
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
-      });
+      console.error("Auth error:", authError);
+      return new Response(
+        JSON.stringify({ error: "bad_user" }), 
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const items = await req.json().catch(() => null);
-    if (!items || !Array.isArray(items)) {
-      return new Response(JSON.stringify({ error: "bad_json" }), { 
-        status: 400, 
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
-      });
+    if (!Array.isArray(items)) {
+      return new Response(
+        JSON.stringify({ error: "bad_json" }), 
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    // Batch insert analytics events
-    const events = items.map(it => ({
+    const events = items.map((item: any) => ({
       user_id: user.id,
-      kind: String(it.kind),
-      meta: it.meta ?? {}
+      kind: item.kind,
+      meta: item.meta || {}
     }));
 
-    const { error: insertError } = await supabase
-      .from("analytics_events")
-      .insert(events);
+    const { error } = await supabase.from("analytics_events").insert(events);
 
-    if (insertError) {
-      console.error("Insert error:", insertError);
-      return new Response(JSON.stringify({ error: insertError.message }), { 
-        status: 500, 
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
-      });
+    if (error) {
+      console.error("Insert error:", error);
+      return new Response(
+        JSON.stringify({ error: error.message }), 
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
+
+    console.log(`[analytics-batch] user=${user.id} items=${items.length}`);
 
     return new Response(
       JSON.stringify({ ok: true, count: items.length }), 
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-
   } catch (error) {
-    console.error("Analytics batch error:", error);
+    console.error("Unexpected error:", error);
+    const message = error instanceof Error ? error.message : String(error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : String(error) }), 
+      JSON.stringify({ error: message }), 
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

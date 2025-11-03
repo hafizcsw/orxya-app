@@ -24,6 +24,9 @@ verify_jwt = true
 [functions.ai-orchestrate]
 verify_jwt = true
 
+[functions.ai-orchestrator]
+verify_jwt = true
+
 [functions.commands]
 verify_jwt = true
 
@@ -63,8 +66,21 @@ verify_jwt = true
 [functions.ai-conflicts]
 verify_jwt = true
 
-[functions.ai-orchestrator]
-verify_jwt = true
-
 [functions.categorize-expense]
 verify_jwt = true
+
+[functions.ingest-health]
+verify_jwt = true
+
+[functions.ingest-finance]
+verify_jwt = true
+
+[functions.privacy-export]
+verify_jwt = true
+
+[functions.privacy-delete-request]
+verify_jwt = true
+
+[functions.analytics-batch]
+verify_jwt = true
+

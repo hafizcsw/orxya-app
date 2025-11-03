@@ -135,14 +135,198 @@ serve(async (req) => {
     });
 
     const body = await req.json() as ReqBase;
+    const { intent, apply = false, calendar_window, input, preferences, constraints, ghost = true } = body;
     
-    console.log(`[orchestrator] user=${user.id} intent=${body.intent}`);
+    console.log(`[orchestrator] user=${user.id} intent=${intent}`);
 
-    return new Response(JSON.stringify({ 
-      message: "AI orchestrator placeholder - Epic 8 implementation in progress",
-      intent: body.intent,
-      user_id: user.id
-    }), {
+    // Handle different intents
+    let result: any = { intent, user_id: user.id };
+
+    switch (intent) {
+      case "daily_briefing": {
+        const schema = {
+          type: "object",
+          properties: {
+            bullets: { type: "array", items: { type: "string" } }
+          },
+          required: ["bullets"]
+        };
+        
+        const brief = await openaiJSON(
+          "You are a daily briefing assistant. Provide 5 concise, actionable bullet points.",
+          { user_id: user.id, date: new Date().toISOString() },
+          "briefing",
+          schema
+        );
+        
+        result.bullets = brief?.bullets || ["No briefing available"];
+        break;
+      }
+
+      case "plan_my_day": {
+        if (!calendar_window) return bad("calendar_window required");
+        
+        const ctx = await fetchContext(supabase, user.id, calendar_window);
+        const schema = {
+          type: "object",
+          properties: {
+            events: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  start: { type: "string" },
+                  end: { type: "string" },
+                  kind: { type: "string" }
+                },
+                required: ["title", "start", "end", "kind"]
+              }
+            }
+          },
+          required: ["events"]
+        };
+
+        const plan = await openaiJSON(
+          "You are a daily planner. Create a balanced schedule respecting prayer times and existing events.",
+          { context: ctx, preferences, constraints },
+          "daily_plan",
+          schema
+        );
+
+        const events = plan?.events || [];
+        
+        if (!apply || ghost) {
+          // Create draft events
+          for (const ev of events) {
+            await supabase.from("events").insert({
+              owner_id: user.id,
+              title: ev.title,
+              starts_at: ev.start,
+              ends_at: ev.end,
+              source: "ai-draft",
+              is_draft: true
+            });
+          }
+          result.events = events;
+          result.status = "draft_created";
+        } else {
+          // Apply directly
+          for (const ev of events) {
+            await supabase.from("events").insert({
+              owner_id: user.id,
+              title: ev.title,
+              starts_at: ev.start,
+              ends_at: ev.end,
+              source: "ai",
+              is_ai_created: true
+            });
+          }
+          result.events = events;
+          result.status = "applied";
+        }
+        break;
+      }
+
+      case "resolve_conflicts": {
+        if (!input?.conflict_id) return bad("conflict_id required");
+        
+        const { data: conflict } = await supabase
+          .from("conflicts")
+          .select("*")
+          .eq("id", input.conflict_id)
+          .single();
+        
+        if (!conflict) return bad("conflict_not_found", 404);
+
+        const schema = {
+          type: "object",
+          properties: {
+            action: { type: "string" },
+            shift_minutes: { type: "number" }
+          },
+          required: ["action"]
+        };
+
+        const resolution = await openaiJSON(
+          "Suggest how to resolve this scheduling conflict.",
+          { conflict, constraints },
+          "resolution",
+          schema
+        );
+
+        result.suggestion = resolution;
+        
+        if (apply && resolution?.shift_minutes && conflict.event_id) {
+          const shifted = await shiftEventBy(
+            supabase, 
+            user.id, 
+            conflict.event_id, 
+            resolution.shift_minutes, 
+            true
+          );
+          result.applied = shifted;
+        }
+        break;
+      }
+
+      case "budget_guard": {
+        const threshold = input?.threshold || 0;
+        const today = isoDateInTZ(new Date(), TZ_DEFAULT);
+        
+        const { data: metrics } = await supabase.rpc("get_daily_metrics", {
+          p_user_id: user.id,
+          p_start: today,
+          p_end: today
+        });
+
+        const todayNet = metrics?.[0]?.net_cashflow || 0;
+        const triggered = todayNet < threshold;
+
+        result.triggered = triggered;
+        result.current_balance = todayNet;
+        result.threshold = threshold;
+        break;
+      }
+
+      case "what_if": {
+        if (!calendar_window) return bad("calendar_window required");
+        
+        const ctx = await fetchContext(supabase, user.id, calendar_window);
+        const schema = {
+          type: "object",
+          properties: {
+            scenarios: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  description: { type: "string" },
+                  feasibility: { type: "string" }
+                },
+                required: ["description", "feasibility"]
+              }
+            }
+          },
+          required: ["scenarios"]
+        };
+
+        const whatIf = await openaiJSON(
+          "Analyze hypothetical planning scenarios.",
+          { context: ctx, preferences, constraints, input },
+          "what_if",
+          schema
+        );
+
+        result.scenarios = whatIf?.scenarios || [];
+        break;
+      }
+
+      default:
+        return bad("unknown_intent");
+    }
+
+    return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   } catch (e) {
