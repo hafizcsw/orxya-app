@@ -148,8 +148,9 @@ export default function CalendarWeek({
         {/* Days grid - Main scrollable area */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Day headers - Sticky */}
-          <div className="grid grid-cols-7 border-b border-border/40 bg-muted/20 h-10 sm:h-12 sticky top-0 z-20">
-            <div className="w-12 sm:w-16" /> {/* Spacer for time gutter */}
+          <div className="flex border-b border-border/10 bg-background h-10 sm:h-12 sticky top-0 z-20">
+            <div className="w-12 sm:w-16 flex-shrink-0" /> {/* Spacer for time gutter */}
+            <div className="grid grid-cols-7 flex-1">
             {days.map((d, i) => {
               const isToday = d.toDateString() === new Date().toDateString();
               return (
@@ -174,9 +175,10 @@ export default function CalendarWeek({
                   >
                     {d.getDate()}
                   </div>
-                </div>
-              );
-            })}
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           {/* All-Day Row */}
@@ -188,65 +190,67 @@ export default function CalendarWeek({
 
           {/* Scrollable container */}
           <div className="flex-1 overflow-auto relative" ref={gridRef}>
-            {/* Time gutter - Sticky on scroll */}
-            <div className="absolute left-0 top-0 w-12 sm:w-16 h-full flex-shrink-0 bg-background z-10 sticky left-0">
-              <div className="relative h-full">
-                {Array.from({ length: 24 }, (_, h) => (
-                  <div
-                    key={h}
-                    className="relative text-right pr-2 sm:pr-3"
-                    style={{ height: pxPerHour }}
-                  >
-                    <span className="absolute -top-2.5 right-2 text-[10px] sm:text-[11px] text-muted-foreground font-normal">
-                      {h === 0 ? "" : `${h.toString().padStart(2, "0")}:00`}
-                    </span>
-                    <div className="absolute top-0 left-0 right-0 border-t border-border/20" />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Week grid with days */}
-            <div className="grid grid-cols-7 relative" style={{ marginLeft: '3rem' }}>
-              {days.map((d, i) => {
-                const iso = d.toISOString().slice(0, 10);
-                const dayEvents = events[iso] ?? [];
-                const prayers = prayersByDay[iso] ?? null;
-
-                return (
-                  <CalendarDay
-                    key={i}
-                    date={d}
-                    events={dayEvents}
-                    prayers={prayers}
-                    onReload={reload}
-                    onEventClick={handleEventClick}
-                    onCreate={(payload) => {
-                      track("cal_create_drag", { durMin: payload.durationMin });
-                    }}
-                    onMove={(evt, to) => {
-                      track("cal_move", { id: evt.id, to_start: to.start_ts });
-                    }}
-                    onResize={(evt, to) => {
-                      track("cal_resize", { id: evt.id, to_end: to.end_ts });
-                    }}
-                    visibleRange={visibleRange}
-                    pxPerHour={pxPerHour}
-                  />
-                );
-              })}
-
-              {/* Current time indicator - red line */}
-              {days.some(d => d.toDateString() === new Date().toDateString()) && (
-                <div
-                  className="absolute left-0 right-0 h-[2px] bg-red-500 z-30 pointer-events-none"
-                  style={{
-                    top: getCurrentTimePosition(pxPerMin),
-                  }}
-                >
-                  <div className="absolute -right-1 -top-1.5 w-3 h-3 rounded-full bg-red-500 shadow-lg" />
+            <div className="flex relative">
+              {/* Time gutter - scrolls with content */}
+              <div className="w-12 sm:w-16 flex-shrink-0 bg-background">
+                <div className="relative">
+                  {Array.from({ length: 24 }, (_, h) => (
+                    <div
+                      key={h}
+                      className="relative text-right pr-2 sm:pr-3"
+                      style={{ height: pxPerHour }}
+                    >
+                      <span className="absolute -top-2.5 right-2 text-[10px] sm:text-[11px] text-muted-foreground font-normal">
+                        {h === 0 ? "" : `${h.toString().padStart(2, "0")}:00`}
+                      </span>
+                      <div className="absolute top-0 left-0 right-0 border-t border-border/10" />
+                    </div>
+                  ))}
                 </div>
-              )}
+              </div>
+
+              {/* Week grid with days */}
+              <div className="grid grid-cols-7 flex-1 relative">
+                {days.map((d, i) => {
+                  const iso = d.toISOString().slice(0, 10);
+                  const dayEvents = events[iso] ?? [];
+                  const prayers = prayersByDay[iso] ?? null;
+
+                  return (
+                    <CalendarDay
+                      key={i}
+                      date={d}
+                      events={dayEvents}
+                      prayers={prayers}
+                      onReload={reload}
+                      onEventClick={handleEventClick}
+                      onCreate={(payload) => {
+                        track("cal_create_drag", { durMin: payload.durationMin });
+                      }}
+                      onMove={(evt, to) => {
+                        track("cal_move", { id: evt.id, to_start: to.start_ts });
+                      }}
+                      onResize={(evt, to) => {
+                        track("cal_resize", { id: evt.id, to_end: to.end_ts });
+                      }}
+                      visibleRange={visibleRange}
+                      pxPerHour={pxPerHour}
+                    />
+                  );
+                })}
+
+                {/* Current time indicator - red line */}
+                {days.some(d => d.toDateString() === new Date().toDateString()) && (
+                  <div
+                    className="absolute left-0 right-0 h-[2px] bg-red-500 z-30 pointer-events-none"
+                    style={{
+                      top: getCurrentTimePosition(pxPerMin),
+                    }}
+                  >
+                    <div className="absolute -right-1 -top-1.5 w-3 h-3 rounded-full bg-red-500 shadow-lg" />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
