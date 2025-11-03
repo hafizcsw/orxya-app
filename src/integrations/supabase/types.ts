@@ -392,6 +392,45 @@ export type Database = {
         }
         Relationships: []
       }
+      analytics_events: {
+        Row: {
+          created_at: string
+          id: number
+          kind: string
+          meta: Json | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          kind: string
+          meta?: Json | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          kind?: string
+          meta?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "mv_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "analytics_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       autopilot_actions: {
         Row: {
           action: string
@@ -1283,6 +1322,42 @@ export type Database = {
           },
         ]
       }
+      pilot_users: {
+        Row: {
+          cohort: string
+          created_at: string
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          cohort?: string
+          created_at?: string
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          cohort?: string
+          created_at?: string
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilot_users_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "mv_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "pilot_users_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       prayer_times: {
         Row: {
           asr: string | null
@@ -1629,6 +1704,39 @@ export type Database = {
           },
         ]
       }
+      user_feature_flags: {
+        Row: {
+          flags: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          flags?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          flags?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_feature_flags_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "mv_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_feature_flags_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       user_privacy_prefs: {
         Row: {
           calendar_enabled: boolean
@@ -1731,6 +1839,36 @@ export type Database = {
           user_id: string | null
         }
         Relationships: []
+      }
+      mv_engagement_daily: {
+        Row: {
+          ai_briefs: number | null
+          ai_plans: number | null
+          ai_resolves: number | null
+          day: string | null
+          events_count: number | null
+          page_views: number | null
+          tile_uses: number | null
+          unique_features_used: number | null
+          user_id: string | null
+          widget_taps: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "mv_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "analytics_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       v_admin_actions_daily: {
         Row: {
@@ -2060,6 +2198,20 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_engagement_metrics: {
+        Args: { p_end: string; p_start: string; p_user_id: string }
+        Returns: {
+          ai_briefs: number
+          ai_plans: number
+          ai_resolves: number
+          day: string
+          events_count: number
+          page_views: number
+          tile_uses: number
+          unique_features_used: number
+          widget_taps: number
+        }[]
+      }
       get_privacy_prefs: {
         Args: { p_user_id: string }
         Returns: {
@@ -2079,6 +2231,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_user_flags: { Args: { p_user_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2108,6 +2261,11 @@ export type Database = {
       }
       refresh_daily_metrics: {
         Args: { full_refresh?: boolean }
+        Returns: undefined
+      }
+      refresh_engagement: { Args: never; Returns: undefined }
+      set_user_flag: {
+        Args: { p_key: string; p_user_id: string; p_value: boolean }
         Returns: undefined
       }
       show_limit: { Args: never; Returns: number }
