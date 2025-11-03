@@ -32,6 +32,7 @@ import SettingsPrayer from "./pages/SettingsPrayer";
 import PlannerChat from "./pages/PlannerChat";
 import OAuthGoogle from "./pages/OAuthGoogle";
 import NotFound from "./pages/NotFound";
+import PrivacyCenter from "./pages/PrivacyCenter";
 import AdminAutopilot from "./pages/AdminAutopilot";
 import Conflicts from "./pages/Conflicts";
 import TestConflicts from "./pages/TestConflicts";
@@ -75,6 +76,7 @@ function AppContent() {
         <Route path="/seed" element={<Seed />} />
         <Route path="/profile" element={<Protected><Profile /></Protected>} />
         <Route path="/expenses" element={<Protected><Expenses /></Protected>} />
+        <Route path="/privacy" element={<Protected><PrivacyCenter /></Protected>} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="*" element={<NotFound />} />

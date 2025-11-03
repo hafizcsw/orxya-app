@@ -1325,6 +1325,45 @@ export type Database = {
         }
         Relationships: []
       }
+      privacy_audit: {
+        Row: {
+          action: string
+          created_at: string
+          id: number
+          meta: Json | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: number
+          meta?: Json | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: number
+          meta?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "privacy_audit_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "mv_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "privacy_audit_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           accent_color: string | null
@@ -1587,6 +1626,54 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vw_events_with_conflicts"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_privacy_prefs: {
+        Row: {
+          calendar_enabled: boolean
+          health_enabled: boolean
+          location_enabled: boolean
+          notif_fin_enabled: boolean
+          pause_all: boolean
+          retention_days: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          calendar_enabled?: boolean
+          health_enabled?: boolean
+          location_enabled?: boolean
+          notif_fin_enabled?: boolean
+          pause_all?: boolean
+          retention_days?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          calendar_enabled?: boolean
+          health_enabled?: boolean
+          location_enabled?: boolean
+          notif_fin_enabled?: boolean
+          pause_all?: boolean
+          retention_days?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_privacy_prefs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "mv_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_privacy_prefs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -1973,6 +2060,25 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_privacy_prefs: {
+        Args: { p_user_id: string }
+        Returns: {
+          calendar_enabled: boolean
+          health_enabled: boolean
+          location_enabled: boolean
+          notif_fin_enabled: boolean
+          pause_all: boolean
+          retention_days: number
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "user_privacy_prefs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1996,12 +2102,20 @@ export type Database = {
         Returns: undefined
       }
       is_admin: { Args: { p_uid: string }; Returns: boolean }
+      log_privacy_audit: {
+        Args: { p_action: string; p_meta: Json; p_user_id: string }
+        Returns: undefined
+      }
       refresh_daily_metrics: {
         Args: { full_refresh?: boolean }
         Returns: undefined
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      update_privacy_prefs: {
+        Args: { p_prefs: Json; p_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       ai_action_status: "queued" | "running" | "done" | "failed"
