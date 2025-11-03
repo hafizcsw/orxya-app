@@ -97,7 +97,10 @@ export async function captureAndSendLocation(): Promise<boolean> {
             }
           },
           (err) => {
-            console.warn('Geolocation error:', err);
+            // Only log if it's not a permission denied error
+            if (err.code !== 1) { // 1 = PERMISSION_DENIED
+              console.warn('Geolocation error:', err);
+            }
             resolve(false);
           },
           { enableHighAccuracy: true, timeout: 15000 }

@@ -3,6 +3,7 @@ import { Protected } from "@/components/Protected";
 import CalendarWeek from "@/components/calendar/CalendarWeek";
 import { Calendar as CalendarIcon, Grid3x3, Plus, Search, Settings, Menu } from "lucide-react";
 import MonthGrid from "@/components/calendar/MonthGrid";
+import { CalendarWeekErrorBoundary } from "@/components/calendar/CalendarWeekErrorBoundary";
 import { startOfMonth, endOfMonth, toISODate } from "@/lib/dates";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/lib/auth";
@@ -50,10 +51,12 @@ export default function CalendarPage() {
   // Detect screen size and manage sidebar
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setSidebarOpen(true); // Auto-open on desktop
-      } else {
-        setSidebarOpen(false); // Auto-close on mobile
+      if (typeof window !== 'undefined') {
+        if (window.innerWidth >= 1024) {
+          setSidebarOpen(true); // Auto-open on desktop
+        } else {
+          setSidebarOpen(false); // Auto-close on mobile
+        }
       }
     };
 
@@ -160,14 +163,14 @@ export default function CalendarPage() {
           </div>
 
           {/* Mobile Sidebar as Sheet */}
-          <Sheet open={sidebarOpen && window.innerWidth < 1024} onOpenChange={setSidebarOpen}>
+          <Sheet open={sidebarOpen && typeof window !== 'undefined' && window.innerWidth < 1024} onOpenChange={setSidebarOpen}>
             <SheetContent side="right" className="w-[280px] sm:w-[320px] p-0">
               <CalendarSidebar
                 selectedDate={currentDate}
                 onDateSelect={(date) => {
                   setCurrentDate(date);
                   setGlobalDate(date);
-                  if (window.innerWidth < 1024) setSidebarOpen(false);
+                  if (typeof window !== 'undefined' && window.innerWidth < 1024) setSidebarOpen(false);
                 }}
               />
             </SheetContent>
@@ -228,15 +231,17 @@ export default function CalendarPage() {
 
               {/* Calendar View */}
               {mode === "week" ? (
-                <CalendarWeek 
-                  key={currentDate.getTime()}
-                  anchor={currentDate} 
-                  startOn={6}
-                  onDateChange={(date) => {
-                    setCurrentDate(date);
-                    setGlobalDate(date);
-                  }}
-                />
+                <CalendarWeekErrorBoundary>
+                  <CalendarWeek 
+                    key={currentDate.getTime()}
+                    anchor={currentDate} 
+                    startOn={6}
+                    onDateChange={(date) => {
+                      setCurrentDate(date);
+                      setGlobalDate(date);
+                    }}
+                  />
+                </CalendarWeekErrorBoundary>
               ) : (
                 <MonthGrid 
                   anchor={currentDate} 

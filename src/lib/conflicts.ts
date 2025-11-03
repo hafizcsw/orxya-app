@@ -6,11 +6,27 @@ import { track } from "./telemetry";
  */
 export async function conflictCheckToday(): Promise<void> {
   try {
+    // Add timeout and better error handling
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
     const { data, error } = await supabase.functions.invoke('conflict-check', {
-      body: {}
+      body: {},
+      headers: {
+        signal: controller.signal as any
+      }
     });
 
-    if (error) throw error;
+    clearTimeout(timeoutId);
+
+    if (error) {
+      // Silently fail if it's a network/timeout error - don't break the app
+      if (error.message?.includes('Failed to send') || error.message?.includes('timeout')) {
+        console.warn('[Conflicts] Check temporarily unavailable:', error.message);
+        return;
+      }
+      throw error;
+    }
 
     track('conflict_check_run', {
       created: data?.created ?? 0,
@@ -18,8 +34,13 @@ export async function conflictCheckToday(): Promise<void> {
     });
 
     console.log('[Conflicts] Check completed:', data);
-  } catch (e) {
-    console.error('[Conflicts] Check failed:', e);
+  } catch (e: any) {
+    // Don't spam console with network errors
+    if (e.name === 'AbortError') {
+      console.warn('[Conflicts] Check timed out');
+    } else {
+      console.error('[Conflicts] Check failed:', e);
+    }
     track('conflict_check_error', { error: String(e) });
   }
 }

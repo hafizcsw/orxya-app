@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ThemeProvider } from "next-themes";
 import { DateProvider } from "./contexts/DateContext";
 import { AIProvider } from "./contexts/AIContext";
@@ -24,7 +25,7 @@ import Assistant from "./pages/Assistant";
 import Calendar from "./pages/Calendar";
 import CalendarFull from "./pages/CalendarFull";
 import CalendarSimple from "./pages/CalendarSimple";
-import CalendarView from "./pages/CalendarView";
+
 import Inbox from "./pages/Inbox";
 import SettingsExternal from "./pages/SettingsExternal";
 import SettingsNotifications from "./pages/SettingsNotifications";
@@ -62,8 +63,7 @@ function AppContent() {
         <Route path="/automation" element={<Protected><Automation /></Protected>} />
         <Route path="/ai" element={<AI />} />
         <Route path="/assistant" element={<Protected><Assistant /></Protected>} />
-        <Route path="/calendar" element={<Protected><Calendar /></Protected>} />
-        <Route path="/calendar-view" element={<Protected><CalendarView /></Protected>} />
+        <Route path="/calendar" element={<Protected><ErrorBoundary><Calendar /></ErrorBoundary></Protected>} />
         <Route path="/inbox" element={<Protected><Inbox /></Protected>} />
         <Route path="/calendar-full" element={<Protected><CalendarFull /></Protected>} />
         <Route path="/calendar-simple" element={<Protected><CalendarSimple /></Protected>} />
@@ -100,10 +100,12 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <DateProvider>
             <AIProvider>
-              <AppContent />
+              <ErrorBoundary>
+                <AppContent />
+              </ErrorBoundary>
             </AIProvider>
           </DateProvider>
         </BrowserRouter>
