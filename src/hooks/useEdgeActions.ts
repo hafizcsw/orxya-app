@@ -120,5 +120,81 @@ export function useEdgeActions() {
     }
   }, []);
 
-  return { fetchConflicts, planMyDay, resolveConflict, sendLocation };
+  // Epic 8: AI Executive Layer functions
+  const dailyBriefing = useCallback(async () => {
+    try {
+      const res = await edgeCall<any, any>(
+        "ai-orchestrator",
+        { intent: "daily_briefing" },
+        await opts()
+      );
+      return res.briefing;
+    } catch (error: any) {
+      toast({
+        title: "خطأ في الموجز اليومي",
+        description: error.message || "حدث خطأ غير متوقع",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  }, []);
+
+  const budgetGuard = useCallback(async (threshold = -200) => {
+    try {
+      const res = await edgeCall<any, any>(
+        "ai-orchestrator",
+        { intent: "budget_guard", input: { threshold } },
+        await opts()
+      );
+      return res;
+    } catch (error: any) {
+      toast({
+        title: "خطأ في حارس الميزانية",
+        description: error.message || "حدث خطأ غير متوقع",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  }, []);
+
+  const whatIfPlan = useCallback(
+    async (
+      window: { start: string; end: string },
+      prefs?: any,
+      cons?: any
+    ) => {
+      try {
+        const res = await edgeCall<any, any>(
+          "ai-orchestrator",
+          { 
+            intent: "what_if", 
+            calendar_window: window, 
+            preferences: prefs, 
+            constraints: cons, 
+            ghost: true 
+          },
+          await opts()
+        );
+        return res;
+      } catch (error: any) {
+        toast({
+          title: "خطأ في السيناريو الافتراضي",
+          description: error.message || "حدث خطأ غير متوقع",
+          variant: "destructive",
+        });
+        throw error;
+      }
+    },
+    []
+  );
+
+  return { 
+    fetchConflicts, 
+    planMyDay, 
+    resolveConflict, 
+    sendLocation,
+    dailyBriefing,
+    budgetGuard,
+    whatIfPlan
+  };
 }
