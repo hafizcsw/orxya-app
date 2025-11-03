@@ -46,8 +46,8 @@ serve(async (req) => {
     const { data: prayerTimes } = await supabase
       .from('prayer_times')
       .select('*')
-      .eq('user_id', user.id)
-      .eq('prayer_date', checkDate)
+      .eq('owner_id', user.id)
+      .eq('date_iso', checkDate)
       .maybeSingle();
 
     if (!prayerTimes) {
@@ -122,14 +122,17 @@ serve(async (req) => {
           conflicts.push(conflict);
 
           await supabase.from('conflicts').upsert({
-            id: conflict.id,
-            user_id: user.id,
-            event_id: event.id,
-            conflict_type: 'prayer',
-            detected_at: new Date().toISOString(),
-            resolved: false,
-            metadata: conflict
-          });
+            owner_id: user.id,
+            object_id: event.id,
+            object_kind: 'event',
+            date_iso: checkDate,
+            prayer_name: prayer.name,
+            prayer_start: prayerWindowStart.toISOString(),
+            prayer_end: prayerWindowEnd.toISOString(),
+            overlap_min: Math.round((Math.min(eventEnd, prayerWindowEnd).getTime() - Math.max(eventStart, prayerWindowStart).getTime()) / (60 * 1000)),
+            severity: calculateSeverity(eventStart, eventEnd, prayerTime),
+            status: 'open'
+          }, { onConflict: 'owner_id,object_id,prayer_name,date_iso' });
         }
       }
     }

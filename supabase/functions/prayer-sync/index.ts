@@ -87,6 +87,8 @@ serve(async (req) => {
       const dateISO = d.toISOString().slice(0, 10);
       
       const times = await fetchOneDay(Number(lat), Number(lon), String(method), dateISO);
+      
+      console.log(`📅 Fetched prayer times for ${dateISO}:`, times);
 
       const { error } = await supabase.from("prayer_times").upsert({
         owner_id: user.id,
@@ -99,6 +101,12 @@ serve(async (req) => {
         method: String(method),
         source: "aladhan"
       }, { onConflict: "owner_id,date_iso" });
+      
+      if (error) {
+        console.error(`❌ DB error for ${dateISO}:`, error);
+      } else {
+        console.log(`✅ Saved prayer times for ${dateISO}`);
+      }
       
       if (error) throw error;
       results.push({ date_iso: dateISO });
