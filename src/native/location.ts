@@ -13,7 +13,7 @@ export async function captureAndSendLocation(): Promise<boolean> {
       const { Geolocation } = await import('@capacitor/geolocation');
       const { coords, timestamp } = await Geolocation.getCurrentPosition({
         enableHighAccuracy: true,
-        timeout: 8000
+        timeout: 15000
       });
       
       const { data, error } = await supabase.functions.invoke('location-update', {
@@ -34,6 +34,13 @@ export async function captureAndSendLocation(): Promise<boolean> {
         }
         throw error;
       }
+      
+      // Cache location
+      localStorage.setItem('last_location', JSON.stringify({
+        lat: coords.latitude,
+        lon: coords.longitude,
+        timestamp: new Date().toISOString()
+      }));
       
       track('location_captured', {
         provider: 'capacitor',
@@ -70,6 +77,13 @@ export async function captureAndSendLocation(): Promise<boolean> {
                 throw error;
               }
               
+              // Cache location
+              localStorage.setItem('last_location', JSON.stringify({
+                lat: pos.coords.latitude,
+                lon: pos.coords.longitude,
+                timestamp: new Date().toISOString()
+              }));
+              
               track('location_captured', {
                 provider: 'browser',
                 saved: data?.saved ?? false,
@@ -86,7 +100,7 @@ export async function captureAndSendLocation(): Promise<boolean> {
             console.warn('Geolocation error:', err);
             resolve(false);
           },
-          { enableHighAccuracy: true, timeout: 8000 }
+          { enableHighAccuracy: true, timeout: 15000 }
         );
       });
       

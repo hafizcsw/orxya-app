@@ -78,7 +78,7 @@ export function useUser() {
                   await captureAndSendLocation();
                   await conflictCheckToday();
                 })(),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Location timeout')), 5000))
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Location timeout')), 15000))
               ]).catch(e => {
                 console.error('Location/Conflicts failed:', e);
               });
@@ -96,7 +96,7 @@ export function useUser() {
                   await syncPrayers(today);
                   await schedulePrayersFor(today);
                 })(),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Prayer timeout')), 3000))
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Prayer timeout')), 10000))
               ]).then(() => {
                 console.log('[useUser] Prayer sync done');
               }).catch(e => {

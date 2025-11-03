@@ -26,22 +26,47 @@ export async function ensureNotificationPerms(): Promise<boolean> {
 
 /** يجلب مواقيت يوم محدد من DB (بعد تشغيل edge function) */
 export async function getPrayerTimesFor(dateISO: string): Promise<PT | null> {
+  // Try localStorage cache first
+  const cached = localStorage.getItem(`prayer_times_${dateISO}`);
+  if (cached) {
+    try {
+      return JSON.parse(cached) as PT;
+    } catch {
+      // Invalid cache, continue to DB
+    }
+  }
+
   const { data: sess } = await supabase.auth.getSession();
   const uid = sess?.session?.user?.id;
   if (!uid) return null;
+  
   const { data } = await supabase
     .from("prayer_times")
     .select("fajr,dhuhr,asr,maghrib,isha")
     .eq("owner_id", uid)
     .eq("date_iso", dateISO)
     .maybeSingle();
-  return (data ?? null) as PT | null;
+  
+  const times = (data ?? null) as PT | null;
+  
+  // Cache for 24 hours
+  if (times) {
+    localStorage.setItem(`prayer_times_${dateISO}`, JSON.stringify(times));
+  }
+  
+  return times;
 }
 
 /** يستدعي Edge Function لحفظ مواقيت التاريخ المطلوب ثم يرجعها */
 export async function syncPrayers(dateISO: string): Promise<PT | null> {
-  await supabase.functions.invoke("prayer-sync", { body: { date: dateISO, days: 1 } });
-  return getPrayerTimesFor(dateISO);
+  try {
+    await supabase.functions.invoke("prayer-sync", { body: { date: dateISO, days: 1 } });
+    return getPrayerTimesFor(dateISO);
+  } catch (error) {
+    console.warn("Prayer sync failed, using cache:", error);
+    // Return cached version if sync fails
+    return getPrayerTimesFor(dateISO);
+  }
 }
 
 /** يُجدول إشعارات اليوم (فجر→عشاء). استدعِه بعد syncPrayers أو إذا كانت البيانات موجودة. */
