@@ -111,7 +111,7 @@ export default function Expenses() {
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="p-6 border-destructive/20 bg-card/50 backdrop-blur-sm hover:border-destructive/40 transition-all duration-300">
+          <Card className="p-6 border-destructive/20 bg-card backdrop-blur-sm hover:border-destructive/40 transition-all duration-300">
             <div className="flex items-center gap-4">
               <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20">
                 <DollarSign className="text-destructive" size={28} />
@@ -123,7 +123,7 @@ export default function Expenses() {
             </div>
           </Card>
 
-          <Card className="p-6 border-primary/20 bg-card/50 backdrop-blur-sm hover:border-primary/40 transition-all duration-300">
+          <Card className="p-6 border-primary/20 bg-card backdrop-blur-sm hover:border-primary/40 transition-all duration-300">
             <div className="flex items-center gap-4">
               <div className="p-4 rounded-2xl bg-primary/10 border border-primary/20">
                 <TrendingDown className="text-primary" size={28} />
@@ -137,7 +137,7 @@ export default function Expenses() {
             </div>
           </Card>
 
-          <Card className="p-6 border-warning/20 bg-card/50 backdrop-blur-sm hover:border-warning/40 transition-all duration-300">
+          <Card className="p-6 border-warning/20 bg-card backdrop-blur-sm hover:border-warning/40 transition-all duration-300">
             <div className="flex items-center gap-4">
               <div className="p-4 rounded-2xl bg-warning/10 border border-warning/20">
                 <Calendar className="text-warning" size={28} />
@@ -152,14 +152,14 @@ export default function Expenses() {
 
         {/* Charts */}
         {chartData.length > 0 && (
-          <Card className="p-6 bg-card/50 backdrop-blur-sm border-border/50">
+          <Card className="p-6 bg-card backdrop-blur-sm border-border">
             <h2 className="text-2xl font-bold mb-6 text-card-foreground">توزيع المصروفات</h2>
             <DonutChart data={chartData} height={300} />
           </Card>
         )}
 
         {/* Filters */}
-        <Card className="p-5 bg-card/50 backdrop-blur-sm border-border/50">
+        <Card className="p-5 bg-card backdrop-blur-sm border-border">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground/60" size={20} />
@@ -167,7 +167,7 @@ export default function Expenses() {
                 placeholder="ابحث في المصروفات..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pr-10 bg-background/50 border-border/50 focus:border-primary/50 text-foreground placeholder:text-muted-foreground/60"
+                className="pr-10 bg-background border-border focus:border-primary text-foreground placeholder:text-muted-foreground/60"
               />
             </div>
 

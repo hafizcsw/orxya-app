@@ -18,7 +18,7 @@ export function ExpenseCard({ category, amount, note, date, source }: ExpenseCar
     <div className="group relative overflow-hidden">
       {/* Glass card with futuristic effects */}
       <div 
-        className="relative p-5 flex items-center gap-4 rounded-2xl backdrop-blur-xl transition-all duration-500 hover:scale-[1.02] border border-border/50 bg-card/50 hover:border-border hover:bg-card/70"
+        className="relative p-5 flex items-center gap-4 rounded-2xl backdrop-blur-xl transition-all duration-500 hover:scale-[1.02] border border-border bg-card hover:border-primary/30 hover:shadow-lg"
         style={{
           boxShadow: 'var(--elev-1)',
         }}
