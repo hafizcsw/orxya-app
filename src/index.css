@@ -26,8 +26,11 @@ html {
 
 body {
   overscroll-behavior-y: none;
-  /* Safe area for mobile devices */
-  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Safe area support for mobile */
+.safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
 }
 
 .input {

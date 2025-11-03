@@ -72,8 +72,8 @@ export function BottomNav() {
       )}
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-xl border-t border-border">
-        <div className="flex items-center justify-around px-4 py-3 max-w-7xl mx-auto">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-xl border-t border-border safe-bottom">
+        <div className="flex items-center justify-around px-2 py-2 max-w-7xl mx-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -83,14 +83,14 @@ export function BottomNav() {
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  "flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all",
+                  "flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg transition-all min-w-[60px]",
                   isActive 
                     ? "text-primary" 
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <Icon className="w-6 h-6" />
-                <span className="text-xs font-medium">{item.label}</span>
+                <Icon className="w-5 h-5" />
+                <span className="text-[10px] font-medium">{item.label}</span>
               </Link>
             );
           })}
@@ -99,28 +99,27 @@ export function BottomNav() {
           <button
             onClick={toggleAI}
             className={cn(
-              "w-16 h-16 rounded-full -mt-8",
+              "w-14 h-14 rounded-full -mt-6",
               "bg-gradient-to-br from-primary to-primary/80",
               "text-primary-foreground",
               "flex items-center justify-center",
-              "font-bold text-xl",
-              "shadow-2xl hover:scale-110 transition-all duration-300",
+              "shadow-2xl hover:scale-105 transition-all duration-300",
               "border-4 border-background"
             )}
             style={{
-              boxShadow: "0 0 25px hsl(var(--primary) / 0.5), 0 10px 20px hsl(var(--primary) / 0.3)",
+              boxShadow: "0 0 20px hsl(var(--primary) / 0.5), 0 8px 16px hsl(var(--primary) / 0.3)",
             }}
           >
-            <Sparkles className="w-7 h-7" />
+            <Sparkles className="w-6 h-6" />
           </button>
 
           {/* More Button */}
           <button
             onClick={() => setMenuOpen(true)}
-            className="flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all text-muted-foreground hover:text-foreground"
+            className="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg transition-all text-muted-foreground hover:text-foreground min-w-[60px]"
           >
-            <Menu className="w-6 h-6" />
-            <span className="text-xs font-medium">المزيد</span>
+            <Menu className="w-5 h-5" />
+            <span className="text-[10px] font-medium">المزيد</span>
           </button>
         </div>
       </nav>

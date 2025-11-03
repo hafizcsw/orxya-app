@@ -282,58 +282,55 @@ const Today = () => {
       <div className="min-h-screen bg-background">
         {/* Sticky Header - Period Selection Only */}
         <div className={cn(
-          "sticky top-12 z-30 bg-background/95 backdrop-blur-xl border-b border-border transition-all duration-300 px-4 py-3",
+          "sticky top-12 z-30 bg-background/95 backdrop-blur-xl border-b border-border transition-all duration-300 px-4 py-2",
           isScrolled && "shadow-lg bg-background/98"
         )}>
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
-            {/* Period Selection */}
-            <div className={cn(
-              "flex gap-2 mx-auto transition-all duration-300",
-              isScrolled && "opacity-0 translate-y-[-20px] pointer-events-none"
-            )}>
+          <div className="max-w-4xl mx-auto flex items-center justify-center">
+            {/* Period Selection - Compact */}
+            <div className="flex gap-1.5">
               <button
                 onClick={() => setPeriod('daily')}
                 className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center transition-all",
+                  "w-9 h-9 rounded-full flex items-center justify-center transition-all text-xs font-bold",
                   period === 'daily' 
                     ? "bg-[hsl(var(--whoop-blue))] text-white shadow-[var(--glow-blue)]" 
                     : "bg-secondary hover:bg-secondary/80"
                 )}
               >
-                <span className="text-xs font-bold">D</span>
+                <span className="text-[10px] font-bold">D</span>
               </button>
               <button
                 onClick={() => setPeriod('weekly')}
                 className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center transition-all",
+                  "w-9 h-9 rounded-full flex items-center justify-center transition-all text-xs font-bold",
                   period === 'weekly' 
                     ? "bg-[hsl(var(--whoop-blue))] text-white shadow-[var(--glow-blue)]" 
                     : "bg-secondary hover:bg-secondary/80"
                 )}
               >
-                <span className="text-xs font-bold">W</span>
+                <span className="text-[10px] font-bold">W</span>
               </button>
               <button
                 onClick={() => setPeriod('monthly')}
                 className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center transition-all",
+                  "w-9 h-9 rounded-full flex items-center justify-center transition-all text-xs font-bold",
                   period === 'monthly' 
                     ? "bg-[hsl(var(--whoop-blue))] text-white shadow-[var(--glow-blue)]" 
                     : "bg-secondary hover:bg-secondary/80"
                 )}
               >
-                <span className="text-xs font-bold">M</span>
+                <span className="text-[10px] font-bold">M</span>
               </button>
               <button
                 onClick={() => setPeriod('yearly')}
                 className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center transition-all",
+                  "w-9 h-9 rounded-full flex items-center justify-center transition-all text-xs font-bold",
                   period === 'yearly' 
                     ? "bg-[hsl(var(--whoop-blue))] text-white shadow-[var(--glow-blue)]" 
                     : "bg-secondary hover:bg-secondary/80"
                 )}
               >
-                <span className="text-xs font-bold">Y</span>
+                <span className="text-[10px] font-bold">Y</span>
               </button>
             </div>
           </div>
@@ -348,52 +345,52 @@ const Today = () => {
               <p className="mt-2 text-sm text-muted-foreground">جار التحميل…</p>
             </OryxaCard>
           ) : report ? (
-            <>
-              {/* Financial Rings - Enhanced with Animations */}
-              <div className="relative mb-8 md:mb-12">
-                {/* Background Glow Effect */}
-                <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent blur-3xl -z-10" />
-                
-                <div className="grid grid-cols-3 gap-1 md:gap-6 mb-6 md:mb-12">
-                  <div className="flex flex-col items-center group animate-fade-in scale-[0.65] md:scale-100" style={{ animationDelay: '0ms' }}>
-                    <div className="relative">
-                      {/* Glow Ring Effect */}
-                      <div className="absolute inset-0 bg-[hsl(var(--whoop-blue))] opacity-20 blur-2xl rounded-full scale-150 group-hover:scale-[2] transition-transform duration-700" />
-                      
-                      <div 
-                        className="relative cursor-pointer transform transition-all duration-500 hover:scale-110"
-                        onClick={() => {
-                          setEditingBalance(true);
-                          setBalanceValue(report.current_balance?.toString() || '0');
-                        }}
-                      >
-                        <StatRing
-                          value={Math.min(100, Math.max(0, ((report.current_balance || 0) / 10000) * 100))}
-                          label="الرصيد"
-                          subtitle="BALANCE"
-                          color="hsl(var(--whoop-blue))"
-                          size="sm"
-                          customDisplay={`$${(report.current_balance || 0).toFixed(0)}`}
-                        />
-                      </div>
-                      
-                      {/* Edit Button Overlay */}
-                      <button
-                        onClick={() => {
-                          setEditingBalance(true);
-                          setBalanceValue(report.current_balance?.toString() || '0');
-                        }}
-                        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-[hsl(var(--whoop-blue))] hover:text-white shadow-lg"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
+              <>
+                {/* Financial Rings - Mobile Optimized */}
+                <div className="relative mb-6">
+                  {/* Background Glow Effect */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent blur-3xl -z-10" />
                   
-                  <div className="flex flex-col items-center group animate-fade-in scale-[0.65] md:scale-100" style={{ animationDelay: '100ms' }}>
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-[hsl(var(--whoop-green))] opacity-20 blur-2xl rounded-full scale-150 group-hover:scale-[2] transition-transform duration-700" />
-                      <div className="relative transform transition-all duration-500 hover:scale-110">
+                  <div className="grid grid-cols-3 gap-2 mb-6">
+                    <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '0ms' }}>
+                      <div className="relative scale-75 md:scale-100">
+                        {/* Glow Ring Effect */}
+                        <div className="absolute inset-0 bg-[hsl(var(--whoop-blue))] opacity-20 blur-2xl rounded-full scale-150 group-hover:scale-[2] transition-transform duration-700" />
+                        
+                        <div 
+                          className="relative cursor-pointer transform transition-all duration-500 hover:scale-110"
+                          onClick={() => {
+                            setEditingBalance(true);
+                            setBalanceValue(report.current_balance?.toString() || '0');
+                          }}
+                        >
+                          <StatRing
+                            value={Math.min(100, Math.max(0, ((report.current_balance || 0) / 10000) * 100))}
+                            label="الرصيد"
+                            subtitle="BALANCE"
+                            color="hsl(var(--whoop-blue))"
+                            size="sm"
+                            customDisplay={`$${(report.current_balance || 0).toFixed(0)}`}
+                          />
+                        </div>
+                        
+                        {/* Edit Button Overlay */}
+                        <button
+                          onClick={() => {
+                            setEditingBalance(true);
+                            setBalanceValue(report.current_balance?.toString() || '0');
+                          }}
+                          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-[hsl(var(--whoop-blue))] hover:text-white shadow-lg"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '100ms' }}>
+                      <div className="relative scale-75 md:scale-100">
+                        <div className="absolute inset-0 bg-[hsl(var(--whoop-green))] opacity-20 blur-2xl rounded-full scale-150 group-hover:scale-[2] transition-transform duration-700" />
+                        <div className="relative transform transition-all duration-500 hover:scale-110">
                         <StatRing
                           value={Math.min(100, Math.max(0, ((report.total_income || 0) / 5000) * 100))}
                           label="الدخل"
@@ -405,11 +402,11 @@ const Today = () => {
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="flex flex-col items-center group animate-fade-in scale-[0.65] md:scale-100" style={{ animationDelay: '200ms' }}>
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-[hsl(var(--whoop-red))] opacity-20 blur-2xl rounded-full scale-150 group-hover:scale-[2] transition-transform duration-700" />
-                      <div className="relative transform transition-all duration-500 hover:scale-110">
+                    
+                    <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '200ms' }}>
+                      <div className="relative scale-75 md:scale-100">
+                        <div className="absolute inset-0 bg-[hsl(var(--whoop-red))] opacity-20 blur-2xl rounded-full scale-150 group-hover:scale-[2] transition-transform duration-700" />
+                        <div className="relative transform transition-all duration-500 hover:scale-110">
                         <StatRing
                           value={Math.min(100, Math.max(0, ((report.total_spend || 0) / 5000) * 100))}
                           label="المصروفات"
@@ -423,64 +420,71 @@ const Today = () => {
                   </div>
                 </div>
 
-                {/* Daily Stats Rings - Enhanced */}
-                <div className="grid grid-cols-3 gap-1 md:gap-6">
-                  <div className="flex flex-col items-center group animate-fade-in scale-[0.65] md:scale-100" style={{ animationDelay: '300ms' }}>
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-[hsl(var(--whoop-green))] opacity-10 blur-xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-500" />
-                      <div className="relative transform transition-all duration-300 hover:scale-105">
-                        <StatRing
-                          value={Math.min(100, Math.max(0, ((report.income_usd || 0) / 1000) * 100))}
-                          label="دخل اليوم"
-                          subtitle="TODAY"
-                          color="hsl(var(--whoop-green))"
-                          size="sm"
-                          customDisplay={`$${report.income_usd || 0}`}
-                        />
+                  {/* Daily Stats Rings - Mobile Optimized */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '300ms' }}>
+                      <div className="relative scale-75 md:scale-100">
+                        <div className="absolute inset-0 bg-[hsl(var(--whoop-green))] opacity-10 blur-xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-500" />
+                        <div className="relative transform transition-all duration-500 hover:scale-110">
+                          <StatRing
+                            value={Math.min(100, Math.max(0, ((report.income_usd || 0) / 1000) * 100))}
+                            label="دخل اليوم"
+                            subtitle="TODAY"
+                            color="hsl(var(--whoop-green))"
+                            size="sm"
+                            customDisplay={`$${report.income_usd || 0}`}
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex flex-col items-center group animate-fade-in scale-[0.65] md:scale-100" style={{ animationDelay: '350ms' }}>
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-[hsl(var(--whoop-red))] opacity-10 blur-xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-500" />
-                      <div className="relative transform transition-all duration-300 hover:scale-105">
-                        <StatRing
-                          value={Math.min(100, Math.max(0, ((report.spend_usd || 0) / 1000) * 100))}
-                          label="مصروف اليوم"
-                          subtitle="TODAY"
-                          color="hsl(var(--whoop-red))"
-                          size="sm"
-                          customDisplay={`$${report.spend_usd || 0}`}
-                        />
+                    
+                    <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '350ms' }}>
+                      <div className="relative scale-75 md:scale-100">
+                        <div className="absolute inset-0 bg-[hsl(var(--whoop-red))] opacity-10 blur-xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-500" />
+                        <div className="relative transform transition-all duration-500 hover:scale-110">
+                          <StatRing
+                            value={Math.min(100, Math.max(0, ((report.spend_usd || 0) / 1000) * 100))}
+                            label="مصروف اليوم"
+                            subtitle="TODAY"
+                            color="hsl(var(--whoop-red))"
+                            size="sm"
+                            customDisplay={`$${report.spend_usd || 0}`}
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex flex-col items-center group animate-fade-in scale-[0.65] md:scale-100" style={{ animationDelay: '400ms' }}>
-                    <div className="relative">
-                      <div className={cn(
-                        "absolute inset-0 opacity-10 blur-xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-500",
-                        report.net_usd >= 0 ? "bg-[hsl(var(--whoop-green))]" : "bg-[hsl(var(--whoop-red))]"
-                      )} />
-                      <div className="relative transform transition-all duration-300 hover:scale-105">
-                        <StatRing
-                          value={Math.min(100, Math.max(0, ((Math.abs(report.net_usd || 0)) / 1000) * 100))}
-                          label="صافي اليوم"
-                          subtitle="NET"
-                          color={report.net_usd >= 0 ? "hsl(var(--whoop-green))" : "hsl(var(--whoop-red))"}
-                          size="sm"
-                          customDisplay={`${report.net_usd >= 0 ? '+' : ''}$${report.net_usd || 0}`}
-                        />
+                    
+                    <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '400ms' }}>
+                      <div className="relative scale-75 md:scale-100">
+                        <div className={cn(
+                          "absolute inset-0 opacity-10 blur-xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-500",
+                          report.net_usd >= 0 ? "bg-[hsl(var(--whoop-green))]" : "bg-[hsl(var(--whoop-red))]"
+                        )} />
+                        <div className="relative transform transition-all duration-500 hover:scale-110">
+                          <StatRing
+                            value={Math.min(100, Math.max(0, ((Math.abs(report.net_usd || 0)) / 1000) * 100))}
+                            label="صافي اليوم"
+                            subtitle="NET"
+                            color={report.net_usd >= 0 ? "hsl(var(--whoop-green))" : "hsl(var(--whoop-red))"}
+                            size="sm"
+                            customDisplay={`${report.net_usd >= 0 ? '+' : ''}$${report.net_usd || 0}`}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
+                {/* Activity Stats - Compact Cards */}
+                <div className="grid grid-cols-2 gap-3">
+                  {renderEditableCard('study_hours', <BookOpen className="w-5 h-5" />, 'دراسة', report.study_hours, 'bg-[hsl(var(--whoop-blue))]/10', 'h')}
+                  {renderEditableCard('mma_hours', <Dumbbell className="w-5 h-5" />, 'رياضة', report.mma_hours, 'bg-[hsl(var(--whoop-green))]/10', 'h')}
+                  {renderEditableCard('work_hours', <Building className="w-5 h-5" />, 'عمل', report.work_hours, 'bg-[hsl(var(--whoop-yellow))]/10', 'h')}
+                  {renderEditableCard('walk_min', <Footprints className="w-5 h-5" />, 'مشي', report.walk_min, 'bg-[hsl(var(--whoop-red))]/10', 'min')}
+                </div>
 
-              {/* Edit Modals - Enhanced with Animations */}
-              {editingBalance && (
+                {/* Edit Modals - Enhanced with Animations */}
+                {editingBalance && (
                 <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
                   <OryxaCard className="max-w-md w-full animate-scale-in shadow-2xl border-2 border-primary/20">
                     <div className="relative">
