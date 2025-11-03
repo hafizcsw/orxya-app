@@ -97,7 +97,9 @@ serve(async (req) => {
       for (const prayer of prayers) {
         if (!prayer.time) continue;
 
-        const prayerTime = new Date(`${checkDate}T${prayer.time}`);
+        // Normalize time format: remove seconds if present (HH:MM:SS -> HH:MM)
+        const timeStr = String(prayer.time).split(':').slice(0, 2).join(':');
+        const prayerTime = new Date(`${checkDate}T${timeStr}`);
         const prayerWindowStart = new Date(prayerTime.getTime() - prayer.window * 60 * 1000);
         const prayerWindowEnd = new Date(prayerTime.getTime() + prayer.window * 60 * 1000);
 
@@ -129,7 +131,7 @@ serve(async (req) => {
             prayer_name: prayer.name,
             prayer_start: prayerWindowStart.toISOString(),
             prayer_end: prayerWindowEnd.toISOString(),
-            overlap_min: Math.round((Math.min(eventEnd, prayerWindowEnd).getTime() - Math.max(eventStart, prayerWindowStart).getTime()) / (60 * 1000)),
+            overlap_min: Math.round((Math.min(eventEnd.getTime(), prayerWindowEnd.getTime()) - Math.max(eventStart.getTime(), prayerWindowStart.getTime())) / (60 * 1000)),
             severity: calculateSeverity(eventStart, eventEnd, prayerTime),
             status: 'open'
           }, { onConflict: 'owner_id,object_id,prayer_name,date_iso' });
