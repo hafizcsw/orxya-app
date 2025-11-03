@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/lib/auth";
 import { track } from "@/lib/telemetry";
 import { throttle } from "@/lib/throttle";
-import { Bot, Send, Sparkles, Calendar, Clock } from "lucide-react";
+import { Bot, Send, Sparkles, Calendar, Clock, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -162,8 +162,8 @@ export default function PlannerChat() {
       <div className="sticky top-0 z-10 backdrop-blur-lg bg-background/80 border-b">
         <div className="container max-w-4xl mx-auto p-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-primary/60">
-              <Sparkles className="w-6 h-6 text-primary-foreground" />
+            <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-primary/60 shadow-lg">
+              <MessageSquare className="w-6 h-6 text-primary-foreground" />
             </div>
             <div>
               <div className="text-lg font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
@@ -193,7 +193,9 @@ export default function PlannerChat() {
             <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6 animate-in fade-in duration-500">
               <div className="relative">
                 <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
-                <Bot className="w-20 h-20 text-primary relative animate-pulse" />
+                <div className="relative p-4 rounded-2xl bg-gradient-to-br from-primary to-primary/60">
+                  <MessageSquare className="w-16 h-16 text-primary-foreground" />
+                </div>
               </div>
               <div>
                 <div className="text-2xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
@@ -233,8 +235,8 @@ export default function PlannerChat() {
                   style={{ animationDelay: `${idx * 50}ms` }}
                 >
                   {m.role === "assistant" && (
-                    <div className="p-2 rounded-full bg-gradient-to-br from-primary to-primary/60 h-fit mt-1">
-                      <Bot className="w-4 h-4 text-primary-foreground" />
+                    <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-primary/60 h-fit mt-1 shadow-md">
+                      <MessageSquare className="w-4 h-4 text-primary-foreground" />
                     </div>
                   )}
                   <div className={`flex-1 rounded-2xl p-4 ${
