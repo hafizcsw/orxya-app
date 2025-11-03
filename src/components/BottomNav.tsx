@@ -99,18 +99,18 @@ export function BottomNav() {
           <button
             onClick={toggleAI}
             className={cn(
-              "w-14 h-14 rounded-full -mt-6",
-              "bg-gradient-to-br from-primary to-primary/80",
-              "text-primary-foreground",
-              "flex items-center justify-center",
-              "shadow-2xl hover:scale-105 transition-all duration-300",
-              "border-4 border-background"
+              "relative flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg transition-all min-w-[60px] group"
             )}
-            style={{
-              boxShadow: "0 0 20px hsl(var(--primary) / 0.5), 0 8px 16px hsl(var(--primary) / 0.3)",
-            }}
           >
-            <Sparkles className="w-6 h-6" />
+            <div
+              className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center shadow-lg hover:scale-110 transition-all duration-300"
+              style={{
+                boxShadow: "0 0 20px hsl(var(--primary) / 0.5), 0 4px 12px hsl(var(--primary) / 0.3)",
+              }}
+            >
+              <Sparkles className="w-6 h-6" />
+            </div>
+            <span className="text-[10px] font-medium text-primary mt-0.5">الذكاء</span>
           </button>
 
           {/* More Button */}
