@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/lib/auth';
 import { Protected } from '@/components/Protected';
@@ -140,8 +140,17 @@ const Seed = () => {
   const [loading, setLoading] = useState(false);
   const [log, setLog] = useState<string[]>([]);
   const [oryxaResult, setOryxaResult] = useState<any>(null);
+  const [autoSeeded, setAutoSeeded] = useState(false);
 
   const addLog = (msg: string) => setLog(prev => [...prev, msg]);
+
+  // Auto-seed on mount
+  useEffect(() => {
+    if (user && !autoSeeded && !loading) {
+      setAutoSeeded(true);
+      handleOryxaSeed(7);
+    }
+  }, [user]);
 
   // Oryxa Seed (Calendar + Finance + Health)
   const handleOryxaSeed = async (days: number = 7) => {
