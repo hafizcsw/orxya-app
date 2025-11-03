@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Bell, Calendar, Check, Clock, DollarSign, Info, Loader2, MapPin, RefreshCcw } from "lucide-react";
 import { useEdgeActions } from "@/hooks/useEdgeActions";
 import { format } from "date-fns";
+import { generateMockFinancialEvents, calculateDailySummary } from "@/lib/financial-mock";
+import { MoneyPulseCard } from "@/components/financial/MoneyPulseCard";
 
 /**
  * TodayWHOOP v2.1 — UI Delta (non-destructive)
@@ -36,6 +38,9 @@ function useFlags() {
       ff_money_pulse: true,
       ff_micro_labels: true,
       ff_permissions_inline: true,
+      ff_financial_notifications: true,
+      ff_ondevice_parser: true,
+      ff_fin_push: false,
     };
     if (ffParam) {
       ffParam.split(",").forEach(k => (initial[k] = true));
@@ -124,25 +129,7 @@ function NowNextStrip({ now, next }: { now?: { title: string; until: string }; n
   );
 }
 
-// -----------------------------
-// Money Pulse (Net Today)
-// -----------------------------
-function MoneyPulseCard({ net, currency, confidence }: { net: number; currency: string; confidence: "low"|"mid"|"high" }) {
-  const color = net > 0 ? "text-emerald-500" : net < 0 ? "text-red-500" : "text-foreground";
-  return (
-    <Card className="bg-background/60 backdrop-blur-md border">
-      <CardContent className="p-4 flex flex-col gap-2">
-        <div className="flex items-center gap-2"><DollarSign className="w-4 h-4" /><div className="font-medium">Money Pulse</div></div>
-        <div className={`text-2xl font-semibold ${color}`}>{net.toFixed(2)} {currency}</div>
-        <div className="flex items-center gap-2">
-          <Button size="sm" className="rounded-2xl"><Check className="w-4 h-4 mr-1" />Confirm</Button>
-          <Button size="sm" variant="outline" className="rounded-2xl">Correct</Button>
-        </div>
-        <MicroLabels source="Notifications" confidence={confidence} lastSync="3m ago" />
-      </CardContent>
-    </Card>
-  );
-}
+// Money Pulse moved to MoneyPulseCard component (Epic 5)
 
 // -----------------------------
 // Inline Timeline (day) + Prayer overlay
@@ -226,6 +213,15 @@ export default function TodayWHOOP() {
   } | undefined>(undefined);
 
   const [loading, setLoading] = useState(false);
+
+  // Financial state (Epic 5)
+  const [financialEvents, setFinancialEvents] = useState(() => 
+    generateMockFinancialEvents(new Date().toISOString().split('T')[0])
+  );
+  const financialSummary = React.useMemo(() => 
+    calculateDailySummary(financialEvents), 
+    [financialEvents]
+  );
 
   // تحميل التعارضات الحقيقية عند تفعيل ff_conflicts_first
   useEffect(() => {
@@ -315,6 +311,27 @@ export default function TodayWHOOP() {
     } catch (e) {
       console.error("ignore failed", e);
     }
+  };
+
+  // Financial handlers (Epic 5)
+  const handleFinancialConfirm = (eventId: number) => {
+    setFinancialEvents(prev => 
+      prev.map(e => e.id === eventId ? { ...e, confirmed: true, confidence: 100 } : e)
+    );
+  };
+
+  const handleFinancialCorrect = (
+    eventId: number, 
+    amount: number, 
+    direction: 1 | -1, 
+    merchant?: string
+  ) => {
+    setFinancialEvents(prev => 
+      prev.map(e => e.id === eventId 
+        ? { ...e, amount, direction, merchant, confirmed: true, confidence: 100 }
+        : e
+      )
+    );
   };
 
   // Mock state (اربطها بالبيانات الحقيقية عند الربط)
@@ -410,8 +427,14 @@ export default function TodayWHOOP() {
         </Card>
       )}
 
-      {/* Money Pulse */}
-      {ff.ff_money_pulse && <MoneyPulseCard net={net} currency="AED" confidence="mid" />}
+      {/* Money Pulse (Epic 5) */}
+      {ff.ff_money_pulse && ff.ff_financial_notifications && (
+        <MoneyPulseCard 
+          summary={financialSummary}
+          onConfirm={handleFinancialConfirm}
+          onCorrect={handleFinancialCorrect}
+        />
+      )}
 
       {/* Timeline with prayer overlay */}
       {ff.ff_timeline_inline && <TimelineInline items={items} now={"12:05"} prayerWindows={prayers} />}
