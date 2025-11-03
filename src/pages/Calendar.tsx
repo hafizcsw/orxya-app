@@ -41,7 +41,6 @@ export default function CalendarPage() {
   const [eventsByDate, setEventsByDate] = useState<Record<string, DbEvent[]>>({});
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
 
   // Sync with global date from Navigation
   useEffect(() => {
@@ -230,7 +229,7 @@ export default function CalendarPage() {
               {/* Calendar View */}
               {mode === "week" ? (
                 <CalendarWeek 
-                  key={refreshKey}
+                  key={currentDate.getTime()}
                   anchor={currentDate} 
                   startOn={6}
                   onDateChange={(date) => {
@@ -254,7 +253,6 @@ export default function CalendarPage() {
           open={quickAddOpen}
           onClose={() => setQuickAddOpen(false)}
           onEventCreated={() => {
-            setRefreshKey(prev => prev + 1);
             setQuickAddOpen(false);
           }}
         />

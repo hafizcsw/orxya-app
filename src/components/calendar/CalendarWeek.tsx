@@ -168,10 +168,7 @@ export default function CalendarWeek({
                   </div>
                   <button
                     onClick={() => {
-                      console.log('Day clicked:', d);
-                      if (onDateChange) {
-                        onDateChange(d);
-                      }
+                      onDateChange?.(d);
                       setGlobalDate(d);
                     }}
                     className={cn(
