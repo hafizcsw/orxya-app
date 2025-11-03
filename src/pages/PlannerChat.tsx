@@ -286,9 +286,6 @@ export default function PlannerChat() {
                 )}
               </Button>
             </div>
-            <div className="mt-2 px-3 text-xs text-muted-foreground">
-              اضغط Enter للإرسال
-            </div>
           </Card>
         </div>
       </div>
