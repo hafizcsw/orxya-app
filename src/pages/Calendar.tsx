@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Protected } from "@/components/Protected";
 import CalendarWeek from "@/components/calendar/CalendarWeek";
 import { Calendar as CalendarIcon, Grid3x3, Plus, Search, Settings, Menu } from "lucide-react";
@@ -11,6 +11,7 @@ import CalendarSidebar from "@/components/calendar/CalendarSidebar";
 import QuickAddDialog from "@/components/calendar/QuickAddDialog";
 import { Button } from "@/components/ui/button";
 import { useCalendarShortcuts } from "@/hooks/useCalendarShortcuts";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 type DbEvent = { 
   id: string; 
@@ -37,8 +38,23 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(false);
   const [eventsByDate, setEventsByDate] = useState<Record<string, DbEvent[]>>({});
   const [quickAddOpen, setQuickAddOpen] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Start closed on mobile
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // Detect screen size and manage sidebar
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(true); // Auto-open on desktop
+      } else {
+        setSidebarOpen(false); // Auto-close on mobile
+      }
+    };
+
+    handleResize(); // Initial check
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Keyboard shortcuts
   useCalendarShortcuts({
@@ -78,8 +94,8 @@ export default function CalendarPage() {
     <Protected>
       <div className="min-h-screen bg-background flex flex-col">
         {/* Google Calendar Header */}
-        <header className="border-b border-border/30 bg-background px-4 py-2 flex items-center justify-between shadow-sm">
-          <div className="flex items-center gap-4">
+        <header className="border-b border-border/30 bg-background px-2 sm:px-4 py-2 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="p-2 hover:bg-accent/50 rounded-lg transition-colors"
@@ -88,12 +104,12 @@ export default function CalendarPage() {
             </button>
             
             <div className="flex items-center gap-2">
-              <CalendarIcon className="w-6 h-6 text-[#1a73e8]" />
-              <h1 className="text-xl font-medium">التقويم</h1>
+              <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 text-[#1a73e8]" />
+              <h1 className="text-base sm:text-xl font-medium">التقويم</h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 sm:gap-3">
             <div className="hidden md:flex items-center gap-2 bg-accent/50 px-3 py-1.5 rounded-lg">
               <Search className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">بحث...</span>
@@ -101,13 +117,14 @@ export default function CalendarPage() {
             
             <Button
               onClick={() => setQuickAddOpen(true)}
-              className="bg-[#1a73e8] hover:bg-[#1557b0] text-white gap-2 shadow-md"
+              size="sm"
+              className="bg-[#1a73e8] hover:bg-[#1557b0] text-white gap-1 sm:gap-2 shadow-md"
             >
               <Plus className="w-4 h-4" />
-              إنشاء
+              <span className="hidden sm:inline">إنشاء</span>
             </Button>
 
-            <button className="p-2 hover:bg-accent/50 rounded-lg transition-colors">
+            <button className="hidden sm:block p-2 hover:bg-accent/50 rounded-lg transition-colors">
               <Settings className="w-5 h-5" />
             </button>
           </div>
@@ -115,20 +132,35 @@ export default function CalendarPage() {
 
         {/* Main Content */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Sidebar */}
+          {/* Desktop Sidebar */}
           {sidebarOpen && (
-            <CalendarSidebar
-              selectedDate={currentDate}
-              onDateSelect={setCurrentDate}
-            />
+            <div className="hidden lg:block">
+              <CalendarSidebar
+                selectedDate={currentDate}
+                onDateSelect={setCurrentDate}
+              />
+            </div>
           )}
+
+          {/* Mobile Sidebar as Sheet */}
+          <Sheet open={sidebarOpen && window.innerWidth < 1024} onOpenChange={setSidebarOpen}>
+            <SheetContent side="right" className="w-[280px] p-0">
+              <CalendarSidebar
+                selectedDate={currentDate}
+                onDateSelect={(date) => {
+                  setCurrentDate(date);
+                  if (window.innerWidth < 1024) setSidebarOpen(false);
+                }}
+              />
+            </SheetContent>
+          </Sheet>
 
           {/* Calendar Content */}
           <div className="flex-1 overflow-auto">
-            <div className="p-4">
+            <div className="p-2 sm:p-4">
               {/* View Controls */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Button
                     onClick={() => setCurrentDate(new Date())}
                     variant="outline"
@@ -136,8 +168,8 @@ export default function CalendarPage() {
                   >
                     اليوم
                   </Button>
-                  
-                  <div className="text-lg font-medium">
+                   
+                  <div className="text-sm sm:text-lg font-medium">
                     {currentDate.toLocaleDateString('ar', { month: 'long', year: 'numeric' })}
                   </div>
                 </div>
@@ -146,7 +178,7 @@ export default function CalendarPage() {
                   <button
                     onClick={() => setMode("week")}
                     className={cn(
-                      "px-3 py-1.5 rounded-md transition-all text-xs font-medium",
+                      "px-2 sm:px-3 py-1.5 rounded-md transition-all text-xs font-medium",
                       mode === "week" 
                         ? "bg-background shadow-sm" 
                         : "hover:bg-background/50"
@@ -160,7 +192,7 @@ export default function CalendarPage() {
                       loadMonthData();
                     }}
                     className={cn(
-                      "px-3 py-1.5 rounded-md transition-all text-xs font-medium",
+                      "px-2 sm:px-3 py-1.5 rounded-md transition-all text-xs font-medium",
                       mode === "month" 
                         ? "bg-background shadow-sm" 
                         : "hover:bg-background/50"

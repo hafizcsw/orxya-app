@@ -32,7 +32,7 @@ export default function CalendarSidebar({
   const [myCalendarsOpen, setMyCalendarsOpen] = useState(true);
 
   return (
-    <div className="w-64 border-l border-border/30 bg-background p-4 space-y-4 overflow-y-auto">
+    <div className="w-full lg:w-64 border-l border-border/30 bg-background p-3 sm:p-4 space-y-4 overflow-y-auto h-full">
       {/* Mini Calendar */}
       <MiniCalendar
         selectedDate={selectedDate}
