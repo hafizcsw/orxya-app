@@ -154,6 +154,8 @@ const Seed = () => {
     setOryxaResult(null);
 
     try {
+      addLog(`🔄 جاري إضافة ${days} أيام من بيانات Oryxa...`);
+      
       const { data, error } = await supabase.functions.invoke('seed-data', {
         body: {
           action: 'seed',
@@ -167,16 +169,23 @@ const Seed = () => {
 
       if (data?.success) {
         setOryxaResult(data);
+        addLog(`✅ نجح! ${data.results.events} أحداث، ${data.results.financial} مالية، ${data.results.health} صحة`);
         toast.success(
           `تم إضافة البيانات بنجاح!\n${data.results.events} أحداث، ${data.results.financial} مالية، ${data.results.health} صحة`,
           { duration: 5000 }
         );
         track('oryxa_seed_success', { days });
+        
+        // Redirect to calendar
+        setTimeout(() => {
+          window.location.href = '/calendar';
+        }, 1500);
       } else {
         throw new Error(data?.error || 'فشل في إضافة البيانات');
       }
     } catch (err: any) {
       console.error('Seed error:', err);
+      addLog(`❌ فشل: ${err.message}`);
       toast.error(`خطأ: ${err.message}`);
       setOryxaResult({ error: err.message });
       track('oryxa_seed_error', { error: err.message });
@@ -412,26 +421,31 @@ const Seed = () => {
               <CardContent className="space-y-4">
                 <div className="flex flex-wrap gap-3">
                   <Button
+                    onClick={() => handleOryxaSeed(7)}
+                    disabled={loading || !user}
+                    size="lg"
+                    className="flex-1 min-w-[200px]"
+                  >
+                    {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Database className="h-5 w-5 mr-2" />}
+                    إضافة أسبوع كامل (7 أيام) 🚀
+                  </Button>
+
+                  <Button
                     onClick={() => handleOryxaSeed(3)}
                     disabled={loading || !user}
                     variant="secondary"
+                    size="lg"
+                    className="flex-1 min-w-[150px]"
                   >
                     {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Database className="h-4 w-4 mr-2" />}
                     إضافة 3 أيام
                   </Button>
 
                   <Button
-                    onClick={() => handleOryxaSeed(7)}
-                    disabled={loading || !user}
-                  >
-                    {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Database className="h-4 w-4 mr-2" />}
-                    إضافة أسبوع كامل (7 أيام)
-                  </Button>
-
-                  <Button
                     onClick={handleOryxaRollback}
                     disabled={loading || !user}
                     variant="destructive"
+                    size="lg"
                   >
                     {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
                     حذف البيانات
