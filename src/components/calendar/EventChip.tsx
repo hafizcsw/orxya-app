@@ -22,7 +22,7 @@ export default function EventChip({
   const getEventColor = () => {
     if (event.is_cancelled) {
       return {
-        bg: "bg-muted/50",
+        bg: "bg-muted",
         border: "border-muted",
         text: "text-muted-foreground line-through"
       };
@@ -30,9 +30,9 @@ export default function EventChip({
     
     if (hasConflict) {
       return {
-        bg: "bg-[#d50000]/20",
+        bg: "bg-[#d50000]",
         border: "border-[#d50000]",
-        text: "text-foreground"
+        text: "text-white"
       };
     }
     
@@ -42,7 +42,7 @@ export default function EventChip({
     return {
       bg: color.bg,
       border: color.border,
-      text: "text-foreground"
+      text: color.text
     };
   };
   
