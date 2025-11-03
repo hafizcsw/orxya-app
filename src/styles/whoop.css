@@ -79,17 +79,17 @@
   --input: 0 0% 95%;
   --ring: 217 100% 50%;
   
-  /* Brand Colors - Same as dark */
-  --whoop-blue: 217 100% 50%;
-  --whoop-green: 166 100% 40%;       /* Darker for light mode */
-  --whoop-yellow: 45 100% 45%;       /* Darker for light mode */
-  --whoop-red: 340 100% 45%;         /* Darker for light mode */
+  /* Brand Colors - Enhanced for better visibility in light mode */
+  --whoop-blue: 217 100% 45%;        /* Darker for better contrast */
+  --whoop-green: 166 100% 35%;       /* Darker for better contrast */
+  --whoop-yellow: 45 100% 40%;       /* Darker for better contrast */
+  --whoop-red: 340 100% 40%;         /* Darker for better contrast */
   
-  /* Glow Effects - Lighter for light mode */
-  --glow-blue: 0 0 15px hsl(217 100% 50% / 0.2);
-  --glow-green: 0 0 20px hsl(166 100% 40% / 0.25);
-  --glow-yellow: 0 0 20px hsl(45 100% 45% / 0.25);
-  --glow-red: 0 0 20px hsl(340 100% 45% / 0.25);
+  /* Glow Effects - Enhanced for light mode */
+  --glow-blue: 0 0 18px hsl(217 100% 45% / 0.3);
+  --glow-green: 0 0 22px hsl(166 100% 35% / 0.35);
+  --glow-yellow: 0 0 22px hsl(45 100% 40% / 0.35);
+  --glow-red: 0 0 22px hsl(340 100% 40% / 0.35);
 }
 
 /* Shimmer Animation for Loading States */

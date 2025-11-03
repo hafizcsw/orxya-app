@@ -20,31 +20,24 @@ export function ThemeToggle() {
     const root = document.documentElement;
     const body = document.body;
     
-    // Remove all theme classes first
+    // Instant class swap
     root.classList.remove('dark', 'light');
     root.removeAttribute('data-theme');
-    
-    // Force a reflow to ensure classes are fully removed
-    void root.offsetHeight;
     
     if (dark) {
       root.classList.add('dark');
       root.setAttribute('data-theme', 'dark');
-      body.style.backgroundColor = '#000000';
-      body.style.color = '#FFFFFF';
+      body.style.setProperty('background-color', '#000000', 'important');
+      body.style.setProperty('color', '#FFFFFF', 'important');
     } else {
       root.classList.add('light');
       root.setAttribute('data-theme', 'light');
-      body.style.backgroundColor = '#FFFFFF';
-      body.style.color = '#000000';
+      body.style.setProperty('background-color', '#FFFFFF', 'important');
+      body.style.setProperty('color', '#000000', 'important');
     }
     
-    // Force repaint
-    requestAnimationFrame(() => {
-      document.body.style.display = 'none';
-      void document.body.offsetHeight;
-      document.body.style.display = '';
-    });
+    // Force immediate repaint
+    void root.offsetHeight;
   };
 
   const toggle = () => {
