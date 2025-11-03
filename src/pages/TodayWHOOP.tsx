@@ -363,7 +363,7 @@ export default function TodayWHOOP() {
   ];
 
   return (
-    <div className="mx-auto max-w-3xl flex flex-col gap-3 p-3">
+    <div className="mx-auto max-w-3xl flex flex-col gap-3 p-3 pb-24 min-h-screen">{/* pb-24 لتجنب التداخل مع bottom navigation */}
       {/* Now / Next Strip */}
       {ff.ff_now_next_strip && <NowNextStrip now={now} next={next} />}
 
