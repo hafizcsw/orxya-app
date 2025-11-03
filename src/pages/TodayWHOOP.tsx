@@ -41,6 +41,11 @@ function useFlags() {
       ff_financial_notifications: true,
       ff_ondevice_parser: true,
       ff_fin_push: false,
+      // Epic 6
+      ff_location_bg: true,
+      ff_location_push: false,
+      ff_finloc_link: true,
+      ff_geocode_ondevice: false,
     };
     if (ffParam) {
       ffParam.split(",").forEach(k => (initial[k] = true));

@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { DollarSign, TrendingUp, TrendingDown, Check, Edit3 } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, Check, Edit3, MapPin } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { FinancialEvent, DailyFinancialSummary } from '@/types/financial';
 import { FinancialCorrectionSheet } from './FinancialCorrectionSheet';
+import { getTopPlacesToday } from '@/lib/financial-mock';
 
 interface MoneyPulseCardProps {
   summary: DailyFinancialSummary;
@@ -18,6 +20,7 @@ export function MoneyPulseCard({ summary, onConfirm, onCorrect, className }: Mon
   
   const isPositive = summary.netToday >= 0;
   const unconfirmedCount = summary.events.filter(e => !e.confirmed).length;
+  const topPlaces = getTopPlacesToday(summary.events);
 
   return (
     <>
@@ -68,6 +71,23 @@ export function MoneyPulseCard({ summary, onConfirm, onCorrect, className }: Mon
           )}
         </div>
 
+        {/* Epic 6: Top Places */}
+        {topPlaces.length > 0 && summary.netToday < 0 && (
+          <div className="pt-3 border-t border-border/50">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+              <MapPin className="w-3.5 h-3.5" />
+              <span className="font-medium">Top places today:</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {topPlaces.map((place, idx) => (
+                <Badge key={idx} variant="secondary" className="text-xs">
+                  {place.placeName} ({place.count})
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="space-y-2 max-h-64 overflow-y-auto">
           {summary.events.map(event => (
             <div 
@@ -94,8 +114,14 @@ export function MoneyPulseCard({ summary, onConfirm, onCorrect, className }: Mon
                       </span>
                     )}
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Confidence: {event.confidence}%
+                  <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
+                    <div>Confidence: {event.confidence}%</div>
+                    {event.placeName && (
+                      <div className="flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />
+                        <span>{event.placeName}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 

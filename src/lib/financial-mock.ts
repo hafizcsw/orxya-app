@@ -1,5 +1,19 @@
-// Mock Financial Data (Epic 5 - will be replaced by Android native later)
+// Mock Financial Data (Epic 5 + 6 - will be replaced by Android native later)
 import { FinancialEvent, DailyFinancialSummary } from '@/types/financial';
+import { PlaceFrequency } from '@/types/location';
+
+const MOCK_PLACES = [
+  "Dubai Mall",
+  "Marina Mall",
+  "City Walk",
+  "Mall of the Emirates",
+  "Downtown Dubai",
+  "Business Bay",
+  "JBR",
+  "Ibn Battuta Mall",
+  "Carrefour City Centre",
+  "Starbucks Downtown"
+];
 
 export function generateMockFinancialEvents(day: string): FinancialEvent[] {
   return [
@@ -13,7 +27,9 @@ export function generateMockFinancialEvents(day: string): FinancialEvent[] {
       merchant: 'Starbucks',
       sourcePkg: 'com.enbd.mobilebanking',
       confidence: 85,
-      confirmed: false
+      confirmed: false,
+      placeName: 'Starbucks Downtown',
+      locSampleId: 101
     },
     {
       id: 2,
@@ -25,7 +41,9 @@ export function generateMockFinancialEvents(day: string): FinancialEvent[] {
       merchant: 'Carrefour',
       sourcePkg: 'com.dib.mobile',
       confidence: 90,
-      confirmed: false
+      confirmed: false,
+      placeName: 'Carrefour City Centre',
+      locSampleId: 102
     },
     {
       id: 3,
@@ -67,4 +85,21 @@ export function mockNetToday(): number {
   const events = generateMockFinancialEvents(new Date().toISOString().split('T')[0]);
   const summary = calculateDailySummary(events);
   return summary.netToday;
+}
+
+// Epic 6: Get top places where money was spent today
+export function getTopPlacesToday(events: FinancialEvent[]): PlaceFrequency[] {
+  const placeMap = new Map<string, number>();
+  
+  events
+    .filter(e => e.direction === -1 && e.placeName) // expenses with location
+    .forEach(e => {
+      const count = placeMap.get(e.placeName!) || 0;
+      placeMap.set(e.placeName!, count + 1);
+    });
+  
+  return Array.from(placeMap.entries())
+    .map(([placeName, count]) => ({ placeName, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 3);
 }

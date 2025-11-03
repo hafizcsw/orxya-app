@@ -11,6 +11,8 @@ export interface FinancialEvent {
   sourcePkg: string; // bank/wallet app pkg
   confidence: number; // 0..100
   confirmed?: boolean;
+  locSampleId?: number; // reference to location sample
+  placeName?: string; // geocoded place name
 }
 
 export interface DailyFinancialSummary {
