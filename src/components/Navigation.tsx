@@ -9,6 +9,7 @@ import { User, ChevronLeft, ChevronRight } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CalendarPopover } from "@/components/CalendarPopover";
 import { useSelectedDate } from "@/contexts/DateContext";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 const Navigation = () => {
   const location = useLocation();
@@ -96,7 +97,7 @@ const Navigation = () => {
   return (
     <>
       <nav className="border-b bg-background/95 backdrop-blur-xl sticky top-0 z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto flex h-14 items-center justify-between px-3">
+        <div className="max-w-4xl mx-auto flex h-12 items-center justify-between px-4">
           {/* Left: Avatar */}
           {user && (
             <div className="relative flex-shrink-0">
@@ -139,13 +140,16 @@ const Navigation = () => {
             </button>
           </div>
 
-          {/* Right: Logo - MUST BE VISIBLE */}
-          <Link
-            to="/"
-            className="text-2xl font-bold text-foreground hover:text-primary transition-colors flex-shrink-0"
-          >
-            Oryxa
-          </Link>
+          {/* Right: Logo + Theme Toggle */}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <ThemeToggle />
+            <Link
+              to="/"
+              className="text-xl font-bold text-foreground hover:text-primary transition-colors"
+            >
+              Oryxa
+            </Link>
+          </div>
         </div>
       </nav>
       

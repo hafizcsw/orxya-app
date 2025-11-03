@@ -11,7 +11,6 @@ import { ensureNotificationPerms } from '@/lib/notify'
 import { Protected } from '@/components/Protected'
 import { OryxaButton } from '@/components/oryxa/Button'
 import { OryxaCard } from '@/components/oryxa/Card'
-import { AIDock } from '@/components/oryxa/AIDock'
 import { StatRing } from '@/components/oryxa/StatRing'
 import { cn } from '@/lib/utils'
 import { Bell, Calendar, DollarSign, TrendingUp, TrendingDown, Clock, Dumbbell, BookOpen, Footprints, Award, Building, Edit2, BarChart3, User } from 'lucide-react'
@@ -280,15 +279,13 @@ const Today = () => {
 
   return (
     <Protected>
-      <div className="min-h-screen bg-background pb-24">
-        <AIDock />
-        
+      <div className="min-h-screen bg-background">
         {/* Sticky Header - Period Selection Only */}
         <div className={cn(
-          "sticky top-14 z-30 bg-background/95 backdrop-blur-xl border-b border-border transition-all duration-300 px-6 py-3",
+          "sticky top-12 z-30 bg-background/95 backdrop-blur-xl border-b border-border transition-all duration-300 px-4 py-3",
           isScrolled && "shadow-lg bg-background/98"
         )}>
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
             {/* Period Selection */}
             <div className={cn(
               "flex gap-2 mx-auto transition-all duration-300",
@@ -342,7 +339,7 @@ const Today = () => {
           </div>
         </div>
 
-        <div className="px-6 py-8 max-w-7xl mx-auto space-y-8">
+        <div className="px-4 py-6 max-w-4xl mx-auto space-y-6">
           <SessionBanner />
 
           {loading ? (

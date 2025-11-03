@@ -6,6 +6,7 @@ import MonthGrid from "@/components/calendar/MonthGrid";
 import { startOfMonth, endOfMonth, toISODate } from "@/lib/dates";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/lib/auth";
+import { cn } from "@/lib/utils";
 
 type DbEvent = { 
   id: string; 
@@ -59,24 +60,23 @@ export default function CalendarPage() {
 
   return (
     <Protected>
-      <div className="min-h-screen bg-background p-6">
-        <div className="max-w-[1600px] mx-auto space-y-4">
-          {/* Mode Switcher */}
+      <div className="min-h-screen bg-background p-4">
+        <div className="max-w-4xl mx-auto space-y-4">
+          {/* Compact Header with Mode Switcher */}
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-              التقويم
-            </h1>
+            <h1 className="text-2xl font-bold">التقويم</h1>
             
-            <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-xl backdrop-blur">
+            <div className="flex items-center gap-1 bg-secondary/60 p-1 rounded-xl">
               <button
                 onClick={() => setMode("week")}
-                className={`px-4 py-2 rounded-lg transition-all text-sm font-medium ${
+                className={cn(
+                  "px-3 py-1.5 rounded-lg transition-all text-xs font-medium flex items-center gap-1",
                   mode === "week" 
-                    ? "bg-background shadow-md" 
+                    ? "bg-background shadow-sm" 
                     : "hover:bg-background/50"
-                }`}
+                )}
               >
-                <CalendarIcon className="w-4 h-4 inline-block mr-2" />
+                <CalendarIcon className="w-3 h-3" />
                 أسبوع
               </button>
               <button
@@ -84,13 +84,14 @@ export default function CalendarPage() {
                   setMode("month");
                   loadMonthData();
                 }}
-                className={`px-4 py-2 rounded-lg transition-all text-sm font-medium ${
+                className={cn(
+                  "px-3 py-1.5 rounded-lg transition-all text-xs font-medium flex items-center gap-1",
                   mode === "month" 
-                    ? "bg-background shadow-md" 
+                    ? "bg-background shadow-sm" 
                     : "hover:bg-background/50"
-                }`}
+                )}
               >
-                <Grid3x3 className="w-4 h-4 inline-block mr-2" />
+                <Grid3x3 className="w-3 h-3" />
                 شهر
               </button>
             </div>

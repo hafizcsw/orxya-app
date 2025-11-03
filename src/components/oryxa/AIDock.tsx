@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { X, Send, Loader2, CheckCircle2, XCircle, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { BottomNav } from "@/components/BottomNav";
 import { askAgentHub, type AgentResponse, type ActionResult } from "@/lib/agent-hub";
+import { useAI } from "@/contexts/AIContext";
 
 interface Message {
   role: "user" | "assistant";
@@ -12,7 +12,7 @@ interface Message {
 }
 
 export function AIDock() {
-  const [isOpen, setIsOpen] = useState(false);
+  const { isAIOpen, setIsAIOpen } = useAI();
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: "مرحباً! أنا مساعدك الذكي في Oryxa. كيف يمكنني مساعدتك اليوم؟" }
@@ -66,34 +66,31 @@ export function AIDock() {
 
   return (
     <>
-      {/* Bottom Navigation with AI Button */}
-      <BottomNav onAIClick={() => setIsOpen(!isOpen)} />
-
       {/* AI Chat Panel */}
-      {isOpen && (
-        <div className="fixed inset-0 z-40 flex items-end justify-end p-6">
+      {isAIOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center pb-20 px-4">
           <div 
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setIsOpen(false)}
+            onClick={() => setIsAIOpen(false)}
           />
           
-          <div className="relative w-full max-w-md h-[600px] bg-card rounded-3xl border border-border shadow-2xl flex flex-col overflow-hidden">
+          <div className="relative w-full max-w-lg h-[70vh] max-h-[600px] bg-card rounded-3xl border border-border shadow-2xl flex flex-col overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-border">
+            <div className="flex items-center justify-between p-4 border-b border-border bg-gradient-to-r from-primary/10 to-transparent">
               <div className="flex items-center gap-3">
                 <div 
-                  className="w-12 h-12 rounded-full bg-primary flex items-center justify-center font-bold text-xl text-primary-foreground"
+                  className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-primary-foreground shadow-lg"
                   style={{ boxShadow: "0 0 20px hsl(var(--primary) / 0.4)" }}
                 >
-                  AI
+                  <Sparkles className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="font-semibold">Oryxa AI</h3>
-                  <p className="text-xs text-muted-foreground">المساعد الذكي</p>
+                  <h3 className="font-semibold">مساعد Oryxa</h3>
+                  <p className="text-xs text-muted-foreground">AI Assistant</p>
                 </div>
               </div>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={() => setIsAIOpen(false)}
                 className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-lg hover:bg-secondary"
               >
                 <X className="w-5 h-5" />

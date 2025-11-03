@@ -1,39 +1,31 @@
-import { Home, Heart, Users, Menu, X, Calendar, Bell, Settings, BarChart3, Zap, Brain, Bot, Activity } from "lucide-react";
+import { Home, Calendar, BarChart3, Menu, X, Bell, Settings, Zap, Brain, Bot, Activity, MessageSquare, Sparkles } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useAI } from "@/contexts/AIContext";
 
-interface BottomNavProps {
-  onAIClick?: () => void;
-}
-
-export function BottomNav({ onAIClick }: BottomNavProps) {
+export function BottomNav() {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { toggleAI } = useAI();
 
   const navItems = [
-    { icon: Home, label: "Home", path: "/" },
-    { icon: Heart, label: "Health", path: "/health" },
-    { icon: Users, label: "Community", path: "/community" },
+    { icon: Home, label: "اليوم", path: "/" },
+    { icon: Calendar, label: "التقويم", path: "/calendar" },
+    { icon: BarChart3, label: "المشاريع", path: "/projects" },
   ];
 
   const menuLinks = [
-    { to: "/", label: "اليوم", icon: Home },
-    { to: "/calendar", label: "التقويم", icon: Calendar },
-    { to: "/calendar-view", label: "تقويم ذكي", icon: Calendar },
+    { to: "/reports", label: "التقارير", icon: BarChart3 },
     { to: "/inbox", label: "الإشعارات", icon: Bell },
-    { to: "/calendar-simple", label: "تقويم بسيط", icon: Calendar },
-    { to: "/planner", label: "المخطط الذكي", icon: Brain },
     { to: "/conflicts", label: "التعارضات", icon: Zap },
+    { to: "/planner", label: "المخطط الذكي", icon: MessageSquare },
+    { to: "/assistant", label: "المساعد", icon: Bot },
     { to: "/settings/external", label: "التكاملات", icon: Settings },
     { to: "/settings/notifications", label: "التنبيهات", icon: Bell },
-    { to: "/projects", label: "المشاريع", icon: BarChart3 },
-    { to: "/reports", label: "التقارير", icon: BarChart3 },
     { to: "/automation", label: "الأتمتة", icon: Zap },
-    { to: "/ai", label: "الذكاء الاصطناعي", icon: Brain },
-    { to: "/assistant", label: "المساعد", icon: Bot },
     { to: "/diagnostics", label: "التشخيص", icon: Activity },
-    { to: "/profile", label: "حسابي", icon: Users },
+    { to: "/profile", label: "حسابي", icon: Settings },
   ];
 
   return (
@@ -103,31 +95,32 @@ export function BottomNav({ onAIClick }: BottomNavProps) {
             );
           })}
 
+          {/* AI Button - Prominent in Center */}
+          <button
+            onClick={toggleAI}
+            className={cn(
+              "w-16 h-16 rounded-full -mt-8",
+              "bg-gradient-to-br from-primary to-primary/80",
+              "text-primary-foreground",
+              "flex items-center justify-center",
+              "font-bold text-xl",
+              "shadow-2xl hover:scale-110 transition-all duration-300",
+              "border-4 border-background"
+            )}
+            style={{
+              boxShadow: "0 0 25px hsl(var(--primary) / 0.5), 0 10px 20px hsl(var(--primary) / 0.3)",
+            }}
+          >
+            <Sparkles className="w-7 h-7" />
+          </button>
+
           {/* More Button */}
           <button
             onClick={() => setMenuOpen(true)}
             className="flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all text-muted-foreground hover:text-foreground"
           >
             <Menu className="w-6 h-6" />
-            <span className="text-xs font-medium">More</span>
-          </button>
-
-          {/* AI Button */}
-          <button
-            onClick={onAIClick}
-            className={cn(
-              "w-14 h-14 rounded-full",
-              "bg-primary text-primary-foreground",
-              "flex items-center justify-center",
-              "font-bold text-xl",
-              "shadow-lg hover:scale-110 transition-all duration-300",
-              "border-2 border-primary/30"
-            )}
-            style={{
-              boxShadow: "0 0 20px hsl(var(--primary) / 0.4)",
-            }}
-          >
-            AI
+            <span className="text-xs font-medium">المزيد</span>
           </button>
         </div>
       </nav>

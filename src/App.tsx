@@ -5,7 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { DateProvider } from "./contexts/DateContext";
+import { AIProvider } from "./contexts/AIContext";
 import Navigation from "./components/Navigation";
+import { BottomNav } from "./components/BottomNav";
+import { AIDock } from "./components/oryxa/AIDock";
 import Index from "./pages/Index";
 import Today from "./pages/Today";
 import Projects from "./pages/Projects";
@@ -42,7 +45,8 @@ function AppContent() {
   return (
     <>
       <Navigation />
-      <Routes>
+      <div className="pb-20">
+        <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/today" element={<Protected><Today /></Protected>} />
         <Route path="/projects" element={<Projects />} />
@@ -68,7 +72,10 @@ function AppContent() {
         <Route path="/auth" element={<Auth />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="*" element={<NotFound />} />
-      </Routes>
+        </Routes>
+      </div>
+      <BottomNav />
+      <AIDock />
     </>
   );
 }
@@ -81,7 +88,9 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <DateProvider>
-            <AppContent />
+            <AIProvider>
+              <AppContent />
+            </AIProvider>
           </DateProvider>
         </BrowserRouter>
       </TooltipProvider>
