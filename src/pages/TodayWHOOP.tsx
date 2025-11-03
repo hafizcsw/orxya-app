@@ -1,8 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Bell, Calendar, Check, Clock, DollarSign, Info, Loader2, MapPin, RefreshCcw } from "lucide-react";
+import { useEdgeActions } from "@/hooks/useEdgeActions";
+import { format } from "date-fns";
 
 /**
  * TodayWHOOP v2.1 — UI Delta (non-destructive)
@@ -212,9 +214,110 @@ function PermissionsInline({ missing }: { missing: Array<{ key: string; label: s
 // -----------------------------
 export default function TodayWHOOP() {
   const ff = useFlags();
+  const { fetchConflicts, resolveConflict } = useEdgeActions();
+
+  // حالة التعارضات
+  const [conflict, setConflict] = useState<{
+    title: string;
+    window: string;
+    prayer?: string;
+    severity: "high" | "mid" | "low";
+    eventId?: string;
+  } | undefined>(undefined);
+
+  const [loading, setLoading] = useState(false);
+
+  // تحميل التعارضات الحقيقية عند تفعيل ff_conflicts_first
+  useEffect(() => {
+    if (!ff.ff_conflicts_first) return;
+    const today = format(new Date(), "yyyy-MM-dd");
+    const go = async () => {
+      setLoading(true);
+      try {
+        const data = await fetchConflicts(today);
+        const top = data.conflicts?.[0];
+        if (top) {
+          setConflict({
+            title: top.event?.title ?? top.prayer?.name ?? "busy",
+            window: `${top.window.start}–${top.window.end}`,
+            prayer: top.prayer?.name,
+            severity: top.severity,
+            eventId: top.event?.id,
+          });
+        }
+      } catch (e) {
+        console.warn("conflict-check failed", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    go();
+  }, [ff.ff_conflicts_first, fetchConflicts]);
+
+  const refreshConflicts = async () => {
+    const today = format(new Date(), "yyyy-MM-dd");
+    setLoading(true);
+    try {
+      const data = await fetchConflicts(today);
+      const top = data.conflicts?.[0];
+      setConflict(
+        top
+          ? {
+              title: top.event?.title ?? top.prayer?.name ?? "busy",
+              window: `${top.window.start}–${top.window.end}`,
+              prayer: top.prayer?.name,
+              severity: top.severity,
+              eventId: top.event?.id,
+            }
+          : undefined
+      );
+    } catch (e) {
+      console.warn("conflict refresh failed", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onShift30 = async () => {
+    if (!conflict) return;
+    try {
+      await resolveConflict({
+        decision: "shift",
+        event_id: conflict.eventId,
+        by: "30m",
+      });
+      await refreshConflicts();
+    } catch (e) {
+      console.error("shift failed", e);
+    }
+  };
+
+  const onNotify = async () => {
+    if (!conflict) return;
+    try {
+      await resolveConflict({
+        decision: "notify_attendees",
+        event_id: conflict.eventId,
+      });
+    } catch (e) {
+      console.error("notify failed", e);
+    }
+  };
+
+  const onIgnore = async () => {
+    if (!conflict) return;
+    try {
+      await resolveConflict({
+        decision: "ignore_today",
+        event_id: conflict.eventId,
+      });
+      await refreshConflicts();
+    } catch (e) {
+      console.error("ignore failed", e);
+    }
+  };
 
   // Mock state (اربطها بالبيانات الحقيقية عند الربط)
-  const conflict = { title: "Client Call", window: "13:00–13:25", prayer: "Dhuhr", severity: "high" as const };
   const now = { title: "Deep Work", until: "12:30" };
   const next = { title: "Sales Review", at: "13:45" };
   const net = -127.50;
@@ -243,7 +346,69 @@ export default function TodayWHOOP() {
       {ff.ff_now_next_strip && <NowNextStrip now={now} next={next} />}
 
       {/* Conflicts on top */}
-      {ff.ff_conflicts_first && <ConflictQuickSolveCard conflict={conflict} />}
+      {ff.ff_conflicts_first && conflict && (
+        <Card
+          className={`backdrop-blur-md bg-background/60 border ${
+            conflict.severity === "high"
+              ? "border-red-500/50"
+              : conflict.severity === "mid"
+              ? "border-amber-500/50"
+              : "border-foreground/10"
+          }`}
+        >
+          <CardContent className="p-4 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-red-500" />
+                <div className="font-medium">Conflict detected</div>
+              </div>
+              <Badge variant="secondary">{conflict.prayer ?? "window"}</Badge>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              <b>{conflict.title ?? "—"}</b> — {conflict.window ?? "—"}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                className="rounded-2xl"
+                onClick={onShift30}
+                disabled={loading}
+              >
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Shift +30m"}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="rounded-2xl"
+                onClick={onNotify}
+                disabled={loading}
+              >
+                Notify
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="rounded-2xl"
+                onClick={onIgnore}
+                disabled={loading}
+              >
+                Ignore today
+              </Button>
+            </div>
+            <MicroLabels source="conflict-check" confidence="high" lastSync="updated now" />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Loading state when no conflict yet */}
+      {ff.ff_conflicts_first && !conflict && loading && (
+        <Card className="backdrop-blur-md bg-background/60 border">
+          <CardContent className="p-4 flex items-center justify-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="text-sm text-muted-foreground">جاري التحقق من التعارضات...</span>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Money Pulse */}
       {ff.ff_money_pulse && <MoneyPulseCard net={net} currency="AED" confidence="mid" />}
