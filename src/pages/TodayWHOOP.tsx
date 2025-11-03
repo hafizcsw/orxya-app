@@ -2,9 +2,12 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Bell, Calendar, Check, Clock, Info, Loader2, MapPin, RefreshCcw, Activity, Heart, Moon, Zap } from "lucide-react";
+import { AlertTriangle, Bell, Calendar, Clock, Info, Loader2, MapPin, RefreshCcw, Activity, Heart, Moon, Zap } from "lucide-react";
 import { useEdgeActions } from "@/hooks/useEdgeActions";
 import { format } from "date-fns";
+import { LegacyToday } from "@/components/LegacyToday";
+import { supabase } from "@/integrations/supabase/client";
+import { useUser } from "@/lib/auth";
 
 /**
  * TodayWHOOP v2.1 — UI Delta (non-destructive)
@@ -12,13 +15,15 @@ import { format } from "date-fns";
  * Drop-in component يُبنى فوق Today الحالي بدون هدم.
  * كل ميزة خلف Feature Flags ويمكن تعطيلها فورًا.
  *
+ * استراتيجية الدمج:
+ * 1. المكونات الجديدة (WHOOP-style) في الأعلى
+ * 2. المكونات القديمة (LegacyToday) في الأسفل
+ * 3. Feature Flags للتحكم في العرض
+ * 4. لا نحذف أي شيء - فقط نضيف فوق الموجود
+ *
  * Flags (قراءة من query/localStorage):
  *   ff_conflicts_first, ff_now_next_strip, ff_timeline_inline,
- *   ff_money_pulse, ff_micro_labels, ff_permissions_inline
- *
- * ملاحظات:
- * - البيانات هنا Mock/Props. اربط مصادر الحقيقة في مرحلة الربط.
- * - التزم بأسلوب WHOOP (حلقات/بطاقات نظيفة + زر فعل واحد لكل سياق).
+ *   ff_health_rings, ff_micro_labels, ff_permissions_inline
  */
 
 // -----------------------------
@@ -312,6 +317,38 @@ function PermissionsInline({ missing }: { missing: Array<{ key: string; label: s
 export default function TodayWHOOP() {
   const ff = useFlags();
   const { fetchConflicts, resolveConflict } = useEdgeActions();
+  const { user } = useUser();
+
+  // حالة التقرير - نفس منطق `/today`
+  const [report, setReport] = useState<any | null>(null);
+  const [reportLoading, setReportLoading] = useState(false);
+
+  // تحميل التقرير
+  async function fetchReport() {
+    if (!user) return;
+    setReportLoading(true);
+    try {
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const { data, error } = await supabase.functions.invoke('report-daily', {
+        body: { 
+          start: dateStr,
+          end: dateStr
+        }
+      });
+      if (error) throw error;
+      setReport(data?.items?.[0] ?? null);
+    } catch (e) {
+      setReport(null);
+    } finally {
+      setReportLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (user) {
+      fetchReport();
+    }
+  }, [user?.id]);
 
   // حالة التعارضات
   const [conflict, setConflict] = useState<{
@@ -324,39 +361,12 @@ export default function TodayWHOOP() {
 
   const [loading, setLoading] = useState(false);
 
-  // Health mock data (يمكن ربطها بمصادر حقيقية لاحقاً)
+  // Health mock data
   const [healthData] = useState({
     sleep: 85,
     strain: 12.5,
     recovery: 78
   });
-
-  // تحميل التعارضات الحقيقية عند تفعيل ff_conflicts_first
-  useEffect(() => {
-    if (!ff.ff_conflicts_first) return;
-    const today = format(new Date(), "yyyy-MM-dd");
-    const go = async () => {
-      setLoading(true);
-      try {
-        const data = await fetchConflicts(today);
-        const top = data.conflicts?.[0];
-        if (top) {
-          setConflict({
-            title: top.event?.title ?? top.prayer?.name ?? "busy",
-            window: `${top.window.start}–${top.window.end}`,
-            prayer: top.prayer?.name,
-            severity: top.severity,
-            eventId: top.event?.id,
-          });
-        }
-      } catch (e) {
-        console.warn("conflict-check failed", e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    go();
-  }, [ff.ff_conflicts_first, fetchConflicts]);
 
   const refreshConflicts = async () => {
     const today = format(new Date(), "yyyy-MM-dd");
@@ -445,7 +455,9 @@ export default function TodayWHOOP() {
   ];
 
   return (
-    <div className="mx-auto max-w-3xl flex flex-col gap-3 p-3 pb-24 min-h-screen">{/* pb-24 لتجنب التداخل مع bottom navigation */}
+    <div className="mx-auto max-w-3xl flex flex-col gap-3 p-3 pb-24 min-h-screen">
+      {/* المكونات الجديدة - WHOOP Style في الأعلى */}
+      
       {/* Now / Next Strip */}
       {ff.ff_now_next_strip && <NowNextStrip now={now} next={next} />}
 
@@ -504,16 +516,6 @@ export default function TodayWHOOP() {
         </Card>
       )}
 
-      {/* Loading state when no conflict yet */}
-      {ff.ff_conflicts_first && !conflict && loading && (
-        <Card className="backdrop-blur-md bg-background/60 border">
-          <CardContent className="p-4 flex items-center justify-center gap-2">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span className="text-sm text-muted-foreground">جاري التحقق من التعارضات...</span>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Health Rings - WHOOP Style */}
       {ff.ff_health_rings && <HealthRings sleep={healthData.sleep} strain={healthData.strain} recovery={healthData.recovery} />}
 
@@ -533,6 +535,12 @@ export default function TodayWHOOP() {
           </CardContent>
         </Card>
       )}
+
+      {/* المكونات القديمة - Legacy في الأسفل */}
+      <div className="border-t border-border pt-6 mt-6">
+        <h3 className="text-lg font-bold mb-4">المالية والنشاطات</h3>
+        <LegacyToday report={report} loading={reportLoading} />
+      </div>
     </div>
   );
 }
