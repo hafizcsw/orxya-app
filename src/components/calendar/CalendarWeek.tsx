@@ -142,31 +142,12 @@ export default function CalendarWeek({
       </div>
 
       {/* Week view container */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Time gutter - Google style - Narrower on mobile */}
-        <div className="w-12 sm:w-16 flex-shrink-0 border-l border-border/40 bg-muted/20">
-          <div className="h-10 sm:h-12 border-b border-border/40" />
-          <div className="relative">
-            {Array.from({ length: 24 }, (_, h) => (
-              <div
-                key={h}
-                className="relative border-b border-border/30 text-right pr-1 sm:pr-2"
-                style={{ height: pxPerHour }}
-              >
-                {h > 0 && (
-                  <span className="absolute -top-2.5 right-1 sm:right-2 text-[9px] sm:text-[10px] text-muted-foreground font-normal">
-                    {h.toString().padStart(2, "0")}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Days grid */}
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* Days grid - Main scrollable area */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Day headers */}
-          <div className="grid grid-cols-7 border-b border-border/40 bg-muted/20 h-10 sm:h-12">
+          {/* Day headers - Sticky */}
+          <div className="grid grid-cols-7 border-b border-border/40 bg-muted/20 h-10 sm:h-12 sticky top-0 z-20">
+            <div className="w-12 sm:w-16" /> {/* Spacer for time gutter */}
             {days.map((d, i) => {
               const isToday = d.toDateString() === new Date().toDateString();
               return (
@@ -203,47 +184,69 @@ export default function CalendarWeek({
             onEventClick={handleEventClick}
           />
 
-          {/* Week grid with time slots */}
-          <div ref={gridRef} className="flex-1 grid grid-cols-7 overflow-auto relative bg-background">
-            {days.map((d, i) => {
-              const iso = d.toISOString().slice(0, 10);
-              const dayEvents = events[iso] ?? [];
-              const prayers = prayersByDay[iso] ?? null;
-
-              return (
-                <CalendarDay
-                  key={i}
-                  date={d}
-                  events={dayEvents}
-                  prayers={prayers}
-                  onReload={reload}
-                  onEventClick={handleEventClick}
-                  onCreate={(payload) => {
-                    track("cal_create_drag", { durMin: payload.durationMin });
-                  }}
-                  onMove={(evt, to) => {
-                    track("cal_move", { id: evt.id, to_start: to.start_ts });
-                  }}
-                  onResize={(evt, to) => {
-                    track("cal_resize", { id: evt.id, to_end: to.end_ts });
-                  }}
-                  visibleRange={visibleRange}
-                  pxPerHour={pxPerHour}
-                />
-              );
-            })}
-
-            {/* Current time indicator - red line */}
-            {days.some(d => d.toDateString() === new Date().toDateString()) && (
-              <div
-                className="absolute left-0 right-0 h-[2px] bg-red-500 z-30 pointer-events-none"
-                style={{
-                  top: getCurrentTimePosition(pxPerMin),
-                }}
-              >
-                <div className="absolute -right-1 -top-1.5 w-3 h-3 rounded-full bg-red-500 shadow-lg" />
+          {/* Scrollable container */}
+          <div className="flex-1 overflow-auto relative" ref={gridRef}>
+            {/* Time gutter - Sticky on scroll */}
+            <div className="absolute left-0 top-0 w-12 sm:w-16 h-full flex-shrink-0 border-l border-border/40 bg-background z-10 sticky left-0">
+              <div className="relative h-full">
+                {Array.from({ length: 24 }, (_, h) => (
+                  <div
+                    key={h}
+                    className="relative border-b border-border/30 text-right pr-1 sm:pr-2 bg-muted/20"
+                    style={{ height: pxPerHour }}
+                  >
+                    {h > 0 && (
+                      <span className="absolute -top-2.5 right-1 sm:right-2 text-[9px] sm:text-[10px] text-muted-foreground font-normal">
+                        {h.toString().padStart(2, "0")}
+                      </span>
+                    )}
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
+
+            {/* Week grid with days */}
+            <div className="grid grid-cols-7 relative" style={{ marginLeft: '3rem' }}>
+              {days.map((d, i) => {
+                const iso = d.toISOString().slice(0, 10);
+                const dayEvents = events[iso] ?? [];
+                const prayers = prayersByDay[iso] ?? null;
+
+                return (
+                  <CalendarDay
+                    key={i}
+                    date={d}
+                    events={dayEvents}
+                    prayers={prayers}
+                    onReload={reload}
+                    onEventClick={handleEventClick}
+                    onCreate={(payload) => {
+                      track("cal_create_drag", { durMin: payload.durationMin });
+                    }}
+                    onMove={(evt, to) => {
+                      track("cal_move", { id: evt.id, to_start: to.start_ts });
+                    }}
+                    onResize={(evt, to) => {
+                      track("cal_resize", { id: evt.id, to_end: to.end_ts });
+                    }}
+                    visibleRange={visibleRange}
+                    pxPerHour={pxPerHour}
+                  />
+                );
+              })}
+
+              {/* Current time indicator - red line */}
+              {days.some(d => d.toDateString() === new Date().toDateString()) && (
+                <div
+                  className="absolute left-0 right-0 h-[2px] bg-red-500 z-30 pointer-events-none"
+                  style={{
+                    top: getCurrentTimePosition(pxPerMin),
+                  }}
+                >
+                  <div className="absolute -right-1 -top-1.5 w-3 h-3 rounded-full bg-red-500 shadow-lg" />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
