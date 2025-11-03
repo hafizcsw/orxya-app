@@ -33,6 +33,12 @@
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
   
+  --success: 142 71% 45%;
+  --success-foreground: 0 0% 100%;
+  
+  --warning: 38 92% 50%;
+  --warning-foreground: 0 0% 0%;
+  
   --border: 0 0% 15%;                /* #262626 - Subtle borders */
   --input: 0 0% 10%;
   --ring: 217 100% 50%;              /* WHOOP blue focus ring */
@@ -74,6 +80,12 @@
   
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
+  
+  --success: 142 71% 45%;
+  --success-foreground: 0 0% 100%;
+  
+  --warning: 38 92% 50%;
+  --warning-foreground: 0 0% 0%;
   
   --border: 0 0% 90%;                /* #E6E6E6 - Light borders */
   --input: 0 0% 95%;
