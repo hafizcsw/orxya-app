@@ -4,6 +4,7 @@ import { useCalendarData } from "@/hooks/useCalendarData";
 import CalendarDay from "./CalendarDay";
 import EventDetailsDrawer from "./EventDetailsDrawer";
 import AllDayRow from "./AllDayRow";
+import { SmartSummaryCard } from './SmartSummaryCard';
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/telemetry";
 import { cn } from "@/lib/utils";
@@ -133,6 +134,31 @@ export default function CalendarDayView({
     return () => clearInterval(interval);
   }, []);
 
+  // Auto-scroll to current time on mount (only for today)
+  useEffect(() => {
+    const isToday = anchor.toDateString() === new Date().toDateString();
+    
+    if (gridRef.current && isToday) {
+      // تأخير بسيط للسماح بالـ render
+      const timer = setTimeout(() => {
+        const now = new Date();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        const currentPosition = currentMinutes * pxPerMin;
+        
+        // التمرير بحيث يكون الوقت الحالي في الثلث العلوي من الشاشة
+        const offset = 150; // مساحة فوق الوقت الحالي
+        const scrollTop = Math.max(0, currentPosition - offset);
+        
+        gridRef.current?.scrollTo({
+          top: scrollTop,
+          behavior: 'smooth'
+        });
+      }, 150);
+
+      return () => clearTimeout(timer);
+    }
+  }, [anchor, pxPerMin]);
+
   const handleEventClick = async (event: any) => {
     setSelectedEvent(event);
     track("cal_open_from_day_chip", {
@@ -188,26 +214,13 @@ export default function CalendarDayView({
       {/* Day view container */}
       <div className="flex flex-1 overflow-hidden relative">
         <div className="flex flex-1 flex-col overflow-hidden">
-          {/* AI Insights Banner - Google style */}
-          {isToday && aiInsights && (
-            <div className="px-4 py-2.5 bg-primary/5 border-b border-primary/10 animate-fade-in">
-              <div className="flex items-start gap-2.5">
-                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-[13px]">🤖</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] text-foreground/90 leading-relaxed">
-                    {loadingInsights ? (
-                      <span className="flex items-center gap-2">
-                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                        جاري تحليل يومك...
-                      </span>
-                    ) : (
-                      aiInsights
-                    )}
-                  </p>
-                </div>
-              </div>
+          {/* Smart Summary Card */}
+          {isToday && allEvents.length > 0 && (
+            <div className="px-4 pt-3">
+              <SmartSummaryCard 
+                events={allEvents} 
+                aiInsight={aiInsights}
+              />
             </div>
           )}
 
@@ -236,7 +249,7 @@ export default function CalendarDayView({
           <AllDayRow events={allEvents} days={[anchor]} onEventClick={handleEventClick} />
 
           {/* Scrollable container */}
-          <div className="flex-1 overflow-auto relative bg-background" ref={gridRef}>
+          <div className="flex-1 overflow-auto relative bg-background scroll-smooth" ref={gridRef}>
             <div className="flex relative">
               {/* Time gutter - Google style */}
               <div className="w-14 sm:w-16 flex-shrink-0 bg-background border-r border-border">

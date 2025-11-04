@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { MapPin, Clock, AlertCircle, CheckCircle2, Pause, X } from "lucide-react";
 import { GOOGLE_CALENDAR_COLORS, getColorForEvent } from "@/lib/calendar-colors";
+import { useCountdown } from '@/hooks/useCountdown';
 import type { EventCategory, EventPriority, EventStatus } from "@/types";
 
 type Props = {
@@ -26,13 +27,6 @@ const CATEGORY_ICONS: Record<EventCategory, string> = {
   other: '📌'
 };
 
-// Priority colors
-const PRIORITY_INDICATORS: Record<EventPriority, { color: string; label: string }> = {
-  high: { color: 'bg-red-500', label: '🔴' },
-  medium: { color: 'bg-yellow-500', label: '🟡' },
-  normal: { color: 'bg-green-500', label: '🟢' }
-};
-
 export default function EventChip({ 
   event, 
   onClick, 
@@ -45,28 +39,44 @@ export default function EventChip({
   const priority: EventPriority = event.priority || 'normal';
   const status: EventStatus = event.status || 'scheduled';
   
+  const countdown = useCountdown(event.starts_at || new Date());
+  const now = new Date();
+  const start = event.starts_at ? new Date(event.starts_at) : now;
+  const end = event.ends_at ? new Date(event.ends_at) : now;
+  const isOngoing = now >= start && now < end;
+  const isPast = now >= end;
+  const isUpcoming = now < start;
+  
   const getEventColor = () => {
     if (event.is_cancelled || status === 'cancelled') {
       return {
         bg: "bg-muted/30",
-        border: "border-muted",
+        border: "border-muted/30",
         text: "text-muted-foreground"
       };
     }
     
-    if (status === 'completed') {
+    if (status === 'completed' || isPast) {
       return {
-        bg: "bg-green-500/20",
-        border: "border-green-500",
-        text: "text-green-700 dark:text-green-300"
+        bg: "bg-muted/20",
+        border: "border-border/30",
+        text: "text-muted-foreground"
       };
     }
     
     if (hasConflict) {
       return {
-        bg: "bg-gradient-to-br from-destructive to-red-600",
-        border: "border-destructive",
+        bg: "bg-gradient-to-br from-destructive/15 to-destructive/10",
+        border: "border-destructive/60",
         text: "text-destructive-foreground"
+      };
+    }
+
+    if (isOngoing) {
+      return {
+        bg: "bg-gradient-to-br from-primary/20 via-primary/15 to-primary/10",
+        border: "border-primary/60",
+        text: "text-primary-foreground"
       };
     }
     
@@ -91,46 +101,60 @@ export default function EventChip({
     return `${displayHour}:${minute.toString().padStart(2, '0')} ${period}`;
   };
 
-  const calculateDuration = () => {
-    if (!event.starts_at || !event.ends_at) return null;
-    const start = new Date(event.starts_at);
-    const end = new Date(event.ends_at);
-    const diff = end.getTime() - start.getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    
-    if (hours > 0) {
-      return mins > 0 ? `${hours}س ${mins}د` : `${hours}س`;
-    }
-    return `${mins}د`;
-  };
-
-  const isOngoing = () => {
-    if (!event.starts_at || !event.ends_at) return false;
-    const now = new Date();
-    const start = new Date(event.starts_at);
-    const end = new Date(event.ends_at);
-    return now >= start && now <= end;
-  };
-
   const getStatusIcon = () => {
+    if (isPast) return <CheckCircle2 className="w-3.5 h-3.5 text-success" />;
+    if (isOngoing) return <div className="w-2 h-2 rounded-full bg-destructive animate-pulse" />;
+    
     switch (status) {
       case 'completed':
-        return <CheckCircle2 className="w-3 h-3 text-green-500" />;
+        return <CheckCircle2 className="w-3.5 h-3.5 text-success" />;
       case 'in_progress':
-        return <Clock className="w-3 h-3 text-blue-500 animate-pulse" />;
+        return <Clock className="w-3.5 h-3.5 text-primary animate-pulse" />;
       case 'paused':
-        return <Pause className="w-3 h-3 text-yellow-500" />;
+        return <Pause className="w-3.5 h-3.5 text-warning" />;
       case 'cancelled':
-        return <X className="w-3 h-3 text-muted-foreground" />;
+        return <X className="w-3.5 h-3.5 text-muted-foreground" />;
       default:
         return null;
     }
   };
 
-  const duration = calculateDuration();
-  const ongoing = isOngoing();
+  const getProgressPercentage = () => {
+    if (!isOngoing) return 0;
+    const total = end.getTime() - start.getTime();
+    const elapsed = now.getTime() - start.getTime();
+    return Math.min(100, Math.max(0, (elapsed / total) * 100));
+  };
+
+  // تصميم مختصر للأحداث طوال اليوم
+  if (isAllDay) {
+    return (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick();
+        }}
+        className={cn(
+          "w-full rounded-lg px-2.5 py-1.5 text-start",
+          "transition-all duration-200 hover:scale-[1.01]",
+          "border backdrop-blur-sm",
+          colors.bg,
+          colors.border,
+          colors.text,
+          "animate-fade-in",
+          className
+        )}
+        style={style}
+        title={event.description || event.title}
+      >
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm shrink-0">{CATEGORY_ICONS[category]}</span>
+          <span className="font-medium text-[13px] truncate">{event.title || "بدون عنوان"}</span>
+          {isPast && <CheckCircle2 className="w-3 h-3 text-success shrink-0 ml-auto" />}
+        </div>
+      </button>
+    );
+  }
 
   return (
     <button
@@ -139,91 +163,104 @@ export default function EventChip({
         onClick();
       }}
       className={cn(
-        "group w-full h-full rounded border-l-[3px] px-2 py-1.5 relative",
+        "group w-full h-full rounded-xl border-l-[3px] px-2.5 py-2 relative",
         "text-start overflow-hidden",
-        "transition-all duration-150 ease-out",
-        "hover:shadow-md hover:z-20",
-        "focus:outline-none focus:ring-1 focus:ring-primary/20",
+        "transition-all duration-300 ease-out",
+        "hover:scale-[1.02] hover:shadow-lg hover:z-20",
+        "focus:outline-none focus:ring-2 focus:ring-primary/30",
         colors.bg,
         colors.border,
         colors.text,
-        "animate-fade-in",
-        ongoing && "ring-1 ring-primary/30",
+        "animate-fade-in backdrop-blur-sm",
+        isOngoing && "shadow-md shadow-primary/20",
+        hasConflict && "ring-2 ring-destructive/50",
         status === 'cancelled' && "opacity-60 line-through",
+        isPast && "opacity-70",
         className
       )}
       style={style}
       title={event.description || event.title}
     >
-      {/* Subtle hover effect */}
-      <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none" />
+      {/* تحذير التعارض */}
+      {hasConflict && (
+        <div className="absolute -top-2 -right-2 z-20 bg-destructive text-destructive-foreground text-[10px] px-2 py-0.5 rounded-full shadow-lg font-bold animate-pulse">
+          ⚠️ تعارض
+        </div>
+      )}
+
+      {/* علامة الأولوية */}
+      {priority === 'high' && !hasConflict && (
+        <div className="absolute -top-1 -right-1 z-10 w-3 h-3 rounded-full bg-destructive shadow-md" />
+      )}
       
-      {/* Priority indicator */}
-      {priority !== 'normal' && (
-        <div className="absolute top-1.5 right-1.5 z-10">
-          <span className="text-[10px]" title={`أولوية ${priority === 'high' ? 'عالية' : 'متوسطة'}`}>
-            {PRIORITY_INDICATORS[priority].label}
+      {/* الوقت - أكبر وأوضح */}
+      <div className="flex items-center justify-between gap-2 mb-1.5">
+        <div className="flex items-center gap-1.5">
+          <Clock className="w-3.5 h-3.5 shrink-0 text-primary" />
+          <span className="font-bold text-[15px]">
+            {event.starts_at && formatTime(event.starts_at)}
           </span>
         </div>
-      )}
-      
-      {/* Conflict indicator */}
-      {hasConflict && (
-        <div className="absolute top-1 right-1 flex items-center gap-1 z-10">
-          <AlertCircle className="w-3 h-3 text-destructive-foreground animate-pulse" />
-        </div>
-      )}
-      
-      <div className="relative z-10 space-y-0.5">
-        {/* Header: Title + Status */}
-        <div className="flex items-start gap-1">
-          <div className="flex-1 min-w-0">
-            <div className={cn(
-              "text-[13px] font-medium leading-snug truncate",
-              status === 'cancelled' && "line-through opacity-60"
-            )}>
-              {event.title || "بدون عنوان"}
-            </div>
-          </div>
+        <div className="flex items-center gap-1 shrink-0">
           {getStatusIcon()}
+          {isOngoing && (
+            <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-destructive text-destructive-foreground font-bold uppercase">
+              Live
+            </span>
+          )}
         </div>
-        
-        {/* Timing information - Google style */}
-        {!isAllDay && event.starts_at && (
-          <div className="flex items-center gap-1 text-[11px] opacity-75">
-            <span>{formatTime(event.starts_at)}</span>
-            {duration && (
-              <>
-                <span>•</span>
-                <span>{duration}</span>
-              </>
-            )}
-          </div>
+      </div>
+
+      {/* العنوان */}
+      <div className="flex items-start gap-1.5 mb-1.5">
+        <span className="text-sm shrink-0">{CATEGORY_ICONS[category]}</span>
+        <span className={cn(
+          "font-semibold text-[13px] leading-snug line-clamp-2",
+          status === 'cancelled' && "line-through opacity-60"
+        )}>
+          {event.title || "بدون عنوان"}
+        </span>
+      </div>
+
+      {/* العداد التنازلي / الحالة */}
+      <div className="flex items-center gap-1.5 text-[11px] mb-1">
+        {isUpcoming && countdown.total > 0 && (
+          <span className="px-2 py-0.5 rounded-md bg-primary/15 text-primary font-medium border border-primary/20">
+            {countdown.formattedShort}
+          </span>
         )}
-        
-        {/* Location - compact */}
-        {event.location && (
-          <div className="flex items-center gap-1 text-[11px] opacity-60 truncate">
-            <MapPin className="w-2.5 h-2.5 flex-shrink-0" />
-            <span className="truncate">{event.location}</span>
-          </div>
+        {isOngoing && countdown.total > 0 && (
+          <span className="px-2 py-0.5 rounded-md bg-destructive/15 text-destructive font-medium border border-destructive/20 animate-pulse">
+            متبقي {countdown.minutes}د
+          </span>
         )}
-        
-        {/* Progress bar for ongoing events */}
-        {ongoing && event.starts_at && event.ends_at && (
-          <div className="w-full h-1 bg-black/20 dark:bg-white/20 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-blue-500 rounded-full transition-all duration-500"
-              style={{
-                width: `${Math.min(100, Math.max(0, 
-                  ((new Date().getTime() - new Date(event.starts_at).getTime()) / 
-                  (new Date(event.ends_at).getTime() - new Date(event.starts_at).getTime())) * 100
-                ))}%`
-              }}
-            />
-          </div>
+        {isPast && (
+          <span className="px-2 py-0.5 rounded-md bg-success/15 text-success font-medium border border-success/20 flex items-center gap-1">
+            <CheckCircle2 className="w-2.5 h-2.5" />
+            مكتمل
+          </span>
         )}
       </div>
+
+      {/* الموقع - اختياري ومختصر */}
+      {event.location && (
+        <div className="flex items-center gap-1 text-[11px] text-muted-foreground truncate opacity-75">
+          <MapPin className="w-2.5 h-2.5 flex-shrink-0" />
+          <span className="truncate">{event.location}</span>
+        </div>
+      )}
+
+      {/* شريط التقدم للأحداث الجارية */}
+      {isOngoing && event.starts_at && event.ends_at && (
+        <div className="mt-2 pt-1.5 border-t border-border/30">
+          <div className="w-full h-1 bg-muted/50 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-primary via-primary to-primary/70 rounded-full transition-all duration-1000"
+              style={{ width: `${getProgressPercentage()}%` }}
+            />
+          </div>
+        </div>
+      )}
     </button>
   );
 }
