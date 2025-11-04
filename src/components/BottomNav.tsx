@@ -174,13 +174,13 @@ export function BottomNav() {
               "bg-gradient-to-br from-primary to-primary/80",
               "shadow-lg hover:shadow-xl",
               "transition-all duration-300",
-              "w-8 h-8 md:w-9 md:h-9"
+              "w-7 h-7 md:w-8 md:h-8"
             )}
               style={{
                 boxShadow: "0 0 20px hsl(var(--primary) / 0.5), 0 4px 12px hsl(var(--primary) / 0.3)",
               }}
             >
-              <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-primary-foreground" />
+              <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary-foreground" />
             </div>
             <span className="text-[10px] md:text-sm mt-1 font-semibold text-primary">AI</span>
           </button>
