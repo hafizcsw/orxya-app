@@ -12,27 +12,56 @@ serve(async (req) => {
   }
 
   try {
+    console.log('=== Calendar AI Insights Function Started ===');
+    
+    // Get authorization header
+    const authHeader = req.headers.get('Authorization');
+    console.log('Auth header present:', !!authHeader);
+    
+    if (!authHeader) {
+      console.error('No authorization header in request');
+      return new Response(
+        JSON.stringify({ error: 'غير مصرح', details: 'No authorization header' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     // Create authenticated Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
         global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
+          headers: { Authorization: authHeader },
         },
       }
     );
 
     // Get the user from the auth header
+    console.log('Attempting to get user...');
     const {
       data: { user },
       error: userError,
     } = await supabaseClient.auth.getUser();
 
-    if (userError || !user) {
-      console.error('Auth error:', userError);
+    if (userError) {
+      console.error('User error:', userError);
       return new Response(
-        JSON.stringify({ error: 'غير مصرح', details: userError?.message }),
+        JSON.stringify({ error: 'غير مصرح', details: userError.message }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    if (!user) {
+      console.error('No user found');
+      return new Response(
+        JSON.stringify({ error: 'غير مصرح', details: 'User not found' }),
         {
           status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -43,6 +72,7 @@ serve(async (req) => {
     console.log('Authenticated user:', user.id);
 
     const { date, currentTime } = await req.json();
+    console.log('Processing request for date:', date);
     
     // Get user profile for personalization
     const { data: profile } = await supabaseClient

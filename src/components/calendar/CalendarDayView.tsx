@@ -66,6 +66,15 @@ export default function CalendarDayView({
     const fetchInsights = async () => {
       setLoadingInsights(true);
       try {
+        // Get current session first
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          console.log('No active session for AI insights');
+          setLoadingInsights(false);
+          return;
+        }
+
         const { data, error } = await supabase.functions.invoke('calendar-ai-insights', {
           body: { 
             date: anchor.toISOString().split('T')[0],
@@ -73,13 +82,17 @@ export default function CalendarDayView({
           }
         });
         
-        if (!error && data?.insights) {
+        if (error) {
+          console.error('Error fetching AI insights:', error);
+          setAiInsights(null);
+        } else if (data?.insights) {
           setAiInsights(data.insights);
         } else if (data?.fallback) {
           setAiInsights(data.fallback);
         }
       } catch (err) {
         console.error('Failed to fetch AI insights:', err);
+        setAiInsights(null);
       } finally {
         setLoadingInsights(false);
       }
