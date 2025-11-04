@@ -121,10 +121,11 @@ function CalendarDay({
 
   return (
     <div
-      className="relative border-l border-border/10 first:border-l-0 h-full select-none bg-white dark:bg-background"
+      className="relative border-l first:border-l-0 h-full select-none bg-white dark:bg-background"
+      style={{ borderColor: '#e0e0e0' }}
       onMouseLeave={() => drag && setDrag(null)}
     >
-      {/* Hour grid - Google Calendar style - extremely subtle */}
+      {/* Hour grid - Google Calendar exact style */}
       <div
         className="absolute inset-0"
         ref={containerRef}
@@ -135,8 +136,17 @@ function CalendarDay({
         {HOURS.map((h) => (
           <div
             key={h}
-            className="border-b border-border/[0.08] hover:bg-[#f1f3f4] dark:hover:bg-accent/5 transition-colors cursor-crosshair"
-            style={{ height: pxPerHour }}
+            className="border-b transition-all duration-150 cursor-crosshair"
+            style={{ 
+              height: pxPerHour,
+              borderColor: '#e0e0e0'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#f8f9fa';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
           />
         ))}
       </div>

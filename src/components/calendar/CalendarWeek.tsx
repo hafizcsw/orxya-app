@@ -125,36 +125,39 @@ export default function CalendarWeek({
     });
   };
   return <div className="w-full h-[calc(100vh-200px)] sm:h-[calc(100vh-160px)] flex flex-col bg-white dark:bg-background overflow-hidden">
-      {/* Top Navigation Bar - Google Calendar Style */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-border/20 bg-white dark:bg-background">
+      {/* Top Navigation Bar - Google Calendar Exact 56px */}
+      <div className="flex items-center justify-between px-6 border-b bg-white dark:bg-background" style={{ height: '56px', borderColor: '#e0e0e0' }}>
         {/* Left Section */}
         <div className="flex items-center gap-3">
           {/* Today Button */}
           <button 
             onClick={goToToday}
-            className="px-5 py-2 text-sm font-medium text-foreground border border-border/30 rounded-md hover:bg-muted/50 transition-colors"
+            className="px-5 py-2 text-[13px] font-['Roboto'] font-medium text-[#3c4043] border rounded-md hover:bg-[#f8f9fa] transition-all duration-150"
+            style={{ height: '36px', borderColor: '#dadce0' }}
           >
             اليوم
           </button>
           
           {/* Navigation Arrows */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0">
             <button 
               onClick={() => navigateWeek("prev")}
-              className="p-2 hover:bg-muted/50 rounded-full transition-colors"
+              className="p-2 hover:bg-[#f1f3f4] rounded-full transition-all duration-150"
+              style={{ width: '40px', height: '40px' }}
             >
-              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              <ChevronRight className="w-5 h-5" style={{ color: '#5f6368' }} />
             </button>
             <button 
               onClick={() => navigateWeek("next")}
-              className="p-2 hover:bg-muted/50 rounded-full transition-colors"
+              className="p-2 hover:bg-[#f1f3f4] rounded-full transition-all duration-150"
+              style={{ width: '40px', height: '40px' }}
             >
-              <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+              <ChevronLeft className="w-5 h-5" style={{ color: '#5f6368' }} />
             </button>
           </div>
 
           {/* Month/Year Display */}
-          <h2 className="text-xl font-normal text-foreground">
+          <h2 className="text-[22px] font-['Roboto'] font-normal mr-2" style={{ color: '#3c4043' }}>
             {start.toLocaleDateString("ar", {
               month: "long",
               year: "numeric"
@@ -163,26 +166,26 @@ export default function CalendarWeek({
         </div>
 
         {/* Right Section */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {/* Search Button */}
-          <button className="p-2 hover:bg-muted/50 rounded-full transition-colors">
-            <Search className="w-5 h-5 text-muted-foreground" />
+          <button className="p-2 hover:bg-[#f1f3f4] rounded-full transition-all duration-150" style={{ width: '40px', height: '40px' }}>
+            <Search className="w-5 h-5" style={{ color: '#5f6368' }} />
           </button>
 
           {/* Help Button */}
-          <button className="p-2 hover:bg-muted/50 rounded-full transition-colors">
-            <HelpCircle className="w-5 h-5 text-muted-foreground" />
+          <button className="p-2 hover:bg-[#f1f3f4] rounded-full transition-all duration-150" style={{ width: '40px', height: '40px' }}>
+            <HelpCircle className="w-5 h-5" style={{ color: '#5f6368' }} />
           </button>
 
           {/* Settings Button */}
-          <button className="p-2 hover:bg-muted/50 rounded-full transition-colors">
-            <Settings className="w-5 h-5 text-muted-foreground" />
+          <button className="p-2 hover:bg-[#f1f3f4] rounded-full transition-all duration-150" style={{ width: '40px', height: '40px' }}>
+            <Settings className="w-5 h-5" style={{ color: '#5f6368' }} />
           </button>
 
           {/* View Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="px-4 py-2 text-sm font-medium text-foreground border border-border/30 rounded-md hover:bg-muted/50 transition-colors flex items-center gap-2">
+              <button className="px-4 py-2 text-[13px] font-['Roboto'] font-medium text-[#3c4043] border rounded-md hover:bg-[#f8f9fa] transition-all duration-150 flex items-center gap-2 mr-2" style={{ height: '36px', borderColor: '#dadce0' }}>
                 أسبوع
                 <ChevronLeft className="w-4 h-4 rotate-[-90deg]" />
               </button>
@@ -206,22 +209,30 @@ export default function CalendarWeek({
       <div className="flex flex-1 overflow-hidden relative bg-white dark:bg-background">
         {/* Days grid - Main scrollable area */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Day headers - Google Calendar style */}
-          <div className="flex border-b border-border/20 bg-white dark:bg-background sticky top-0 z-20 shadow-sm">
-            <div className="w-16 flex-shrink-0 border-r border-border/20" /> {/* Spacer for time gutter */}
+          {/* Day headers - Google Calendar Exact 72px */}
+          <div className="flex border-b bg-white dark:bg-background sticky top-0 z-20" style={{ height: '72px', borderColor: '#e0e0e0' }}>
+            <div className="flex-shrink-0 border-r" style={{ width: '56px', borderColor: '#e0e0e0' }} /> {/* Spacer for time gutter */}
             <div className="grid grid-cols-7 flex-1">
             {days.map((d, i) => {
               const isToday = d.toDateString() === new Date().toDateString();
               const weekdayShort = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'][d.getDay()];
               
-              return <div key={i} className={cn("flex flex-col items-center justify-center py-3 px-2 border-l border-border/10", i === 0 && "border-l-0")}>
-                  <div className="text-[11px] text-muted-foreground/70 font-medium mb-1.5 uppercase tracking-wide">
+              return <div key={i} className={cn("flex flex-col items-center justify-center border-l", i === 0 && "border-l-0")} style={{ borderColor: '#e0e0e0' }}>
+                  <div className="text-[11px] font-['Roboto'] font-medium uppercase mb-0.5" style={{ color: '#70757a', letterSpacing: '0.8px' }}>
                     {weekdayShort}
                   </div>
                   <button onClick={() => {
                   onDateChange?.(d);
                   setGlobalDate(d);
-                }} className={cn("flex items-center justify-center rounded-full transition-all font-medium cursor-pointer", "w-12 h-12 text-2xl", isToday ? "bg-[#1a73e8] text-white shadow-md hover:bg-[#1557b0]" : "text-foreground hover:bg-muted/50")}>
+                }} className={cn("flex items-center justify-center rounded-full transition-all duration-150 cursor-pointer", isToday ? "text-white" : "hover:bg-[#f1f3f4]")} style={{ 
+                  width: '46px', 
+                  height: '46px',
+                  fontSize: '26px',
+                  fontFamily: 'Roboto',
+                  fontWeight: isToday ? 500 : 400,
+                  backgroundColor: isToday ? '#1a73e8' : 'transparent',
+                  color: isToday ? '#ffffff' : '#3c4043'
+                }}>
                     {d.getDate()}
                   </button>
                   </div>;
@@ -235,8 +246,8 @@ export default function CalendarWeek({
           {/* Scrollable container */}
           <div className="flex-1 overflow-auto relative bg-white dark:bg-background" ref={gridRef}>
             <div className="flex relative">
-              {/* Time gutter - Google Calendar exact style */}
-              <div className="w-16 flex-shrink-0 bg-white dark:bg-background border-r border-border/20">
+              {/* Time gutter - Google Calendar Exact 56px width */}
+              <div className="flex-shrink-0 bg-white dark:bg-background border-r" style={{ width: '56px', borderColor: '#e0e0e0' }}>
                 <div className="relative">
                   {Array.from({ length: 24 }, (_, h) => {
                     const period = h < 12 ? 'AM' : 'PM';
@@ -249,9 +260,12 @@ export default function CalendarWeek({
                         style={{ height: pxPerHour }}
                       >
                         {h > 0 && (
-                          <div className="absolute -top-2.5 left-0 right-0 text-center">
-                            <span className="text-[10px] text-muted-foreground/60 font-normal">
-                              {displayHour} {period}
+                          <div className="absolute left-0 right-0 flex flex-col items-end pr-2" style={{ top: '2px' }}>
+                            <span className="text-[10px] font-['Roboto'] font-normal leading-none" style={{ color: '#70757a' }}>
+                              {displayHour}
+                            </span>
+                            <span className="text-[8px] font-['Roboto'] font-normal leading-none" style={{ color: '#70757a', marginTop: '-1px' }}>
+                              {period}
                             </span>
                           </div>
                         )}
@@ -263,13 +277,13 @@ export default function CalendarWeek({
 
               {/* Week grid with days */}
               <div className="grid grid-cols-7 flex-1 relative bg-white dark:bg-background">
-                {/* Hour lines - very subtle */}
+                {/* Hour lines - Google Calendar exact style */}
                 <div className="absolute inset-0 pointer-events-none col-span-7">
                   {Array.from({ length: 24 }, (_, h) => (
                     <div 
                       key={h} 
-                      className="absolute left-0 right-0 border-t border-border/[0.08]"
-                      style={{ top: h * pxPerHour }}
+                      className="absolute left-0 right-0 border-t"
+                      style={{ top: h * pxPerHour, borderColor: '#e0e0e0' }}
                     />
                   ))}
                 </div>
