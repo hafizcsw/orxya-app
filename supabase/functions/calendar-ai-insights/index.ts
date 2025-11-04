@@ -14,49 +14,23 @@ serve(async (req) => {
   try {
     console.log('=== Calendar AI Insights Function Started ===');
     
-    // Get authorization header from the request
-    const authHeader = req.headers.get('Authorization');
-    console.log('Auth header present:', !!authHeader);
-    
-    if (!authHeader) {
-      console.error('No authorization header in request');
-      return new Response(
-        JSON.stringify({ error: 'غير مصرح', details: 'Auth session missing!' }),
-        {
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // Create Supabase client with anon key for JWT verification
+    // Create Supabase client using the request headers
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
         global: {
-          headers: { Authorization: authHeader },
+          headers: { Authorization: req.headers.get('Authorization')! },
         },
       }
     );
 
-    // Get the authenticated user
+    // Get the authenticated user (JWT already verified by Supabase)
     console.log('Getting user from auth token...');
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
 
-    if (userError) {
-      console.error('Auth error:', userError.message);
-      return new Response(
-        JSON.stringify({ error: 'غير مصرح', details: userError.message }),
-        {
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    if (!user) {
-      console.error('No user found in session');
+    if (userError || !user) {
+      console.error('Auth error:', userError?.message || 'No user');
       return new Response(
         JSON.stringify({ error: 'غير مصرح', details: 'Auth session missing!' }),
         {
