@@ -51,19 +51,13 @@ export default function PrayerBand({
       );
     });
 
-  // Current time line
+  // Current time line - only show if it's today
   const now = new Date();
   const nowMin = now.getHours() * 60 + now.getMinutes();
 
   return (
-    <div className="absolute inset-0 pointer-events-none z-10">
+    <div className="absolute inset-y-0 left-0 right-0 pointer-events-none z-10">
       {nodes}
-      <div
-        className="absolute left-0 right-0 border-t-2 border-destructive"
-        style={{ top: nowMin * scale.pxPerMin }}
-      >
-        <div className="absolute -top-1.5 -left-1.5 w-3 h-3 rounded-full bg-destructive animate-pulse" />
-      </div>
     </div>
   );
 }
