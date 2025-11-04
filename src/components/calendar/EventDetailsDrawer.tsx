@@ -2,13 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/telemetry";
 import { requestAISuggestion, type AISuggestion } from "@/lib/aiConflicts";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Portal } from "./Portal";
 import { Button } from "@/components/ui/button";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { Input } from "@/components/ui/input";
@@ -220,27 +214,38 @@ export default function EventDetailsDrawer({
     }
   };
 
-  if (!event) return null;
+  if (!event || !open) return null;
 
   return (
-    <Sheet open={open} onOpenChange={onClose}>
-      <SheetContent className="w-[500px] sm:max-w-[500px] overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
-            تفاصيل الحدث
+    <Portal>
+      {/* الخلفية المظللة */}
+      <div
+        className="pointer-events-auto fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      
+      {/* الدرج */}
+      <aside
+        className="pointer-events-auto fixed left-0 top-0 bottom-0 z-50 w-[500px] max-w-[92vw] bg-card shadow-2xl border-r overflow-y-auto"
+        role="dialog"
+        aria-modal="true"
+      >
+        <header className="sticky top-0 z-10 p-4 border-b bg-card/95 backdrop-blur">
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold">تفاصيل الحدث</h3>
             {hasConflict && (
               <Badge variant="destructive" className="text-xs">
                 <AlertTriangle className="w-3 h-3 mr-1" />
                 تعارض
               </Badge>
             )}
-          </SheetTitle>
-          <SheetDescription>
+          </div>
+          <p className="text-sm text-muted-foreground mt-1">
             قم بتعديل تفاصيل الحدث أو احذفه
-          </SheetDescription>
-        </SheetHeader>
+          </p>
+        </header>
 
-        <div className="space-y-6 mt-6">
+        <div className="p-4 space-y-6">
           {/* Title */}
           <div className="space-y-2">
             <Label htmlFor="title">العنوان</Label>
@@ -410,7 +415,7 @@ export default function EventDetailsDrawer({
             </ActionButton>
           </div>
         </div>
-      </SheetContent>
+      </aside>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
@@ -429,6 +434,6 @@ export default function EventDetailsDrawer({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Sheet>
+    </Portal>
   );
 }

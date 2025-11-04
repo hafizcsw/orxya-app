@@ -472,7 +472,9 @@ export default function TodayWHOOP() {
   const { data: calendarData, loading: calLoading } = useCalendarInstances(startISO, endISO);
 
   return (
-    <div className="mx-auto max-w-3xl flex flex-col gap-3 p-3 pb-24 min-h-screen">
+    <main className="min-h-dvh flex flex-col bg-background">
+      <section className="flex-1 overflow-y-auto overscroll-contain pb-20">
+        <div className="mx-auto max-w-3xl flex flex-col gap-3 p-3">
       {/* المكونات الجديدة - WHOOP Style في الأعلى */}
       
       {/* Natural Language Input */}
@@ -606,6 +608,8 @@ export default function TodayWHOOP() {
         <h3 className="text-lg font-bold mb-4">المالية والنشاطات</h3>
         <LegacyToday report={report} loading={reportLoading} />
       </div>
-    </div>
+        </div>
+      </section>
+    </main>
   );
 }

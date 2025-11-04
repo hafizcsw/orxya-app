@@ -103,9 +103,14 @@ const App = () => (
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <DateProvider>
             <AIProvider>
-              <ErrorBoundary>
-                <AppContent />
-              </ErrorBoundary>
+              <div id="app-root" className="relative min-h-dvh isolate">
+                <div id="page" className="relative z-0">
+                  <ErrorBoundary>
+                    <AppContent />
+                  </ErrorBoundary>
+                </div>
+                <div id="portals" className="fixed inset-0 z-50 pointer-events-none" />
+              </div>
             </AIProvider>
           </DateProvider>
         </BrowserRouter>

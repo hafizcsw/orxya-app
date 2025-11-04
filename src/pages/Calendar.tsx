@@ -101,9 +101,9 @@ export default function CalendarPage() {
 
   return (
     <Protected>
-      <div className="min-h-screen bg-background flex flex-col">
+      <main className="min-h-dvh flex flex-col bg-background">
         {/* Google Calendar Header */}
-        <header className="border-b border-border/30 bg-background px-2 sm:px-4 py-2 flex items-center justify-between shadow-sm sticky top-0 z-50">
+        <header className="sticky top-0 z-20 border-b border-border/30 bg-background px-2 sm:px-4 py-2 flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -145,7 +145,7 @@ export default function CalendarPage() {
         </header>
 
         {/* Main Content */}
-        <div className="flex-1 flex overflow-hidden">
+        <section className="flex-1 flex overflow-y-auto overscroll-contain">
           {/* Desktop Sidebar - Always visible on large screens */}
           <div className={cn(
             "hidden lg:block border-l border-border/30 bg-background transition-all",
@@ -251,7 +251,7 @@ export default function CalendarPage() {
               )}
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Quick Add Dialog */}
         <QuickAddDialog
@@ -261,7 +261,7 @@ export default function CalendarPage() {
             setQuickAddOpen(false);
           }}
         />
-      </div>
+      </main>
     </Protected>
   );
 }

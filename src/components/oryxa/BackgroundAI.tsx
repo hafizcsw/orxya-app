@@ -21,7 +21,7 @@ export function BackgroundAI({ className, intensity = 'medium' }: BackgroundAIPr
     <div
       ref={canvasRef}
       className={cn(
-        'fixed inset-0 -z-10 overflow-hidden pointer-events-none',
+        'pointer-events-none fixed inset-0 -z-10 isolate overflow-hidden',
         className
       )}
     >
