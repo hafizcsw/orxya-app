@@ -196,17 +196,6 @@ export default function CalendarDayView({
       {/* Day view container */}
       <div className="flex flex-1 overflow-hidden relative">
         <div className="flex flex-1 flex-col overflow-hidden">
-          {/* Smart Summary Card */}
-          {isToday && allEvents.length > 0 && (
-            <div className="px-4 pt-3">
-              <SmartSummaryCard 
-                events={allEvents} 
-                aiInsight={aiInsights}
-              />
-            </div>
-          )}
-
-
           {/* All-Day Row */}
           <AllDayRow events={allEvents} days={[anchor]} onEventClick={handleEventClick} />
 
