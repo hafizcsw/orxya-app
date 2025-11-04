@@ -141,3 +141,43 @@ export function getDaysInRange(start: Date, end: Date): Date[] {
   
   return days;
 }
+
+/**
+ * Format time based on user preference (12h/24h)
+ */
+export function formatTime(date: Date | string, format: '12h' | '24h' = '12h', locale: string = 'ar'): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  
+  if (format === '24h') {
+    return d.toLocaleTimeString(locale, { 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      hour12: false 
+    });
+  }
+  
+  // نظام 12 ساعة
+  const hour = d.getHours();
+  const minute = d.getMinutes();
+  const period = locale === 'ar' ? (hour >= 12 ? 'م' : 'ص') : (hour >= 12 ? 'PM' : 'AM');
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}:${minute.toString().padStart(2, '0')} ${period}`;
+}
+
+/**
+ * Format date based on user preference
+ */
+export function formatDate(date: Date | string, format: string = 'DD/MM/YYYY', locale: string = 'ar'): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  
+  switch (format) {
+    case 'DD/MM/YYYY':
+      return d.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' });
+    case 'MM/DD/YYYY':
+      return d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+    case 'YYYY-MM-DD':
+      return d.toISOString().split('T')[0];
+    default:
+      return d.toLocaleDateString(locale);
+  }
+}

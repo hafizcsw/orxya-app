@@ -6,6 +6,7 @@ import EventDetailsDrawer from "./EventDetailsDrawer";
 import AllDayRow from "./AllDayRow";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/telemetry";
+import { useSettings } from "@/contexts/SettingsContext";
 import { ChevronLeft, ChevronRight, Search, HelpCircle, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCurrentTimePosition } from "@/lib/eventPacking";
@@ -31,6 +32,7 @@ export default function CalendarWeek({
   showPrayerTimes = true
 }: Props) {
   const navigate = useNavigate();
+  const { settings } = useSettings();
   const {
     setSelectedDate: setGlobalDate
   } = useSelectedDate();

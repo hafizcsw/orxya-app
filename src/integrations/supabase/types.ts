@@ -1464,101 +1464,170 @@ export type Database = {
         Row: {
           accent_color: string | null
           allow_location: boolean | null
+          auto_add_google_meet: boolean | null
           avatar_url: string | null
           calendar_writeback: boolean
+          country_code: string | null
           created_at: string | null
           currency: string | null
+          date_format: string | null
           default_calendar_id: string | null
           default_calendar_name: string | null
           default_calendar_provider: string | null
+          default_event_duration: number | null
+          default_notification_time: number | null
+          default_task_list_id: string | null
           density_pref: string | null
           dnd_enabled: boolean | null
           dnd_end: string | null
           dnd_start: string | null
+          enable_desktop_notifications: boolean | null
+          enable_email_notifications: boolean | null
+          enable_sound_notifications: boolean | null
           full_name: string | null
           id: string
           initial_balance_usd: number | null
+          keyboard_shortcuts_enabled: boolean | null
+          language: string | null
           latitude: number | null
           location_updated_at: string | null
           longitude: number | null
+          notification_sound: string | null
           prayer_buffers: Json | null
           prayer_method: string | null
           prayer_post_buffer_min: number | null
           prayer_pre_buffer_min: number | null
+          reduce_brightness_past_events: boolean | null
           religion: string | null
           respect_prayer: boolean | null
+          show_declined_events: boolean | null
+          show_event_colors: boolean | null
+          show_prayer_times_on_calendar: boolean | null
+          show_week_numbers: boolean | null
+          show_weekends: boolean | null
           telemetry_enabled: boolean | null
           theme_pref: string | null
+          time_format: string | null
           timezone: string | null
           tz: string | null
           wa_opt_in: boolean | null
           wa_phone: string | null
+          week_start_day: number | null
+          working_days: Json | null
+          working_hours_end: string | null
+          working_hours_start: string | null
         }
         Insert: {
           accent_color?: string | null
           allow_location?: boolean | null
+          auto_add_google_meet?: boolean | null
           avatar_url?: string | null
           calendar_writeback?: boolean
+          country_code?: string | null
           created_at?: string | null
           currency?: string | null
+          date_format?: string | null
           default_calendar_id?: string | null
           default_calendar_name?: string | null
           default_calendar_provider?: string | null
+          default_event_duration?: number | null
+          default_notification_time?: number | null
+          default_task_list_id?: string | null
           density_pref?: string | null
           dnd_enabled?: boolean | null
           dnd_end?: string | null
           dnd_start?: string | null
+          enable_desktop_notifications?: boolean | null
+          enable_email_notifications?: boolean | null
+          enable_sound_notifications?: boolean | null
           full_name?: string | null
           id?: string
           initial_balance_usd?: number | null
+          keyboard_shortcuts_enabled?: boolean | null
+          language?: string | null
           latitude?: number | null
           location_updated_at?: string | null
           longitude?: number | null
+          notification_sound?: string | null
           prayer_buffers?: Json | null
           prayer_method?: string | null
           prayer_post_buffer_min?: number | null
           prayer_pre_buffer_min?: number | null
+          reduce_brightness_past_events?: boolean | null
           religion?: string | null
           respect_prayer?: boolean | null
+          show_declined_events?: boolean | null
+          show_event_colors?: boolean | null
+          show_prayer_times_on_calendar?: boolean | null
+          show_week_numbers?: boolean | null
+          show_weekends?: boolean | null
           telemetry_enabled?: boolean | null
           theme_pref?: string | null
+          time_format?: string | null
           timezone?: string | null
           tz?: string | null
           wa_opt_in?: boolean | null
           wa_phone?: string | null
+          week_start_day?: number | null
+          working_days?: Json | null
+          working_hours_end?: string | null
+          working_hours_start?: string | null
         }
         Update: {
           accent_color?: string | null
           allow_location?: boolean | null
+          auto_add_google_meet?: boolean | null
           avatar_url?: string | null
           calendar_writeback?: boolean
+          country_code?: string | null
           created_at?: string | null
           currency?: string | null
+          date_format?: string | null
           default_calendar_id?: string | null
           default_calendar_name?: string | null
           default_calendar_provider?: string | null
+          default_event_duration?: number | null
+          default_notification_time?: number | null
+          default_task_list_id?: string | null
           density_pref?: string | null
           dnd_enabled?: boolean | null
           dnd_end?: string | null
           dnd_start?: string | null
+          enable_desktop_notifications?: boolean | null
+          enable_email_notifications?: boolean | null
+          enable_sound_notifications?: boolean | null
           full_name?: string | null
           id?: string
           initial_balance_usd?: number | null
+          keyboard_shortcuts_enabled?: boolean | null
+          language?: string | null
           latitude?: number | null
           location_updated_at?: string | null
           longitude?: number | null
+          notification_sound?: string | null
           prayer_buffers?: Json | null
           prayer_method?: string | null
           prayer_post_buffer_min?: number | null
           prayer_pre_buffer_min?: number | null
+          reduce_brightness_past_events?: boolean | null
           religion?: string | null
           respect_prayer?: boolean | null
+          show_declined_events?: boolean | null
+          show_event_colors?: boolean | null
+          show_prayer_times_on_calendar?: boolean | null
+          show_week_numbers?: boolean | null
+          show_weekends?: boolean | null
           telemetry_enabled?: boolean | null
           theme_pref?: string | null
+          time_format?: string | null
           timezone?: string | null
           tz?: string | null
           wa_opt_in?: boolean | null
           wa_phone?: string | null
+          week_start_day?: number | null
+          working_days?: Json | null
+          working_hours_end?: string | null
+          working_hours_start?: string | null
         }
         Relationships: []
       }
@@ -1661,6 +1730,36 @@ export type Database = {
           qty?: number | null
           sale_date?: string
           type?: string | null
+        }
+        Relationships: []
+      }
+      task_lists: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          owner_id: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          owner_id: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          owner_id?: string
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1818,6 +1917,62 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vw_daily_metrics"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      user_tasks: {
+        Row: {
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string | null
+          description: string | null
+          due_date: string | null
+          due_time: string | null
+          id: string
+          list_id: string | null
+          owner_id: string
+          position: number | null
+          priority: number | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          due_time?: string | null
+          id?: string
+          list_id?: string | null
+          owner_id: string
+          position?: number | null
+          priority?: number | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          due_time?: string | null
+          id?: string
+          list_id?: string | null
+          owner_id?: string
+          position?: number | null
+          priority?: number | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_tasks_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "task_lists"
+            referencedColumns: ["id"]
           },
         ]
       }

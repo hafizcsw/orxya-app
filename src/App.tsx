@@ -7,6 +7,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ThemeProvider } from "next-themes";
 import { DateProvider } from "./contexts/DateContext";
 import { AIProvider } from "./contexts/AIContext";
+import { SettingsProvider } from "./contexts/SettingsContext";
 import Navigation from "./components/Navigation";
 import { BottomNav } from "./components/BottomNav";
 import { AIDock } from "./components/oryxa/AIDock";
@@ -42,6 +43,7 @@ import Conflicts from "./pages/Conflicts";
 import TestConflicts from "./pages/TestConflicts";
 import Expenses from "./pages/Expenses";
 import TodayWHOOP from "./pages/TodayWHOOP";
+import Settings from "./pages/Settings";
 import { Protected } from "./components/Protected";
 import { useAutopilotNotifications } from "./hooks/useAutopilotNotifications";
 
@@ -67,6 +69,7 @@ function AppContent() {
         <Route path="/inbox" element={<Protected><Inbox /></Protected>} />
         <Route path="/calendar-full" element={<Protected><CalendarFull /></Protected>} />
         <Route path="/calendar-simple" element={<Protected><CalendarSimple /></Protected>} />
+        <Route path="/settings" element={<Protected><Settings /></Protected>} />
         <Route path="/settings/external" element={<Protected><SettingsExternal /></Protected>} />
         <Route path="/settings/notifications" element={<Protected><SettingsNotifications /></Protected>} />
         <Route path="/settings/prayer" element={<Protected><SettingsPrayer /></Protected>} />
@@ -101,18 +104,20 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <DateProvider>
-            <AIProvider>
-              <div id="app-root" className="relative min-h-dvh isolate">
-                <div id="page" className="relative z-0">
-                  <ErrorBoundary>
-                    <AppContent />
-                  </ErrorBoundary>
+          <SettingsProvider>
+            <DateProvider>
+              <AIProvider>
+                <div id="app-root" className="relative min-h-dvh isolate">
+                  <div id="page" className="relative z-0">
+                    <ErrorBoundary>
+                      <AppContent />
+                    </ErrorBoundary>
+                  </div>
+                  <div id="portals" className="fixed inset-0 z-50 pointer-events-none" />
                 </div>
-                <div id="portals" className="fixed inset-0 z-50 pointer-events-none" />
-              </div>
-            </AIProvider>
-          </DateProvider>
+              </AIProvider>
+            </DateProvider>
+          </SettingsProvider>
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
