@@ -281,7 +281,7 @@ export default function CalendarPage() {
                       setCurrentDate(date);
                       setGlobalDate(date);
                     }}
-                    showPrayerTimes={showPrayerTimes}
+                    showPrayerTimes={false}
                   />
                 </CalendarWeekErrorBoundary>
               ) : (
