@@ -36,7 +36,7 @@ type Props = {
   pxPerHour?: number;
 };
 
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const HOURS = Array.from({ length: 25 }, (_, i) => i); // 0-24 to include midnight
 
 function CalendarDay({
   date,

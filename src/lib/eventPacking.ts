@@ -58,34 +58,36 @@ function packTimedEvents(events: any[], pxPerMin: number): PackedEvent[] {
     }))
     .sort((a, b) => a.startMin - b.startMin || a.endMin - b.endMin);
 
-  const lanes: { endMin: number }[] = [];
+  const lanes: { event: any; endMin: number }[] = [];
   const packed: PackedEvent[] = [];
 
   for (const item of list) {
-    // Remove lanes that have ended
-    const activeLanes = lanes.filter(l => l.endMin > item.startMin);
-    
     // Find first available lane
     let laneIdx = 0;
-    const usedLanes = new Set(
-      activeLanes.map((_, idx) => idx)
-    );
     
-    while (usedLanes.has(laneIdx)) {
-      laneIdx++;
+    for (let i = 0; i < lanes.length; i++) {
+      // Check if this lane is available (previous event ended)
+      if (lanes[i].endMin <= item.startMin) {
+        laneIdx = i;
+        break;
+      }
+      laneIdx = i + 1;
     }
 
-    // Ensure lanes array is large enough
-    while (lanes.length <= laneIdx) {
-      lanes.push({ endMin: 0 });
+    // Update or add lane
+    if (laneIdx < lanes.length) {
+      lanes[laneIdx] = { event: item.event, endMin: item.endMin };
+    } else {
+      lanes.push({ event: item.event, endMin: item.endMin });
     }
-    
-    lanes[laneIdx] = { endMin: item.endMin };
+
+    // Count active lanes at this time
+    const activeLanes = lanes.filter(l => l.endMin > item.startMin).length;
 
     packed.push({
       event: item.event,
       lane: laneIdx,
-      laneCount: Math.max(laneIdx + 1, activeLanes.length + 1),
+      laneCount: Math.max(laneIdx + 1, activeLanes),
       startMin: item.startMin,
       endMin: item.endMin,
       top: item.startMin * pxPerMin,
@@ -132,16 +134,21 @@ function recalculateLaneCounts(packed: PackedEvent[]) {
 }
 
 function isAllDayEvent(event: any): boolean {
+  // Check explicit all_day flag first
+  if (event.all_day === true || event.is_all_day === true) return true;
+  
   if (!event.starts_at || !event.ends_at) return false;
   
   const start = new Date(event.starts_at);
   const end = new Date(event.ends_at);
   
-  // All-day if duration >= 20 hours or starts at midnight
+  // All-day only if duration >= 20 hours AND doesn't start at a specific minute
   const durationHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-  const startsAtMidnight = start.getHours() === 0 && start.getMinutes() === 0;
+  const startsAtMidnightZero = start.getHours() === 0 && start.getMinutes() === 0 && start.getSeconds() === 0;
+  const endsAtMidnightZero = end.getHours() === 0 && end.getMinutes() === 0 && end.getSeconds() === 0;
   
-  return durationHours >= 20 || startsAtMidnight;
+  // Only treat as all-day if it's a full day event (24h from midnight to midnight)
+  return durationHours >= 23 && startsAtMidnightZero && endsAtMidnightZero;
 }
 
 function getEventSpanDays(event: any, currentDate: Date): number {
