@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 
 type Props = {
   mode: "month"|"week";
@@ -13,6 +14,7 @@ type Props = {
 
 export default function CalendarHeader({ mode, date, onPrev, onNext, onToday, onMode }: Props) {
   const title = date.toLocaleDateString(undefined, { year: "numeric", month: "long" });
+  const navigate = useNavigate();
   
   return (
     <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
@@ -64,6 +66,16 @@ export default function CalendarHeader({ mode, date, onPrev, onNext, onToday, on
           onClick={() => onMode("week")}
         >
           أسبوع
+        </Button>
+        <Button 
+          variant="outline"
+          size="sm"
+          onClick={() => navigate('/settings')}
+          className="gap-2"
+          title="الإعدادات"
+        >
+          <Settings className="h-4 w-4" />
+          الإعدادات
         </Button>
       </div>
     </div>
