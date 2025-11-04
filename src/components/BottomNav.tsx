@@ -119,9 +119,14 @@ export function BottomNav() {
         </div>
       )}
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-xl border-t border-border safe-bottom">
-        <div className="flex items-center justify-around px-2 py-2 max-w-7xl mx-auto">
+      {/* Bottom Navigation - Responsive */}
+      <nav className={cn(
+        "fixed bottom-0 left-0 right-0 z-40",
+        "bg-card/95 backdrop-blur-xl border-t border-border",
+        "h-16 md:h-20", // Taller on tablets
+        "safe-bottom"
+      )}>
+        <div className="flex items-center justify-around px-2 py-2 max-w-7xl mx-auto h-full">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -131,43 +136,66 @@ export function BottomNav() {
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  "flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg transition-all min-w-[60px]",
+                  "flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-all min-w-[60px]",
+                  "md:scale-110", // Slightly larger on tablets
                   isActive 
                     ? "text-primary" 
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <Icon className="w-5 h-5" />
-                <span className="text-[10px] font-medium">{item.label}</span>
+                <Icon className={cn(
+                  "transition-all",
+                  "w-5 h-5 md:w-6 md:h-6", // Responsive icon size
+                  isActive && "scale-110"
+                )} />
+                <span className={cn(
+                  "text-[10px] transition-all",
+                  "md:text-sm", // Larger text on tablets
+                  isActive && "font-semibold"
+                )}>
+                  {item.label}
+                </span>
               </Link>
             );
           })}
 
-          {/* AI Button - Prominent in Center */}
+          {/* AI Button - Center with Responsive Size */}
           <button
             onClick={toggleAI}
             className={cn(
-              "relative flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg transition-all min-w-[60px] group"
+              "flex flex-col items-center justify-center",
+              "relative -mt-6 md:-mt-8", // Adjusted for taller nav
+              "transition-all duration-300",
+              "hover:scale-105 active:scale-95"
             )}
           >
-            <div
-              className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center shadow-lg hover:scale-110 transition-all duration-300"
+            <div className={cn(
+              "rounded-full flex items-center justify-center",
+              "bg-gradient-to-br from-primary to-primary/80",
+              "shadow-lg hover:shadow-xl",
+              "transition-all duration-300",
+              "w-14 h-14 md:w-16 md:h-16 lg:w-18 lg:h-18" // Progressive sizing
+            )}
               style={{
                 boxShadow: "0 0 24px hsl(var(--primary) / 0.6), 0 6px 16px hsl(var(--primary) / 0.4)",
               }}
             >
-              <Sparkles className="w-7 h-7" />
+              <Sparkles className="w-7 h-7 md:w-8 md:h-8 lg:w-9 lg:h-9 text-primary-foreground" />
             </div>
-            <span className="text-[10px] font-medium text-primary mt-0.5">الذكاء</span>
+            <span className="text-xs md:text-sm mt-1 font-semibold text-primary">AI</span>
           </button>
 
           {/* More Button */}
           <button
             onClick={() => setMenuOpen(true)}
-            className="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg transition-all text-muted-foreground hover:text-foreground min-w-[60px]"
+            className={cn(
+              "flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-all min-w-[60px]",
+              "md:scale-110", // Slightly larger on tablets
+              "text-muted-foreground hover:text-foreground"
+            )}
           >
-            <Menu className="w-5 h-5" />
-            <span className="text-[10px] font-medium">المزيد</span>
+            <Menu className="w-5 h-5 md:w-6 md:h-6" />
+            <span className="text-[10px] md:text-sm font-medium">المزيد</span>
           </button>
         </div>
       </nav>

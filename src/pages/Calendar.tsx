@@ -167,10 +167,10 @@ export default function CalendarPage() {
 
         {/* Main Content */}
         <section className="flex-1 flex overflow-y-auto overscroll-contain">
-          {/* Desktop Sidebar - Always visible on large screens */}
+          {/* Desktop Sidebar - Responsive Width */}
           <div className={cn(
             "hidden lg:block border-l border-border/30 bg-background transition-all",
-            sidebarOpen ? "w-64" : "w-0"
+            sidebarOpen ? "w-64 xl:w-80" : "w-0" // Wider on XL screens
           )}>
             {sidebarOpen && (
               <CalendarSidebar
@@ -213,7 +213,11 @@ export default function CalendarPage() {
             resistance={2}
             className="flex-1 overflow-auto bg-background"
           >
-            <div className="p-3 sm:p-4 max-w-[1800px] mx-auto">
+            <div className={cn(
+              "p-3 sm:p-4 max-w-[1800px] mx-auto",
+              "px-4 md:px-6 lg:px-8", // Progressive padding
+              "py-6 md:py-8"
+            )}>
               {/* Google Calendar Style Date Header */}
               <div className="flex items-center justify-between mb-4 pb-3 border-b">
                 <div className="flex items-center gap-4">

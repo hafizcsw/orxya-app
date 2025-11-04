@@ -346,12 +346,17 @@ const Today = () => {
             </OryxaCard>
           ) : report ? (
               <>
-                {/* Financial Rings - Mobile Optimized */}
+                {/* Financial Rings - Responsive Grid */}
                 <div className="relative mb-6">
                   {/* Background Glow Effect */}
                   <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent blur-3xl -z-10" />
                   
-                  <div className="grid grid-cols-3 gap-2 mb-6">
+                  <div className={cn(
+                    "grid gap-2 mb-6",
+                    "grid-cols-3", // Mobile: 3 columns
+                    "md:grid-cols-4", // Tablet: 4 columns
+                    "lg:grid-cols-6" // Desktop: 6 columns
+                  )}>
                     <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '0ms' }}>
                       <div className="relative scale-75 md:scale-100">
                         {/* Glow Ring Effect */}
@@ -424,8 +429,13 @@ const Today = () => {
                   </div>
                 </div>
 
-                  {/* Daily Stats Rings - Mobile Optimized */}
-                  <div className="grid grid-cols-3 gap-2">
+                  {/* Daily Stats Rings - Responsive Grid */}
+                  <div className={cn(
+                    "grid gap-2",
+                    "grid-cols-3", // Mobile: 3 columns
+                    "md:grid-cols-4", // Tablet: 4 columns
+                    "lg:grid-cols-6" // Desktop: 6 columns
+                  )}>
                     <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '300ms' }}>
                       <div className="relative scale-75 md:scale-100">
                         <div className="absolute inset-0 bg-[hsl(var(--whoop-green))] opacity-10 blur-xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-500" />
@@ -479,8 +489,13 @@ const Today = () => {
                   </div>
                 </div>
 
-                {/* Activity Stats - Compact Cards */}
-                <div className="grid grid-cols-2 gap-3">
+                {/* Activity Stats - Responsive Cards */}
+                <div className={cn(
+                  "grid gap-3",
+                  "grid-cols-2", // Mobile: 2 columns
+                  "md:grid-cols-3", // Tablet: 3 columns
+                  "lg:grid-cols-4" // Desktop: 4 columns
+                )}>
                   {renderEditableCard('study_hours', <BookOpen className="w-5 h-5" />, 'دراسة', report.study_hours, 'bg-[hsl(var(--whoop-blue))]/10', 'h')}
                   {renderEditableCard('mma_hours', <Dumbbell className="w-5 h-5" />, 'رياضة', report.mma_hours, 'bg-[hsl(var(--whoop-green))]/10', 'h')}
                   {renderEditableCard('work_hours', <Building className="w-5 h-5" />, 'عمل', report.work_hours, 'bg-[hsl(var(--whoop-yellow))]/10', 'h')}

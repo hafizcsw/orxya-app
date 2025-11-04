@@ -2,12 +2,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ThemeProvider } from "next-themes";
 import { DateProvider } from "./contexts/DateContext";
 import { AIProvider } from "./contexts/AIContext";
 import { SettingsProvider } from "./contexts/SettingsContext";
+import { motion, AnimatePresence } from "framer-motion";
 import Navigation from "./components/Navigation";
 import { BottomNav } from "./components/BottomNav";
 import { AIDock } from "./components/oryxa/AIDock";
@@ -53,12 +54,21 @@ const queryClient = new QueryClient();
 
 function AppContent() {
   useAutopilotNotifications();
+  const location = useLocation();
   
   return (
     <>
       <Navigation />
       <div className="pb-20">
-        <Routes>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Routes location={location}>
         <Route path="/" element={<Index />} />
         <Route path="/today" element={<Protected><Today /></Protected>} />
         <Route path="/today-whoop" element={<Protected><TodayWHOOP /></Protected>} />
@@ -94,6 +104,8 @@ function AppContent() {
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="*" element={<NotFound />} />
         </Routes>
+          </motion.div>
+        </AnimatePresence>
       </div>
       <BottomNav />
       <AIDock />

@@ -15,8 +15,12 @@ export default function CalendarHeader({ mode, date, onPrev, onNext, onToday, on
   const title = date.toLocaleDateString(undefined, { year: "numeric", month: "long" });
   
   return (
-    <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
-      <div className="flex items-center gap-2">
+    <div className={cn(
+      "flex items-center justify-between gap-3",
+      "flex-wrap md:flex-nowrap", // No wrap on desktop
+      "mb-4 md:mb-6"
+    )}>
+      <div className="flex items-center gap-2 md:gap-3">
         <Button 
           variant="outline" 
           size="sm" 
@@ -47,7 +51,12 @@ export default function CalendarHeader({ mode, date, onPrev, onNext, onToday, on
           <ChevronLeft className="h-4 w-4" />
         </Button>
         
-        <h2 className="text-xl font-semibold mx-3">{title}</h2>
+        <h2 className={cn(
+          "text-xl md:text-2xl font-semibold mx-3",
+          "hidden md:block" // Only show on desktop
+        )}>
+          {title}
+        </h2>
       </div>
       
       <div className="flex items-center gap-2">
@@ -55,6 +64,7 @@ export default function CalendarHeader({ mode, date, onPrev, onNext, onToday, on
           variant={mode === "month" ? "default" : "outline"}
           size="sm"
           onClick={() => onMode("month")}
+          className="md:h-10 md:px-4"
         >
           شهر
         </Button>
@@ -62,6 +72,7 @@ export default function CalendarHeader({ mode, date, onPrev, onNext, onToday, on
           variant={mode === "week" ? "default" : "outline"}
           size="sm"
           onClick={() => onMode("week")}
+          className="md:h-10 md:px-4"
         >
           أسبوع
         </Button>

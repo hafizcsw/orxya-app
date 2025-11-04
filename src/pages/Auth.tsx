@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { useUser } from '@/lib/auth'
 import { useNavigate } from 'react-router-dom'
+import { cn } from '@/lib/utils'
+import { Calendar } from 'lucide-react'
 
 const siteUrl = import.meta.env.VITE_SITE_URL ?? window.location.origin
 const redirectTo = `${siteUrl}/auth/callback`
@@ -78,25 +80,32 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-success/5">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-success/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-      </div>
+      {/* Gradient Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
       
-      {/* Form Card */}
-      <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
-        <div className="card-glass max-w-md w-full p-8 space-y-6">
-          {/* Logo */}
-          <div className="text-center">
-            <div className="inline-block p-4 rounded-2xl bg-gradient-to-br from-primary to-primary/50 mb-4">
-              <span className="text-3xl">⚡</span>
+      {/* Animated Blobs */}
+      <div className="absolute top-20 right-10 w-72 h-72 bg-primary/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-float" />
+      <div className="absolute bottom-20 left-10 w-96 h-96 bg-accent/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-float" style={{ animationDelay: '2s' }} />
+      
+      {/* Content */}
+      <div className="relative z-10 flex min-h-screen items-center justify-center p-4">
+        <div className={cn(
+          "w-full max-w-md",
+          "bg-card/80 backdrop-blur-xl",
+          "border border-border/50",
+          "rounded-3xl shadow-2xl",
+          "p-8 md:p-10"
+        )}>
+          {/* Logo/Brand */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-4">
+              <Calendar className="w-8 h-8 text-primary" />
             </div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-              {mode === 'signin' ? 'مرحبًا بعودتك' : 'انضم إلينا'}
+              Oryxa
             </h1>
             <p className="text-sm text-muted-foreground mt-2">
-              {mode === 'signin' ? 'أدخل بياناتك للمتابعة' : 'أنشئ حسابك الآن'}
+              منظّم حياتك الذكي
             </p>
           </div>
 
