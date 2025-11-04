@@ -23,55 +23,47 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const jwt = req.headers.get("Authorization")?.replace("Bearer ", "");
-  if (!jwt) return new Response("no_auth", { status: 401, headers: corsHeaders });
+  // Public endpoint - no auth required for viewing availability
 
   const sb = createClient(
     Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!,
-    { global: { headers: { Authorization: `Bearer ${jwt}` } } }
+    Deno.env.get("SUPABASE_ANON_KEY")!
   );
 
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) return new Response("bad_user", { status: 401, headers: corsHeaders });
-
-  const { data: flags } = await sb.rpc("get_user_flags", { p_user_id: user.id });
-  if (!flags?.ff_calendar_appointments) {
-    return new Response("flag_off", { status: 403, headers: corsHeaders });
+  const { slug, date, duration, step = 30, limit = 20 }: Input = await req.json().catch(() => ({}));
+  if (!slug || !date || !duration) {
+    return new Response(
+      JSON.stringify({ error: "Missing required fields: slug, date, duration", code: "MISSING_FIELDS" }),
+      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 
-  let body: Input;
-  try {
-    body = await req.json();
-  } catch {
-    return new Response("bad_json", { status: 400, headers: corsHeaders });
-  }
-
-  const { data: page, error: pErr } = await sb
+  const { data: page, error: pageErr } = await sb
     .from("appointment_pages")
     .select("*")
-    .eq("user_id", user.id)
-    .eq("slug", body.slug)
+    .eq("slug", slug)
     .eq("active", true)
     .maybeSingle();
-
-  if (pErr || !page) {
-    return new Response("page_not_found", { status: 404, headers: corsHeaders });
+  if (pageErr || !page) {
+    return new Response(
+      JSON.stringify({ error: "Appointment page not found", code: "PAGE_NOT_FOUND" }),
+      { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 
-  const step = Math.max(5, body.step ?? 15);
-  const dur = Math.max(15, body.duration);
-  const limit = Math.min(48, body.limit ?? 24);
+  const stepMinutes = Math.max(5, step);
+  const dur = Math.max(15, duration);
+  const maxSlots = Math.min(48, limit);
 
-  const dayStart = Date.parse(`${body.date}T${page.window.start}:00`);
-  const dayEnd = Date.parse(`${body.date}T${page.window.end}:00`);
+  const dayStart = Date.parse(`${date}T${page.window.start}:00`);
+  const dayEnd = Date.parse(`${date}T${page.window.end}:00`);
 
   const { data: busyEvts } = await sb
     .from("events")
-    .select("starts_at,ends_at,busy_state,kind")
+    .select("starts_at,ends_at,busy_state,kind,owner_id")
     .gte("starts_at", new Date(dayStart - 24 * 3600e3).toISOString())
     .lte("ends_at", new Date(dayEnd + 24 * 3600e3).toISOString())
-    .eq("owner_id", user.id);
+    .eq("owner_id", page.user_id);
 
   const busy: Array<[number, number]> = [];
   (busyEvts ?? []).forEach((e) => {
@@ -86,15 +78,15 @@ serve(async (req) => {
   const { data: prayers } = await sb
     .from("prayer_times")
     .select("date_iso,fajr,dhuhr,asr,maghrib,isha")
-    .eq("owner_id", user.id)
-    .eq("date_iso", body.date)
+    .eq("owner_id", page.user_id)
+    .eq("date_iso", date)
     .maybeSingle();
 
   if (prayers) {
     ["fajr", "dhuhr", "asr", "maghrib", "isha"].forEach((k) => {
       const t = (prayers as any)[k];
       if (!t) return;
-      const ts = Date.parse(`${body.date}T${t}`);
+      const ts = Date.parse(`${date}T${t}`);
       busy.push([ts - 5 * 60e3, ts + 20 * 60e3]);
     });
   }
@@ -113,13 +105,13 @@ serve(async (req) => {
   });
 
   const slots: string[] = [];
-  for (let ts = dayStart; ts + dur * 60e3 <= dayEnd; ts += step * 60e3) {
+  for (let ts = dayStart; ts + dur * 60e3 <= dayEnd; ts += stepMinutes * 60e3) {
     const slotEnd = ts + dur * 60e3;
     const sWithBuf = ts - ((page.buffer?.before ?? 10) * 60e3);
     const eWithBuf = slotEnd + ((page.buffer?.after ?? 10) * 60e3);
     const collide = busy.some(([b1, b2]) => overlaps(sWithBuf, eWithBuf, b1, b2));
     if (!collide) slots.push(new Date(ts).toISOString());
-    if (slots.length >= limit) break;
+    if (slots.length >= maxSlots) break;
   }
 
   const capped = slots.slice(0, page.max_per_day ?? 8);

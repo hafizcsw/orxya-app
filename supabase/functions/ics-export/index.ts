@@ -16,7 +16,12 @@ serve(async (req) => {
   }
 
   const jwt = req.headers.get("Authorization")?.replace("Bearer ", "");
-  if (!jwt) return new Response("no_auth", { status: 401, headers: corsHeaders });
+  if (!jwt) {
+    return new Response(
+      JSON.stringify({ error: "No authorization header", code: "NO_AUTH" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
 
   const sb = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -25,16 +30,27 @@ serve(async (req) => {
   );
 
   const { data: { user } } = await sb.auth.getUser();
-  if (!user) return new Response("bad_user", { status: 401, headers: corsHeaders });
+  if (!user) {
+    return new Response(
+      JSON.stringify({ error: "Invalid user", code: "INVALID_USER" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
 
   const { data: flags } = await sb.rpc("get_user_flags", { p_user_id: user.id });
   if (!flags?.ff_calendar_ics) {
-    return new Response("flag_off", { status: 403, headers: corsHeaders });
+    return new Response(
+      JSON.stringify({ error: "ICS export feature not enabled", code: "FEATURE_DISABLED" }),
+      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 
   const { start, end } = await req.json().catch(() => ({}));
   if (!start || !end) {
-    return new Response("need_start_end", { status: 400, headers: corsHeaders });
+    return new Response(
+      JSON.stringify({ error: "Missing start and end dates", code: "MISSING_DATES" }),
+      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 
   const { data: evts, error } = await sb
@@ -44,7 +60,12 @@ serve(async (req) => {
     .lte("ends_at", end)
     .eq("owner_id", user.id);
 
-  if (error) return new Response(error.message, { status: 500, headers: corsHeaders });
+  if (error) {
+    return new Response(
+      JSON.stringify({ error: error.message, code: "QUERY_FAILED" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
 
   const lines: string[] = [];
   lines.push("BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Oryxa//Calendar//EN");

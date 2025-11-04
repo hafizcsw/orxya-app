@@ -24,7 +24,12 @@ serve(async (req) => {
   }
 
   const jwt = req.headers.get("Authorization")?.replace("Bearer ", "");
-  if (!jwt) return new Response("no_auth", { status: 401, headers: corsHeaders });
+  if (!jwt) {
+    return new Response(
+      JSON.stringify({ error: "No authorization header", code: "NO_AUTH" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
 
   const sb = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -33,18 +38,29 @@ serve(async (req) => {
   );
 
   const { data: { user } } = await sb.auth.getUser();
-  if (!user) return new Response("bad_user", { status: 401, headers: corsHeaders });
+  if (!user) {
+    return new Response(
+      JSON.stringify({ error: "Invalid user", code: "INVALID_USER" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
 
   const { data: flags } = await sb.rpc("get_user_flags", { p_user_id: user.id });
   if (!flags?.ff_calendar_appointments) {
-    return new Response("flag_off", { status: 403, headers: corsHeaders });
+    return new Response(
+      JSON.stringify({ error: "Appointment pages feature not enabled", code: "FEATURE_DISABLED" }),
+      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 
   let body: PublishInput;
   try {
     body = await req.json();
   } catch {
-    return new Response("bad_json", { status: 400, headers: corsHeaders });
+    return new Response(
+      JSON.stringify({ error: "Invalid JSON", code: "INVALID_JSON" }),
+      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 
   const payload = {
@@ -76,7 +92,12 @@ serve(async (req) => {
       .from("appointment_pages")
       .update(payload)
       .eq("id", existing.id);
-    if (error) return new Response(error.message, { status: 500, headers: corsHeaders });
+    if (error) {
+      return new Response(
+        JSON.stringify({ error: error.message, code: "UPDATE_FAILED" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     return new Response(
       JSON.stringify({ ok: true, id: existing.id, updated: true }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -87,7 +108,12 @@ serve(async (req) => {
       .insert(payload)
       .select("id")
       .single();
-    if (error) return new Response(error.message, { status: 500, headers: corsHeaders });
+    if (error) {
+      return new Response(
+        JSON.stringify({ error: error.message, code: "INSERT_FAILED" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     return new Response(
       JSON.stringify({ ok: true, id: data.id, created: true }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }

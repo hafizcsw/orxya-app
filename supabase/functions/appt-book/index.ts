@@ -11,7 +11,7 @@ type Input = {
   start: string;
   duration: number;
   guest_email: string;
-  guest_name?: string;
+  guest_name: string;
   note?: string;
 };
 
@@ -24,63 +24,55 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const jwt = req.headers.get("Authorization")?.replace("Bearer ", "");
-  if (!jwt) return new Response("no_auth", { status: 401, headers: corsHeaders });
+  // Public endpoint - no auth required for booking
 
   const sb = createClient(
     Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!,
-    { global: { headers: { Authorization: `Bearer ${jwt}` } } }
+    Deno.env.get("SUPABASE_ANON_KEY")!
   );
 
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) return new Response("bad_user", { status: 401, headers: corsHeaders });
-
-  const { data: flags } = await sb.rpc("get_user_flags", { p_user_id: user.id });
-  if (!flags?.ff_calendar_appointments) {
-    return new Response("flag_off", { status: 403, headers: corsHeaders });
+  const body: Input = await req.json().catch(() => ({} as Input));
+  if (!body.slug || !body.guest_name || !body.guest_email || !body.start || !body.duration) {
+    return new Response(
+      JSON.stringify({ error: "Missing required fields", code: "MISSING_FIELDS" }),
+      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 
-  let body: Input;
-  try {
-    body = await req.json();
-  } catch {
-    return new Response("bad_json", { status: 400, headers: corsHeaders });
-  }
-
-  const { data: page } = await sb
+  const { data: page, error: pageErr } = await sb
     .from("appointment_pages")
     .select("*")
-    .eq("user_id", user.id)
     .eq("slug", body.slug)
     .eq("active", true)
     .maybeSingle();
-
-  if (!page) {
-    return new Response("page_not_found", { status: 404, headers: corsHeaders });
+  if (pageErr || !page) {
+    return new Response(
+      JSON.stringify({ error: "Appointment page not found", code: "PAGE_NOT_FOUND" }),
+      { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 
-  const start = Date.parse(body.start);
-  const end = start + body.duration * 60e3;
+  const startTime = Date.parse(body.start);
+  const endTime = startTime + body.duration * 60e3;
 
   const { data: evts } = await sb
     .from("events")
     .select("starts_at,ends_at,busy_state")
-    .gte("starts_at", new Date(start - 2 * 3600e3).toISOString())
-    .lte("ends_at", new Date(end + 2 * 3600e3).toISOString())
-    .eq("owner_id", user.id);
+    .gte("starts_at", new Date(startTime - 2 * 3600e3).toISOString())
+    .lte("ends_at", new Date(endTime + 2 * 3600e3).toISOString())
+    .eq("owner_id", page.user_id);
 
   const { data: books } = await sb
     .from("appointment_bookings")
     .select("start_at,end_at")
     .eq("page_id", page.id)
-    .gte("start_at", new Date(start - 2 * 3600e3).toISOString())
-    .lte("end_at", new Date(end + 2 * 3600e3).toISOString());
+    .gte("start_at", new Date(startTime - 2 * 3600e3).toISOString())
+    .lte("end_at", new Date(endTime + 2 * 3600e3).toISOString());
 
   const bufBefore = (page.buffer?.before ?? 10) * 60e3;
   const bufAfter = (page.buffer?.after ?? 10) * 60e3;
-  const sWith = start - bufBefore;
-  const eWith = end + bufAfter;
+  const sWith = startTime - bufBefore;
+  const eWith = endTime + bufAfter;
 
   const bad =
     (evts ?? []).some(
@@ -92,37 +84,37 @@ serve(async (req) => {
       overlaps(sWith, eWith, Date.parse(b.start_at), Date.parse(b.end_at))
     );
 
-  if (bad) return new Response("slot_taken", { status: 409, headers: corsHeaders });
+  if (bad) {
+    return new Response(
+      JSON.stringify({ error: "Time slot unavailable", code: "TIME_CONFLICT" }),
+      { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
 
   const { data: evt, error: eErr } = await sb
     .from("events")
     .insert({
-      owner_id: user.id,
-      title: `Appointment with ${body.guest_name ?? body.guest_email}`,
-      starts_at: new Date(start).toISOString(),
-      ends_at: new Date(end).toISOString(),
+      owner_id: page.user_id,
+      title: `Appointment with ${body.guest_name}`,
+      starts_at: new Date(startTime).toISOString(),
+      ends_at: new Date(endTime).toISOString(),
       location: "Online",
       description: body.note ?? null,
-      is_draft: false,
-      kind: "appointment",
-      source: "local",
-      external_source: "appointment",
-      calendar_id: null,
-      busy_state: "busy",
-      visibility: "default",
     })
     .select("id")
     .single();
 
-  if (eErr) return new Response(eErr.message, { status: 500, headers: corsHeaders });
+  if (eErr) {
+    return new Response(
+      JSON.stringify({ error: eErr.message, code: "EVENT_CREATE_FAILED" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
 
   await sb.from("event_attendees").insert({
     event_id: evt.id,
     email: body.guest_email,
-    name: body.guest_name ?? null,
-    can_modify: false,
-    can_invite_others: false,
-    can_see_guests: true,
+    name: body.guest_name,
   });
 
   const { data: bk, error: bErr } = await sb
@@ -131,15 +123,20 @@ serve(async (req) => {
       page_id: page.id,
       event_id: evt.id,
       guest_email: body.guest_email,
-      guest_name: body.guest_name ?? null,
-      start_at: new Date(start).toISOString(),
-      end_at: new Date(end).toISOString(),
+      guest_name: body.guest_name,
+      start_at: new Date(startTime).toISOString(),
+      end_at: new Date(endTime).toISOString(),
       status: "confirmed",
     })
     .select("id")
     .single();
 
-  if (bErr) return new Response(bErr.message, { status: 500, headers: corsHeaders });
+  if (bErr) {
+    return new Response(
+      JSON.stringify({ error: bErr.message, code: "BOOKING_CREATE_FAILED" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
 
   return new Response(
     JSON.stringify({ ok: true, booking_id: bk.id, event_id: evt.id }),

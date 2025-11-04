@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { Copy, Edit, Plus, Loader2 } from "lucide-react";
 
@@ -120,125 +120,161 @@ export function AppointmentPagesManager() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-xl font-normal text-foreground">Appointment Pages</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Create shareable booking pages with custom availability
+          <p className="text-xs text-[#5f6368] dark:text-[#9aa0a6]">
+            Create shareable booking pages
           </p>
         </div>
-        <Button onClick={createNew} variant="outline" size="sm">
+        <Button 
+          onClick={createNew} 
+          size="sm"
+          className="h-9 bg-[#1a73e8] hover:bg-[#1557b0] text-white"
+        >
           <Plus className="w-4 h-4 mr-2" />
-          New Page
+          إنشاء صفحة
         </Button>
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center p-12">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          <Loader2 className="w-6 h-6 animate-spin text-[#5f6368] dark:text-[#9aa0a6]" />
         </div>
       ) : pages.length === 0 ? (
-        <div className="text-center py-12 border border-border rounded-lg">
-          <p className="text-sm text-muted-foreground mb-4">No appointment pages created yet</p>
-          <Button onClick={createNew} variant="default" size="sm">
+        <div className="text-center py-12 border border-[#dadce0] dark:border-[#5f6368] rounded">
+          <p className="text-sm text-[#5f6368] dark:text-[#9aa0a6] mb-4">لا توجد صفحات مواعيد</p>
+          <Button 
+            onClick={createNew} 
+            size="sm"
+            className="h-9 bg-[#1a73e8] hover:bg-[#1557b0] text-white"
+          >
             <Plus className="w-4 h-4 mr-2" />
-            Create Your First Page
+            إنشاء أول صفحة
           </Button>
         </div>
       ) : (
-        <div className="border border-border rounded-lg divide-y divide-border">
-          {pages.map((page) => (
-            <div key={page.id} className="p-4 hover:bg-muted/30 transition-colors">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h3 className="text-base font-medium text-foreground">{page.title}</h3>
-                  {page.description && (
-                    <p className="text-sm text-muted-foreground mt-1">{page.description}</p>
-                  )}
-                  <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                    <span>Durations: {page.durations?.join(", ")} min</span>
-                    <span>•</span>
-                    <span>
-                      {page.window?.start} - {page.window?.end}
-                    </span>
-                    <span>•</span>
-                    <span className={page.active ? "text-success" : "text-muted-foreground"}>
-                      {page.active ? "Active" : "Inactive"}
-                    </span>
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="border-b border-[#dadce0] dark:border-[#5f6368]">
+              <th className="text-right text-xs text-[#5f6368] dark:text-[#9aa0a6] font-medium py-3 px-4">
+                العنوان
+              </th>
+              <th className="text-right text-xs text-[#5f6368] dark:text-[#9aa0a6] font-medium py-3 px-4">
+                المدة
+              </th>
+              <th className="text-right text-xs text-[#5f6368] dark:text-[#9aa0a6] font-medium py-3 px-4">
+                الحالة
+              </th>
+              <th className="text-left text-xs text-[#5f6368] dark:text-[#9aa0a6] font-medium py-3 px-4">
+                الإجراءات
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {pages.map((page) => (
+              <tr 
+                key={page.id} 
+                className="border-b border-[#dadce0] dark:border-[#5f6368] hover:bg-[#f1f3f4] dark:hover:bg-[#3c4043] transition-colors"
+              >
+                <td className="py-3 px-4">
+                  <div className="text-sm text-[#3c4043] dark:text-[#e8eaed] font-medium">
+                    {page.title}
                   </div>
-                </div>
-                <div className="flex items-center gap-2 ml-4">
-                  <Button
-                    onClick={() => copyBookingLink(page.slug)}
-                    variant="ghost"
-                    size="sm"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    onClick={() => editPage(page)}
-                    variant="ghost"
-                    size="sm"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+                  {page.description && (
+                    <div className="text-xs text-[#5f6368] dark:text-[#9aa0a6] mt-0.5">
+                      {page.description}
+                    </div>
+                  )}
+                </td>
+                <td className="py-3 px-4">
+                  <div className="text-xs text-[#5f6368] dark:text-[#9aa0a6]">
+                    {page.durations?.join(", ")} دقيقة
+                  </div>
+                </td>
+                <td className="py-3 px-4">
+                  <span className={`text-xs ${page.active ? "text-[#1e8e3e]" : "text-[#5f6368]"}`}>
+                    {page.active ? "نشط" : "غير نشط"}
+                  </span>
+                </td>
+                <td className="py-3 px-4">
+                  <div className="flex items-center gap-1">
+                    <Button
+                      onClick={() => copyBookingLink(page.slug)}
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 hover:bg-[#f1f3f4] dark:hover:bg-[#3c4043]"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      onClick={() => editPage(page)}
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 hover:bg-[#f1f3f4] dark:hover:bg-[#3c4043]"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
 
-      <Dialog open={showEditor} onOpenChange={setShowEditor}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {editingPage.id ? "Edit" : "Create"} Appointment Page
-            </DialogTitle>
-          </DialogHeader>
+      <Sheet open={showEditor} onOpenChange={setShowEditor}>
+        <SheetContent side="right" className="w-[600px] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="text-[22px] font-normal text-[#3c4043] dark:text-[#e8eaed]">
+              {editingPage.id ? "تعديل" : "إنشاء"} صفحة مواعيد
+            </SheetTitle>
+          </SheetHeader>
 
-          <div className="space-y-4">
+          <div className="space-y-4 mt-6">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-sm font-normal">Slug</Label>
+                <Label className="text-sm text-[#3c4043] dark:text-[#e8eaed]">الاسم المختصر</Label>
                 <Input
                   value={editingPage.slug}
                   onChange={(e) =>
                     setEditingPage({ ...editingPage, slug: e.target.value })
                   }
                   placeholder="consultation"
+                  className="h-9 mt-1"
                 />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Will appear in link: /book/...
+                <p className="text-xs text-[#5f6368] dark:text-[#9aa0a6] mt-1">
+                  سيظهر في الرابط: /book/...
                 </p>
               </div>
               <div>
-                <Label className="text-sm font-normal">Title</Label>
+                <Label className="text-sm text-[#3c4043] dark:text-[#e8eaed]">العنوان</Label>
                 <Input
                   value={editingPage.title}
                   onChange={(e) =>
                     setEditingPage({ ...editingPage, title: e.target.value })
                   }
-                  placeholder="Consultation"
+                  placeholder="استشارة"
+                  className="h-9 mt-1"
                 />
               </div>
             </div>
 
             <div>
-              <Label className="text-sm font-normal">Description</Label>
+              <Label className="text-sm text-[#3c4043] dark:text-[#e8eaed]">الوصف</Label>
               <Textarea
                 value={editingPage.description || ""}
                 onChange={(e) =>
                   setEditingPage({ ...editingPage, description: e.target.value })
                 }
-                placeholder="Brief description"
+                placeholder="وصف مختصر"
                 rows={2}
+                className="mt-1"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-sm font-normal">Available durations (minutes, comma-separated)</Label>
+                <Label className="text-sm text-[#3c4043] dark:text-[#e8eaed]">المدة المتاحة (دقائق)</Label>
                 <Input
                   value={editingPage.durations?.join(",")}
                   onChange={(e) =>
@@ -248,10 +284,11 @@ export function AppointmentPagesManager() {
                     })
                   }
                   placeholder="30,45,60"
+                  className="h-9 mt-1"
                 />
               </div>
               <div>
-                <Label className="text-sm font-normal">Max per day</Label>
+                <Label className="text-sm text-[#3c4043] dark:text-[#e8eaed]">الحد الأقصى باليوم</Label>
                 <Input
                   type="number"
                   value={editingPage.max_per_day}
@@ -261,6 +298,7 @@ export function AppointmentPagesManager() {
                       max_per_day: parseInt(e.target.value),
                     })
                   }
+                  className="h-9 mt-1"
                 />
               </div>
             </div>
@@ -326,27 +364,38 @@ export function AppointmentPagesManager() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 pt-4 border-t border-[#dadce0] dark:border-[#5f6368]">
               <Switch
                 checked={editingPage.active}
                 onCheckedChange={(checked) =>
                   setEditingPage({ ...editingPage, active: checked })
                 }
+                className="h-5 w-9 data-[state=checked]:bg-[#1a73e8]"
               />
-              <Label className="text-sm font-normal">Active</Label>
+              <Label className="text-sm text-[#3c4043] dark:text-[#e8eaed]">نشط</Label>
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button variant="outline" onClick={() => setShowEditor(false)} size="sm">
-              Cancel
+          <div className="flex justify-end gap-2 pt-4 border-t border-[#dadce0] dark:border-[#5f6368] mt-6">
+            <Button 
+              variant="ghost" 
+              onClick={() => setShowEditor(false)} 
+              size="sm"
+              className="h-9 hover:bg-[#f1f3f4] dark:hover:bg-[#3c4043]"
+            >
+              إلغاء
             </Button>
-            <Button onClick={handleSave} disabled={loading} size="sm">
-              {loading ? "Saving..." : "Save"}
+            <Button 
+              onClick={handleSave} 
+              disabled={loading} 
+              size="sm"
+              className="h-9 bg-[#1a73e8] hover:bg-[#1557b0] text-white"
+            >
+              {loading ? "جارٍ الحفظ..." : "حفظ"}
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

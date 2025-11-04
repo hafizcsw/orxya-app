@@ -70,7 +70,12 @@ serve(async (req) => {
   }
 
   const jwt = req.headers.get("Authorization")?.replace("Bearer ", "");
-  if (!jwt) return new Response("no_auth", { status: 401, headers: corsHeaders });
+  if (!jwt) {
+    return new Response(
+      JSON.stringify({ error: "No authorization header", code: "NO_AUTH" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
 
   const sb = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -79,21 +84,35 @@ serve(async (req) => {
   );
 
   const { data: { user } } = await sb.auth.getUser();
-  if (!user) return new Response("bad_user", { status: 401, headers: corsHeaders });
+  if (!user) {
+    return new Response(
+      JSON.stringify({ error: "Invalid user", code: "INVALID_USER" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
 
   const { data: flags } = await sb.rpc("get_user_flags", { p_user_id: user.id });
   if (!flags?.ff_calendar_ics) {
-    return new Response("flag_off", { status: 403, headers: corsHeaders });
+    return new Response(
+      JSON.stringify({ error: "ICS import feature not enabled", code: "FEATURE_DISABLED" }),
+      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 
-  const body = await req.json().catch(() => null);
-  if (!body?.ics) {
-    return new Response("need_ics", { status: 400, headers: corsHeaders });
+  const { ics }: { ics?: string } = await req.json().catch(() => ({}));
+  if (!ics) {
+    return new Response(
+      JSON.stringify({ error: "Missing ICS data", code: "MISSING_ICS" }),
+      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 
-  const evts = parseICS(body.ics);
+  const evts = parseICS(ics);
   if (!evts.length) {
-    return new Response("no_events", { status: 400, headers: corsHeaders });
+    return new Response(
+      JSON.stringify({ error: "No events found in ICS", code: "NO_EVENTS" }),
+      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 
   const rows = evts.map((e) => ({
