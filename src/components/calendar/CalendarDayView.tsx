@@ -79,6 +79,9 @@ export default function CalendarDayView({
           body: { 
             date: anchor.toISOString().split('T')[0],
             currentTime: new Date().toISOString()
+          },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`
           }
         });
         
