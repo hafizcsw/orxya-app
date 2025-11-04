@@ -119,12 +119,8 @@ const Today = () => {
     if (!user) return
     setPlansLoading(true)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
       const { data, error } = await supabase.functions.invoke('plans-manage', {
-        body: { action: 'list' },
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`
-        }
+        body: { action: 'list' }
       })
       if (error) throw error
       setPlans(data?.plans || [])
@@ -138,12 +134,8 @@ const Today = () => {
   async function addPlan(planData: BusinessPlanFormData) {
     if (!user) return
     try {
-      const { data: { session } } = await supabase.auth.getSession()
       const { error } = await supabase.functions.invoke('plans-manage', {
-        body: { action: 'create', ...planData },
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`
-        }
+        body: { action: 'create', ...planData }
       })
       if (error) throw error
       await fetchPlans()
@@ -156,12 +148,8 @@ const Today = () => {
   async function updatePlan(id: string, planData: BusinessPlanFormData) {
     if (!user) return
     try {
-      const { data: { session } } = await supabase.auth.getSession()
       const { error } = await supabase.functions.invoke('plans-manage', {
-        body: { action: 'update', id, ...planData },
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`
-        }
+        body: { action: 'update', id, ...planData }
       })
       if (error) throw error
       await fetchPlans()
@@ -174,12 +162,8 @@ const Today = () => {
   async function deletePlan(id: string) {
     if (!user) return
     try {
-      const { data: { session } } = await supabase.auth.getSession()
       const { error } = await supabase.functions.invoke('plans-manage', {
-        body: { action: 'delete', id },
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`
-        }
+        body: { action: 'delete', id }
       })
       if (error) throw error
       await fetchPlans()
