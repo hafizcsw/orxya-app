@@ -25,6 +25,8 @@ export default function CalendarDayView({
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [dailySummary, setDailySummary] = useState<string>("");
+  const [loadingSummary, setLoadingSummary] = useState(false);
   const [conflictData, setConflictData] = useState<{
     hasConflict: boolean;
     conflictId: string | null;
@@ -53,6 +55,30 @@ export default function CalendarDayView({
   const allEvents = useMemo(() => {
     return Object.values(events).flat();
   }, [events]);
+
+  // Fetch daily summary
+  useEffect(() => {
+    const fetchSummary = async () => {
+      if (allEvents.length === 0) return;
+      
+      setLoadingSummary(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('daily-summary', {
+          body: { date: anchor.toISOString().split('T')[0] }
+        });
+        
+        if (!error && data?.summary) {
+          setDailySummary(data.summary);
+        }
+      } catch (err) {
+        console.error('Failed to fetch summary:', err);
+      } finally {
+        setLoadingSummary(false);
+      }
+    };
+    
+    fetchSummary();
+  }, [anchor, allEvents.length]);
 
   useEffect(() => {
     reloadThrottled();
@@ -126,7 +152,16 @@ export default function CalendarDayView({
 
       {/* Day view container */}
       <div className="flex flex-1 overflow-hidden relative">
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex flex-1 flex-col overflow-hidden">
+          {/* AI Summary Header */}
+          {dailySummary && (
+            <div className="px-4 py-3 bg-gradient-to-r from-primary/10 to-primary/5 border-b border-primary/20">
+              <p className="text-sm text-foreground leading-relaxed">
+                {loadingSummary ? "..." : dailySummary}
+              </p>
+            </div>
+          )}
+
           {/* Day header */}
           <div className="flex border-b border-border/10 bg-background h-12 sm:h-12 sticky top-0 z-20">
             <div className="w-14 sm:w-16 flex-shrink-0" />
