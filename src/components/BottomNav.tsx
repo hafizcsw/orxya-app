@@ -164,7 +164,7 @@ export function BottomNav() {
             onClick={toggleAI}
             className={cn(
               "flex flex-col items-center justify-center",
-              "relative -mt-6 md:-mt-8", // Adjusted for taller nav
+              "relative -mt-4 md:-mt-6",
               "transition-all duration-300",
               "hover:scale-105 active:scale-95"
             )}
@@ -174,13 +174,13 @@ export function BottomNav() {
               "bg-gradient-to-br from-primary to-primary/80",
               "shadow-lg hover:shadow-xl",
               "transition-all duration-300",
-              "w-14 h-14 md:w-16 md:h-16 lg:w-18 lg:h-18" // Progressive sizing
+              "w-12 h-12 md:w-14 md:h-14"
             )}
               style={{
                 boxShadow: "0 0 24px hsl(var(--primary) / 0.6), 0 6px 16px hsl(var(--primary) / 0.4)",
               }}
             >
-              <Sparkles className="w-6 h-6 md:w-7 md:h-7 text-primary-foreground" />
+              <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-primary-foreground" />
             </div>
             <span className="text-xs md:text-sm mt-1 font-semibold text-primary">AI</span>
           </button>
