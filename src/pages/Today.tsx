@@ -13,7 +13,7 @@ import { OryxaButton } from '@/components/oryxa/Button'
 import { OryxaCard } from '@/components/oryxa/Card'
 import { StatRing } from '@/components/oryxa/StatRing'
 import { cn } from '@/lib/utils'
-import { Bell, Calendar, DollarSign, TrendingUp, TrendingDown, Clock, Dumbbell, BookOpen, Footprints, Award, Building, Edit2, BarChart3, User } from 'lucide-react'
+import { Bell, Calendar, DollarSign, TrendingUp, TrendingDown, Clock, Dumbbell, BookOpen, Footprints, Award, Building, Edit2, BarChart3, User, Moon, Heart } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { z } from 'zod'
@@ -564,6 +564,8 @@ const Today = () => {
                     {renderEditableCard('mma_hours', <Dumbbell className="w-5 h-5" />, 'رياضة', report.mma_hours, 'bg-[hsl(var(--whoop-green))]/10', 'h')}
                     {renderEditableCard('work_hours', <Building className="w-5 h-5" />, 'عمل', report.work_hours, 'bg-[hsl(var(--whoop-yellow))]/10', 'h')}
                     {renderEditableCard('walk_min', <Footprints className="w-5 h-5" />, 'مشي', report.walk_min, 'bg-[hsl(var(--whoop-red))]/10', 'min')}
+                    {renderEditableCard('sleep_hours', <Moon className="w-5 h-5" />, 'نوم', report.sleep_hours, 'bg-purple-500/10', 'h')}
+                    {renderEditableCard('recovery_score', <Heart className="w-5 h-5" />, 'استشفاء', report.recovery_score, 'bg-pink-500/10', '%', 1)}
                   </div>
                 </section>
 
@@ -626,6 +628,8 @@ const Today = () => {
                       {editingField === 'study_hours' && 'تعديل ساعات الدراسة'}
                       {editingField === 'mma_hours' && 'تعديل ساعات MMA'}
                       {editingField === 'walk_min' && 'تعديل دقائق المشي'}
+                      {editingField === 'sleep_hours' && 'تعديل ساعات النوم'}
+                      {editingField === 'recovery_score' && 'تعديل نسبة الاستشفاء'}
                     </h3>
                     <div className="relative mb-6">
                       <input
