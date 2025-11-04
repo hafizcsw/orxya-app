@@ -82,7 +82,7 @@ export default function PrayerBand({
     });
 
   return (
-    <div className="absolute inset-y-0 left-0 right-0 pointer-events-none">
+    <div className="absolute inset-y-0 left-0 right-0 pointer-events-none z-0">
       {nodes}
     </div>
   );
@@ -111,14 +111,14 @@ function PrayerTimeMarker({
 
   return (
     <div className="pointer-events-none">
-      {/* Prayer time window background - شفاف أكثر */}
+      {/* Prayer time window background - شفاف جداً بدون blur قوي */}
       <div
-        className={`absolute left-0 right-0 backdrop-blur-[2px] transition-all duration-500 ${
+        className={`absolute left-0 right-0 backdrop-blur-[0.5px] transition-all duration-500 mix-blend-multiply ${
           isNext 
-            ? 'bg-gradient-to-r from-emerald-500/8 via-emerald-400/10 to-emerald-500/8 border-y border-emerald-500/20'
+            ? 'bg-gradient-to-r from-emerald-500/5 via-emerald-400/6 to-emerald-500/5 border-y border-emerald-500/15'
             : isPast
-            ? 'bg-gradient-to-r from-muted/3 via-muted/5 to-muted/3 border-y border-border/10'
-            : 'bg-gradient-to-r from-amber-500/5 via-amber-400/8 to-amber-500/5 border-y border-amber-500/15'
+            ? 'bg-gradient-to-r from-muted/2 via-muted/3 to-muted/2 border-y border-border/8'
+            : 'bg-gradient-to-r from-amber-500/4 via-amber-400/5 to-amber-500/4 border-y border-amber-500/10'
         }`}
         style={{ top: bandTop, height: bandH }}
       />
@@ -137,13 +137,13 @@ function PrayerTimeMarker({
         <div className={`absolute -top-4 left-2 flex items-center gap-2 ${
           isNext ? 'animate-pulse' : ''
         }`}>
-          {/* بطاقة الصلاة - شفافة وخفيفة */}
-          <span className={`text-xs sm:text-sm px-3 py-1.5 rounded-xl font-bold backdrop-blur-sm border transition-all duration-500 flex items-center gap-2 ${
+          {/* بطاقة الصلاة - بدون شادو، فقط حدود */}
+          <span className={`text-xs sm:text-sm px-3 py-1.5 rounded-xl font-bold backdrop-blur-sm border-2 transition-all duration-500 flex items-center gap-2 ${
             isNext
-              ? 'bg-emerald-500/85 text-white border-emerald-300/30 shadow-sm'
+              ? 'bg-emerald-500/90 text-white border-emerald-300/40'
               : isPast
-              ? 'bg-muted/70 text-muted-foreground border-border/20 shadow-sm'
-              : 'bg-amber-500/80 text-white border-amber-300/20 shadow-sm'
+              ? 'bg-muted/75 text-muted-foreground border-border/30'
+              : 'bg-amber-500/85 text-white border-amber-300/30'
           }`}>
             <span className="text-base">🕌</span>
             <span>{label}</span>
@@ -152,7 +152,7 @@ function PrayerTimeMarker({
 
           {/* عداد تنازلي للصلاة القادمة فقط */}
           {isNext && !countdown.isNegative && countdown.total > 0 && (
-            <span className="text-xs px-2.5 py-1 rounded-lg bg-white/85 text-emerald-600 font-bold shadow-sm border border-emerald-200/50 backdrop-blur-sm animate-fade-in">
+            <span className="text-xs px-2.5 py-1 rounded-lg bg-white/90 text-emerald-600 font-bold border-2 border-emerald-200/60 backdrop-blur-sm animate-fade-in">
               {countdown.formattedShort}
             </span>
           )}
