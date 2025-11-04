@@ -105,7 +105,7 @@ export default function CalendarDayView({
   return (
     <div className="w-full h-[calc(100vh-200px)] sm:h-[calc(100vh-160px)] flex flex-col bg-background rounded-lg overflow-hidden border border-border/20">
       {/* Header */}
-      <div className="hidden sm:flex items-center justify-between px-4 sm:px-6 py-2 border-b border-border/20">
+      <div className="hidden sm:flex items-center justify-between px-4 sm:px-6 py-3 border-b border-border/20">
         <h2 className="text-base sm:text-lg font-normal text-foreground">
           {anchor.toLocaleDateString("ar", {
             weekday: "long",
@@ -118,7 +118,7 @@ export default function CalendarDayView({
         <button
           onClick={reload}
           disabled={loading}
-          className="px-4 py-1.5 text-sm font-medium rounded-md hover:bg-accent/50 transition-colors disabled:opacity-50"
+          className="px-4 py-2 text-sm font-medium rounded-md hover:bg-accent/50 transition-colors disabled:opacity-50"
         >
           {loading ? "..." : "تحديث"}
         </button>
@@ -128,16 +128,16 @@ export default function CalendarDayView({
       <div className="flex flex-1 overflow-hidden relative">
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Day header */}
-          <div className="flex border-b border-border/10 bg-background h-10 sm:h-12 sticky top-0 z-20">
-            <div className="w-12 sm:w-16 flex-shrink-0" />
-            <div className="flex-1 flex flex-col items-center justify-center gap-0.5 px-1 text-center">
-              <div className="text-[9px] sm:text-[11px] text-muted-foreground font-normal">
+          <div className="flex border-b border-border/10 bg-background h-12 sm:h-12 sticky top-0 z-20">
+            <div className="w-14 sm:w-16 flex-shrink-0" />
+            <div className="flex-1 flex flex-col items-center justify-center gap-1 px-1 text-center">
+              <div className="text-xs sm:text-[11px] text-muted-foreground font-normal">
                 {anchor.toLocaleDateString("ar", { weekday: "short" })}
               </div>
               <div
                 className={cn(
                   "flex items-center justify-center rounded-full transition-all font-medium",
-                  "w-6 h-6 sm:w-7 sm:h-7 text-xs sm:text-sm",
+                  "w-7 h-7 sm:w-7 sm:h-7 text-sm sm:text-sm",
                   isToday
                     ? "bg-[#1a73e8] text-white shadow-md"
                     : "text-foreground"
@@ -155,7 +155,7 @@ export default function CalendarDayView({
           <div className="flex-1 overflow-auto relative" ref={gridRef}>
             <div className="flex relative">
               {/* Time gutter */}
-              <div className="w-12 sm:w-16 flex-shrink-0 bg-background">
+              <div className="w-14 sm:w-16 flex-shrink-0 bg-background">
                 <div className="relative">
                   {Array.from({ length: 24 }, (_, h) => {
                     const period = h < 12 ? 'AM' : 'PM';
@@ -166,8 +166,13 @@ export default function CalendarDayView({
                         className="relative text-right pr-2 sm:pr-3"
                         style={{ height: pxPerHour }}
                       >
-                        <span className="absolute -top-2.5 right-2 text-[10px] sm:text-[11px] text-muted-foreground font-normal">
-                          {h === 0 ? "" : `${displayHour.toString().padStart(2, "0")}:00 ${period}`}
+                        <span className="absolute -top-2.5 right-1 sm:right-2 text-[10px] sm:text-[11px] text-muted-foreground font-normal leading-tight">
+                          {h === 0 ? "" : (
+                            <>
+                              <span className="block sm:inline">{displayHour.toString().padStart(2, "0")}:00</span>
+                              <span className="block sm:inline sm:ml-1 text-[8px] sm:text-[10px]">{period}</span>
+                            </>
+                          )}
                         </span>
                         <div className="absolute top-0 left-0 right-0 border-t border-border/10" />
                       </div>

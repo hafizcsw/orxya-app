@@ -111,23 +111,23 @@ export default function CalendarPage() {
     <Protected>
       <main className="min-h-dvh flex flex-col bg-background">
         {/* Google Calendar Header */}
-        <header className="sticky top-0 z-20 border-b border-border/30 bg-background px-2 sm:px-4 py-2 flex items-center justify-between shadow-sm">
-          <div className="flex items-center gap-2 sm:gap-4">
+        <header className="sticky top-0 z-20 border-b border-border/30 bg-background px-3 sm:px-4 py-3 sm:py-2 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-3 sm:gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="p-2 hover:bg-accent/50 rounded-lg transition-colors"
               aria-label="Toggle sidebar"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-5 h-5 sm:w-5 sm:h-5" />
             </button>
             
             <div className="flex items-center gap-2">
-              <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 text-[#1a73e8]" />
-              <h1 className="text-base sm:text-xl font-medium hidden sm:block">التقويم</h1>
+              <CalendarIcon className="w-6 h-6 sm:w-6 sm:h-6 text-[#1a73e8]" />
+              <h1 className="text-lg sm:text-xl font-medium">التقويم</h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-1 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <div className="hidden md:flex items-center gap-2 bg-muted/30 px-3 py-1.5 rounded-full cursor-pointer hover:bg-muted/50 transition-colors border border-border/30">
               <Search className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">بحث...</span>
@@ -137,10 +137,10 @@ export default function CalendarPage() {
               onClick={() => setQuickAddOpen(true)}
               size="sm"
               variant="outline"
-              className="bg-white dark:bg-background hover:bg-accent text-foreground gap-1 sm:gap-2 shadow-sm border border-border/50 font-medium px-3 sm:px-4"
+              className="bg-white dark:bg-background hover:bg-accent text-foreground gap-2 shadow-sm border border-border/50 font-medium px-3 sm:px-4 h-9 sm:h-9 text-sm"
             >
               <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">إنشاء</span>
+              <span>إنشاء</span>
             </Button>
 
             <button 
@@ -186,10 +186,10 @@ export default function CalendarPage() {
 
           {/* Calendar Content */}
           <div className="flex-1 overflow-auto bg-background">
-            <div className="p-2 sm:p-4 max-w-[1800px] mx-auto">
+            <div className="p-3 sm:p-4 max-w-[1800px] mx-auto">
               {/* View Controls */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-2 sm:gap-4">
-                <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3 sm:gap-4">
+                <div className="flex items-center gap-3 flex-wrap w-full sm:w-auto">
                   <Button
                     onClick={() => {
                       const today = new Date();
@@ -199,7 +199,7 @@ export default function CalendarPage() {
                     }}
                     variant="outline"
                     size="sm"
-                    className="h-8 sm:h-9"
+                    className="h-9 text-sm font-medium"
                   >
                     اليوم
                   </Button>
@@ -208,14 +208,14 @@ export default function CalendarPage() {
                     onClick={() => setShowPrayerTimes(!showPrayerTimes)}
                     variant={showPrayerTimes ? "default" : "outline"}
                     size="sm"
-                    className="h-8 sm:h-9 gap-2"
+                    className="h-9 gap-2 text-sm font-medium"
                     title={showPrayerTimes ? "إخفاء أوقات الصلاة" : "إظهار أوقات الصلاة"}
                   >
                     <Moon className="w-4 h-4" />
-                    <span className="hidden sm:inline">الصلاة</span>
+                    <span className="sm:inline">الصلاة</span>
                   </Button>
                    
-                  <h2 className="text-lg sm:text-xl font-medium">
+                  <h2 className="text-base sm:text-xl font-medium">
                     {currentDate.toLocaleDateString('ar', { month: 'long', year: 'numeric' })}
                   </h2>
                 </div>
@@ -224,7 +224,7 @@ export default function CalendarPage() {
                   <button
                     onClick={() => setMode("day")}
                     className={cn(
-                      "px-2 sm:px-3 py-1.5 rounded-md transition-all text-xs font-medium",
+                      "px-3 sm:px-3 py-2 rounded-md transition-all text-sm font-medium",
                       mode === "day" 
                         ? "bg-background shadow-sm" 
                         : "hover:bg-background/50"
@@ -235,7 +235,7 @@ export default function CalendarPage() {
                   <button
                     onClick={() => setMode("week")}
                     className={cn(
-                      "px-2 sm:px-3 py-1.5 rounded-md transition-all text-xs font-medium",
+                      "px-3 sm:px-3 py-2 rounded-md transition-all text-sm font-medium",
                       mode === "week" 
                         ? "bg-background shadow-sm" 
                         : "hover:bg-background/50"
@@ -249,7 +249,7 @@ export default function CalendarPage() {
                       loadMonthData();
                     }}
                     className={cn(
-                      "px-2 sm:px-3 py-1.5 rounded-md transition-all text-xs font-medium",
+                      "px-3 sm:px-3 py-2 rounded-md transition-all text-sm font-medium",
                       mode === "month" 
                         ? "bg-background shadow-sm" 
                         : "hover:bg-background/50"
