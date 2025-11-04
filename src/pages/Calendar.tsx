@@ -85,6 +85,7 @@ export default function CalendarPage() {
         .from("events")
         .select("*")
         .eq("owner_id", user.id)
+        .is("deleted_at", null)
         .gte("starts_at", from.toISOString())
         .lte("ends_at", to.toISOString());
 

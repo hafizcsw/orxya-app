@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { AlertCircle } from "lucide-react";
+import { GOOGLE_CALENDAR_COLORS, getColorForEvent } from "@/lib/calendar-colors";
 
 export default function EventBubble({
   p,
@@ -73,12 +74,16 @@ export default function EventBubble({
     }
   };
 
+  const colorKey = getColorForEvent(p.event.source, p.event.color);
+  const colorClasses = GOOGLE_CALENDAR_COLORS[colorKey];
+
   return (
     <div
       ref={ref}
       className={cn(
         "absolute rounded-lg shadow-lg transition-all cursor-move overflow-hidden group",
-        "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground",
+        colorClasses.bg,
+        colorClasses.text,
         isDragging && "shadow-2xl scale-105 z-50",
         "hover:shadow-xl hover:z-40"
       )}

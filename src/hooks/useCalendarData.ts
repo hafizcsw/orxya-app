@@ -24,6 +24,7 @@ export function useCalendarData(range: Range) {
         .from("events")
         .select("*")
         .eq("owner_id", user.id)
+        .is("deleted_at", null)
         .gte("starts_at", range.from + "T00:00:00Z")
         .lte("ends_at", range.to + "T23:59:59Z")
         .order("starts_at", { ascending: true });
