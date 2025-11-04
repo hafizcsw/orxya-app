@@ -1,13 +1,52 @@
-import { Home, Calendar, BarChart3, Menu, X, Bell, Settings, Zap, Brain, Bot, Activity, MessageSquare, Sparkles } from "lucide-react";
+import { Home, Calendar, BarChart3, Menu, X, Bell, Settings, Zap, Brain, Bot, Activity, MessageSquare, Sparkles, Sun, Moon } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAI } from "@/contexts/AIContext";
 
 export function BottomNav() {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const { toggleAI } = useAI();
+  
+  const [isDark, setIsDark] = useState(() => {
+    const stored = localStorage.getItem('theme');
+    if (stored) return stored === 'dark';
+    return true;
+  });
+
+  useEffect(() => {
+    applyTheme(isDark);
+  }, []);
+
+  const applyTheme = (dark: boolean) => {
+    const root = document.documentElement;
+    const body = document.body;
+    
+    root.classList.remove('dark', 'light');
+    root.removeAttribute('data-theme');
+    
+    if (dark) {
+      root.classList.add('dark');
+      root.setAttribute('data-theme', 'dark');
+      body.style.setProperty('background-color', '#000000', 'important');
+      body.style.setProperty('color', '#FFFFFF', 'important');
+    } else {
+      root.classList.add('light');
+      root.setAttribute('data-theme', 'light');
+      body.style.setProperty('background-color', '#FFFFFF', 'important');
+      body.style.setProperty('color', '#000000', 'important');
+    }
+    
+    void root.offsetHeight;
+  };
+
+  const toggleTheme = () => {
+    const newTheme = !isDark;
+    setIsDark(newTheme);
+    localStorage.setItem('theme', newTheme ? 'dark' : 'light');
+    applyTheme(newTheme);
+  };
 
   const navItems = [
     { icon: Home, label: "اليوم", path: "/" },
@@ -47,6 +86,15 @@ export function BottomNav() {
 
             {/* Menu Items */}
             <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-background/95">
+              {/* Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors w-full text-right text-muted-foreground hover:bg-accent"
+              >
+                {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                <span>{isDark ? 'الوضع النهاري' : 'الوضع الليلي'}</span>
+              </button>
+              
               {menuLinks.map((link) => {
                 const Icon = link.icon;
                 return (
