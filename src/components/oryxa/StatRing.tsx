@@ -9,6 +9,7 @@ interface StatRingProps {
   subtitle?: string;
   className?: string;
   customDisplay?: string; // نص مخصص بدلاً من النسبة المئوية
+  scale?: number; // Scale factor for responsive sizing
 }
 
 export function StatRing({
@@ -19,6 +20,7 @@ export function StatRing({
   subtitle,
   className,
   customDisplay,
+  scale,
 }: StatRingProps) {
   const sizes = {
     sm: { width: 100, strokeWidth: 6, fontSize: '1.25rem' },
@@ -32,7 +34,10 @@ export function StatRing({
   const offset = circumference - (Math.min(value, 100) / 100) * circumference;
 
   return (
-    <div className={cn('flex flex-col items-center gap-2', className)}>
+    <div 
+      className={cn('flex flex-col items-center gap-2', className)}
+      style={{ transform: scale ? `scale(${scale})` : undefined }}
+    >
       <div className="relative" style={{ width, height: width }}>
         <svg width={width} height={width} className="transform -rotate-90">
           {/* Background circle */}

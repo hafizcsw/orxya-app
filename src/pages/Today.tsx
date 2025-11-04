@@ -18,6 +18,7 @@ import { useNavigate } from 'react-router-dom'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { z } from 'zod'
 import { useSelectedDate } from '@/contexts/DateContext'
+import { useDeviceType } from '@/hooks/useDeviceType'
 
 // Validation schemas
 const dailyLogSchema = z.object({
@@ -47,6 +48,7 @@ const Today = () => {
   const { user } = useUser()
   const navigate = useNavigate()
   const { selectedDate } = useSelectedDate()
+  const device = useDeviceType()
   const [loading, setLoading] = useState(false)
   const [report, setReport] = useState<any | null>(null)
   const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('daily')
@@ -56,6 +58,30 @@ const Today = () => {
   const [editingBalance, setEditingBalance] = useState(false)
   const [balanceValue, setBalanceValue] = useState('')
   const [isScrolled, setIsScrolled] = useState(false)
+
+  // Responsive sizing helpers
+  const getFinancialRingSize = () => {
+    if (device === 'mobile') return 'md'
+    if (device === 'tablet') return 'md'
+    return 'lg'
+  }
+
+  const getDailyRingSize = () => {
+    if (device === 'mobile') return 'sm'
+    return 'md'
+  }
+
+  const getFinancialScale = () => {
+    if (device === 'mobile') return 0.90
+    if (device === 'tablet') return 1.0
+    return 1.10
+  }
+
+  const getDailyScale = () => {
+    if (device === 'mobile') return 0.85
+    if (device === 'tablet') return 1.0
+    return 1.10
+  }
 
   async function fetchReport() {
     if (!user) return
@@ -336,7 +362,12 @@ const Today = () => {
           </div>
         </div>
 
-        <div className="px-4 py-6 max-w-4xl mx-auto space-y-6">
+        <div className={cn(
+          "px-4 py-6 space-y-8",
+          device === 'mobile' && "max-w-full",
+          device === 'tablet' && "max-w-3xl mx-auto",
+          device === 'desktop' && "max-w-5xl mx-auto"
+        )}>
           <SessionBanner />
 
           {loading ? (
@@ -346,161 +377,195 @@ const Today = () => {
             </OryxaCard>
           ) : report ? (
               <>
-                {/* Financial Rings - Responsive Grid */}
-                <div className="relative mb-6">
-                  {/* Background Glow Effect */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent blur-3xl -z-10" />
+                {/* Section 1: Financial Overview - الدوائر المالية الكبيرة */}
+                <section className="mb-8">
+                  <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
+                    النظرة المالية
+                  </h2>
+                  
+                  <div className="relative">
+                    {/* Background Glow Effect */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent blur-3xl -z-10" />
+                    
+                    <div className={cn(
+                      "grid gap-4",
+                      device === 'mobile' && "grid-cols-3 gap-3",
+                      device === 'tablet' && "grid-cols-3 gap-6 max-w-2xl mx-auto",
+                      device === 'desktop' && "grid-cols-3 gap-8 max-w-4xl mx-auto"
+                    )}>
+                      {/* Ring 1: Balance */}
+                      <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '0ms' }}>
+                        <div className="relative">
+                          {/* Glow Ring Effect */}
+                          <div className="absolute inset-0 bg-[hsl(var(--whoop-blue))] opacity-20 blur-2xl rounded-full scale-150 group-hover:scale-[2] transition-transform duration-700" />
+                          
+                          <div 
+                            className="relative cursor-pointer transform transition-all duration-500 hover:scale-110"
+                            onClick={() => {
+                              setEditingBalance(true);
+                              setBalanceValue(report.current_balance?.toString() || '0');
+                            }}
+                          >
+                            <StatRing
+                              value={Math.min(100, Math.max(0, ((report.current_balance || 0) / 10000) * 100))}
+                              label="الرصيد"
+                              subtitle="BALANCE"
+                              color="hsl(var(--whoop-blue))"
+                              size={getFinancialRingSize()}
+                              scale={getFinancialScale()}
+                              customDisplay={`$${(report.current_balance || 0).toFixed(0)}`}
+                            />
+                          </div>
+                        
+                          {/* Edit Button Overlay */}
+                          <button
+                            onClick={() => {
+                              setEditingBalance(true);
+                              setBalanceValue(report.current_balance?.toString() || '0');
+                            }}
+                            className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-[hsl(var(--whoop-blue))] hover:text-white shadow-lg"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {/* Ring 2: Total Income */}
+                      <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '100ms' }}>
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-[hsl(var(--whoop-green))] opacity-20 blur-2xl rounded-full scale-150 group-hover:scale-[2] transition-transform duration-700" />
+                          <div className="relative transform transition-all duration-500 hover:scale-110">
+                            <StatRing
+                              value={Math.min(100, Math.max(0, ((report.total_income || 0) / 5000) * 100))}
+                              label="الدخل الكلي"
+                              subtitle="INCOME"
+                              color="hsl(var(--whoop-green))"
+                              size={getFinancialRingSize()}
+                              scale={getFinancialScale()}
+                              customDisplay={`$${report.total_income || 0}`}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Ring 3: Total Expenses */}
+                      <div 
+                        className="flex flex-col items-center group animate-fade-in cursor-pointer" 
+                        style={{ animationDelay: '200ms' }}
+                        onClick={() => navigate('/expenses')}
+                      >
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-[hsl(var(--whoop-red))] opacity-20 blur-2xl rounded-full scale-150 group-hover:scale-[2] transition-transform duration-700" />
+                          <div className="relative transform transition-all duration-500 hover:scale-110">
+                            <StatRing
+                              value={Math.min(100, Math.max(0, ((report.total_spend || 0) / 5000) * 100))}
+                              label="المصروفات الكلية"
+                              subtitle="EXPENSES"
+                              color="hsl(var(--whoop-red))"
+                              size={getFinancialRingSize()}
+                              scale={getFinancialScale()}
+                              customDisplay={`$${report.total_spend || 0}`}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Section 2: Today's Stats - دوائر اليوم */}
+                <section className="mb-8">
+                  <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
+                    إحصائيات اليوم
+                  </h2>
+                  
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-t from-secondary/10 via-transparent to-transparent blur-2xl -z-10" />
+                    
+                    <div className={cn(
+                      "grid gap-3",
+                      device === 'mobile' && "grid-cols-3 gap-3",
+                      device === 'tablet' && "grid-cols-3 gap-4 max-w-2xl mx-auto",
+                      device === 'desktop' && "grid-cols-3 gap-6 max-w-3xl mx-auto"
+                    )}>
+                      {/* Ring 1: Today Income */}
+                      <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '300ms' }}>
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-[hsl(var(--whoop-green))] opacity-10 blur-xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-500" />
+                          <div className="relative transform transition-all duration-500 hover:scale-110">
+                            <StatRing
+                              value={Math.min(100, Math.max(0, ((report.income_usd || 0) / 1000) * 100))}
+                              label="دخل اليوم"
+                              subtitle="TODAY"
+                              color="hsl(var(--whoop-green))"
+                              size={getDailyRingSize()}
+                              scale={getDailyScale()}
+                              customDisplay={`$${report.income_usd || 0}`}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Ring 2: Today Expenses */}
+                      <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '350ms' }}>
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-[hsl(var(--whoop-red))] opacity-10 blur-xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-500" />
+                          <div className="relative transform transition-all duration-500 hover:scale-110">
+                            <StatRing
+                              value={Math.min(100, Math.max(0, ((report.spend_usd || 0) / 1000) * 100))}
+                              label="مصروف اليوم"
+                              subtitle="TODAY"
+                              color="hsl(var(--whoop-red))"
+                              size={getDailyRingSize()}
+                              scale={getDailyScale()}
+                              customDisplay={`$${report.spend_usd || 0}`}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Ring 3: Today Net */}
+                      <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '400ms' }}>
+                        <div className="relative">
+                          <div className={cn(
+                            "absolute inset-0 opacity-10 blur-xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-500",
+                            report.net_usd >= 0 ? "bg-[hsl(var(--whoop-green))]" : "bg-[hsl(var(--whoop-red))]"
+                          )} />
+                          <div className="relative transform transition-all duration-500 hover:scale-110">
+                            <StatRing
+                              value={Math.min(100, Math.max(0, ((Math.abs(report.net_usd || 0)) / 1000) * 100))}
+                              label="صافي اليوم"
+                              subtitle="NET"
+                              color={report.net_usd >= 0 ? "hsl(var(--whoop-green))" : "hsl(var(--whoop-red))"}
+                              size={getDailyRingSize()}
+                              scale={getDailyScale()}
+                              customDisplay={`${report.net_usd >= 0 ? '+' : ''}$${report.net_usd || 0}`}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Section 3: Activity Cards - الأنشطة اليومية */}
+                <section className="mb-8">
+                  <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
+                    الأنشطة اليومية
+                  </h2>
                   
                   <div className={cn(
-                    "grid gap-2 mb-6",
-                    "grid-cols-3", // Mobile: 3 columns
-                    "md:grid-cols-4", // Tablet: 4 columns
-                    "lg:grid-cols-6" // Desktop: 6 columns
+                    "grid gap-3",
+                    "grid-cols-2", // Mobile: 2 columns
+                    "md:grid-cols-3", // Tablet: 3 columns
+                    "lg:grid-cols-4" // Desktop: 4 columns
                   )}>
-                    <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '0ms' }}>
-                      <div className="relative scale-75 md:scale-100">
-                        {/* Glow Ring Effect */}
-                        <div className="absolute inset-0 bg-[hsl(var(--whoop-blue))] opacity-20 blur-2xl rounded-full scale-150 group-hover:scale-[2] transition-transform duration-700" />
-                        
-                        <div 
-                          className="relative cursor-pointer transform transition-all duration-500 hover:scale-110"
-                          onClick={() => {
-                            setEditingBalance(true);
-                            setBalanceValue(report.current_balance?.toString() || '0');
-                          }}
-                        >
-                          <StatRing
-                            value={Math.min(100, Math.max(0, ((report.current_balance || 0) / 10000) * 100))}
-                            label="الرصيد"
-                            subtitle="BALANCE"
-                            color="hsl(var(--whoop-blue))"
-                            size="sm"
-                            customDisplay={`$${(report.current_balance || 0).toFixed(0)}`}
-                          />
-                        </div>
-                        
-                        {/* Edit Button Overlay */}
-                        <button
-                          onClick={() => {
-                            setEditingBalance(true);
-                            setBalanceValue(report.current_balance?.toString() || '0');
-                          }}
-                          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-[hsl(var(--whoop-blue))] hover:text-white shadow-lg"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '100ms' }}>
-                      <div className="relative scale-75 md:scale-100">
-                        <div className="absolute inset-0 bg-[hsl(var(--whoop-green))] opacity-20 blur-2xl rounded-full scale-150 group-hover:scale-[2] transition-transform duration-700" />
-                        <div className="relative transform transition-all duration-500 hover:scale-110">
-                        <StatRing
-                          value={Math.min(100, Math.max(0, ((report.total_income || 0) / 5000) * 100))}
-                          label="الدخل"
-                          subtitle="INCOME"
-                          color="hsl(var(--whoop-green))"
-                          size="sm"
-                          customDisplay={`$${report.total_income || 0}`}
-                        />
-                      </div>
-                    </div>
+                    {renderEditableCard('study_hours', <BookOpen className="w-5 h-5" />, 'دراسة', report.study_hours, 'bg-[hsl(var(--whoop-blue))]/10', 'h')}
+                    {renderEditableCard('mma_hours', <Dumbbell className="w-5 h-5" />, 'رياضة', report.mma_hours, 'bg-[hsl(var(--whoop-green))]/10', 'h')}
+                    {renderEditableCard('work_hours', <Building className="w-5 h-5" />, 'عمل', report.work_hours, 'bg-[hsl(var(--whoop-yellow))]/10', 'h')}
+                    {renderEditableCard('walk_min', <Footprints className="w-5 h-5" />, 'مشي', report.walk_min, 'bg-[hsl(var(--whoop-red))]/10', 'min')}
                   </div>
-                    
-                    <div 
-                      className="flex flex-col items-center group animate-fade-in cursor-pointer" 
-                      style={{ animationDelay: '200ms' }}
-                      onClick={() => navigate('/expenses')}
-                    >
-                      <div className="relative scale-75 md:scale-100">
-                        <div className="absolute inset-0 bg-[hsl(var(--whoop-red))] opacity-20 blur-2xl rounded-full scale-150 group-hover:scale-[2] transition-transform duration-700" />
-                        <div className="relative transform transition-all duration-500 hover:scale-110">
-                        <StatRing
-                          value={Math.min(100, Math.max(0, ((report.total_spend || 0) / 5000) * 100))}
-                          label="المصروفات"
-                          subtitle="EXPENSES"
-                          color="hsl(var(--whoop-red))"
-                          size="sm"
-                          customDisplay={`$${report.total_spend || 0}`}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                  {/* Daily Stats Rings - Responsive Grid */}
-                  <div className={cn(
-                    "grid gap-2",
-                    "grid-cols-3", // Mobile: 3 columns
-                    "md:grid-cols-4", // Tablet: 4 columns
-                    "lg:grid-cols-6" // Desktop: 6 columns
-                  )}>
-                    <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '300ms' }}>
-                      <div className="relative scale-75 md:scale-100">
-                        <div className="absolute inset-0 bg-[hsl(var(--whoop-green))] opacity-10 blur-xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-500" />
-                        <div className="relative transform transition-all duration-500 hover:scale-110">
-                          <StatRing
-                            value={Math.min(100, Math.max(0, ((report.income_usd || 0) / 1000) * 100))}
-                            label="دخل اليوم"
-                            subtitle="TODAY"
-                            color="hsl(var(--whoop-green))"
-                            size="sm"
-                            customDisplay={`$${report.income_usd || 0}`}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '350ms' }}>
-                      <div className="relative scale-75 md:scale-100">
-                        <div className="absolute inset-0 bg-[hsl(var(--whoop-red))] opacity-10 blur-xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-500" />
-                        <div className="relative transform transition-all duration-500 hover:scale-110">
-                          <StatRing
-                            value={Math.min(100, Math.max(0, ((report.spend_usd || 0) / 1000) * 100))}
-                            label="مصروف اليوم"
-                            subtitle="TODAY"
-                            color="hsl(var(--whoop-red))"
-                            size="sm"
-                            customDisplay={`$${report.spend_usd || 0}`}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '400ms' }}>
-                      <div className="relative scale-75 md:scale-100">
-                        <div className={cn(
-                          "absolute inset-0 opacity-10 blur-xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-500",
-                          report.net_usd >= 0 ? "bg-[hsl(var(--whoop-green))]" : "bg-[hsl(var(--whoop-red))]"
-                        )} />
-                        <div className="relative transform transition-all duration-500 hover:scale-110">
-                          <StatRing
-                            value={Math.min(100, Math.max(0, ((Math.abs(report.net_usd || 0)) / 1000) * 100))}
-                            label="صافي اليوم"
-                            subtitle="NET"
-                            color={report.net_usd >= 0 ? "hsl(var(--whoop-green))" : "hsl(var(--whoop-red))"}
-                            size="sm"
-                            customDisplay={`${report.net_usd >= 0 ? '+' : ''}$${report.net_usd || 0}`}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Activity Stats - Responsive Cards */}
-                <div className={cn(
-                  "grid gap-3",
-                  "grid-cols-2", // Mobile: 2 columns
-                  "md:grid-cols-3", // Tablet: 3 columns
-                  "lg:grid-cols-4" // Desktop: 4 columns
-                )}>
-                  {renderEditableCard('study_hours', <BookOpen className="w-5 h-5" />, 'دراسة', report.study_hours, 'bg-[hsl(var(--whoop-blue))]/10', 'h')}
-                  {renderEditableCard('mma_hours', <Dumbbell className="w-5 h-5" />, 'رياضة', report.mma_hours, 'bg-[hsl(var(--whoop-green))]/10', 'h')}
-                  {renderEditableCard('work_hours', <Building className="w-5 h-5" />, 'عمل', report.work_hours, 'bg-[hsl(var(--whoop-yellow))]/10', 'h')}
-                  {renderEditableCard('walk_min', <Footprints className="w-5 h-5" />, 'مشي', report.walk_min, 'bg-[hsl(var(--whoop-red))]/10', 'min')}
-                </div>
+                </section>
 
                 {/* Edit Modals - Enhanced with Animations */}
                 {editingBalance && (
