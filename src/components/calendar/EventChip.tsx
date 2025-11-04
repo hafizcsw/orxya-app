@@ -50,8 +50,7 @@ export default function EventChip({
       return {
         bg: "bg-muted/30",
         border: "border-muted",
-        text: "text-muted-foreground",
-        shadow: ""
+        text: "text-muted-foreground"
       };
     }
     
@@ -59,8 +58,7 @@ export default function EventChip({
       return {
         bg: "bg-green-500/20",
         border: "border-green-500",
-        text: "text-green-700 dark:text-green-300",
-        shadow: "shadow-sm shadow-green-500/20"
+        text: "text-green-700 dark:text-green-300"
       };
     }
     
@@ -68,8 +66,7 @@ export default function EventChip({
       return {
         bg: "bg-gradient-to-br from-destructive to-red-600",
         border: "border-destructive",
-        text: "text-destructive-foreground",
-        shadow: "shadow-md shadow-destructive/30"
+        text: "text-destructive-foreground"
       };
     }
     
@@ -79,8 +76,7 @@ export default function EventChip({
     return {
       bg: color.bg,
       border: color.border,
-      text: color.text,
-      shadow: color.shadow ? `shadow-sm ${color.shadow}` : "shadow-sm"
+      text: color.text
     };
   };
   
@@ -143,16 +139,15 @@ export default function EventChip({
         onClick();
       }}
       className={cn(
-        "group w-full h-full rounded-xl border-l-[6px] px-2.5 py-1.5 relative",
+        "group w-full h-full rounded-lg border-l-4 px-3 py-2 relative",
         "text-start overflow-hidden",
-        "transition-all duration-300 ease-out",
-        "hover:scale-[1.02] hover:z-20 hover:-translate-y-0.5",
-        "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-1",
+        "transition-all duration-200 ease-out",
+        "hover:scale-[1.01] hover:z-20",
+        "focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-1",
         "backdrop-blur-sm",
         colors.bg,
         colors.border,
         colors.text,
-        colors.shadow,
         "animate-fade-in",
         ongoing && "event-pulse-border ring-2 ring-blue-500/50",
         status === 'cancelled' && "border-dashed opacity-60",
