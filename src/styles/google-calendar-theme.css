@@ -99,3 +99,24 @@
   --sidebar-border: 217 8% 22%;
   --sidebar-ring: 217 91% 60%;
 }
+
+/* Google Calendar Settings Styles */
+.gcal-settings-page {
+  background: hsl(var(--background));
+  min-height: 100vh;
+}
+
+.gcal-settings-sidebar {
+  width: 240px;
+  border-right: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+}
+
+.gcal-settings-item {
+  padding: 1.5rem 0;
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.gcal-settings-item:last-child {
+  border-bottom: none;
+}

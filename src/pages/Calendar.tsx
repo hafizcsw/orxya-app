@@ -154,7 +154,7 @@ export default function CalendarPage() {
             </Button>
 
             <button 
-              onClick={() => window.location.href = '/settings?section=calendar-parity'}
+              onClick={() => window.location.href = '/calendar/settings'}
               className="hidden sm:flex p-2 hover:bg-accent/50 rounded-full transition-all duration-200 hover:rotate-90"
               aria-label="Calendar Settings"
             >

@@ -26,6 +26,7 @@ import Assistant from "./pages/Assistant";
 import Calendar from "./pages/Calendar";
 import CalendarFull from "./pages/CalendarFull";
 import CalendarSimple from "./pages/CalendarSimple";
+import CalendarSettings from "./pages/CalendarSettings";
 
 import Inbox from "./pages/Inbox";
 import SettingsExternal from "./pages/SettingsExternal";
@@ -66,6 +67,7 @@ function AppContent() {
         <Route path="/ai" element={<AI />} />
         <Route path="/assistant" element={<Protected><Assistant /></Protected>} />
         <Route path="/calendar" element={<Protected><ErrorBoundary><Calendar /></ErrorBoundary></Protected>} />
+        <Route path="/calendar/settings" element={<Protected><CalendarSettings /></Protected>} />
         <Route path="/inbox" element={<Protected><Inbox /></Protected>} />
         <Route path="/calendar-full" element={<Protected><CalendarFull /></Protected>} />
         <Route path="/calendar-simple" element={<Protected><CalendarSimple /></Protected>} />
