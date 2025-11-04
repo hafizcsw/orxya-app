@@ -60,8 +60,8 @@ export default function EventChip({
         onClick();
       }}
       className={cn(
-        "w-full h-full rounded-md border-l-[4px] px-2 py-1 relative",
-        "text-start text-xs overflow-hidden",
+        "w-full h-full rounded-md border-l-[3px] px-1.5 py-0.5 relative",
+        "text-start overflow-hidden",
         "transition-all duration-200",
         "hover:shadow-md hover:scale-[1.02] hover:z-10",
         "focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/30",
@@ -76,18 +76,18 @@ export default function EventChip({
         <div className="w-1.5 h-1.5 rounded-full bg-red-500 absolute top-0.5 left-0.5 animate-pulse" />
       )}
       
-      <div className="font-medium leading-tight truncate">
+      <div className="text-[10px] sm:text-xs font-medium leading-tight truncate">
         {event.title || "بدون عنوان"}
       </div>
       
       {!isAllDay && event.starts_at && (
-        <div className="text-[10px] opacity-80 leading-tight">
+        <div className="text-[8px] sm:text-[10px] opacity-80 leading-tight">
           {formatTime(event.starts_at)}
         </div>
       )}
       
       {event.location && (
-        <div className="flex items-center gap-0.5 text-[9px] opacity-60 truncate mt-0.5">
+        <div className="flex items-center gap-0.5 text-[8px] opacity-60 truncate mt-0.5">
           <MapPin className="w-2 h-2 flex-shrink-0" />
           <span className="truncate">{event.location}</span>
         </div>
