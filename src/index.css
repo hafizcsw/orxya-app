@@ -313,6 +313,30 @@ textarea:focus-visible {
   100% { transform: translateX(100%); }
 }
 
+/* Event card animations */
+@keyframes lift {
+  from { transform: translateY(0); }
+  to { transform: translateY(-2px); }
+}
+
+@keyframes pulse-border {
+  0%, 100% { border-color: currentColor; opacity: 1; }
+  50% { border-color: currentColor; opacity: 0.5; }
+}
+
+@keyframes progress {
+  from { width: 0%; }
+  to { width: var(--progress-width); }
+}
+
+.event-lift {
+  animation: lift 0.2s ease-out forwards;
+}
+
+.event-pulse-border {
+  animation: pulse-border 2s ease-in-out infinite;
+}
+
 /* Print styles for PDF export */
 @media print {
   .no-print {

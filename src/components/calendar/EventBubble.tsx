@@ -1,7 +1,21 @@
 import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Clock, MapPin, Users, CheckCircle2 } from "lucide-react";
 import { GOOGLE_CALENDAR_COLORS, getColorForEvent } from "@/lib/calendar-colors";
+import type { EventCategory, EventStatus } from "@/types";
+
+const CATEGORY_ICONS: Record<EventCategory, string> = {
+  work: '💼',
+  personal: '👤',
+  meeting: '👥',
+  task: '🎯',
+  study: '📚',
+  exercise: '🏃',
+  food: '🍽️',
+  travel: '✈️',
+  prayer: '🕌',
+  other: '📌'
+};
 
 export default function EventBubble({
   p,
@@ -76,55 +90,119 @@ export default function EventBubble({
 
   const colorKey = getColorForEvent(p.event.source, p.event.color);
   const colorClasses = GOOGLE_CALENDAR_COLORS[colorKey];
+  const category: EventCategory = p.event.category || 'other';
+  const status: EventStatus = p.event.status || 'scheduled';
+
+  const formatTime = (iso: string) => {
+    const d = new Date(iso);
+    const hour = d.getHours();
+    const minute = d.getMinutes();
+    const period = hour >= 12 ? 'م' : 'ص';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minute.toString().padStart(2, '0')} ${period}`;
+  };
+
+  const isCompleted = status === 'completed';
 
   return (
     <div
       ref={ref}
       className={cn(
-        "absolute rounded-lg shadow-lg transition-all cursor-move overflow-hidden group",
+        "absolute rounded-xl shadow-md transition-all cursor-move overflow-hidden group border-l-4",
         colorClasses.bg,
         colorClasses.text,
-        isDragging && "shadow-2xl scale-105 z-50",
-        "hover:shadow-xl hover:z-40"
+        colorClasses.border,
+        colorClasses.shadow,
+        isDragging && "shadow-2xl scale-105 z-50 ring-2 ring-primary/50",
+        "hover:shadow-xl hover:z-40 hover:-translate-y-0.5",
+        "backdrop-blur-sm",
+        isCompleted && "opacity-80"
       )}
       style={{
         top: p.top,
         height: p.height,
         left: `${p.laneLeftPct}%`,
         width: `${p.laneWidthPct}%`,
-        minHeight: "20px"
+        minHeight: "24px"
       }}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      <div className="p-2 h-full flex flex-col relative">
+      <div className="p-2.5 h-full flex flex-col relative gap-1">
+        {/* Gradient overlay on hover */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl pointer-events-none" />
+        
+        {/* Conflict indicator */}
         {hasConflict && (
-          <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-destructive border-2 border-background animate-pulse" />
+          <div className="absolute -top-1 -right-1 z-10">
+            <div className="w-4 h-4 rounded-full bg-destructive border-2 border-background animate-pulse flex items-center justify-center">
+              <AlertCircle className="w-2.5 h-2.5 text-destructive-foreground" />
+            </div>
+          </div>
         )}
         
-        <div className="font-semibold text-sm truncate flex items-center gap-1">
-          {hasConflict && <AlertCircle className="w-3 h-3 flex-shrink-0" />}
-          {p.event.title || "بدون عنوان"}
-        </div>
-        {p.event.location && (
-          <div className="text-xs opacity-90 truncate">📍 {p.event.location}</div>
+        {/* Completed indicator */}
+        {isCompleted && (
+          <div className="absolute top-2 right-2 z-10">
+            <CheckCircle2 className="w-4 h-4 text-green-500" />
+          </div>
         )}
-        {p.height > 40 && (
-          <div className="text-xs opacity-75 mt-auto">
-            {new Date(p.event.starts_at || p.event.start_ts).toLocaleTimeString("ar", {
-              hour: "2-digit",
-              minute: "2-digit"
-            })}
+        
+        {/* Header: Category + Title */}
+        <div className="flex items-start gap-1.5 relative z-10">
+          <span className="text-sm flex-shrink-0" title={category}>
+            {CATEGORY_ICONS[category]}
+          </span>
+          <div className={cn(
+            "font-semibold text-sm leading-tight flex-1 min-w-0",
+            p.height > 30 ? "line-clamp-2" : "truncate",
+            isCompleted && "line-through opacity-75"
+          )}>
+            {p.event.title || "بدون عنوان"}
+          </div>
+        </div>
+        
+        {/* Time information - always show for events > 30px */}
+        {p.height > 30 && (
+          <div className="flex items-center gap-1.5 text-xs opacity-90 relative z-10">
+            <Clock className="w-3 h-3 flex-shrink-0" />
+            <span>
+              {formatTime(p.event.starts_at || p.event.start_ts)}
+              {p.event.ends_at && ` - ${formatTime(p.event.ends_at)}`}
+            </span>
+          </div>
+        )}
+        
+        {/* Location - show for events > 50px */}
+        {p.height > 50 && p.event.location && (
+          <div className="flex items-center gap-1.5 text-xs opacity-80 truncate relative z-10">
+            <MapPin className="w-3 h-3 flex-shrink-0" />
+            <span className="truncate">{p.event.location}</span>
+          </div>
+        )}
+        
+        {/* Description - show for events > 70px */}
+        {p.height > 70 && p.event.description && (
+          <div className="text-xs opacity-75 line-clamp-2 relative z-10 mt-auto">
+            {p.event.description}
+          </div>
+        )}
+        
+        {/* Participants - show for events > 90px */}
+        {p.height > 90 && p.event.attendees && p.event.attendees.length > 0 && (
+          <div className="flex items-center gap-1.5 text-xs opacity-70 relative z-10">
+            <Users className="w-3 h-3 flex-shrink-0" />
+            <span className="truncate">{p.event.attendees.length} مشارك</span>
           </div>
         )}
       </div>
 
-      {/* Resize handles */}
+      {/* Resize handles - enhanced */}
       <div
         data-handle="true"
-        className="absolute -top-0.5 left-0 right-0 h-2 cursor-n-resize opacity-0 group-hover:opacity-100 bg-white/20 transition-opacity"
+        className="absolute -top-1 left-0 right-0 h-3 cursor-n-resize opacity-0 group-hover:opacity-100 bg-gradient-to-b from-white/30 to-transparent transition-opacity rounded-t-xl"
         onMouseDown={(e) => {
           e.stopPropagation();
           setResizing("start");
@@ -132,7 +210,7 @@ export default function EventBubble({
       />
       <div
         data-handle="true"
-        className="absolute -bottom-0.5 left-0 right-0 h-2 cursor-s-resize opacity-0 group-hover:opacity-100 bg-white/20 transition-opacity"
+        className="absolute -bottom-1 left-0 right-0 h-3 cursor-s-resize opacity-0 group-hover:opacity-100 bg-gradient-to-t from-white/30 to-transparent transition-opacity rounded-b-xl"
         onMouseDown={(e) => {
           e.stopPropagation();
           setResizing("end");
