@@ -2,18 +2,43 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/telemetry";
 import { requestAISuggestion, type AISuggestion } from "@/lib/aiConflicts";
-import { Portal } from "./Portal";
 import { Button } from "@/components/ui/button";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Trash2, Save, Sparkles, AlertTriangle, CheckCircle } from "lucide-react";
+import { 
+  Loader2, 
+  Trash2, 
+  Save, 
+  Sparkles, 
+  AlertTriangle, 
+  CheckCircle,
+  Clock,
+  MapPin,
+  Tag,
+  FileText,
+  Palette,
+  Copy,
+  Share2,
+  Calendar as CalendarIcon,
+  X,
+  Check
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import EventColorPicker from "./EventColorPicker";
 import { type CalendarColor } from "@/lib/calendar-colors";
+import { GOOGLE_CALENDAR_COLORS } from "@/lib/calendar-colors";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { format } from "date-fns";
+import { ar } from "date-fns/locale";
 
 type Event = {
   id: string;
@@ -52,6 +77,7 @@ export default function EventDetailsDrawer({
   const [color, setColor] = useState<CalendarColor>("peacock");
   const [aiSuggestion, setAiSuggestion] = useState<AISuggestion | null>(null);
   const [loadingAI, setLoadingAI] = useState(false);
+  const [applyingAI, setApplyingAI] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -162,6 +188,7 @@ export default function EventDetailsDrawer({
 
   const handleApplySuggestion = async () => {
     if (!event || !aiSuggestion) return;
+    setApplyingAI(true);
 
     try {
       const updates: any = {};
@@ -199,211 +226,283 @@ export default function EventDetailsDrawer({
         description: "حدث خطأ أثناء تطبيق الاقتراح",
         variant: "destructive" 
       });
+    } finally {
+      setApplyingAI(false);
     }
+  };
+
+  const handleCopy = () => {
+    if (!event) return;
+    const startDate = new Date(event.starts_at);
+    const eventText = `${title}\n${format(startDate, "PPp", { locale: ar })}\n${location || ""}`;
+    navigator.clipboard.writeText(eventText);
+    toast({ title: "تم النسخ بنجاح" });
   };
 
   if (!event || !open) return null;
 
+  const colorHex = GOOGLE_CALENDAR_COLORS[color]?.hex || "#3B82F6";
+  const startDate = new Date(event.starts_at);
+  const endDate = new Date(event.ends_at);
+
   return (
-    <Portal>
-      {/* الخلفية المظللة */}
-      <div
-        className="pointer-events-auto fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      
-      {/* الدرج */}
-      <aside
-        className="pointer-events-auto fixed left-0 top-0 bottom-0 z-50 w-[500px] max-w-[92vw] bg-card shadow-2xl border-r overflow-y-auto"
-        role="dialog"
-        aria-modal="true"
+    <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <SheetContent 
+        side="bottom" 
+        className={cn(
+          "h-[85vh] rounded-t-3xl border-t-2 p-0 bg-background flex flex-col",
+          "md:h-full md:w-[480px] md:rounded-none md:border-l-2 md:border-t-0 md:side-right"
+        )}
       >
-        <header className="sticky top-0 z-10 p-4 border-b bg-muted">
+        {/* Quick Actions Bar */}
+        <div className="flex items-center justify-between px-6 py-3 border-b bg-background/95 backdrop-blur-sm shrink-0">
           <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold">تفاصيل الحدث</h3>
-            {hasConflict && (
-              <Badge variant="destructive" className="text-xs">
-                <AlertTriangle className="w-3 h-3 mr-1" />
-                تعارض
-              </Badge>
-            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDelete}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCopy}
+            >
+              <Copy className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => toast({ title: "قريباً: مشاركة الحدث" })}
+            >
+              <Share2 className="w-4 h-4" />
+            </Button>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            قم بتعديل تفاصيل الحدث أو احذفه
-          </p>
-        </header>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="rounded-full"
+          >
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
 
-        <div className="p-4 space-y-6 bg-muted">
-          {/* Title */}
-          <div className="space-y-2">
-            <Label htmlFor="title">العنوان</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="عنوان الحدث"
-              className="text-base"
+        {/* Header */}
+        <SheetHeader className="px-6 py-4 space-y-3 border-b shrink-0">
+          <div className="flex items-start gap-3">
+            <div 
+              className="w-1 h-16 rounded-full flex-shrink-0" 
+              style={{ backgroundColor: colorHex }}
             />
+            <div className="flex-1 min-w-0">
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="text-2xl font-bold border-none px-0 h-auto focus-visible:ring-0 bg-transparent"
+                placeholder="عنوان الحدث"
+              />
+              <div className="mt-2 space-y-1">
+                <p className="text-base text-muted-foreground flex items-center gap-2">
+                  <CalendarIcon className="w-4 h-4" />
+                  {format(startDate, "EEEE، d MMMM yyyy", { locale: ar })}
+                </p>
+                <p className="text-base text-muted-foreground flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  {format(startDate, "h:mm a", { locale: ar })} - {format(endDate, "h:mm a", { locale: ar })}
+                </p>
+              </div>
+            </div>
+          </div>
+        </SheetHeader>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+          {/* Time Section */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Clock className="w-4 h-4 text-primary" />
+              <span>الوقت</span>
+            </div>
+            <div className="pr-6 space-y-3">
+              <div>
+                <Label htmlFor="event-start" className="text-xs text-muted-foreground">البداية</Label>
+                <Input
+                  id="event-start"
+                  type="datetime-local"
+                  value={startsAt}
+                  onChange={(e) => setStartsAt(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="event-end" className="text-xs text-muted-foreground">النهاية</Label>
+                <Input
+                  id="event-end"
+                  type="datetime-local"
+                  value={endsAt}
+                  onChange={(e) => setEndsAt(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+            </div>
           </div>
 
-          {/* Time */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="starts">البداية</Label>
+          {/* Location Section */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <MapPin className="w-4 h-4 text-primary" />
+              <span>الموقع</span>
+            </div>
+            <div className="pr-6">
               <Input
-                id="starts"
-                type="datetime-local"
-                value={startsAt}
-                onChange={(e) => setStartsAt(e.target.value)}
-                className="text-sm"
+                id="event-location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="أضف موقع"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="ends">النهاية</Label>
+          </div>
+
+          {/* Tags Section */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Tag className="w-4 h-4 text-primary" />
+              <span>الوسوم</span>
+            </div>
+            <div className="pr-6">
               <Input
-                id="ends"
-                type="datetime-local"
-                value={endsAt}
-                onChange={(e) => setEndsAt(e.target.value)}
-                className="text-sm"
+                id="event-tags"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                placeholder="وسم1, وسم2"
               />
             </div>
           </div>
 
-          {/* Location */}
-          <div className="space-y-2">
-            <Label htmlFor="location">الموقع</Label>
-            <Input
-              id="location"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="أضف موقعًا"
-            />
+          {/* Notes Section */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <FileText className="w-4 h-4 text-primary" />
+              <span>الملاحظات</span>
+            </div>
+            <div className="pr-6">
+              <Textarea
+                id="event-notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="أضف ملاحظات"
+                className="min-h-[100px]"
+              />
+            </div>
           </div>
 
-          {/* Tags */}
-          <div className="space-y-2">
-            <Label htmlFor="tags">الوسوم</Label>
-            <Input
-              id="tags"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              placeholder="عمل, شخصي, مهم (افصل بفاصلة)"
-            />
+          {/* Color Section */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Palette className="w-4 h-4 text-primary" />
+              <span>اللون</span>
+            </div>
+            <div className="pr-6">
+              <EventColorPicker value={color} onChange={setColor} />
+            </div>
           </div>
 
-          {/* Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="notes">ملاحظات</Label>
-            <Textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="أضف ملاحظات..."
-              rows={4}
-            />
-          </div>
-
-          {/* Color Picker */}
-          <div className="space-y-2">
-            <Label>لون الحدث</Label>
-            <EventColorPicker value={color} onChange={setColor} />
-          </div>
-
-          {/* AI Suggestion Section */}
+          {/* AI Conflict Resolution */}
           {hasConflict && conflictId && (
-            <div className="space-y-3 p-4 rounded-lg border border-warning bg-warning text-warning-foreground">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-warning" />
-                  <span className="font-medium text-sm">تعارض مع وقت الصلاة</span>
+            <Card className="p-5 bg-gradient-to-br from-yellow-50/50 to-orange-50/50 dark:from-yellow-950/20 dark:to-orange-950/20 border-2 border-yellow-200/50 dark:border-yellow-800/50">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-full bg-yellow-500/10">
+                  <Sparkles className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
                 </div>
-                <ActionButton
-                  size="sm"
-                  variant="outline"
-                  onClick={handleRequestAI}
-                  disabled={!!aiSuggestion}
-                  loadingText="جار التحليل..."
-                  icon={<Sparkles className="w-4 h-4" />}
-                >
-                  اقتراح حل (AI)
-                </ActionButton>
+                <span className="text-lg font-semibold">اقتراحات الذكاء الاصطناعي</span>
               </div>
 
+              {!aiSuggestion && (
+                <Button
+                  onClick={handleRequestAI}
+                  disabled={loadingAI}
+                  variant="outline"
+                  className="w-full bg-background/80 hover:bg-background"
+                >
+                  {loadingAI ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      جارٍ التحليل...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      اطلب اقتراح من الذكاء الاصطناعي
+                    </>
+                  )}
+                </Button>
+              )}
+
               {aiSuggestion && (
-                <div className="space-y-3 mt-3">
-                  <div className="p-3 rounded-lg bg-card text-card-foreground border">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CheckCircle className="w-4 h-4 text-success" />
-                      <span className="font-medium text-sm">
-                        {aiSuggestion.action === "move_event"
-                          ? "تحريك الحدث"
-                          : aiSuggestion.action === "shorten_event"
-                          ? "تقصير الحدث"
-                          : "إلغاء الحدث"}
-                      </span>
-                      {aiSuggestion.confidence && (
-                        <Badge variant="secondary" className="text-xs">
-                          ثقة: {Math.round(aiSuggestion.confidence * 100)}%
-                        </Badge>
-                      )}
-                    </div>
-
-                    {aiSuggestion.new_start && aiSuggestion.new_end && (
-                      <div className="text-sm text-muted-foreground mb-2">
-                        <span className="font-medium">الوقت المقترح:</span>{" "}
-                        {new Date(aiSuggestion.new_start).toLocaleString("ar", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}{" "}
-                        -{" "}
-                        {new Date(aiSuggestion.new_end).toLocaleString("ar", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </div>
-                    )}
-
-                    {aiSuggestion.reasoning && (
-                      <p className="text-xs text-muted-foreground">
-                        💡 {aiSuggestion.reasoning}
-                      </p>
-                    )}
+                <div className="space-y-4">
+                  <div className="bg-background/60 backdrop-blur-sm p-4 rounded-lg border">
+                    <p className="font-medium mb-2 text-sm">💡 السبب:</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{aiSuggestion.reasoning}</p>
                   </div>
 
-                  <ActionButton
+                  {aiSuggestion.new_start && aiSuggestion.new_end && (
+                    <div className="bg-primary/5 p-4 rounded-lg border border-primary/20">
+                      <p className="font-medium mb-3 text-sm">⏰ الوقت المقترح:</p>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground">البداية:</span>
+                          <span className="font-medium">
+                            {format(new Date(aiSuggestion.new_start), "PPp", { locale: ar })}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground">النهاية:</span>
+                          <span className="font-medium">
+                            {format(new Date(aiSuggestion.new_end), "PPp", { locale: ar })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <Button
                     onClick={handleApplySuggestion}
-                    loadingText="جار التطبيق..."
-                    icon={<CheckCircle className="w-4 h-4" />}
-                    className="w-full"
+                    disabled={applyingAI}
+                    className="w-full bg-primary hover:bg-primary/90 shadow-lg"
+                    size="lg"
                   >
-                    تطبيق الاقتراح
-                  </ActionButton>
+                    {applyingAI ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        جارٍ التطبيق...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-5 h-5 mr-2" />
+                        تطبيق الاقتراح
+                      </>
+                    )}
+                  </Button>
                 </div>
               )}
-            </div>
+            </Card>
           )}
-
-          {/* Actions */}
-          <div className="flex gap-2 pt-4 border-t">
-            <ActionButton
-              onClick={handleSave}
-              loadingText="جار الحفظ..."
-              icon={<Save className="w-4 h-4" />}
-              className="flex-1"
-            >
-              حفظ
-            </ActionButton>
-            <ActionButton
-              onClick={handleDelete}
-              variant="destructive"
-              icon={<Trash2 className="w-4 h-4" />}
-            >
-              حذف
-            </ActionButton>
-          </div>
         </div>
-      </aside>
-    </Portal>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t bg-background/95 backdrop-blur-sm shrink-0">
+          <Button 
+            onClick={handleSave} 
+            className="w-full shadow-lg" 
+            size="lg"
+          >
+            ✓ حفظ التغييرات
+          </Button>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
