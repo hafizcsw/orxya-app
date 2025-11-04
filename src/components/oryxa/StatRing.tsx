@@ -26,24 +26,26 @@ export function StatRing({
     sm: { width: 100, strokeWidth: 6, fontSize: '1.25rem' },
     md: { width: 120, strokeWidth: 8, fontSize: '1.5rem' },
     lg: { width: 180, strokeWidth: 10, fontSize: '2rem' },
-  };
+  }
 
-  const { width, strokeWidth, fontSize } = sizes[size];
-  const radius = (width - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (Math.min(value, 100) / 100) * circumference;
+  // Apply responsive scale
+  const actualScale = scale || 1
+  const { width, strokeWidth, fontSize } = sizes[size]
+  const scaledWidth = width * actualScale
+  const radius = (scaledWidth - strokeWidth) / 2
+  const circumference = 2 * Math.PI * radius
+  const offset = circumference - (Math.min(value, 100) / 100) * circumference
 
   return (
     <div 
       className={cn('flex flex-col items-center gap-2', className)}
-      style={{ transform: scale ? `scale(${scale})` : undefined }}
     >
-      <div className="relative" style={{ width, height: width }}>
-        <svg width={width} height={width} className="transform -rotate-90">
+      <div className="relative" style={{ width: scaledWidth, height: scaledWidth }}>
+        <svg width={scaledWidth} height={scaledWidth} className="transform -rotate-90">
           {/* Background circle */}
           <circle
-            cx={width / 2}
-            cy={width / 2}
+            cx={scaledWidth / 2}
+            cy={scaledWidth / 2}
             r={radius}
             fill="none"
             stroke="hsl(var(--muted))"
@@ -53,8 +55,8 @@ export function StatRing({
           
           {/* Animated progress circle */}
           <motion.circle
-            cx={width / 2}
-            cy={width / 2}
+            cx={scaledWidth / 2}
+            cy={scaledWidth / 2}
             r={radius}
             fill="none"
             stroke={color}

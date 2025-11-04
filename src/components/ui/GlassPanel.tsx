@@ -18,14 +18,14 @@ export function GlassPanel({
     sm: 'backdrop-blur-sm',
     md: 'backdrop-blur-md',
     lg: 'backdrop-blur-xl'
-  };
+  }
   
   const paddingStyles = {
     none: '',
     sm: 'p-4',
     md: 'p-6',
     lg: 'p-8'
-  };
+  }
   
   return (
     <div 

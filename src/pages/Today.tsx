@@ -61,18 +61,22 @@ const Today = () => {
   const [balanceValue, setBalanceValue] = useState('')
   const [isScrolled, setIsScrolled] = useState(false)
 
-  // Responsive sizing helpers
+  // Responsive sizing helpers - محسّنة
   const getFinancialRingSize = () => {
-    if (device === 'mobile') return 'md'
-    if (device === 'tablet') return 'lg'
-    return 'lg'
+    if (device === 'mobile') return 'sm'      // 100px بدلاً من md
+    if (device === 'tablet') return 'md'      // 120px
+    return 'lg'                               // 180px
   }
 
   const getDailyRingSize = () => {
-    if (device === 'mobile') return 'sm'
-    if (device === 'tablet') return 'md'
-    return 'md'
+    if (device === 'mobile') return 'sm'      // 100px
+    if (device === 'tablet') return 'sm'      // 100px
+    return 'md'                               // 120px
   }
+
+  // تقليل الـ Animations على الموبايل
+  const shouldAnimate = device !== 'mobile' || 
+    !window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
   async function fetchReport() {
     if (!user) return
@@ -213,7 +217,11 @@ const Today = () => {
     const isEditing = editingField === field
     
     return (
-      <GlassPanel blur="md" padding="md" className="group relative overflow-hidden hover:scale-105 transition-all duration-300">
+      <GlassPanel 
+        blur="md" 
+        padding={device === 'mobile' ? 'sm' : 'md'}
+        className="group relative overflow-hidden hover:scale-105 transition-all duration-300"
+      >
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         
         <div className="relative z-10">
@@ -298,69 +306,77 @@ const Today = () => {
 
   return (
     <Protected>
-      <div className="min-h-screen bg-background relative">
-        <BackgroundAI intensity="medium" />
-        {/* Sticky Header - Period Selection Only */}
+      <div className="min-h-screen bg-background relative pb-safe">
+        <BackgroundAI intensity={device === 'mobile' ? 'low' : 'medium'} />
+        
+        {/* Sticky Header - Period Selection Only - محسّن للموبايل */}
         <div className={cn(
-          "sticky top-12 z-30 bg-background/95 backdrop-blur-xl border-b border-border transition-all duration-300 px-4 py-2",
+          "sticky z-30 bg-background/95 backdrop-blur-xl border-b border-border transition-all duration-300",
+          device === 'mobile' ? "top-0 py-1.5 px-3" : "top-12 py-2 px-4",
           isScrolled && "shadow-lg bg-background/98"
         )}>
           <div className="max-w-4xl mx-auto flex items-center justify-center">
-            {/* Period Selection - Compact */}
-            <div className="flex gap-1.5">
+            {/* Period Selection - Responsive */}
+            <div className={cn(
+              "flex",
+              device === 'mobile' ? "gap-1" : "gap-1.5"
+            )}>
               <button
                 onClick={() => setPeriod('daily')}
                 className={cn(
-                  "w-9 h-9 rounded-full flex items-center justify-center transition-all text-xs font-bold",
+                  "rounded-full flex items-center justify-center transition-all font-bold",
+                  device === 'mobile' ? "w-8 h-8 text-[9px]" : "w-9 h-9 text-[10px]",
                   period === 'daily' 
                     ? "bg-[hsl(var(--whoop-blue))] text-white shadow-[var(--glow-blue)]" 
                     : "bg-secondary hover:bg-secondary/80"
                 )}
               >
-                <span className="text-[10px] font-bold">D</span>
+                <span>D</span>
               </button>
               <button
                 onClick={() => setPeriod('weekly')}
                 className={cn(
-                  "w-9 h-9 rounded-full flex items-center justify-center transition-all text-xs font-bold",
+                  "rounded-full flex items-center justify-center transition-all font-bold",
+                  device === 'mobile' ? "w-8 h-8 text-[9px]" : "w-9 h-9 text-[10px]",
                   period === 'weekly' 
                     ? "bg-[hsl(var(--whoop-blue))] text-white shadow-[var(--glow-blue)]" 
                     : "bg-secondary hover:bg-secondary/80"
                 )}
               >
-                <span className="text-[10px] font-bold">W</span>
+                <span>W</span>
               </button>
               <button
                 onClick={() => setPeriod('monthly')}
                 className={cn(
-                  "w-9 h-9 rounded-full flex items-center justify-center transition-all text-xs font-bold",
+                  "rounded-full flex items-center justify-center transition-all font-bold",
+                  device === 'mobile' ? "w-8 h-8 text-[9px]" : "w-9 h-9 text-[10px]",
                   period === 'monthly' 
                     ? "bg-[hsl(var(--whoop-blue))] text-white shadow-[var(--glow-blue)]" 
                     : "bg-secondary hover:bg-secondary/80"
                 )}
               >
-                <span className="text-[10px] font-bold">M</span>
+                <span>M</span>
               </button>
               <button
                 onClick={() => setPeriod('yearly')}
                 className={cn(
-                  "w-9 h-9 rounded-full flex items-center justify-center transition-all text-xs font-bold",
+                  "rounded-full flex items-center justify-center transition-all font-bold",
+                  device === 'mobile' ? "w-8 h-8 text-[9px]" : "w-9 h-9 text-[10px]",
                   period === 'yearly' 
                     ? "bg-[hsl(var(--whoop-blue))] text-white shadow-[var(--glow-blue)]" 
                     : "bg-secondary hover:bg-secondary/80"
                 )}
               >
-                <span className="text-[10px] font-bold">Y</span>
+                <span>Y</span>
               </button>
             </div>
           </div>
         </div>
 
         <div className={cn(
-          "px-4 py-6 space-y-8",
-          device === 'mobile' && "max-w-full",
-          device === 'tablet' && "max-w-3xl mx-auto",
-          device === 'desktop' && "max-w-5xl mx-auto"
+          device === 'mobile' && "px-3 py-4 space-y-6 max-w-full",
+          device === 'tablet' && "px-6 py-6 space-y-7 max-w-3xl mx-auto",
+          device === 'desktop' && "px-8 py-8 space-y-8 max-w-5xl mx-auto"
         )}>
           <SessionBanner />
 
@@ -382,13 +398,19 @@ const Today = () => {
                     <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent blur-3xl -z-10" />
                     
                     <div className={cn(
-                      "grid gap-6 place-items-center",
-                      device === 'mobile' && "grid-cols-3 gap-4 px-2",
+                      "grid place-items-center",
+                      device === 'mobile' && "grid-cols-2 gap-6 px-3",
                       device === 'tablet' && "grid-cols-3 gap-8 max-w-3xl mx-auto",
                       device === 'desktop' && "grid-cols-3 gap-10 max-w-4xl mx-auto"
                     )}>
                       {/* Ring 1: Balance */}
-                      <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '0ms' }}>
+                      <div 
+                        className={cn(
+                          "flex flex-col items-center group",
+                          shouldAnimate && "animate-fade-in"
+                        )} 
+                        style={{ animationDelay: shouldAnimate ? '0ms' : undefined }}
+                      >
                         <div className="relative">
                           {/* Glow Ring Effect */}
                           <div className="absolute inset-0 bg-[hsl(var(--whoop-blue))] opacity-20 blur-2xl rounded-full scale-150 group-hover:scale-[2] transition-transform duration-700" />
@@ -425,7 +447,13 @@ const Today = () => {
                       </div>
                       
                       {/* Ring 2: Total Income */}
-                      <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '100ms' }}>
+                      <div 
+                        className={cn(
+                          "flex flex-col items-center group",
+                          shouldAnimate && "animate-fade-in"
+                        )} 
+                        style={{ animationDelay: shouldAnimate ? '100ms' : undefined }}
+                      >
                         <div className="relative">
                           <div className="absolute inset-0 bg-[hsl(var(--whoop-green))] opacity-20 blur-2xl rounded-full scale-150 group-hover:scale-[2] transition-transform duration-700" />
                           <div className="relative transform transition-all duration-300 hover:scale-105">
@@ -443,8 +471,11 @@ const Today = () => {
                       
                       {/* Ring 3: Total Expenses */}
                       <div 
-                        className="flex flex-col items-center group animate-fade-in cursor-pointer" 
-                        style={{ animationDelay: '200ms' }}
+                        className={cn(
+                          "flex flex-col items-center group cursor-pointer",
+                          shouldAnimate && "animate-fade-in"
+                        )} 
+                        style={{ animationDelay: shouldAnimate ? '200ms' : undefined }}
                         onClick={() => navigate('/expenses')}
                       >
                         <div className="relative">
@@ -481,7 +512,13 @@ const Today = () => {
                       device === 'desktop' && "grid-cols-3 gap-8 max-w-3xl mx-auto"
                     )}>
                       {/* Ring 1: Today Income */}
-                      <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '300ms' }}>
+                      <div 
+                        className={cn(
+                          "flex flex-col items-center group",
+                          shouldAnimate && "animate-fade-in"
+                        )} 
+                        style={{ animationDelay: shouldAnimate ? '300ms' : undefined }}
+                      >
                         <div className="relative">
                           <div className="absolute inset-0 bg-[hsl(var(--whoop-green))] opacity-10 blur-xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-500" />
                           <div className="relative transform transition-all duration-300 hover:scale-105">
@@ -498,7 +535,13 @@ const Today = () => {
                       </div>
                       
                       {/* Ring 2: Today Expenses */}
-                      <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '350ms' }}>
+                      <div 
+                        className={cn(
+                          "flex flex-col items-center group",
+                          shouldAnimate && "animate-fade-in"
+                        )} 
+                        style={{ animationDelay: shouldAnimate ? '350ms' : undefined }}
+                      >
                         <div className="relative">
                           <div className="absolute inset-0 bg-[hsl(var(--whoop-red))] opacity-10 blur-xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-500" />
                           <div className="relative transform transition-all duration-300 hover:scale-105">
@@ -515,7 +558,13 @@ const Today = () => {
                       </div>
                       
                       {/* Ring 3: Today Net */}
-                      <div className="flex flex-col items-center group animate-fade-in" style={{ animationDelay: '400ms' }}>
+                      <div 
+                        className={cn(
+                          "flex flex-col items-center group",
+                          shouldAnimate && "animate-fade-in"
+                        )} 
+                        style={{ animationDelay: shouldAnimate ? '400ms' : undefined }}
+                      >
                         <div className="relative">
                           <div className={cn(
                             "absolute inset-0 opacity-10 blur-xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-500",
@@ -543,7 +592,12 @@ const Today = () => {
                     الأنشطة اليومية
                   </h2>
                   
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className={cn(
+                    "grid gap-3",
+                    device === 'mobile' && "grid-cols-2 gap-2.5",
+                    device === 'tablet' && "grid-cols-3 gap-3",
+                    device === 'desktop' && "grid-cols-3 gap-4"
+                  )}>
                     {renderEditableCard('study_hours', <BookOpen className="w-5 h-5" />, 'دراسة', report.study_hours, 'bg-[hsl(var(--whoop-blue))]/10', 'h')}
                     {renderEditableCard('mma_hours', <Dumbbell className="w-5 h-5" />, 'رياضة', report.mma_hours, 'bg-[hsl(var(--whoop-green))]/10', 'h')}
                     {renderEditableCard('work_hours', <Building className="w-5 h-5" />, 'عمل', report.work_hours, 'bg-[hsl(var(--whoop-yellow))]/10', 'h')}
@@ -555,11 +609,27 @@ const Today = () => {
 
                 {/* Edit Modals - Enhanced with Animations */}
                 {editingBalance && (
-                <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-50 flex items-center justify-center p-4 animate-fade-in">
-                  <HolographicCard variant="neon" glow className="max-w-md w-full animate-scale-in shadow-[0_0_50px_hsl(var(--primary)/0.5)]">
-                    <div className="relative p-6">
+                <div className={cn(
+                  "fixed inset-0 bg-black/90 backdrop-blur-xl z-50 flex items-center justify-center animate-fade-in",
+                  device === 'mobile' ? "p-3" : "p-4"
+                )}>
+                  <HolographicCard 
+                    variant="neon" 
+                    glow 
+                    className={cn(
+                      "w-full animate-scale-in shadow-[0_0_50px_hsl(var(--primary)/0.5)]",
+                      device === 'mobile' ? "max-w-[90vw]" : "max-w-md"
+                    )}
+                  >
+                    <div className={cn(
+                      "relative",
+                      device === 'mobile' ? "p-4" : "p-6"
+                    )}>
                       <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-20 h-20 rounded-full bg-primary opacity-30 blur-3xl animate-pulse-glow" />
-                      <h3 className="text-2xl font-bold mb-6 text-center bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-shimmer bg-[length:200%_auto]">
+                      <h3 className={cn(
+                        "font-bold mb-6 text-center bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-shimmer bg-[length:200%_auto]",
+                        device === 'mobile' ? "text-xl" : "text-2xl"
+                      )}>
 تعديل الرصيد الحقيقي
                       </h3>
                       <div className="relative mb-6">
@@ -570,7 +640,10 @@ const Today = () => {
                           min="0"
                           value={balanceValue}
                           onChange={(e) => setBalanceValue(e.target.value)}
-                          className="input w-full text-3xl font-bold text-center relative z-10 bg-background/50 backdrop-blur-sm border-2 focus:border-primary focus:shadow-[0_0_30px_hsl(var(--primary)/0.5)] transition-all"
+                          className={cn(
+                            "input w-full font-bold text-center relative z-10 bg-background/50 backdrop-blur-sm border-2 focus:border-primary focus:shadow-[0_0_30px_hsl(var(--primary)/0.5)] transition-all",
+                            device === 'mobile' ? "text-2xl" : "text-3xl"
+                          )}
                           autoFocus
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
@@ -606,10 +679,25 @@ const Today = () => {
               )}
               
               {editingField && editingField !== 'balance' && (
-                <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-50 flex items-center justify-center p-4 animate-fade-in">
-                  <HolographicCard variant="neon" glow className="max-w-md w-full animate-scale-in shadow-[0_0_50px_hsl(var(--primary)/0.5)]">
-                    <div className="p-6">
-                      <h3 className="text-2xl font-bold mb-6 text-center bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-shimmer bg-[length:200%_auto]">
+                <div className={cn(
+                  "fixed inset-0 bg-black/90 backdrop-blur-xl z-50 flex items-center justify-center animate-fade-in",
+                  device === 'mobile' ? "p-3" : "p-4"
+                )}>
+                  <HolographicCard 
+                    variant="neon" 
+                    glow 
+                    className={cn(
+                      "w-full animate-scale-in shadow-[0_0_50px_hsl(var(--primary)/0.5)]",
+                      device === 'mobile' ? "max-w-[90vw]" : "max-w-md"
+                    )}
+                  >
+                    <div className={cn(
+                      device === 'mobile' ? "p-4" : "p-6"
+                    )}>
+                      <h3 className={cn(
+                        "font-bold mb-6 text-center bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-shimmer bg-[length:200%_auto]",
+                        device === 'mobile' ? "text-xl" : "text-2xl"
+                      )}>
                         {editingField === 'work_hours' && 'تعديل ساعات العمل'}
                         {editingField === 'study_hours' && 'تعديل ساعات الدراسة'}
                         {editingField === 'mma_hours' && 'تعديل ساعات MMA'}
@@ -624,7 +712,10 @@ const Today = () => {
                           min="0"
                           value={editValue}
                           onChange={(e) => setEditValue(e.target.value)}
-                          className="input w-full text-3xl font-bold text-center bg-background/50 backdrop-blur-sm border-2 focus:border-primary focus:shadow-[0_0_30px_hsl(var(--primary)/0.5)] transition-all"
+                          className={cn(
+                            "input w-full font-bold text-center bg-background/50 backdrop-blur-sm border-2 focus:border-primary focus:shadow-[0_0_30px_hsl(var(--primary)/0.5)] transition-all",
+                            device === 'mobile' ? "text-2xl" : "text-3xl"
+                          )}
                           autoFocus
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
@@ -659,8 +750,13 @@ const Today = () => {
                 </div>
               )}
 
-              {/* Sales */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Sales - محسّن للموبايل */}
+              <div className={cn(
+                "grid gap-4",
+                device === 'mobile' && "grid-cols-1 gap-3",
+                device === 'tablet' && "grid-cols-2 gap-4",
+                device === 'desktop' && "grid-cols-3 gap-4"
+              )}>
                 <GlassPanel blur="lg" className="hover:scale-105 transition-all duration-300">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
@@ -717,10 +813,17 @@ const Today = () => {
                       </div>
                       الدخل والمصروفات
                     </h4>
-                    <ResponsiveContainer width="100%" height={300}>
+                    <ResponsiveContainer 
+                      width="100%" 
+                      height={device === 'mobile' ? 200 : 300}
+                    >
                       <LineChart data={report.trend_data}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" />
+                        <XAxis 
+                          dataKey="label" 
+                          stroke="hsl(var(--muted-foreground))" 
+                          tick={{ fontSize: device === 'mobile' ? 10 : 12 }}
+                        />
                         <YAxis stroke="hsl(var(--muted-foreground))" />
                         <Tooltip 
                           contentStyle={{ 
@@ -743,10 +846,17 @@ const Today = () => {
                       </div>
                       الأنشطة
                     </h4>
-                    <ResponsiveContainer width="100%" height={300}>
+                    <ResponsiveContainer 
+                      width="100%" 
+                      height={device === 'mobile' ? 200 : 300}
+                    >
                       <BarChart data={report.trend_data}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" />
+                        <XAxis 
+                          dataKey="label" 
+                          stroke="hsl(var(--muted-foreground))"
+                          tick={{ fontSize: device === 'mobile' ? 10 : 12 }}
+                        />
                         <YAxis stroke="hsl(var(--muted-foreground))" />
                         <Tooltip 
                           contentStyle={{ 
