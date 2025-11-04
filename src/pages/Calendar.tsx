@@ -38,7 +38,7 @@ type PT = {
 export default function CalendarPage() {
   const { user } = useUser();
   const { selectedDate: globalDate, setSelectedDate: setGlobalDate } = useSelectedDate();
-  const [mode, setMode] = useState<"day" | "week" | "month">("week");
+  const [mode, setMode] = useState<"day" | "week" | "month">("day");
   const [currentDate, setCurrentDate] = useState(globalDate);
   const [loading, setLoading] = useState(false);
   const [eventsByDate, setEventsByDate] = useState<Record<string, DbEvent[]>>({});
