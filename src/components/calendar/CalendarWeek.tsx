@@ -169,19 +169,22 @@ export default function CalendarWeek({
           {/* Scrollable container */}
           <div className="flex-1 overflow-auto relative" ref={gridRef}>
             <div className="flex relative">
-              {/* Time gutter - scrolls with content */}
+              {/* Time gutter - Clean design */}
               <div className="w-14 sm:w-16 flex-shrink-0 bg-background">
                 <div className="relative">
-                  {Array.from({
-                  length: 24
-                }, (_, h) => <div key={h} className="relative text-right pr-2 sm:pr-3" style={{
-                  height: pxPerHour
-                }}>
-                      <span className="absolute -top-2.5 right-1 sm:right-2 text-[10px] sm:text-[11px] text-muted-foreground font-normal">
-                        {h === 0 ? "" : `${h.toString().padStart(2, "0")}:00`}
-                      </span>
-                      <div className="absolute top-0 left-0 right-0 border-t border-border/10" />
-                    </div>)}
+                  {Array.from({ length: 24 }, (_, h) => (
+                    <div 
+                      key={h} 
+                      className="relative text-right pr-2 sm:pr-3" 
+                      style={{ height: pxPerHour }}
+                    >
+                      {h > 0 && h % 3 === 0 && (
+                        <span className="absolute -top-2.5 right-1 sm:right-2 text-[10px] sm:text-xs text-muted-foreground/70 font-light">
+                          {h.toString().padStart(2, "0")}
+                        </span>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
 

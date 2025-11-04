@@ -24,12 +24,12 @@ export default function MonthGrid({ anchor, eventsByDate, onDayClick }: Props) {
 
   const today = new Date();
   return (
-    <div className="grid grid-cols-7 border rounded-2xl overflow-hidden">
-      {/* Enhanced Weekday Headers */}
+    <div className="grid grid-cols-7 rounded-lg overflow-hidden border border-border/20">
+      {/* Clean Weekday Headers */}
       {["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"].map((n,i)=>(
         <div 
           key={i} 
-          className="px-3 py-3 text-center text-sm font-semibold bg-muted/80 border-b text-foreground uppercase tracking-wide"
+          className="px-3 py-3 text-center text-xs font-medium bg-background border-b border-border/10 text-muted-foreground"
         >
           {n}
         </div>
@@ -47,35 +47,37 @@ export default function MonthGrid({ anchor, eventsByDate, onDayClick }: Props) {
             key={i}
             onClick={() => onDayClick?.(iso)}
             className={cn(
-              "relative h-28 p-2 text-right border hover:bg-secondary/30 transition-colors",
-              inMonth ? "" : "bg-muted/20 opacity-60",
-              isTodayCell && "ring-2 ring-primary ring-inset"
+              "relative h-28 p-2.5 text-right border-r border-b border-border/10 hover:bg-accent/30 transition-colors",
+              inMonth ? "" : "bg-muted/10 opacity-50",
+              i % 7 === 6 && "border-r-0"
             )}
           >
-            {/* Day number with highlight */}
+            {/* Day number - Clean minimal style */}
             <div className={cn(
-              "inline-flex items-center justify-center rounded-full mb-1",
-              "w-7 h-7 text-sm font-medium transition-all",
+              "inline-flex items-center justify-center rounded-full mb-1.5",
+              "w-7 h-7 text-sm font-normal transition-all",
               isTodayCell
-                ? "bg-primary text-white shadow-md"
-                : "text-foreground"
+                ? "bg-[#1a73e8] text-white"
+                : inMonth 
+                  ? "text-foreground" 
+                  : "text-muted-foreground"
             )}>
               {d.getDate()}
             </div>
             
-            {/* Events list - cleaner */}
+            {/* Events - Minimal clean dots */}
             <div className="space-y-1">
-              {dayEvents.slice(0,2).map(ev => (
+              {dayEvents.slice(0,3).map(ev => (
                 <div 
                   key={ev.id} 
-                  className="truncate text-xs rounded-md px-2 py-1 bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-900 dark:text-blue-200 font-medium"
+                  className="truncate text-[11px] px-1.5 py-0.5 bg-primary/10 text-primary rounded font-normal"
                 >
-                  {ev.source === "ai" && "🧠 "}{ev.title}
+                  {ev.title}
                 </div>
               ))}
-              {dayEvents.length > 2 && (
-                <div className="text-xs text-muted-foreground font-medium">
-                  +{dayEvents.length - 2} أخرى
+              {dayEvents.length > 3 && (
+                <div className="text-[10px] text-muted-foreground/70 px-1">
+                  +{dayEvents.length - 3}
                 </div>
               )}
             </div>
