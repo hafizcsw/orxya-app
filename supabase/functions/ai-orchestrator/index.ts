@@ -3,7 +3,7 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-type Intent = "plan_my_day" | "resolve_conflicts" | "daily_briefing" | "budget_guard" | "what_if";
+type Intent = "plan_my_day" | "resolve_conflicts" | "daily_briefing" | "budget_guard" | "what_if" | "calendar_suggest";
 type ReqBase = { 
   intent: Intent; 
   apply?: boolean; 
@@ -319,6 +319,63 @@ serve(async (req) => {
         );
 
         result.scenarios = whatIf?.scenarios || [];
+        break;
+      }
+
+      case "calendar_suggest": {
+        // اقتراحات ذكية للمواعيد تحترم الصلاة والسفر والعمل
+        if (!calendar_window) return bad("calendar_window required");
+        if (!input?.duration_minutes) return bad("duration_minutes required");
+        
+        const ctx = await fetchContext(supabase, user.id, calendar_window);
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("working_hours_start, working_hours_end, working_days, prayer_pre_buffer_min, prayer_post_buffer_min")
+          .eq("id", user.id)
+          .single();
+
+        const schema = {
+          type: "object",
+          properties: {
+            suggestions: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  start: { type: "string" },
+                  end: { type: "string" },
+                  score: { type: "number" },
+                  reason: { type: "string" },
+                  conflicts: { type: "array", items: { type: "string" } }
+                },
+                required: ["start", "end", "score", "reason", "conflicts"]
+              }
+            }
+          },
+          required: ["suggestions"]
+        };
+
+        const systemPrompt = `You are a smart calendar assistant. Suggest 3-5 time windows for a ${input.duration_minutes}-minute event.
+- Respect prayer times with buffers (pre: ${profile?.prayer_pre_buffer_min || 10}m, post: ${profile?.prayer_post_buffer_min || 20}m)
+- Respect working hours: ${profile?.working_hours_start || "09:00"} - ${profile?.working_hours_end || "17:00"}
+- Avoid conflicts with existing events
+- Consider travel time between locations if applicable
+- Score each suggestion (0-100) based on feasibility and conflicts
+Return suggestions in descending score order.`;
+
+        const suggestions = await openaiJSON(
+          systemPrompt,
+          { 
+            context: ctx, 
+            duration_minutes: input.duration_minutes,
+            preferences: input.preferences || {},
+            title: input.title || "Untitled Event"
+          },
+          "calendar_suggest",
+          schema
+        );
+
+        result.suggestions = suggestions?.suggestions || [];
         break;
       }
 

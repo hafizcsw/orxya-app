@@ -17,6 +17,9 @@ import { useCalendarShortcuts } from "@/hooks/useCalendarShortcuts";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useSelectedDate } from "@/contexts/DateContext";
 import PullToRefresh from "react-simple-pull-to-refresh";
+import { SmartLamp } from "@/components/SmartLamp";
+import { AdvancedEventForm } from "@/components/calendar/AdvancedEventForm";
+import { toast } from "sonner";
 
 type DbEvent = { 
   id: string; 
@@ -45,8 +48,10 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(false);
   const [eventsByDate, setEventsByDate] = useState<Record<string, DbEvent[]>>({});
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [advancedFormOpen, setAdvancedFormOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showPrayerTimes, setShowPrayerTimes] = useState(true);
+  const [editingEvent, setEditingEvent] = useState<any>(null);
 
   // Sync with global date from Navigation
   useEffect(() => {
@@ -146,7 +151,10 @@ export default function CalendarPage() {
             </div>
             
             <Button
-              onClick={() => setQuickAddOpen(true)}
+              onClick={() => {
+                setEditingEvent(null);
+                setAdvancedFormOpen(true);
+              }}
               size="sm"
               variant="outline"
               className="bg-white dark:bg-background hover:bg-accent text-foreground gap-2 shadow-md hover:shadow-lg border border-border/50 font-semibold px-3 sm:px-4 h-9 sm:h-9 text-sm transition-all duration-200 hover:scale-105 active:scale-95"
@@ -365,6 +373,40 @@ export default function CalendarPage() {
             setQuickAddOpen(false);
           }}
         />
+
+        {/* Advanced Event Form */}
+        <Sheet open={advancedFormOpen} onOpenChange={setAdvancedFormOpen}>
+          <SheetContent side="left" className="w-full sm:max-w-2xl overflow-y-auto">
+            <AdvancedEventForm
+              initialData={editingEvent}
+              onSubmit={async (data) => {
+                try {
+                  const { error } = await supabase.functions.invoke("calendar-apply", {
+                    body: {
+                      action: editingEvent?.id ? "update" : "create",
+                      event: data,
+                    },
+                  });
+
+                  if (error) throw error;
+                  toast.success(editingEvent?.id ? "تم تحديث الحدث" : "تم إنشاء الحدث");
+                  setAdvancedFormOpen(false);
+                  setEditingEvent(null);
+                  handleRefresh();
+                } catch (err) {
+                  toast.error("فشل حفظ الحدث");
+                }
+              }}
+              onClose={() => {
+                setAdvancedFormOpen(false);
+                setEditingEvent(null);
+              }}
+            />
+          </SheetContent>
+        </Sheet>
+
+        {/* Smart Lamp Notification */}
+        <SmartLamp />
       </main>
     </Protected>
   );
