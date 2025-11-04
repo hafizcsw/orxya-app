@@ -202,40 +202,39 @@ export default function CalendarDayView({
           {/* Scrollable container */}
           <div className="flex-1 overflow-auto relative bg-background scroll-smooth" ref={gridRef}>
             <div className="flex relative">
-              {/* Enhanced Time Gutter - Google Calendar Style */}
-              <div className="w-14 sm:w-16 flex-shrink-0 bg-background border-l border-border">
-                <div className="relative">
-                  {Array.from({ length: 24 }, (_, h) => {
-                    const period = h < 12 ? 'ص' : 'م';
-                    const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
-                    return (
-                      <div key={h} className="relative" style={{ height: pxPerHour }}>
-                        {/* Main hour line - bold */}
-                        <div className="absolute top-0 left-0 right-0 border-t border-border/50" style={{ zIndex: zIndex.hourLines }} />
-                        
-                        {/* Half-hour line - subtle */}
-                        <div 
-                          className="absolute left-0 right-0 border-t border-border/20 border-dashed" 
-                          style={{ top: pxPerHour / 2, zIndex: zIndex.hourLines }} 
-                        />
-                        
-                        {/* Time label - larger and clearer */}
-                        <span className="absolute -top-3 left-1 text-xs font-medium text-muted-foreground flex items-baseline gap-1">
-                          {h === 0 ? "" : (
-                            <>
-                              <span className="text-base">{displayHour}</span>
-                              <span className="text-[10px] opacity-70">{period}</span>
-                            </>
-                          )}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
+              {/* Clean Time Gutter - Google Calendar Style */}
+              <div className="w-14 sm:w-16 flex-shrink-0 bg-background border-l border-border/10 relative">
+                {Array.from({ length: 24 }, (_, h) => {
+                  const period = h < 12 ? 'ص' : 'م';
+                  const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
+                  
+                  return (
+                    <div key={h} className="relative" style={{ height: pxPerHour }}>
+                      {/* Time label - clean and simple */}
+                      {h !== 0 && (
+                        <div className="absolute -top-2.5 right-2 text-[11px] text-muted-foreground/70 font-medium flex items-baseline gap-0.5">
+                          <span>{displayHour}</span>
+                          <span className="text-[9px]">{period}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
 
-              {/* Day grid */}
+              {/* Day grid with subtle lines */}
               <div className="flex-1 relative">
+                {/* Hour lines background - very subtle */}
+                <div className="absolute inset-0 pointer-events-none">
+                  {Array.from({ length: 24 }, (_, h) => (
+                    <div 
+                      key={h} 
+                      className="absolute left-0 right-0 border-t border-border/5"
+                      style={{ top: h * pxPerHour }}
+                    />
+                  ))}
+                </div>
+
                 <CalendarDay
                   date={anchor}
                   events={dayEvents}

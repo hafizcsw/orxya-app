@@ -139,25 +139,20 @@ export default function WeekView({ anchor, eventsByDate, prayersByDate, onEventC
   return (
     <div ref={gridRef} className="h-[72vh] border rounded-2xl overflow-auto">
       <div className="flex">
-        {/* Enhanced Time Gutter - Google Style */}
-        <div className="w-16 flex-shrink-0 bg-background border-l">
+        {/* Clean Time Gutter - Google Calendar Style */}
+        <div className="w-14 sm:w-16 flex-shrink-0 bg-background border-l border-border/10 relative">
           {Array.from({length:24}, (_,h)=>{
             const period = h < 12 ? 'ص' : 'م';
             const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
             return (
-              <div key={h} className="h-16 relative border-b border-border/10">
-                {/* Main hour line */}
-                <div className="absolute top-0 left-0 right-0 border-t border-border/50" />
-                
-                {/* Time label - larger and clearer */}
-                <span className="absolute -top-3 left-1 text-xs font-medium text-muted-foreground flex items-baseline gap-1">
-                  {h === 0 ? "" : (
-                    <>
-                      <span className="text-base">{displayHour}</span>
-                      <span className="text-[10px] opacity-70">{period}</span>
-                    </>
-                  )}
-                </span>
+              <div key={h} className="h-16 relative">
+                {/* Time label only - clean and simple */}
+                {h !== 0 && (
+                  <div className="absolute -top-2.5 right-2 text-[11px] text-muted-foreground/70 font-medium flex items-baseline gap-0.5">
+                    <span>{displayHour}</span>
+                    <span className="text-[9px]">{period}</span>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -188,10 +183,19 @@ export default function WeekView({ anchor, eventsByDate, prayersByDate, onEventC
                     {d.getDate()}
                   </div>
                 </div>
+                
+                {/* Hour lines - very subtle */}
                 <div className="relative" style={{ height: '1536px' }}>
-                  {Array.from({length:24}, (_,h)=>(
-                    <div key={h} className="h-16 border-b border-border/10" />
-                  ))}
+                  <div className="absolute inset-0 pointer-events-none">
+                    {Array.from({length:24}, (_,h)=>(
+                      <div 
+                        key={h} 
+                        className="absolute left-0 right-0 border-t border-border/5"
+                        style={{ top: h * 64 }}
+                      />
+                    ))}
+                  </div>
+                  
                   <DayPrayerOverlay {...(prayersByDate[iso] ?? {})} />
                   {list.map(ev => {
                     const startMin = minutesSinceMidnight(ev.starts_at);
