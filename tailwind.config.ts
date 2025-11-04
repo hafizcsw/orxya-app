@@ -105,6 +105,10 @@ export default {
           to: { height: "0" },
         },
         "shimmer": {
+          "0%": { backgroundPosition: "-200% center" },
+          "100%": { backgroundPosition: "200% center" },
+        },
+        "shimmer-slide": {
           "0%": { backgroundPosition: "-1000px 0" },
           "100%": { backgroundPosition: "1000px 0" },
         },
@@ -160,7 +164,8 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "shimmer": "shimmer 2s linear infinite",
+        "shimmer": "shimmer 3s linear infinite",
+        "shimmer-slide": "shimmer-slide 2s linear infinite",
         "slide-up": "slide-up 0.3s ease-out",
         "slide-down": "slide-down 0.3s ease-out",
         "slide-in-right": "slide-in-right 0.4s ease-out",

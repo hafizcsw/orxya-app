@@ -12,6 +12,31 @@
   .shimmer-slide {
     animation: shimmer-slide 2s infinite linear;
   }
+  
+  .animate-shimmer {
+    animation: shimmer 3s linear infinite;
+    background-size: 200% auto;
+  }
+  
+  .glow-primary {
+    box-shadow: var(--glow-primary);
+  }
+  
+  .glow-accent {
+    box-shadow: var(--glow-accent);
+  }
+  
+  .glow-neon-cyan {
+    box-shadow: var(--glow-neon-cyan);
+  }
+  
+  .glow-neon-pink {
+    box-shadow: var(--glow-neon-pink);
+  }
+  
+  .glow-neon-green {
+    box-shadow: var(--glow-neon-green);
+  }
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap');
@@ -111,6 +136,13 @@ All colors MUST be HSL.
     --google-blue: 217 91% 60%;
     --google-blue-dark: 217 91% 45%;
     
+    /* Neon Color Palette */
+    --neon-cyan: 190 100% 50%;
+    --neon-pink: 330 100% 50%;
+    --neon-green: 150 100% 50%;
+    --neon-purple: 270 100% 60%;
+    --neon-yellow: 60 100% 50%;
+    
     /* Advanced Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(217 100% 50%), hsl(217 100% 60%));
     --gradient-secondary: linear-gradient(135deg, hsl(210 15% 15%), hsl(210 15% 18%));
@@ -120,6 +152,14 @@ All colors MUST be HSL.
     --gradient-animated: linear-gradient(270deg, hsl(217 100% 50%), hsl(166 100% 50%), hsl(45 100% 50%));
     --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.1), hsl(0 0% 100% / 0.05));
     --gradient-holographic: linear-gradient(135deg, hsl(217 100% 50% / 0.3), hsl(166 100% 50% / 0.2), hsl(45 100% 50% / 0.3));
+    --gradient-neon: linear-gradient(135deg, hsl(var(--neon-cyan) / 0.8), hsl(var(--neon-pink) / 0.8), hsl(var(--neon-green) / 0.8));
+    
+    /* Glow Effects */
+    --glow-primary: 0 0 20px hsl(var(--primary) / 0.5), 0 0 40px hsl(var(--primary) / 0.3);
+    --glow-accent: 0 0 20px hsl(var(--accent) / 0.5), 0 0 40px hsl(var(--accent) / 0.3);
+    --glow-neon-cyan: 0 0 20px hsl(var(--neon-cyan) / 0.6), 0 0 40px hsl(var(--neon-cyan) / 0.4), 0 0 60px hsl(var(--neon-cyan) / 0.2);
+    --glow-neon-pink: 0 0 20px hsl(var(--neon-pink) / 0.6), 0 0 40px hsl(var(--neon-pink) / 0.4), 0 0 60px hsl(var(--neon-pink) / 0.2);
+    --glow-neon-green: 0 0 20px hsl(var(--neon-green) / 0.6), 0 0 40px hsl(var(--neon-green) / 0.4), 0 0 60px hsl(var(--neon-green) / 0.2);
     
     /* Glassmorphism */
     --glass-bg: hsl(210 20% 8% / 0.7);

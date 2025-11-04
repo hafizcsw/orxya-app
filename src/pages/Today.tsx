@@ -9,9 +9,11 @@ import { SessionBanner } from '@/components/SessionBanner'
 import { LocalNotifications } from '@capacitor/local-notifications'
 import { ensureNotificationPerms } from '@/lib/notify'
 import { Protected } from '@/components/Protected'
-import { OryxaButton } from '@/components/oryxa/Button'
-import { OryxaCard } from '@/components/oryxa/Card'
+import { NeonButton } from '@/components/ui/NeonButton'
+import { HolographicCard } from '@/components/ui/HolographicCard'
+import { GlassPanel } from '@/components/ui/GlassPanel'
 import { StatRing } from '@/components/oryxa/StatRing'
+import { BackgroundAI } from '@/components/oryxa/BackgroundAI'
 import { cn } from '@/lib/utils'
 import { Bell, Calendar, DollarSign, TrendingUp, TrendingDown, Clock, Dumbbell, BookOpen, Footprints, Award, Building, Edit2, BarChart3, User, Moon, Heart } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -211,8 +213,8 @@ const Today = () => {
     const isEditing = editingField === field
     
     return (
-      <OryxaCard className="group relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <GlassPanel blur="md" padding="md" className="group relative overflow-hidden hover:scale-105 transition-all duration-300">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-3">
@@ -221,9 +223,10 @@ const Today = () => {
             </span>
             <div className="flex items-center gap-2">
               {!isEditing && (
-                <OryxaButton
+                <NeonButton
                   variant="ghost"
                   size="sm"
+                  glow={false}
                   className="opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={() => {
                     setEditingField(field)
@@ -231,9 +234,9 @@ const Today = () => {
                   }}
                 >
                   <Edit2 className="w-4 h-4" />
-                </OryxaButton>
+                </NeonButton>
               )}
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 duration-300 ${iconBgClass}`}>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all group-hover:scale-110 group-hover:shadow-[0_0_20px_currentColor] duration-300 ${iconBgClass}`}>
                 {icon}
               </div>
             </div>
@@ -247,7 +250,7 @@ const Today = () => {
                 min="0"
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
-                className="input w-full text-2xl font-bold"
+                className="input w-full text-2xl font-bold bg-background/80 backdrop-blur-sm border-2 focus:border-primary focus:shadow-[0_0_20px_hsl(var(--primary)/0.3)] transition-all"
                 autoFocus
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -258,27 +261,28 @@ const Today = () => {
                 }}
               />
               <div className="flex gap-2">
-                <OryxaButton
+                <NeonButton
                   size="sm"
                   variant="primary"
                   onClick={() => updateField(field, editValue)}
                   className="flex-1"
                 >
                   حفظ
-                </OryxaButton>
-                <OryxaButton
+                </NeonButton>
+                <NeonButton
                   size="sm"
                   variant="ghost"
+                  glow={false}
                   onClick={() => setEditingField(null)}
                   className="flex-1"
                 >
                   إلغاء
-                </OryxaButton>
+                </NeonButton>
               </div>
             </div>
           ) : (
             <div
-              className="text-3xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text cursor-pointer hover:scale-105 transition-transform"
+              className="text-3xl font-bold mb-2 bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent cursor-pointer hover:scale-105 transition-transform animate-shimmer bg-[length:200%_auto]"
               onClick={() => {
                 setEditingField(field)
                 setEditValue(value || 0)
@@ -288,13 +292,14 @@ const Today = () => {
             </div>
           )}
         </div>
-      </OryxaCard>
+      </GlassPanel>
     )
   }
 
   return (
     <Protected>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background relative">
+        <BackgroundAI intensity="medium" />
         {/* Sticky Header - Period Selection Only */}
         <div className={cn(
           "sticky top-12 z-30 bg-background/95 backdrop-blur-xl border-b border-border transition-all duration-300 px-4 py-2",
@@ -360,10 +365,10 @@ const Today = () => {
           <SessionBanner />
 
           {loading ? (
-            <OryxaCard className="p-6 text-center">
+            <HolographicCard variant="glass" className="p-6 text-center">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               <p className="mt-2 text-sm text-muted-foreground">جار التحميل…</p>
-            </OryxaCard>
+            </HolographicCard>
           ) : report ? (
               <>
                 {/* Section 1: Financial Overview - الدوائر المالية الكبيرة */}
@@ -550,22 +555,22 @@ const Today = () => {
 
                 {/* Edit Modals - Enhanced with Animations */}
                 {editingBalance && (
-                <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-                  <OryxaCard className="max-w-md w-full animate-scale-in shadow-2xl border-2 border-primary/20">
-                    <div className="relative">
-                      <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-20 h-20 rounded-full bg-[hsl(var(--whoop-blue))] opacity-20 blur-2xl" />
-                      <h3 className="text-2xl font-bold mb-6 text-center bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-50 flex items-center justify-center p-4 animate-fade-in">
+                  <HolographicCard variant="neon" glow className="max-w-md w-full animate-scale-in shadow-[0_0_50px_hsl(var(--primary)/0.5)]">
+                    <div className="relative p-6">
+                      <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-20 h-20 rounded-full bg-primary opacity-30 blur-3xl animate-pulse-glow" />
+                      <h3 className="text-2xl font-bold mb-6 text-center bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-shimmer bg-[length:200%_auto]">
 تعديل الرصيد الحقيقي
                       </h3>
                       <div className="relative mb-6">
-                        <div className="absolute inset-0 bg-primary/5 blur-xl rounded-lg" />
+                        <div className="absolute inset-0 bg-primary/10 blur-xl rounded-lg animate-pulse-glow" />
                         <input
                           type="number"
                           step="0.01"
                           min="0"
                           value={balanceValue}
                           onChange={(e) => setBalanceValue(e.target.value)}
-                          className="input w-full text-3xl font-bold text-center relative z-10 bg-background/50 backdrop-blur-sm border-2 focus:border-primary transition-all"
+                          className="input w-full text-3xl font-bold text-center relative z-10 bg-background/50 backdrop-blur-sm border-2 focus:border-primary focus:shadow-[0_0_30px_hsl(var(--primary)/0.5)] transition-all"
                           autoFocus
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
@@ -577,131 +582,135 @@ const Today = () => {
                         />
                       </div>
                       <div className="flex gap-3">
-                        <OryxaButton
+                        <NeonButton
                           size="md"
                           variant="primary"
                           onClick={() => updateBalance(balanceValue)}
-                          className="flex-1 shadow-lg hover:shadow-xl transition-all"
+                          className="flex-1"
                         >
                           حفظ
-                        </OryxaButton>
-                        <OryxaButton
+                        </NeonButton>
+                        <NeonButton
                           size="md"
                           variant="ghost"
+                          glow={false}
                           onClick={() => setEditingBalance(false)}
                           className="flex-1"
                         >
                           إلغاء
-                        </OryxaButton>
+                        </NeonButton>
                       </div>
                     </div>
-                  </OryxaCard>
+                  </HolographicCard>
                 </div>
               )}
               
               {editingField && editingField !== 'balance' && (
-                <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-                  <OryxaCard className="max-w-md w-full animate-scale-in shadow-2xl border-2 border-primary/20">
-                    <h3 className="text-2xl font-bold mb-6 text-center">
-                      {editingField === 'work_hours' && 'تعديل ساعات العمل'}
-                      {editingField === 'study_hours' && 'تعديل ساعات الدراسة'}
-                      {editingField === 'mma_hours' && 'تعديل ساعات MMA'}
-                      {editingField === 'walk_min' && 'تعديل دقائق المشي'}
-                      {editingField === 'sleep_hours' && 'تعديل ساعات النوم'}
-                      {editingField === 'recovery_score' && 'تعديل نسبة الاستشفاء'}
-                    </h3>
-                    <div className="relative mb-6">
-                      <input
-                        type="number"
-                        step={editingField === 'walk_min' ? '1' : '0.5'}
-                        min="0"
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        className="input w-full text-3xl font-bold text-center bg-background/50 backdrop-blur-sm border-2 focus:border-primary transition-all"
-                        autoFocus
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            updateField(editingField, editValue);
-                          } else if (e.key === 'Escape') {
-                            setEditingField(null);
-                          }
-                        }}
-                      />
+                <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-50 flex items-center justify-center p-4 animate-fade-in">
+                  <HolographicCard variant="neon" glow className="max-w-md w-full animate-scale-in shadow-[0_0_50px_hsl(var(--primary)/0.5)]">
+                    <div className="p-6">
+                      <h3 className="text-2xl font-bold mb-6 text-center bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-shimmer bg-[length:200%_auto]">
+                        {editingField === 'work_hours' && 'تعديل ساعات العمل'}
+                        {editingField === 'study_hours' && 'تعديل ساعات الدراسة'}
+                        {editingField === 'mma_hours' && 'تعديل ساعات MMA'}
+                        {editingField === 'walk_min' && 'تعديل دقائق المشي'}
+                        {editingField === 'sleep_hours' && 'تعديل ساعات النوم'}
+                        {editingField === 'recovery_score' && 'تعديل نسبة الاستشفاء'}
+                      </h3>
+                      <div className="relative mb-6">
+                        <input
+                          type="number"
+                          step={editingField === 'walk_min' ? '1' : '0.5'}
+                          min="0"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          className="input w-full text-3xl font-bold text-center bg-background/50 backdrop-blur-sm border-2 focus:border-primary focus:shadow-[0_0_30px_hsl(var(--primary)/0.5)] transition-all"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              updateField(editingField, editValue);
+                            } else if (e.key === 'Escape') {
+                              setEditingField(null);
+                            }
+                          }}
+                        />
+                      </div>
+                      <div className="flex gap-3">
+                        <NeonButton
+                          size="md"
+                          variant="primary"
+                          onClick={() => updateField(editingField, editValue)}
+                          className="flex-1"
+                        >
+                          حفظ
+                        </NeonButton>
+                        <NeonButton
+                          size="md"
+                          variant="ghost"
+                          glow={false}
+                          onClick={() => setEditingField(null)}
+                          className="flex-1"
+                        >
+                          إلغاء
+                        </NeonButton>
+                      </div>
                     </div>
-                    <div className="flex gap-3">
-                      <OryxaButton
-                        size="md"
-                        variant="primary"
-                        onClick={() => updateField(editingField, editValue)}
-                        className="flex-1 shadow-lg hover:shadow-xl transition-all"
-                      >
-                        حفظ
-                      </OryxaButton>
-                      <OryxaButton
-                        size="md"
-                        variant="ghost"
-                        onClick={() => setEditingField(null)}
-                        className="flex-1"
-                      >
-                        إلغاء
-                      </OryxaButton>
-                    </div>
-                  </OryxaCard>
+                  </HolographicCard>
                 </div>
               )}
 
               {/* Sales */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <OryxaCard>
+                <GlassPanel blur="lg" className="hover:scale-105 transition-all duration-300">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
                       منح دراسية
                     </span>
-                    <div className="w-10 h-10 rounded-full bg-[hsl(var(--whoop-green)_/_0.1)] flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-[hsl(var(--whoop-green)_/_0.1)] flex items-center justify-center hover:shadow-[0_0_20px_hsl(var(--whoop-green)/0.5)] transition-all">
                       <Award className="w-5 h-5 text-[hsl(var(--whoop-green))]" />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <div className="text-sm text-muted-foreground">الربح</div>
-                    <div className="text-2xl font-bold text-[hsl(var(--whoop-green))]">${report.scholarship_profit || 0}</div>
+                    <div className="text-2xl font-bold text-[hsl(var(--whoop-green))] drop-shadow-[0_0_10px_hsl(var(--whoop-green)/0.5)]">${report.scholarship_profit || 0}</div>
                   </div>
-                </OryxaCard>
+                </GlassPanel>
                 
-                <OryxaCard>
+                <GlassPanel blur="lg" className="hover:scale-105 transition-all duration-300">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
                       فلل
                     </span>
-                    <div className="w-10 h-10 rounded-full bg-[hsl(var(--whoop-blue)_/_0.1)] flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-[hsl(var(--whoop-blue)_/_0.1)] flex items-center justify-center hover:shadow-[0_0_20px_hsl(var(--whoop-blue)/0.5)] transition-all">
                       <Building className="w-5 h-5 text-[hsl(var(--whoop-blue))]" />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <div className="text-sm text-muted-foreground">الربح</div>
-                    <div className="text-2xl font-bold text-[hsl(var(--whoop-blue))]">${report.villa_profit || 0}</div>
+                    <div className="text-2xl font-bold text-[hsl(var(--whoop-blue))] drop-shadow-[0_0_10px_hsl(var(--whoop-blue)/0.5)]">${report.villa_profit || 0}</div>
                   </div>
-                </OryxaCard>
+                </GlassPanel>
                 
-                <OryxaCard>
+                <GlassPanel blur="lg" className="hover:scale-105 transition-all duration-300">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
                       أخرى
                     </span>
-                    <div className="w-10 h-10 rounded-full bg-[hsl(var(--whoop-yellow)_/_0.1)] flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-[hsl(var(--whoop-yellow)_/_0.1)] flex items-center justify-center hover:shadow-[0_0_20px_hsl(var(--whoop-yellow)/0.5)] transition-all">
                       <DollarSign className="w-5 h-5 text-[hsl(var(--whoop-yellow))]" />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <div className="text-sm text-muted-foreground">الربح</div>
-                    <div className="text-2xl font-bold text-[hsl(var(--whoop-yellow))]">${report.other_profit || 0}</div>
+                    <div className="text-2xl font-bold text-[hsl(var(--whoop-yellow))] drop-shadow-[0_0_10px_hsl(var(--whoop-yellow)/0.5)]">${report.other_profit || 0}</div>
                   </div>
-                </OryxaCard>
+                </GlassPanel>
               </div>
 
               {/* Charts */}
               {period !== 'daily' && report.trend_data && report.trend_data.length > 0 && (
                 <div className="space-y-4">
-                  <OryxaCard className="p-6">
+                  <HolographicCard variant="glass" className="p-6">
                     <h4 className="font-medium mb-4 flex items-center gap-2">
                       <div className="w-8 h-8 rounded-full bg-[hsl(var(--whoop-blue)_/_0.1)] flex items-center justify-center">
                         <BarChart3 className="w-4 h-4 text-[hsl(var(--whoop-blue))]" />
@@ -725,9 +734,9 @@ const Today = () => {
                         <Line type="monotone" dataKey="spend_usd" stroke="hsl(var(--whoop-red))" name="المصروفات" strokeWidth={2} />
                       </LineChart>
                     </ResponsiveContainer>
-                  </OryxaCard>
+                  </HolographicCard>
 
-                  <OryxaCard className="p-6">
+                  <HolographicCard variant="glass" className="p-6">
                     <h4 className="font-medium mb-4 flex items-center gap-2">
                       <div className="w-8 h-8 rounded-full bg-[hsl(var(--whoop-blue)_/_0.1)] flex items-center justify-center">
                         <BarChart3 className="w-4 h-4 text-[hsl(var(--whoop-blue))]" />
@@ -752,14 +761,14 @@ const Today = () => {
                         <Bar dataKey="mma_hours" fill="hsl(var(--whoop-red))" name="MMA" />
                       </BarChart>
                     </ResponsiveContainer>
-                  </OryxaCard>
+                  </HolographicCard>
                 </div>
               )}
             </>
           ) : (
-            <OryxaCard className="p-6 text-center">
+            <HolographicCard variant="glass" className="p-6 text-center">
               <p className="text-muted-foreground">لا توجد بيانات لعرضها</p>
-            </OryxaCard>
+            </HolographicCard>
           )}
         </div>
 
