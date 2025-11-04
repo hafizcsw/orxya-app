@@ -5,7 +5,7 @@ import AuthSheet from "@/components/AuthSheet";
 import { useUser } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/telemetry";
-import { User, ChevronLeft, ChevronRight, Settings } from "lucide-react";
+import { User, ChevronLeft, ChevronRight } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CalendarPopover } from "@/components/CalendarPopover";
 import { useSelectedDate } from "@/contexts/DateContext";
@@ -171,13 +171,7 @@ const Navigation = () => {
 
           {/* Right: Settings & Logo */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            <button 
-              onClick={() => navigate('/settings')}
-              className="w-8 h-8 rounded-lg bg-secondary/60 hover:bg-secondary/80 flex items-center justify-center transition-all"
-              title="الإعدادات"
-            >
-              <Settings className="w-4 h-4" />
-            </button>
+            
             <Link to="/" className="text-lg font-bold text-foreground hover:text-primary transition-colors">
               Oryxa
             </Link>
