@@ -14,29 +14,23 @@ serve(async (req) => {
   try {
     console.log('=== Calendar AI Insights Function Started ===');
     
-    // Get JWT from Authorization header
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      console.error('No Authorization header');
-      return new Response(
-        JSON.stringify({ error: 'غير مصرح', details: 'Auth session missing!' }),
-        {
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // Create Supabase client with SERVICE ROLE for admin access
-    const supabaseAdmin = createClient(
+    // Create Supabase client with proper auth configuration
+    const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: req.headers.get('Authorization')! },
+        },
+        auth: {
+          persistSession: false,
+        },
+      }
     );
 
-    // Get user from JWT (already verified by Supabase when verify_jwt = true)
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
+    // Get the authenticated user
+    console.log('Getting user from auth token...');
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
 
     if (userError || !user) {
       console.error('Auth error:', userError?.message || 'No user');
@@ -50,17 +44,6 @@ serve(async (req) => {
     }
 
     console.log('Authenticated user:', user.id);
-
-    // Create user-scoped client for data operations
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: authHeader },
-        },
-      }
-    );
 
     const { date, currentTime } = await req.json();
     console.log('Processing request for date:', date);
