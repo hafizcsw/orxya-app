@@ -139,31 +139,33 @@ const Navigation = () => {
             </div>
           )}
 
-          {/* Center: Calendar Navigation */}
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            <button
-              onClick={goToPreviousDay}
-              className="w-7 h-7 rounded-lg bg-secondary/60 hover:bg-secondary/80 flex items-center justify-center transition-all"
-            >
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-            
-            <CalendarPopover 
-              selectedDate={selectedDate}
-              onDateChange={(date) => setSelectedDate(date)}
-            >
-              <button className="px-3 py-1 rounded-lg bg-secondary/60 hover:bg-secondary/80 transition-all">
-                <span className="font-bold text-xs tracking-wide">{formatDate(selectedDate)}</span>
+          {/* Center: Calendar Navigation - Hidden on Calendar Page */}
+          {location.pathname !== '/calendar' && (
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <button
+                onClick={goToPreviousDay}
+                className="w-7 h-7 rounded-lg bg-secondary/60 hover:bg-secondary/80 flex items-center justify-center transition-all"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
               </button>
-            </CalendarPopover>
-            
-            <button
-              onClick={goToNextDay}
-              className="w-7 h-7 rounded-lg bg-secondary/60 hover:bg-secondary/80 flex items-center justify-center transition-all"
-            >
-              <ChevronLeft className="w-3.5 h-3.5" />
-            </button>
-          </div>
+              
+              <CalendarPopover 
+                selectedDate={selectedDate}
+                onDateChange={(date) => setSelectedDate(date)}
+              >
+                <button className="px-3 py-1 rounded-lg bg-secondary/60 hover:bg-secondary/80 transition-all">
+                  <span className="font-bold text-xs tracking-wide">{formatDate(selectedDate)}</span>
+                </button>
+              </CalendarPopover>
+              
+              <button
+                onClick={goToNextDay}
+                className="w-7 h-7 rounded-lg bg-secondary/60 hover:bg-secondary/80 flex items-center justify-center transition-all"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
 
           {/* Right: Logo + Theme Toggle */}
           <div className="flex items-center gap-2 flex-shrink-0">
