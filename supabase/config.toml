@@ -105,3 +105,9 @@ verify_jwt = true
 [functions.calendar-sync-google]
 verify_jwt = true
 
+[functions.ics-export]
+verify_jwt = true
+
+[functions.ics-import]
+verify_jwt = true
+

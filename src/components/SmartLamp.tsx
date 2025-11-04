@@ -114,14 +114,16 @@ export function SmartLamp({ className }: SmartLampProps) {
     try {
       const { error } = await supabase.functions.invoke("calendar-apply", {
         body: {
-          action: "move",
-          event_id: nextEvent.id,
-          shift_minutes: minutes,
+          action: "update",
+          event: { id: nextEvent.id },
+          shift_min: minutes,
+          propagate_google: false
         },
       });
 
       if (error) throw error;
       toast.success(`تم تأجيل الحدث ${minutes} دقيقة`);
+      setDismissed(true);
     } catch (err) {
       toast.error("فشل تأجيل الحدث");
     }
@@ -133,13 +135,18 @@ export function SmartLamp({ className }: SmartLampProps) {
     try {
       const { error } = await supabase.functions.invoke("calendar-apply", {
         body: {
-          action: "mark_free",
-          event_id: nextEvent.id,
+          action: "update",
+          event: { 
+            id: nextEvent.id,
+            busy_state: "free"
+          },
+          propagate_google: false
         },
       });
 
       if (error) throw error;
       toast.success("تم وضع علامة متاح");
+      setDismissed(true);
     } catch (err) {
       toast.error("فشل تحديث الحدث");
     }

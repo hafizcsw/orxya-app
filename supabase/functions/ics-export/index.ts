@@ -6,8 +6,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-function icsEscape(s: string) {
-  return s.replace(/\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
+function esc(s: string) {
+  return (s || "").replace(/\\/g,"\\\\").replace(/\n/g,"\\n").replace(/,/g,"\\,").replace(/;/g,"\\;");
+}
+
+function fmt(dt: string) {
+  // UTC → 20251104T093000Z
+  const d = new Date(dt);
+  const pad = (n:number)=> String(n).padStart(2,"0");
+  return `${d.getUTCFullYear()}${pad(d.getUTCMonth()+1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`;
 }
 
 serve(async (req) => {
@@ -15,88 +22,71 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const jwt = req.headers.get("Authorization")?.replace("Bearer ", "");
-  if (!jwt) {
-    return new Response(
-      JSON.stringify({ error: "No authorization header", code: "NO_AUTH" }),
-      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  }
+  try {
+    const jwt = req.headers.get("Authorization")?.replace("Bearer ","");
+    if (!jwt) return new Response("no_auth", { status: 401, headers: corsHeaders });
 
-  const sb = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!,
-    { global: { headers: { Authorization: `Bearer ${jwt}` } } }
-  );
+    const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: `Bearer ${jwt}` } }
+    });
 
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) {
-    return new Response(
-      JSON.stringify({ error: "Invalid user", code: "INVALID_USER" }),
-      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  }
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return new Response("bad_user", { status: 401, headers: corsHeaders });
 
-  const { data: flags } = await sb.rpc("get_user_flags", { p_user_id: user.id });
-  if (!flags?.ff_calendar_ics) {
-    return new Response(
-      JSON.stringify({ error: "ICS export feature not enabled", code: "FEATURE_DISABLED" }),
-      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  }
+    const body = await req.json().catch(()=> ({}));
+    const start = body.start ?? new Date(Date.now()-7*24*3600e3).toISOString();
+    const end   = body.end   ?? new Date(Date.now()+30*24*3600e3).toISOString();
 
-  const { start, end } = await req.json().catch(() => ({}));
-  if (!start || !end) {
-    return new Response(
-      JSON.stringify({ error: "Missing start and end dates", code: "MISSING_DATES" }),
-      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  }
+    const { data: rows, error } = await sb
+      .from("events")
+      .select("id,title,description,location,starts_at,ends_at,timezone,provider,external_id")
+      .eq("owner_id", user.id)
+      .is("deleted_at", null)
+      .gte("starts_at", start)
+      .lte("ends_at", end)
+      .order("starts_at", { ascending: true });
 
-  const { data: evts, error } = await sb
-    .from("events")
-    .select("id,title,description,location,starts_at,ends_at,rrule,all_day")
-    .gte("starts_at", start)
-    .lte("ends_at", end)
-    .eq("owner_id", user.id);
+    if (error) return new Response(error.message, { status: 400, headers: corsHeaders });
 
-  if (error) {
-    return new Response(
-      JSON.stringify({ error: error.message, code: "QUERY_FAILED" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  }
+    const now = fmt(new Date().toISOString());
+    let ics = [
+      "BEGIN:VCALENDAR",
+      "PRODID:-//Oryxa//Calendar//EN",
+      "VERSION:2.0",
+      "CALSCALE:GREGORIAN",
+      "METHOD:PUBLISH"
+    ];
 
-  const lines: string[] = [];
-  lines.push("BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Oryxa//Calendar//EN");
-
-  (evts ?? []).forEach((e) => {
-    lines.push("BEGIN:VEVENT");
-    lines.push(`UID:${e.id}@oryxa`);
-    lines.push(
-      `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z/, "Z")}`
-    );
-
-    if (e.all_day) {
-      lines.push(`DTSTART;VALUE=DATE:${e.starts_at.slice(0, 10).replace(/-/g, "")}`);
-      lines.push(`DTEND;VALUE=DATE:${e.ends_at.slice(0, 10).replace(/-/g, "")}`);
-    } else {
-      const fmt = (iso: string) => iso.replace(/[-:]/g, "").replace(/\.\d{3}Z/, "Z");
-      lines.push(`DTSTART:${fmt(e.starts_at)}`);
-      lines.push(`DTEND:${fmt(e.ends_at)}`);
+    for (const r of rows ?? []) {
+      const uid = r.external_id || `oryxa-${r.id}@local`;
+      ics.push(
+        "BEGIN:VEVENT",
+        `UID:${esc(uid)}`,
+        `DTSTAMP:${now}`,
+        `DTSTART:${fmt(r.starts_at)}`,
+        `DTEND:${fmt(r.ends_at)}`,
+        `SUMMARY:${esc(r.title || "")}`,
+        r.description ? `DESCRIPTION:${esc(r.description)}` : "",
+        r.location ? `LOCATION:${esc(r.location)}` : "",
+        "END:VEVENT"
+      );
     }
 
-    if (e.rrule) lines.push(`RRULE:${e.rrule}`);
-    if (e.title) lines.push(`SUMMARY:${icsEscape(e.title)}`);
-    if (e.location) lines.push(`LOCATION:${icsEscape(e.location)}`);
-    if (e.description) lines.push(`DESCRIPTION:${icsEscape(e.description)}`);
-    lines.push("END:VEVENT");
-  });
+    ics.push("END:VCALENDAR");
+    const text = ics.filter(Boolean).join("\r\n");
 
-  lines.push("END:VCALENDAR");
-  const ics = lines.join("\r\n");
-
-  return new Response(ics, {
-    headers: { ...corsHeaders, "Content-Type": "text/calendar; charset=utf-8" },
-  });
+    return new Response(text, {
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "text/calendar; charset=utf-8",
+        "Content-Disposition": `attachment; filename="oryxa-${new Date().toISOString().slice(0,10)}.ics"`
+      }
+    });
+  } catch (e) {
+    console.error("ics-export error:", e);
+    return new Response(JSON.stringify({ error: String(e) }), { 
+      status: 500, 
+      headers: { ...corsHeaders, "Content-Type": "application/json" } 
+    });
+  }
 });

@@ -45,8 +45,28 @@ serve(async (req) => {
         break;
       }
       case 'update': {
+        // Support for shift_min from Android Smart Lamp actions
+        const shiftMin = body.shift_min as number | undefined;
+        
+        let updateData = { ...event };
+        
+        if (shiftMin && event.id) {
+          const { data: existing } = await sb.from('events')
+            .select('starts_at,ends_at')
+            .eq('id', event.id)
+            .eq('owner_id', user.id)
+            .maybeSingle();
+          
+          if (existing?.starts_at && existing?.ends_at) {
+            const s = new Date(existing.starts_at).getTime() + shiftMin * 60_000;
+            const e = new Date(existing.ends_at).getTime() + shiftMin * 60_000;
+            updateData.starts_at = new Date(s).toISOString();
+            updateData.ends_at = new Date(e).toISOString();
+          }
+        }
+        
         const { data, error } = await sb.from('events')
-          .update(event)
+          .update(updateData)
           .eq('id', event.id)
           .eq('owner_id', user.id)
           .select().single();
