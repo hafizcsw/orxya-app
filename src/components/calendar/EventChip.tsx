@@ -225,17 +225,17 @@ export default function EventChip({
       {/* العداد التنازلي / الحالة */}
       <div className="flex items-center gap-1.5 text-[11px] mb-1">
         {isUpcoming && countdown.total > 0 && (
-          <span className="px-2 py-0.5 rounded-md bg-primary/15 text-primary font-medium border border-primary/20">
+          <span className="px-2 py-0.5 rounded-md bg-primary/15 text-primary font-medium">
             {countdown.formattedShort}
           </span>
         )}
         {isOngoing && countdown.total > 0 && (
-          <span className="px-2 py-0.5 rounded-md bg-destructive/15 text-destructive font-medium border border-destructive/20 animate-pulse">
+          <span className="px-2 py-0.5 rounded-md bg-destructive/15 text-destructive font-medium animate-pulse">
             متبقي {countdown.minutes}د
           </span>
         )}
         {isPast && (
-          <span className="px-2 py-0.5 rounded-md bg-success/15 text-success font-medium border border-success/20 flex items-center gap-1">
+          <span className="px-2 py-0.5 rounded-md bg-success/15 text-success font-medium flex items-center gap-1">
             <CheckCircle2 className="w-2.5 h-2.5" />
             مكتمل
           </span>
@@ -252,7 +252,7 @@ export default function EventChip({
 
       {/* شريط التقدم للأحداث الجارية */}
       {isOngoing && event.starts_at && event.ends_at && (
-        <div className="mt-2 pt-1.5 border-t border-border/30">
+        <div className="mt-2 pt-1.5">
           <div className="w-full h-1 bg-muted/50 rounded-full overflow-hidden">
             <div 
               className="h-full bg-gradient-to-r from-primary via-primary to-primary/70 rounded-full transition-all duration-1000"
