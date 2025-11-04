@@ -1,204 +1,127 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { CalendarParitySettings } from "@/components/calendar/CalendarParitySettings";
-import { ChevronLeft } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
+import { useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowRight, Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CalendarParitySettings } from '@/components/calendar/CalendarParitySettings';
+import { GeneralSettings } from '@/pages/Settings/components/GeneralSettings';
+import { EventSettings } from '@/pages/Settings/components/EventSettings';
+import { ViewSettings } from '@/pages/Settings/components/ViewSettings';
+import { NotificationSettings } from '@/pages/Settings/components/NotificationSettings';
+import { cn } from '@/lib/utils';
+
+type SettingsSection = 'general' | 'events' | 'view' | 'notifications' | 'integration';
 
 export default function CalendarSettings() {
-  const [activeSection, setActiveSection] = useState("general");
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialSection = (searchParams.get('section') as SettingsSection) || 'general';
+  const [activeSection, setActiveSection] = useState<SettingsSection>(initialSection);
 
   const sections = [
-    { id: "general", label: "General" },
-    { id: "events", label: "Events & Calendars" },
-    { id: "view", label: "View Options" },
-    { id: "notifications", label: "Notifications" },
-    { id: "integration", label: "Integration & Sync" },
+    { id: 'general' as const, label: 'عام', englishLabel: 'General' },
+    { id: 'events' as const, label: 'الأحداث والتقويمات', englishLabel: 'Events & Calendars' },
+    { id: 'view' as const, label: 'خيارات العرض', englishLabel: 'View Options' },
+    { id: 'notifications' as const, label: 'التنبيهات', englishLabel: 'Notifications' },
+    { id: 'integration' as const, label: 'التكامل والمزامنة', englishLabel: 'Integration & Sync' },
   ];
 
+  const renderSection = () => {
+    switch (activeSection) {
+      case 'general':
+        return <GeneralSettings />;
+      case 'events':
+        return <EventSettings />;
+      case 'view':
+        return <ViewSettings />;
+      case 'notifications':
+        return <NotificationSettings />;
+      case 'integration':
+        return <CalendarParitySettings />;
+      default:
+        return <GeneralSettings />;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#f8f9fa]">
-      {/* Header */}
-      <header className="bg-white border-b border-[#e0e0e0] sticky top-0 z-10">
-        <div className="flex items-center gap-4 px-6 py-4">
-          <button
-            onClick={() => navigate("/calendar")}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            aria-label="Back to Calendar"
-          >
-            <ChevronLeft className="w-5 h-5 text-[#5f6368]" />
-          </button>
-          <h1 className="text-[22px] text-[#202124]">Settings</h1>
+    <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#202124]">
+      <header className="bg-white dark:bg-[#292a2d] border-b border-[#dadce0] dark:border-[#5f6368] px-6 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/calendar')}
+              className="flex items-center gap-2 hover:bg-[#f1f3f4] dark:hover:bg-[#3c4043]"
+            >
+              <ArrowRight className="w-4 h-4" />
+              <span className="text-sm">رجوع</span>
+            </Button>
+            <div className="h-6 w-px bg-[#dadce0] dark:bg-[#5f6368]" />
+            <div className="flex items-center gap-2">
+              <Settings className="w-5 h-5 text-[#5f6368] dark:text-[#9aa0a6]" />
+              <h1 className="text-[22px] font-normal text-[#3c4043] dark:text-[#e8eaed]">الإعدادات</h1>
+            </div>
+          </div>
         </div>
       </header>
 
       <div className="flex">
-        {/* Sidebar Navigation */}
-        <aside className="hidden md:block w-[280px] bg-white border-r border-[#e0e0e0] min-h-[calc(100vh-73px)]">
-          <div className="p-6 border-b border-[#e0e0e0]">
-            <h2 className="text-xs text-[#5f6368] mb-1">Settings for</h2>
-            <p className="text-sm text-[#202124]">Calendar</p>
-          </div>
-          <nav className="py-2">
-            {sections.map((section) => (
-              <button
-                key={section.id}
-                onClick={() => setActiveSection(section.id)}
-                className={`w-full text-left px-6 py-3 text-sm transition-colors relative ${
-                  activeSection === section.id
-                    ? "bg-[#e8f0fe] text-[#1967d2] font-medium"
-                    : "text-[#202124] hover:bg-[#f1f3f4]"
-                }`}
-              >
-                {activeSection === section.id && (
-                  <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#1967d2]" />
-                )}
-                {section.label}
-              </button>
-            ))}
+        <aside className="hidden lg:block w-64 border-l border-[#dadce0] dark:border-[#5f6368] bg-white dark:bg-[#292a2d]">
+          <nav className="p-6">
+            <div className="space-y-1">
+              {sections.map((section) => {
+                const isActive = activeSection === section.id;
+                return (
+                  <button
+                    key={section.id}
+                    onClick={() => setActiveSection(section.id)}
+                    className={cn(
+                      "w-full text-right px-4 py-2.5 rounded-lg text-sm transition-all",
+                      isActive
+                        ? "bg-[#e8f0fe] dark:bg-[#1a73e8] text-[#1a73e8] dark:text-white font-medium border-l-4 border-[#1a73e8]"
+                        : "text-[#5f6368] dark:text-[#9aa0a6] hover:bg-[#f1f3f4] dark:hover:bg-[#3c4043] hover:text-[#3c4043] dark:hover:text-[#e8eaed]"
+                    )}
+                  >
+                    <div className="text-right">
+                      <div>{section.label}</div>
+                      <div className={cn(
+                        "text-xs mt-0.5",
+                        isActive ? "text-[#1a73e8] dark:text-white" : "text-[#5f6368] dark:text-[#9aa0a6]"
+                      )}>
+                        {section.englishLabel}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </nav>
         </aside>
 
-        {/* Mobile Section Selector */}
-        <div className="md:hidden w-full bg-white border-b border-[#e0e0e0] sticky top-[73px] z-10">
-          <select
-            value={activeSection}
-            onChange={(e) => setActiveSection(e.target.value)}
-            className="w-full p-4 bg-transparent text-[#202124] border-none outline-none"
-          >
-            {sections.map((section) => (
-              <option key={section.id} value={section.id}>
-                {section.label}
-              </option>
-            ))}
-          </select>
+        <div className="lg:hidden p-4 bg-white dark:bg-[#292a2d] border-b border-[#dadce0] dark:border-[#5f6368]">
+          <Select value={activeSection} onValueChange={(value) => setActiveSection(value as SettingsSection)}>
+            <SelectTrigger className="w-full h-9 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="z-[100]">
+              {sections.map((section) => (
+                <SelectItem key={section.id} value={section.id} className="text-sm">
+                  <div className="text-right">
+                    <div>{section.label}</div>
+                    <div className="text-xs text-muted-foreground">{section.englishLabel}</div>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
-        {/* Main Content */}
-        <main className="flex-1 bg-white mx-4 md:mx-8 my-6 rounded-lg shadow-sm min-h-[calc(100vh-120px)]">
-          <div className="max-w-[800px] p-8">
-            {activeSection === "integration" && <CalendarParitySettings />}
-            
-            {activeSection === "general" && (
-              <div>
-                <h1 className="text-[22px] text-[#202124] mb-8">General</h1>
-                
-                <div className="space-y-6">
-                  <div className="flex items-start justify-between py-4 border-b border-[#e0e0e0]">
-                    <div className="flex-1">
-                      <h3 className="text-sm font-medium text-[#202124] mb-1">Language</h3>
-                      <p className="text-xs text-[#5f6368]">العربية</p>
-                    </div>
-                    <Select defaultValue="ar">
-                      <SelectTrigger className="w-[200px] bg-[#f1f3f4] border-none text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="ar">العربية</SelectItem>
-                        <SelectItem value="en">English</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex items-start justify-between py-4 border-b border-[#e0e0e0]">
-                    <div className="flex-1">
-                      <h3 className="text-sm font-medium text-[#202124] mb-1">Country</h3>
-                      <p className="text-xs text-[#5f6368]">روسيا (Россия)</p>
-                    </div>
-                    <Select defaultValue="ru">
-                      <SelectTrigger className="w-[200px] bg-[#f1f3f4] border-none text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="ru">روسيا (Россия)</SelectItem>
-                        <SelectItem value="us">United States</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex items-start justify-between py-4 border-b border-[#e0e0e0]">
-                    <div className="flex-1">
-                      <h3 className="text-sm font-medium text-[#202124] mb-1">Time zone</h3>
-                      <p className="text-xs text-[#5f6368]">تنسيق التاريخ</p>
-                    </div>
-                    <Select defaultValue="date">
-                      <SelectTrigger className="w-[200px] bg-[#f1f3f4] border-none text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="date">12/31/2025</SelectItem>
-                        <SelectItem value="date2">31/12/2025</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex items-start justify-between py-4 border-b border-[#e0e0e0]">
-                    <div className="flex-1">
-                      <h3 className="text-sm font-medium text-[#202124] mb-1">Date format</h3>
-                      <p className="text-xs text-[#5f6368]">تنسيق الوقت</p>
-                    </div>
-                    <Select defaultValue="time">
-                      <SelectTrigger className="w-[200px] bg-[#f1f3f4] border-none text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="time">1:00 م</SelectItem>
-                        <SelectItem value="time24">13:00</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeSection === "events" && (
-              <div>
-                <h1 className="text-[22px] text-[#202124] mb-8">Events & Calendars</h1>
-                <div className="space-y-6">
-                  <div className="py-4 border-b border-[#e0e0e0]">
-                    <p className="text-sm font-medium text-[#202124]">Default event duration</p>
-                    <p className="text-xs text-[#5f6368] mt-1">Coming soon</p>
-                  </div>
-                  <div className="py-4 border-b border-[#e0e0e0]">
-                    <p className="text-sm font-medium text-[#202124]">Event visibility</p>
-                    <p className="text-xs text-[#5f6368] mt-1">Coming soon</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeSection === "view" && (
-              <div>
-                <h1 className="text-[22px] text-[#202124] mb-8">View Options</h1>
-                <div className="space-y-6">
-                  <div className="py-4 border-b border-[#e0e0e0]">
-                    <p className="text-sm font-medium text-[#202124]">Default view</p>
-                    <p className="text-xs text-[#5f6368] mt-1">Coming soon</p>
-                  </div>
-                  <div className="py-4 border-b border-[#e0e0e0]">
-                    <p className="text-sm font-medium text-[#202124]">Week starts on</p>
-                    <p className="text-xs text-[#5f6368] mt-1">Coming soon</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeSection === "notifications" && (
-              <div>
-                <h1 className="text-[22px] text-[#202124] mb-8">Notifications</h1>
-                <div className="space-y-6">
-                  <div className="py-4 border-b border-[#e0e0e0]">
-                    <p className="text-sm font-medium text-[#202124]">Event notifications</p>
-                    <p className="text-xs text-[#5f6368] mt-1">Coming soon</p>
-                  </div>
-                  <div className="py-4 border-b border-[#e0e0e0]">
-                    <p className="text-sm font-medium text-[#202124]">Email notifications</p>
-                    <p className="text-xs text-[#5f6368] mt-1">Coming soon</p>
-                  </div>
-                </div>
-              </div>
-            )}
+        <main className="flex-1 p-4 lg:p-8 overflow-auto">
+          <div className="max-w-full lg:max-w-5xl mx-auto bg-white dark:bg-[#292a2d] rounded-lg shadow-sm">
+            <div className="p-6 lg:p-8">
+              {renderSection()}
+            </div>
           </div>
         </main>
       </div>

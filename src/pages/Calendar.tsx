@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Protected } from "@/components/Protected";
 import CalendarWeek from "@/components/calendar/CalendarWeek";
 import CalendarDayView from "@/components/calendar/CalendarDayView";
@@ -36,6 +37,7 @@ type PT = {
 };
 
 export default function CalendarPage() {
+  const navigate = useNavigate();
   const { user } = useUser();
   const { selectedDate: globalDate, setSelectedDate: setGlobalDate } = useSelectedDate();
   const [mode, setMode] = useState<"day" | "week" | "month">("day");
@@ -154,7 +156,7 @@ export default function CalendarPage() {
             </Button>
 
             <button 
-              onClick={() => window.location.href = '/calendar/settings'}
+              onClick={() => navigate('/calendar/settings')}
               className="hidden sm:flex p-2 hover:bg-accent/50 rounded-full transition-all duration-200 hover:rotate-90"
               aria-label="Calendar Settings"
             >

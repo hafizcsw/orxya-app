@@ -403,6 +403,130 @@ export type Database = {
           },
         ]
       }
+      appointment_bookings: {
+        Row: {
+          created_at: string | null
+          end_at: string
+          event_id: string | null
+          guest_email: string
+          guest_name: string
+          id: string
+          notes: string | null
+          page_id: string
+          start_at: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_at: string
+          event_id?: string | null
+          guest_email: string
+          guest_name: string
+          id?: string
+          notes?: string | null
+          page_id: string
+          start_at: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_at?: string
+          event_id?: string | null
+          guest_email?: string
+          guest_name?: string
+          id?: string
+          notes?: string | null
+          page_id?: string
+          start_at?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_bookings_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_bookings_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "vw_events_conflicts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_bookings_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "vw_events_with_conflicts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_bookings_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "appointment_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_pages: {
+        Row: {
+          active: boolean | null
+          availability_window: Json | null
+          buffer_minutes: Json | null
+          created_at: string | null
+          description: string | null
+          durations: number[] | null
+          id: string
+          max_per_day: number | null
+          slug: string
+          timezone: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          active?: boolean | null
+          availability_window?: Json | null
+          buffer_minutes?: Json | null
+          created_at?: string | null
+          description?: string | null
+          durations?: number[] | null
+          id?: string
+          max_per_day?: number | null
+          slug: string
+          timezone?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          active?: boolean | null
+          availability_window?: Json | null
+          buffer_minutes?: Json | null
+          created_at?: string | null
+          description?: string | null
+          durations?: number[] | null
+          id?: string
+          max_per_day?: number | null
+          slug?: string
+          timezone?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_pages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       autopilot_actions: {
         Row: {
           action: string
