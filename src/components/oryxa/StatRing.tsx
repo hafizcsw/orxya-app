@@ -48,7 +48,7 @@ export function StatRing({
             fill="none"
             stroke="hsl(var(--muted))"
             strokeWidth={strokeWidth}
-            opacity={0.2}
+            opacity={0.6}
           />
           
           {/* Animated progress circle */}
