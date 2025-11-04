@@ -2308,36 +2308,6 @@ export type Database = {
       }
     }
     Views: {
-      v_admin_actions_daily: {
-        Row: {
-          applied: number | null
-          day: string | null
-          total_actions: number | null
-          undone: number | null
-        }
-        Relationships: []
-      }
-      v_admin_conflict_kpis: {
-        Row: {
-          applied_7d: number | null
-          as_of_date: string | null
-          auto_applied_now: number | null
-          open_now: number | null
-          resolved_now: number | null
-          suggested_now: number | null
-          undo_rate_7d: number | null
-          undone_7d: number | null
-          undone_now: number | null
-        }
-        Relationships: []
-      }
-      v_admin_top_reasons_30d: {
-        Row: {
-          cnt: number | null
-          reason: string | null
-        }
-        Relationships: []
-      }
       v_plan_performance: {
         Row: {
           category: string | null
