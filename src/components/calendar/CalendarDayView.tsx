@@ -155,18 +155,22 @@ export default function CalendarDayView({
               {/* Time gutter */}
               <div className="w-12 sm:w-16 flex-shrink-0 bg-background">
                 <div className="relative">
-                  {Array.from({ length: 24 }, (_, h) => (
-                    <div
-                      key={h}
-                      className="relative text-right pr-2 sm:pr-3"
-                      style={{ height: pxPerHour }}
-                    >
-                      <span className="absolute -top-2.5 right-2 text-[10px] sm:text-[11px] text-muted-foreground font-normal">
-                        {h === 0 ? "" : `${h.toString().padStart(2, "0")}:00`}
-                      </span>
-                      <div className="absolute top-0 left-0 right-0 border-t border-border/10" />
-                    </div>
-                  ))}
+                  {Array.from({ length: 24 }, (_, h) => {
+                    const period = h < 12 ? 'AM' : 'PM';
+                    const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
+                    return (
+                      <div
+                        key={h}
+                        className="relative text-right pr-2 sm:pr-3"
+                        style={{ height: pxPerHour }}
+                      >
+                        <span className="absolute -top-2.5 right-2 text-[10px] sm:text-[11px] text-muted-foreground font-normal">
+                          {h === 0 ? "" : `${displayHour.toString().padStart(2, "0")}:00 ${period}`}
+                        </span>
+                        <div className="absolute top-0 left-0 right-0 border-t border-border/10" />
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
