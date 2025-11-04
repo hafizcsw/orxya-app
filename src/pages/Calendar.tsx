@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useCalendarShortcuts } from "@/hooks/useCalendarShortcuts";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useSelectedDate } from "@/contexts/DateContext";
+import PullToRefresh from "react-simple-pull-to-refresh";
 
 type DbEvent = { 
   id: string; 
@@ -107,6 +108,15 @@ export default function CalendarPage() {
     }
   }
 
+  const handleRefresh = async () => {
+    if (mode === "month") {
+      await loadMonthData();
+    }
+    // Trigger re-render for week and day views (they have their own data fetching)
+    setCurrentDate(new Date(currentDate));
+    return Promise.resolve();
+  };
+
   return (
     <Protected>
       <main className="min-h-dvh flex flex-col bg-background">
@@ -185,7 +195,21 @@ export default function CalendarPage() {
           </Sheet>
 
           {/* Calendar Content */}
-          <div className="flex-1 overflow-auto bg-background">
+          <PullToRefresh
+            onRefresh={handleRefresh}
+            pullingContent={
+              <div className="flex justify-center py-4">
+                <div className="text-sm text-muted-foreground">↓ اسحب للتحديث</div>
+              </div>
+            }
+            refreshingContent={
+              <div className="flex justify-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+              </div>
+            }
+            resistance={2}
+            className="flex-1 overflow-auto bg-background"
+          >
             <div className="p-3 sm:p-4 max-w-[1800px] mx-auto">
               {/* Enhanced View Controls */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3 sm:gap-4">
@@ -292,7 +316,7 @@ export default function CalendarPage() {
                 />
               )}
             </div>
-          </div>
+          </PullToRefresh>
         </section>
 
         {/* Quick Add Dialog */}
