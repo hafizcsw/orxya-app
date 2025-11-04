@@ -111,39 +111,39 @@ function PrayerTimeMarker({
 
   return (
     <div className="pointer-events-none">
-      {/* Prayer time window background */}
+      {/* Prayer time window background - شفاف أكثر */}
       <div
-        className={`absolute left-0 right-0 backdrop-blur-sm transition-all duration-500 ${
+        className={`absolute left-0 right-0 backdrop-blur-[2px] transition-all duration-500 ${
           isNext 
-            ? 'bg-gradient-to-r from-emerald-500/15 via-emerald-400/20 to-emerald-500/15 border-y border-emerald-500/40'
+            ? 'bg-gradient-to-r from-emerald-500/8 via-emerald-400/10 to-emerald-500/8 border-y border-emerald-500/20'
             : isPast
-            ? 'bg-gradient-to-r from-muted/5 via-muted/10 to-muted/5 border-y border-border/20'
-            : 'bg-gradient-to-r from-amber-500/8 via-amber-400/12 to-amber-500/8 border-y border-amber-500/25'
+            ? 'bg-gradient-to-r from-muted/3 via-muted/5 to-muted/3 border-y border-border/10'
+            : 'bg-gradient-to-r from-amber-500/5 via-amber-400/8 to-amber-500/5 border-y border-amber-500/15'
         }`}
         style={{ top: bandTop, height: bandH }}
       />
       
-      {/* Prayer time line with enhanced design */}
+      {/* Prayer time line - خط رفيع بدون ظل قوي */}
       <div
         className={`absolute left-0 right-0 transition-all duration-500 ${
           isNext 
-            ? 'border-t-[3px] border-emerald-500 shadow-xl shadow-emerald-500/50'
+            ? 'border-t-2 border-emerald-500/70'
             : isPast
-            ? 'border-t-2 border-muted/40 shadow-md shadow-muted/20'
-            : 'border-t-2 border-amber-500 shadow-lg shadow-amber-500/30'
+            ? 'border-t border-muted/30'
+            : 'border-t-2 border-amber-500/60'
         }`}
         style={{ top: y }}
       >
         <div className={`absolute -top-4 left-2 flex items-center gap-2 ${
           isNext ? 'animate-pulse' : ''
         }`}>
-          {/* بطاقة الصلاة الرئيسية */}
-          <span className={`text-xs sm:text-sm px-3 py-1.5 rounded-xl font-bold backdrop-blur-md border shadow-lg transition-all duration-500 flex items-center gap-2 ${
+          {/* بطاقة الصلاة - شفافة وخفيفة */}
+          <span className={`text-xs sm:text-sm px-3 py-1.5 rounded-xl font-bold backdrop-blur-sm border transition-all duration-500 flex items-center gap-2 ${
             isNext
-              ? 'bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-600 text-white border-emerald-300/40 shadow-emerald-500/50'
+              ? 'bg-emerald-500/85 text-white border-emerald-300/30 shadow-sm'
               : isPast
-              ? 'bg-gradient-to-r from-muted/80 to-muted/60 text-muted-foreground border-border/30 shadow-muted/30'
-              : 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 text-white border-amber-300/30 shadow-amber-500/40'
+              ? 'bg-muted/70 text-muted-foreground border-border/20 shadow-sm'
+              : 'bg-amber-500/80 text-white border-amber-300/20 shadow-sm'
           }`}>
             <span className="text-base">🕌</span>
             <span>{label}</span>
@@ -152,7 +152,7 @@ function PrayerTimeMarker({
 
           {/* عداد تنازلي للصلاة القادمة فقط */}
           {isNext && !countdown.isNegative && countdown.total > 0 && (
-            <span className="text-xs px-2.5 py-1 rounded-lg bg-white/90 text-emerald-600 font-bold shadow-md border border-emerald-200 backdrop-blur-sm animate-fade-in">
+            <span className="text-xs px-2.5 py-1 rounded-lg bg-white/85 text-emerald-600 font-bold shadow-sm border border-emerald-200/50 backdrop-blur-sm animate-fade-in">
               {countdown.formattedShort}
             </span>
           )}
