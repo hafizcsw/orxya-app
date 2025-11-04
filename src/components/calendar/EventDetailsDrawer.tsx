@@ -245,7 +245,7 @@ export default function EventDetailsDrawer({
           </p>
         </header>
 
-        <div className="p-4 space-y-6">
+        <div className="p-4 space-y-6 bg-muted">
           {/* Title */}
           <div className="space-y-2">
             <Label htmlFor="title">العنوان</Label>
