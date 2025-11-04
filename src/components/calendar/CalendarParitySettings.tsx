@@ -14,9 +14,9 @@ export function CalendarParitySettings() {
   const handleToggle = async (key: string, value: boolean) => {
     try {
       await setFlag(key, value);
-      toast.success("تم تحديث الإعداد بنجاح");
+      toast.success("Setting updated successfully");
     } catch (error) {
-      toast.error("فشل في تحديث الإعداد");
+      toast.error("Failed to update setting");
     }
   };
 
@@ -29,12 +29,10 @@ export function CalendarParitySettings() {
   }
 
   const sections = [
-    { id: "overview", label: "Overview", component: null },
-    { id: "appointment-pages", label: "Appointment Pages", component: AppointmentPagesManager },
-    { id: "ics", label: "ICS Import/Export", component: ICSManager },
+    { id: "overview", label: "Overview" },
+    { id: "appointment-pages", label: "Appointment Pages" },
+    { id: "ics", label: "ICS Import/Export" },
   ];
-
-  const ActiveComponent = sections.find(s => s.id === activeSection)?.component;
 
   return (
     <div className="space-y-0">
@@ -72,7 +70,7 @@ export function CalendarParitySettings() {
       {activeSection === "overview" && (
         <div className="space-y-0">
           {/* Calendar Parity Main Toggle */}
-          <div className="gcal-settings-item py-6 border-b border-border">
+          <div className="py-6 border-b border-border">
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <Label htmlFor="ff_calendar_parity" className="text-base font-medium text-foreground cursor-pointer">
@@ -91,7 +89,7 @@ export function CalendarParitySettings() {
           </div>
 
           {/* Find Time */}
-          <div className="gcal-settings-item py-6 border-b border-border">
+          <div className="py-6 border-b border-border">
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <Label htmlFor="ff_calendar_find_time" className="text-base font-medium text-foreground cursor-pointer">
@@ -110,7 +108,7 @@ export function CalendarParitySettings() {
           </div>
 
           {/* Appointments */}
-          <div className="gcal-settings-item py-6 border-b border-border">
+          <div className="py-6 border-b border-border">
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <Label htmlFor="ff_calendar_appointments" className="text-base font-medium text-foreground cursor-pointer">
@@ -129,7 +127,7 @@ export function CalendarParitySettings() {
           </div>
 
           {/* Tasks Parity */}
-          <div className="gcal-settings-item py-6 border-b border-border">
+          <div className="py-6 border-b border-border">
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <Label htmlFor="ff_calendar_tasks_parity" className="text-base font-medium text-foreground cursor-pointer">
@@ -148,7 +146,7 @@ export function CalendarParitySettings() {
           </div>
 
           {/* ICS Import/Export */}
-          <div className="gcal-settings-item py-6">
+          <div className="py-6">
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <Label htmlFor="ff_calendar_ics" className="text-base font-medium text-foreground cursor-pointer">
@@ -168,7 +166,8 @@ export function CalendarParitySettings() {
         </div>
       )}
 
-      {ActiveComponent && <ActiveComponent />}
+      {activeSection === "appointment-pages" && <AppointmentPagesManager />}
+      {activeSection === "ics" && <ICSManager />}
     </div>
   );
 }
