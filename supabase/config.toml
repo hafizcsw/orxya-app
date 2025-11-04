@@ -99,3 +99,9 @@ verify_jwt = true
 [functions.glances-feed]
 verify_jwt = true
 
+[functions.calendar-apply]
+verify_jwt = true
+
+[functions.calendar-sync-google]
+verify_jwt = true
+
