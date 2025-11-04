@@ -15,12 +15,16 @@ import { GlassPanel } from '@/components/ui/GlassPanel'
 import { StatRing } from '@/components/oryxa/StatRing'
 import { BackgroundAI } from '@/components/oryxa/BackgroundAI'
 import { cn } from '@/lib/utils'
-import { Bell, Calendar, DollarSign, TrendingUp, TrendingDown, Clock, Dumbbell, BookOpen, Footprints, Award, Building, Edit2, BarChart3, User, Moon, Heart } from 'lucide-react'
+import { Bell, Calendar, DollarSign, TrendingUp, TrendingDown, Clock, Dumbbell, BookOpen, Footprints, Award, Building, Edit2, BarChart3, User, Moon, Heart, Plus, Briefcase } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { z } from 'zod'
 import { useSelectedDate } from '@/contexts/DateContext'
 import { useDeviceType } from '@/hooks/useDeviceType'
+import { PlanCard } from '@/components/plans/PlanCard'
+import { PlanFormDialog } from '@/components/plans/PlanFormDialog'
+import { PlansAnalytics } from '@/components/plans/PlansAnalytics'
+import { BusinessPlan, BusinessPlanFormData } from '@/types/business-plan'
 
 // Validation schemas
 const dailyLogSchema = z.object({
@@ -60,6 +64,13 @@ const Today = () => {
   const [editingBalance, setEditingBalance] = useState(false)
   const [balanceValue, setBalanceValue] = useState('')
   const [isScrolled, setIsScrolled] = useState(false)
+  
+  // Plans management state
+  const [plans, setPlans] = useState<BusinessPlan[]>([])
+  const [showPlanForm, setShowPlanForm] = useState(false)
+  const [editingPlan, setEditingPlan] = useState<BusinessPlan | null>(null)
+  const [showAnalytics, setShowAnalytics] = useState(false)
+  const [plansLoading, setPlansLoading] = useState(false)
 
   // Responsive sizing helpers - محسّنة
   const getFinancialRingSize = () => {
@@ -100,8 +111,67 @@ const Today = () => {
   useEffect(() => { 
     if (user) {
       fetchReport()
+      fetchPlans()
     }
   }, [user?.id, period, selectedDate])
+
+  async function fetchPlans() {
+    if (!user) return
+    setPlansLoading(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('plans-manage', {
+        body: { action: 'list' }
+      })
+      if (error) throw error
+      setPlans(data?.plans || [])
+    } catch (e: any) {
+      console.error('Error fetching plans:', e)
+    } finally {
+      setPlansLoading(false)
+    }
+  }
+
+  async function addPlan(planData: BusinessPlanFormData) {
+    if (!user) return
+    try {
+      const { error } = await supabase.functions.invoke('plans-manage', {
+        body: { action: 'create', ...planData }
+      })
+      if (error) throw error
+      await fetchPlans()
+      setToast('تمت إضافة الخطة بنجاح! ✅')
+    } catch (e: any) {
+      setToast('حدث خطأ ❌')
+    }
+  }
+
+  async function updatePlan(id: string, planData: BusinessPlanFormData) {
+    if (!user) return
+    try {
+      const { error } = await supabase.functions.invoke('plans-manage', {
+        body: { action: 'update', id, ...planData }
+      })
+      if (error) throw error
+      await fetchPlans()
+      setToast('تم التحديث ✅')
+    } catch (e: any) {
+      setToast('حدث خطأ ❌')
+    }
+  }
+
+  async function deletePlan(id: string) {
+    if (!user) return
+    try {
+      const { error } = await supabase.functions.invoke('plans-manage', {
+        body: { action: 'delete', id }
+      })
+      if (error) throw error
+      await fetchPlans()
+      setToast('تم الحذف ✅')
+    } catch (e: any) {
+      setToast('حدث خطأ ❌')
+    }
+  }
 
   useEffect(() => {
     const handleScroll = () => {
@@ -750,57 +820,108 @@ const Today = () => {
                 </div>
               )}
 
-              {/* Sales - محسّن للموبايل */}
-              <div className={cn(
-                "grid gap-4",
-                device === 'mobile' && "grid-cols-1 gap-3",
-                device === 'tablet' && "grid-cols-2 gap-4",
-                device === 'desktop' && "grid-cols-3 gap-4"
-              )}>
-                <GlassPanel blur="lg" className="hover:scale-105 transition-all duration-300">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                      منح دراسية
-                    </span>
-                    <div className="w-10 h-10 rounded-full bg-[hsl(var(--whoop-green)_/_0.1)] flex items-center justify-center hover:shadow-[0_0_20px_hsl(var(--whoop-green)/0.5)] transition-all">
-                      <Award className="w-5 h-5 text-[hsl(var(--whoop-green))]" />
+              {/* Business Plans - نظام ديناميكي محسّن */}
+              <div className="space-y-4">
+                {/* Header مع أزرار التحكم */}
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-bold gradient-text flex items-center gap-2">
+                    <Briefcase className="w-5 h-5" />
+                    خطط الأعمال
+                  </h3>
+                  <div className="flex gap-2">
+                    <NeonButton 
+                      size="sm" 
+                      variant="accent"
+                      onClick={() => setShowAnalytics(!showAnalytics)}
+                    >
+                      <BarChart3 className="w-4 h-4" />
+                      {device !== 'mobile' && 'التحليلات'}
+                    </NeonButton>
+                    <NeonButton 
+                      size="sm" 
+                      variant="primary"
+                      glow
+                      onClick={() => {
+                        setEditingPlan(null)
+                        setShowPlanForm(true)
+                      }}
+                    >
+                      <Plus className="w-4 h-4" />
+                      {device !== 'mobile' && 'إضافة خطة'}
+                    </NeonButton>
+                  </div>
+                </div>
+
+                {/* Plans Grid */}
+                {plansLoading ? (
+                  <div className="text-center text-muted-foreground py-8">جاري التحميل...</div>
+                ) : plans.length > 0 ? (
+                  <div className={cn(
+                    "grid gap-4",
+                    device === 'mobile' && "grid-cols-1 gap-3",
+                    device === 'tablet' && "grid-cols-2 gap-4",
+                    device === 'desktop' && "grid-cols-3 gap-4"
+                  )}>
+                    {plans.map(plan => (
+                      <PlanCard 
+                        key={plan.plan_id}
+                        plan={plan}
+                        onEdit={(p) => {
+                          setEditingPlan(p)
+                          setShowPlanForm(true)
+                        }}
+                        onDelete={deletePlan}
+                        onClick={(p) => {
+                          // يمكن إضافة navigation لصفحة تفصيلية لاحقاً
+                          console.log('Plan clicked:', p)
+                        }}
+                      />
+                    ))}
+                    
+                    {/* Add button card */}
+                    <div
+                      onClick={() => {
+                        setEditingPlan(null)
+                        setShowPlanForm(true)
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <GlassPanel 
+                        blur="md" 
+                        className="border-2 border-dashed border-primary/30 hover:border-primary/60 transition-all flex items-center justify-center min-h-[150px]"
+                      >
+                        <div className="text-center">
+                          <Plus className="w-8 h-8 mx-auto mb-2 text-primary" />
+                          <p className="text-sm text-muted-foreground">إضافة خطة جديدة</p>
+                        </div>
+                      </GlassPanel>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <div className="text-sm text-muted-foreground">الربح</div>
-                    <div className="text-2xl font-bold text-[hsl(var(--whoop-green))] drop-shadow-[0_0_10px_hsl(var(--whoop-green)/0.5)]">${report.scholarship_profit || 0}</div>
-                  </div>
-                </GlassPanel>
-                
-                <GlassPanel blur="lg" className="hover:scale-105 transition-all duration-300">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                      فلل
-                    </span>
-                    <div className="w-10 h-10 rounded-full bg-[hsl(var(--whoop-blue)_/_0.1)] flex items-center justify-center hover:shadow-[0_0_20px_hsl(var(--whoop-blue)/0.5)] transition-all">
-                      <Building className="w-5 h-5 text-[hsl(var(--whoop-blue))]" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-sm text-muted-foreground">الربح</div>
-                    <div className="text-2xl font-bold text-[hsl(var(--whoop-blue))] drop-shadow-[0_0_10px_hsl(var(--whoop-blue)/0.5)]">${report.villa_profit || 0}</div>
-                  </div>
-                </GlassPanel>
-                
-                <GlassPanel blur="lg" className="hover:scale-105 transition-all duration-300">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                      أخرى
-                    </span>
-                    <div className="w-10 h-10 rounded-full bg-[hsl(var(--whoop-yellow)_/_0.1)] flex items-center justify-center hover:shadow-[0_0_20px_hsl(var(--whoop-yellow)/0.5)] transition-all">
-                      <DollarSign className="w-5 h-5 text-[hsl(var(--whoop-yellow))]" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-sm text-muted-foreground">الربح</div>
-                    <div className="text-2xl font-bold text-[hsl(var(--whoop-yellow))] drop-shadow-[0_0_10px_hsl(var(--whoop-yellow)/0.5)]">${report.other_profit || 0}</div>
-                  </div>
-                </GlassPanel>
+                ) : (
+                  <GlassPanel 
+                    blur="md" 
+                    className="p-8 text-center"
+                  >
+                    <Briefcase className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
+                    <p className="text-muted-foreground mb-4">لا توجد خطط حتى الآن</p>
+                    <NeonButton 
+                      variant="primary"
+                      glow
+                      onClick={() => {
+                        setEditingPlan(null)
+                        setShowPlanForm(true)
+                      }}
+                    >
+                      <Plus className="w-4 h-4 ml-2" />
+                      إضافة خطتك الأولى
+                    </NeonButton>
+                  </GlassPanel>
+                )}
+
+                {/* Analytics Section */}
+                {showAnalytics && plans.length > 0 && (
+                  <PlansAnalytics plans={plans} />
+                )}
               </div>
 
               {/* Charts */}
@@ -884,6 +1005,22 @@ const Today = () => {
 
         {toast && <Toast msg={toast} />}
       </div>
+      
+      <PlanFormDialog 
+        plan={editingPlan}
+        isOpen={showPlanForm}
+        onClose={() => {
+          setShowPlanForm(false)
+          setEditingPlan(null)
+        }}
+        onSave={async (data) => {
+          if (editingPlan) {
+            await updatePlan(editingPlan.plan_id, data)
+          } else {
+            await addPlan(data)
+          }
+        }}
+      />
     </Protected>
   )
 }

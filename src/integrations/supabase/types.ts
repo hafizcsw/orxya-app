@@ -566,6 +566,54 @@ export type Database = {
         }
         Relationships: []
       }
+      business_plans: {
+        Row: {
+          category: string | null
+          color: string | null
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          order_pos: number | null
+          owner_id: string
+          slug: string
+          target_monthly: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          order_pos?: number | null
+          owner_id: string
+          slug: string
+          target_monthly?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          order_pos?: number | null
+          owner_id?: string
+          slug?: string
+          target_monthly?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       calendar_mapping: {
         Row: {
           calendar_id: string
@@ -1827,6 +1875,8 @@ export type Database = {
           id: string
           item: string | null
           owner_id: string
+          plan_id: string | null
+          plan_slug: string | null
           price_usd: number | null
           profit_usd: number | null
           qty: number | null
@@ -1838,6 +1888,8 @@ export type Database = {
           id?: string
           item?: string | null
           owner_id: string
+          plan_id?: string | null
+          plan_slug?: string | null
           price_usd?: number | null
           profit_usd?: number | null
           qty?: number | null
@@ -1849,13 +1901,30 @@ export type Database = {
           id?: string
           item?: string | null
           owner_id?: string
+          plan_id?: string | null
+          plan_slug?: string | null
           price_usd?: number | null
           profit_usd?: number | null
           qty?: number | null
           sale_date?: string
           type?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "sales_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "business_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "v_plan_performance"
+            referencedColumns: ["plan_id"]
+          },
+        ]
       }
       task_lists: {
         Row: {
@@ -2211,6 +2280,27 @@ export type Database = {
         Row: {
           cnt: number | null
           reason: string | null
+        }
+        Relationships: []
+      }
+      v_plan_performance: {
+        Row: {
+          category: string | null
+          color: string | null
+          description: string | null
+          icon: string | null
+          month_profit: number | null
+          month_qty: number | null
+          month_transactions: number | null
+          name: string | null
+          order_pos: number | null
+          owner_id: string | null
+          plan_id: string | null
+          slug: string | null
+          target_monthly: number | null
+          today_profit: number | null
+          week_profit: number | null
+          year_profit: number | null
         }
         Relationships: []
       }
