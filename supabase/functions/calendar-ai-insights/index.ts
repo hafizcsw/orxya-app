@@ -12,35 +12,32 @@ serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      console.error('No authorization header');
-      return new Response(JSON.stringify({ error: 'No authorization header' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Create Supabase client with service role key to bypass RLS
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-    );
-
-    // Create regular client with user's token for auth
-    const supabase = createClient(
+    // Create authenticated Supabase client
+    const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
+      {
+        global: {
+          headers: { Authorization: req.headers.get('Authorization')! },
+        },
+      }
     );
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    // Get the user from the auth header
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseClient.auth.getUser();
+
     if (userError || !user) {
       console.error('Auth error:', userError);
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return new Response(
+        JSON.stringify({ error: 'غير مصرح', details: userError?.message }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     console.log('Authenticated user:', user.id);
@@ -48,7 +45,7 @@ serve(async (req) => {
     const { date, currentTime } = await req.json();
     
     // Get user profile for personalization
-    const { data: profile } = await supabase
+    const { data: profile } = await supabaseClient
       .from('profiles')
       .select('display_name')
       .eq('id', user.id)
@@ -57,7 +54,7 @@ serve(async (req) => {
     const userName = profile?.display_name || 'صديقي';
 
     // Get events for the current day
-    const { data: events, error: eventsError } = await supabase
+    const { data: events, error: eventsError } = await supabaseClient
       .from('events')
       .select('*')
       .eq('owner_id', user.id)
@@ -67,14 +64,14 @@ serve(async (req) => {
 
     if (eventsError) {
       console.error('Error fetching events:', eventsError);
-      return new Response(JSON.stringify({ error: 'Failed to fetch events' }), {
+      return new Response(JSON.stringify({ error: 'فشل في جلب الأحداث' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     // Get prayer times for today
-    const { data: prayerTimes } = await supabase
+    const { data: prayerTimes } = await supabaseClient
       .from('prayer_times')
       .select('*')
       .eq('owner_id', user.id)
