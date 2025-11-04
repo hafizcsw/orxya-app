@@ -25,8 +25,8 @@ export default function CalendarDayView({
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [dailySummary, setDailySummary] = useState<string>("");
-  const [loadingSummary, setLoadingSummary] = useState(false);
+  const [aiInsights, setAiInsights] = useState<string>("");
+  const [loadingInsights, setLoadingInsights] = useState(false);
   const [conflictData, setConflictData] = useState<{
     hasConflict: boolean;
     conflictId: string | null;
@@ -56,29 +56,40 @@ export default function CalendarDayView({
     return Object.values(events).flat();
   }, [events]);
 
-  // Fetch daily summary
+  const iso = anchor.toISOString().slice(0, 10);
+  const dayEvents = events[iso] ?? [];
+  const prayers = prayersByDay[iso] ?? null;
+  const isToday = anchor.toDateString() === new Date().toDateString();
+
+  // Fetch AI insights when events load or time changes significantly
   useEffect(() => {
-    const fetchSummary = async () => {
-      if (allEvents.length === 0) return;
-      
-      setLoadingSummary(true);
+    const fetchInsights = async () => {
+      setLoadingInsights(true);
       try {
-        const { data, error } = await supabase.functions.invoke('daily-summary', {
-          body: { date: anchor.toISOString().split('T')[0] }
+        const { data, error } = await supabase.functions.invoke('calendar-ai-insights', {
+          body: { 
+            date: anchor.toISOString().split('T')[0],
+            currentTime: new Date().toISOString()
+          }
         });
         
-        if (!error && data?.summary) {
-          setDailySummary(data.summary);
+        if (!error && data?.insights) {
+          setAiInsights(data.insights);
+        } else if (data?.fallback) {
+          setAiInsights(data.fallback);
         }
       } catch (err) {
-        console.error('Failed to fetch summary:', err);
+        console.error('Failed to fetch AI insights:', err);
       } finally {
-        setLoadingSummary(false);
+        setLoadingInsights(false);
       }
     };
     
-    fetchSummary();
-  }, [anchor, allEvents.length]);
+    // Only fetch if it's today
+    if (isToday && allEvents.length >= 0) {
+      fetchInsights();
+    }
+  }, [anchor, allEvents.length, isToday]);
 
   useEffect(() => {
     reloadThrottled();
@@ -123,10 +134,6 @@ export default function CalendarDayView({
     });
   };
 
-  const iso = anchor.toISOString().slice(0, 10);
-  const dayEvents = events[iso] ?? [];
-  const prayers = prayersByDay[iso] ?? null;
-  const isToday = anchor.toDateString() === new Date().toDateString();
 
   return (
     <div className="w-full h-[calc(100vh-200px)] sm:h-[calc(100vh-160px)] flex flex-col bg-background rounded-lg overflow-hidden border border-border/20">
@@ -153,12 +160,26 @@ export default function CalendarDayView({
       {/* Day view container */}
       <div className="flex flex-1 overflow-hidden relative">
         <div className="flex flex-1 flex-col overflow-hidden">
-          {/* AI Summary Header */}
-          {dailySummary && (
-            <div className="px-4 py-3 bg-gradient-to-r from-primary/10 to-primary/5 border-b border-primary/20">
-              <p className="text-sm text-foreground leading-relaxed">
-                {loadingSummary ? "..." : dailySummary}
-              </p>
+          {/* AI Insights Banner - Only for Today */}
+          {isToday && aiInsights && (
+            <div className="px-4 py-3 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 border-b border-blue-500/20 backdrop-blur-sm animate-fade-in">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+                  <span className="text-sm">🤖</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground leading-relaxed">
+                    {loadingInsights ? (
+                      <span className="flex items-center gap-2">
+                        <span className="inline-block w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                        جاري تحليل يومك...
+                      </span>
+                    ) : (
+                      aiInsights
+                    )}
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 

@@ -90,3 +90,6 @@ verify_jwt = true
 [functions.nlp-quickadd]
 verify_jwt = true
 
+[functions.calendar-ai-insights]
+verify_jwt = true
+
