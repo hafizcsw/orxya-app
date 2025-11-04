@@ -23,7 +23,7 @@ export function CalendarParitySettings() {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        <Loader2 className="w-6 h-6 animate-spin text-[#5f6368]" />
       </div>
     );
   }
@@ -35,31 +35,25 @@ export function CalendarParitySettings() {
   ];
 
   return (
-    <div className="space-y-0">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-normal text-foreground mb-2">Integration & Sync</h1>
-        <p className="text-sm text-muted-foreground">
-          Manage calendar integrations, appointments, and data import/export
-        </p>
-      </div>
+    <div>
+      <h1 className="text-[22px] text-[#202124] mb-8">Integration & Sync</h1>
 
       {/* Sub-navigation */}
-      <div className="border-b border-border mb-8">
-        <nav className="flex gap-6">
+      <div className="border-b border-[#e0e0e0] mb-6">
+        <nav className="flex gap-8">
           {sections.map((section) => (
             <button
               key={section.id}
               onClick={() => setActiveSection(section.id)}
-              className={`pb-3 px-1 text-sm transition-colors relative ${
+              className={`pb-3 text-sm transition-colors relative ${
                 activeSection === section.id
-                  ? "text-primary font-medium"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "text-[#1967d2] font-medium"
+                  : "text-[#5f6368] hover:text-[#202124]"
               }`}
             >
               {section.label}
               {activeSection === section.id && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#1967d2]" />
               )}
             </button>
           ))}
@@ -70,98 +64,88 @@ export function CalendarParitySettings() {
       {activeSection === "overview" && (
         <div className="space-y-0">
           {/* Calendar Parity Main Toggle */}
-          <div className="py-6 border-b border-border">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <Label htmlFor="ff_calendar_parity" className="text-base font-medium text-foreground cursor-pointer">
-                  Calendar Parity
-                </Label>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Enable advanced calendar features for Google Calendar compatibility
-                </p>
-              </div>
-              <Switch
-                id="ff_calendar_parity"
-                checked={flags?.ff_calendar_parity ?? false}
-                onCheckedChange={(checked) => handleToggle("ff_calendar_parity", checked)}
-              />
+          <div className="flex items-start justify-between py-6 border-b border-[#e0e0e0]">
+            <div className="flex-1 pr-4">
+              <Label htmlFor="ff_calendar_parity" className="text-sm font-medium text-[#202124] cursor-pointer block">
+                Calendar Parity
+              </Label>
+              <p className="text-xs text-[#5f6368] mt-1">
+                Enable advanced calendar features for Google Calendar compatibility
+              </p>
             </div>
+            <Switch
+              id="ff_calendar_parity"
+              checked={flags?.ff_calendar_parity ?? false}
+              onCheckedChange={(checked) => handleToggle("ff_calendar_parity", checked)}
+            />
           </div>
 
           {/* Find Time */}
-          <div className="py-6 border-b border-border">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <Label htmlFor="ff_calendar_find_time" className="text-base font-medium text-foreground cursor-pointer">
-                  Find Time
-                </Label>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Automatically suggest meeting times based on availability
-                </p>
-              </div>
-              <Switch
-                id="ff_calendar_find_time"
-                checked={flags?.ff_calendar_find_time ?? false}
-                onCheckedChange={(checked) => handleToggle("ff_calendar_find_time", checked)}
-              />
+          <div className="flex items-start justify-between py-6 border-b border-[#e0e0e0]">
+            <div className="flex-1 pr-4">
+              <Label htmlFor="ff_calendar_find_time" className="text-sm font-medium text-[#202124] cursor-pointer block">
+                Find Time
+              </Label>
+              <p className="text-xs text-[#5f6368] mt-1">
+                Automatically suggest meeting times based on availability
+              </p>
             </div>
+            <Switch
+              id="ff_calendar_find_time"
+              checked={flags?.ff_calendar_find_time ?? false}
+              onCheckedChange={(checked) => handleToggle("ff_calendar_find_time", checked)}
+            />
           </div>
 
           {/* Appointments */}
-          <div className="py-6 border-b border-border">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <Label htmlFor="ff_calendar_appointments" className="text-base font-medium text-foreground cursor-pointer">
-                  Appointment Pages
-                </Label>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Create booking pages for appointments with customizable availability
-                </p>
-              </div>
-              <Switch
-                id="ff_calendar_appointments"
-                checked={flags?.ff_calendar_appointments ?? false}
-                onCheckedChange={(checked) => handleToggle("ff_calendar_appointments", checked)}
-              />
+          <div className="flex items-start justify-between py-6 border-b border-[#e0e0e0]">
+            <div className="flex-1 pr-4">
+              <Label htmlFor="ff_calendar_appointments" className="text-sm font-medium text-[#202124] cursor-pointer block">
+                Appointment Pages
+              </Label>
+              <p className="text-xs text-[#5f6368] mt-1">
+                Create booking pages for appointments with customizable availability
+              </p>
             </div>
+            <Switch
+              id="ff_calendar_appointments"
+              checked={flags?.ff_calendar_appointments ?? false}
+              onCheckedChange={(checked) => handleToggle("ff_calendar_appointments", checked)}
+            />
           </div>
 
           {/* Tasks Parity */}
-          <div className="py-6 border-b border-border">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <Label htmlFor="ff_calendar_tasks_parity" className="text-base font-medium text-foreground cursor-pointer">
-                  Tasks Integration
-                </Label>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Sync and manage tasks within your calendar
-                </p>
-              </div>
-              <Switch
-                id="ff_calendar_tasks_parity"
-                checked={flags?.ff_calendar_tasks_parity ?? false}
-                onCheckedChange={(checked) => handleToggle("ff_calendar_tasks_parity", checked)}
-              />
+          <div className="flex items-start justify-between py-6 border-b border-[#e0e0e0]">
+            <div className="flex-1 pr-4">
+              <Label htmlFor="ff_calendar_tasks_parity" className="text-sm font-medium text-[#202124] cursor-pointer block">
+                Tasks Integration
+              </Label>
+              <p className="text-xs text-[#5f6368] mt-1">
+                Sync and manage tasks within your calendar
+              </p>
             </div>
+            <Switch
+              id="ff_calendar_tasks_parity"
+              checked={flags?.ff_calendar_tasks_parity ?? false}
+              onCheckedChange={(checked) => handleToggle("ff_calendar_tasks_parity", checked)}
+            />
           </div>
 
           {/* ICS Import/Export */}
-          <div className="py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <Label htmlFor="ff_calendar_ics" className="text-base font-medium text-foreground cursor-pointer">
-                  ICS Import/Export
-                </Label>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Import and export calendar events in standard ICS format
-                </p>
-              </div>
-              <Switch
-                id="ff_calendar_ics"
-                checked={flags?.ff_calendar_ics ?? false}
-                onCheckedChange={(checked) => handleToggle("ff_calendar_ics", checked)}
-              />
+          <div className="flex items-start justify-between py-6">
+            <div className="flex-1 pr-4">
+              <Label htmlFor="ff_calendar_ics" className="text-sm font-medium text-[#202124] cursor-pointer block">
+                ICS Import/Export
+              </Label>
+              <p className="text-xs text-[#5f6368] mt-1">
+                Import and export calendar events in standard ICS format
+              </p>
             </div>
+            <Switch
+              id="ff_calendar_ics"
+              checked={flags?.ff_calendar_ics ?? false}
+              onCheckedChange={(checked) => handleToggle("ff_calendar_ics", checked)}
+            />
           </div>
         </div>
       )}
