@@ -1,4 +1,5 @@
 import { useCountdown } from '@/hooks/useCountdown';
+import { zIndex } from '@/lib/z-index';
 
 type PrayerTimes = { 
   fajr?: string; 
@@ -82,7 +83,7 @@ export default function PrayerBand({
     });
 
   return (
-    <div className="absolute inset-y-0 left-0 right-0 pointer-events-none z-0">
+    <div className="absolute inset-y-0 left-0 right-0 pointer-events-none" style={{ zIndex: zIndex.prayerBackground }}>
       {nodes}
     </div>
   );
@@ -111,55 +112,60 @@ function PrayerTimeMarker({
 
   return (
     <div className="pointer-events-none">
-      {/* Prayer time window background - شفاف جداً بدون blur قوي */}
+      {/* Prayer time window background - شفاف جداً بدون blur */}
       <div
-        className={`absolute left-0 right-0 backdrop-blur-[0.5px] transition-all duration-500 mix-blend-multiply ${
+        className={`absolute left-0 right-0 transition-colors duration-500 ${
           isNext 
-            ? 'bg-gradient-to-r from-emerald-500/5 via-emerald-400/6 to-emerald-500/5 border-y border-emerald-500/15'
+            ? 'bg-emerald-500/[0.02] border-y border-emerald-500/8'
             : isPast
-            ? 'bg-gradient-to-r from-muted/2 via-muted/3 to-muted/2 border-y border-border/8'
-            : 'bg-gradient-to-r from-amber-500/4 via-amber-400/5 to-amber-500/4 border-y border-amber-500/10'
+            ? 'bg-muted/[0.01] border-y border-border/5'
+            : 'bg-amber-500/[0.02] border-y border-amber-500/6'
         }`}
-        style={{ top: bandTop, height: bandH }}
+        style={{ top: bandTop, height: bandH, zIndex: zIndex.prayerBackground }}
       />
       
-      {/* Prayer time line - خط رفيع بدون ظل قوي */}
+      {/* Prayer time line - أرفع وأوضح */}
       <div
-        className={`absolute left-0 right-0 transition-all duration-500 ${
+        className={`absolute left-0 right-0 transition-all duration-300 ${
           isNext 
-            ? 'border-t-2 border-emerald-500/70'
+            ? 'border-t border-emerald-500/40'
             : isPast
-            ? 'border-t border-muted/30'
-            : 'border-t-2 border-amber-500/60'
+            ? 'border-t border-muted/20 border-dashed'
+            : 'border-t border-amber-500/30'
         }`}
-        style={{ top: y }}
+        style={{ top: y, zIndex: zIndex.prayerLines }}
       >
-        <div className={`absolute -top-4 left-2 flex items-center gap-2 ${
-          isNext ? 'animate-pulse' : ''
-        }`}>
-          {/* بطاقة الصلاة - بدون شادو، فقط حدود */}
-          <span className={`text-xs sm:text-sm px-3 py-1.5 rounded-xl font-bold backdrop-blur-sm border-2 transition-all duration-500 flex items-center gap-2 ${
-            isNext
-              ? 'bg-emerald-500/90 text-white border-emerald-300/40'
+        {/* Badge - صغير جداً على الحافة اليسرى */}
+        <div 
+          className={`absolute -left-1 -top-3 pointer-events-auto ${isNext ? 'animate-pulse' : ''}`}
+          style={{ zIndex: zIndex.prayerBadge }}
+        >
+          <span className={`
+            inline-flex items-center gap-1 px-2 py-0.5 rounded-md
+            text-[10px] font-semibold
+            border shadow-sm
+            ${isNext
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300'
               : isPast
-              ? 'bg-muted/75 text-muted-foreground border-border/30'
-              : 'bg-amber-500/85 text-white border-amber-300/30'
-          }`}>
-            <span className="text-base">🕌</span>
+              ? 'bg-muted/50 text-muted-foreground border-border/30'
+              : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300'
+            }
+          `}>
+            <span className="text-xs">🕌</span>
             <span>{label}</span>
-            <span className="opacity-90 font-medium">{timeStr}</span>
+            <span className="opacity-70">{timeStr}</span>
           </span>
-
-          {/* عداد تنازلي للصلاة القادمة فقط */}
+          
+          {/* Countdown - منفصل وصغير */}
           {isNext && !countdown.isNegative && countdown.total > 0 && (
-            <span className="text-xs px-2.5 py-1 rounded-lg bg-white/90 text-emerald-600 font-bold border-2 border-emerald-200/60 backdrop-blur-sm animate-fade-in">
+            <span className="ml-1 inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold bg-white border border-emerald-200 text-emerald-600 dark:bg-emerald-950 dark:border-emerald-800">
               {countdown.formattedShort}
             </span>
           )}
-
+          
           {/* علامة للصلوات المنتهية */}
           {isPast && (
-            <span className="text-xs px-2 py-1 rounded-lg bg-success/10 text-success font-medium border border-success/20">
+            <span className="ml-1 inline-flex px-1 py-0.5 rounded text-[9px] font-medium bg-success/10 text-success border border-success/20">
               ✓
             </span>
           )}

@@ -338,6 +338,32 @@ textarea:focus-visible {
   animation: pulse-border 2s ease-in-out infinite;
 }
 
+/* Calendar Grid Enhancements */
+.calendar-grid-line {
+  @apply border-border/30 transition-colors;
+}
+
+.calendar-grid-line-half {
+  @apply border-border/15 border-dashed;
+}
+
+.prayer-time-indicator {
+  @apply transition-all duration-300 ease-out;
+}
+
+.event-card-hover {
+  @apply hover:shadow-lg hover:scale-[1.02] hover:z-20 transition-all duration-200;
+}
+
+/* Smooth shadows */
+.shadow-calendar {
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+}
+
+.shadow-calendar-hover {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
+}
+
 /* Print styles for PDF export */
 @media print {
   .no-print {

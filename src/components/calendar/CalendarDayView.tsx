@@ -8,6 +8,7 @@ import { SmartSummaryCard } from './SmartSummaryCard';
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/telemetry";
 import { cn } from "@/lib/utils";
+import { zIndex } from '@/lib/z-index';
 import { getCurrentTimePosition } from "@/lib/eventPacking";
 import { useVisibleHours } from "@/hooks/useVisibleHours";
 
@@ -255,23 +256,28 @@ export default function CalendarDayView({
               <div className="w-14 sm:w-16 flex-shrink-0 bg-background border-r border-border">
                 <div className="relative">
                   {Array.from({ length: 24 }, (_, h) => {
-                    const period = h < 12 ? 'AM' : 'PM';
+                    const period = h < 12 ? 'ص' : 'م';
                     const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
                     return (
-                      <div
-                        key={h}
-                        className="relative text-right pr-2 sm:pr-3"
-                        style={{ height: pxPerHour }}
-                      >
-                        <span className="absolute -top-2 right-1 sm:right-2 text-[10px] text-muted-foreground font-normal">
+                      <div key={h} className="relative" style={{ height: pxPerHour }}>
+                        {/* Hour line - واضح */}
+                        <div className="absolute top-0 left-0 right-0 border-t border-border/40" style={{ zIndex: zIndex.hourLines }} />
+                        
+                        {/* Half-hour line - رفيع ومنقط */}
+                        <div 
+                          className="absolute left-0 right-0 border-t border-border/15 border-dashed" 
+                          style={{ top: pxPerHour / 2, zIndex: zIndex.hourLines }} 
+                        />
+                        
+                        {/* Time label */}
+                        <span className="absolute -top-2.5 right-2 text-[11px] font-medium text-muted-foreground">
                           {h === 0 ? "" : (
-                            <>
-                              {displayHour}
-                              <span className="ml-0.5 text-[9px]">{period}</span>
-                            </>
+                            <span className="flex items-baseline gap-0.5">
+                              <span>{displayHour}</span>
+                              <span className="text-[9px] opacity-70">{period}</span>
+                            </span>
                           )}
                         </span>
-                        <div className="absolute top-0 left-0 right-0 border-t border-border" />
                       </div>
                     );
                   })}
@@ -310,10 +316,15 @@ export default function CalendarDayView({
                 {/* Current time indicator - Google style */}
                 {isToday && (
                   <div
-                    className="absolute left-0 right-0 h-[2px] bg-[#ea4335] z-30 pointer-events-none"
-                    style={{ top: getCurrentTimePosition(pxPerMin) }}
+                    className="absolute left-0 right-0 pointer-events-none transition-all"
+                    style={{ 
+                      top: getCurrentTimePosition(pxPerMin),
+                      zIndex: zIndex.currentTimeLine 
+                    }}
                   >
-                    <div className="absolute -left-1.5 -top-1.5 w-3 h-3 rounded-full bg-[#ea4335]" />
+                    <div className="relative h-[2px] bg-red-500 shadow-sm">
+                      <div className="absolute -left-1.5 -top-1.5 w-3 h-3 rounded-full bg-red-500 shadow-md" />
+                    </div>
                   </div>
                 )}
               </div>
