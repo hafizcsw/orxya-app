@@ -141,8 +141,12 @@ function CalendarDay({
         ))}
       </div>
 
-      {/* Prayer overlay */}
-      {prayers && <PrayerBand prayers={prayers} scale={{ pxPerMin }} />}
+      {/* Prayer overlay - Higher z-index to stay above events */}
+      {prayers && (
+        <div className="absolute inset-0 z-30 pointer-events-none">
+          <PrayerBand prayers={prayers} scale={{ pxPerMin }} />
+        </div>
+      )}
 
       {/* Events */}
       <div className="absolute inset-0 z-20 px-1">

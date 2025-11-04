@@ -61,7 +61,7 @@ export default function PrayerBand({
   const nowMin = now.getHours() * 60 + now.getMinutes();
 
   return (
-    <div className="absolute inset-y-0 left-0 right-0 pointer-events-none z-10">
+    <div className="absolute inset-y-0 left-0 right-0 pointer-events-none">
       {nodes}
     </div>
   );
