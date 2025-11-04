@@ -192,46 +192,6 @@ export default function CalendarDayView({
 
   return (
     <div className="w-full h-[calc(100vh-200px)] sm:h-[calc(100vh-160px)] flex flex-col bg-background overflow-hidden">
-      {/* Enhanced Header - Google Calendar Style */}
-      <div className="sticky top-0 z-30 bg-background border-b border-border shadow-sm">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-4">
-            {/* Day Circle - Large and prominent */}
-            <div className={cn(
-              "flex flex-col items-center justify-center rounded-full transition-all",
-              "w-16 h-16",
-              isToday
-                ? "bg-primary text-white shadow-lg"
-                : "text-foreground"
-            )}>
-              <span className="text-xs uppercase text-muted-foreground font-medium">
-                {anchor.toLocaleDateString("ar", { weekday: "short" })}
-              </span>
-              <span className="text-2xl font-bold">
-                {anchor.getDate()}
-              </span>
-            </div>
-            
-            {/* Month and Year */}
-            <div className="flex flex-col">
-              <h2 className="text-xl font-bold">
-                {anchor.toLocaleDateString("ar", { weekday: "long" })}
-              </h2>
-              <span className="text-sm text-muted-foreground">
-                {anchor.toLocaleDateString("ar", { month: "long", year: "numeric" })}
-              </span>
-            </div>
-          </div>
-          
-          <button 
-            onClick={reload}
-            disabled={loading}
-            className="px-4 py-2 text-sm font-medium rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
-          >
-            {loading ? "..." : "تحديث"}
-          </button>
-        </div>
-      </div>
 
       {/* Day view container */}
       <div className="flex flex-1 overflow-hidden relative">

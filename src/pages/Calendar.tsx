@@ -211,19 +211,51 @@ export default function CalendarPage() {
             className="flex-1 overflow-auto bg-background"
           >
             <div className="p-3 sm:p-4 max-w-[1800px] mx-auto">
-              {/* Enhanced View Controls */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3 sm:gap-4">
-                <div className="flex items-center gap-3 flex-wrap w-full sm:w-auto">
+              {/* Google Calendar Style Date Header */}
+              <div className="flex items-center justify-between mb-4 pb-3 border-b">
+                <div className="flex items-center gap-4">
+                  {/* Large Day Circle */}
+                  {mode === "day" && (
+                    <div className={cn(
+                      "flex flex-col items-center justify-center rounded-full",
+                      "w-14 h-14 sm:w-16 sm:h-16",
+                      currentDate.toDateString() === new Date().toDateString()
+                        ? "bg-primary text-white shadow-lg"
+                        : "border-2 border-border text-foreground"
+                    )}>
+                      <span className="text-xs uppercase font-medium opacity-80">
+                        {currentDate.toLocaleDateString("ar", { weekday: "short" })}
+                      </span>
+                      <span className="text-xl sm:text-2xl font-bold">
+                        {currentDate.getDate()}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Month/Year */}
+                  <div className="flex flex-col">
+                    <h2 className="text-lg sm:text-2xl font-bold">
+                      {mode === "day" 
+                        ? currentDate.toLocaleDateString("ar", { weekday: "long" })
+                        : currentDate.toLocaleDateString('ar', { month: 'long' })}
+                    </h2>
+                    <span className="text-sm text-muted-foreground">
+                      {currentDate.toLocaleDateString('ar', { year: 'numeric' })}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Controls */}
+                <div className="flex items-center gap-2">
                   <Button
                     onClick={() => {
                       const today = new Date();
                       setCurrentDate(today);
                       setGlobalDate(today);
-                      setMode("day");
                     }}
                     variant="outline"
                     size="sm"
-                    className="h-9 text-sm font-semibold shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105 border-primary/20"
+                    className="h-9"
                   >
                     اليوم
                   </Button>
@@ -232,19 +264,18 @@ export default function CalendarPage() {
                     onClick={() => setShowPrayerTimes(!showPrayerTimes)}
                     variant={showPrayerTimes ? "default" : "outline"}
                     size="sm"
-                    className="h-9 gap-2 text-sm font-semibold shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105"
-                    title={showPrayerTimes ? "إخفاء أوقات الصلاة" : "إظهار أوقات الصلاة"}
+                    className="h-9 gap-2"
                   >
                     <Moon className="w-4 h-4" />
-                    <span className="sm:inline">الصلاة</span>
                   </Button>
-                   
-                  <h2 className="text-base sm:text-xl font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text">
-                    {currentDate.toLocaleDateString('ar', { month: 'long', year: 'numeric' })}
-                  </h2>
                 </div>
+              </div>
 
-                <div className="flex items-center gap-1 bg-gradient-to-r from-secondary/60 to-secondary/40 p-1.5 rounded-xl shadow-md backdrop-blur-sm border border-border/30">
+              {/* View Mode Tabs */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                </div>
+                <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg">
                   <button
                     onClick={() => setMode("day")}
                     className={cn(
