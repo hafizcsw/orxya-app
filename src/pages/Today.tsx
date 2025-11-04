@@ -577,9 +577,9 @@ const Today = () => {
                     
                     <div className={cn(
                       "grid gap-4 place-items-center",
-                      device === 'mobile' && "grid-cols-3 gap-3 px-2",
-                      device === 'tablet' && "grid-cols-3 gap-6 max-w-2xl mx-auto",
-                      device === 'desktop' && "grid-cols-3 gap-8 max-w-3xl mx-auto"
+                      device === 'mobile' && "grid-cols-3 gap-2 px-2",
+                      device === 'tablet' && "grid-cols-3 gap-3 max-w-xl mx-auto",
+                      device === 'desktop' && "grid-cols-3 gap-4 max-w-2xl mx-auto"
                     )}>
                       {/* Ring 1: Today Income */}
                       <div 

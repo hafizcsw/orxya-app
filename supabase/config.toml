@@ -93,3 +93,6 @@ verify_jwt = true
 [functions.calendar-ai-insights]
 verify_jwt = true
 
+[functions.plans-manage]
+verify_jwt = true
+
