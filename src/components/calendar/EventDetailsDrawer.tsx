@@ -230,7 +230,7 @@ export default function EventDetailsDrawer({
         role="dialog"
         aria-modal="true"
       >
-        <header className="sticky top-0 z-10 p-4 border-b bg-card/95 backdrop-blur">
+        <header className="sticky top-0 z-10 p-4 border-b bg-muted">
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-semibold">تفاصيل الحدث</h3>
             {hasConflict && (
