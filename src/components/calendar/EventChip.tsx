@@ -174,53 +174,16 @@ export default function EventChip({
         </div>
       )}
       
-      <div className="relative z-10 space-y-0.5">
-        {/* Header: Title + Status */}
-        <div className="flex items-start gap-1">
-          <div className="flex-1 min-w-0">
-            <div className={cn(
-              "text-[13px] font-medium leading-snug truncate",
-              status === 'cancelled' && "line-through opacity-60"
-            )}>
-              {event.title || "بدون عنوان"}
-            </div>
-          </div>
-          {getStatusIcon()}
-        </div>
-        
-        {/* Timing information - Google style */}
+      <div className="relative z-10">
+        {/* Timing only - simplified */}
         {!isAllDay && event.starts_at && (
-          <div className="flex items-center gap-1 text-[11px] opacity-75">
-            <span>{formatTime(event.starts_at)}</span>
-            {duration && (
-              <>
-                <span>•</span>
-                <span>{duration}</span>
-              </>
-            )}
+          <div className="text-[12px] font-medium">
+            {formatTime(event.starts_at)}
           </div>
         )}
-        
-        {/* Location - compact */}
-        {event.location && (
-          <div className="flex items-center gap-1 text-[11px] opacity-60 truncate">
-            <MapPin className="w-2.5 h-2.5 flex-shrink-0" />
-            <span className="truncate">{event.location}</span>
-          </div>
-        )}
-        
-        {/* Progress bar for ongoing events */}
-        {ongoing && event.starts_at && event.ends_at && (
-          <div className="w-full h-1 bg-black/20 dark:bg-white/20 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-blue-500 rounded-full transition-all duration-500"
-              style={{
-                width: `${Math.min(100, Math.max(0, 
-                  ((new Date().getTime() - new Date(event.starts_at).getTime()) / 
-                  (new Date(event.ends_at).getTime() - new Date(event.starts_at).getTime())) * 100
-                ))}%`
-              }}
-            />
+        {isAllDay && (
+          <div className="text-[11px] font-medium truncate">
+            {event.title || "بدون عنوان"}
           </div>
         )}
       </div>
