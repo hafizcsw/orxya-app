@@ -164,7 +164,7 @@ export function BottomNav() {
             onClick={toggleAI}
             className={cn(
               "flex flex-col items-center justify-center",
-              "relative -mt-2 md:-mt-3",
+              "relative -mt-1 md:-mt-2",
               "transition-all duration-300",
               "hover:scale-105 active:scale-95"
             )}
