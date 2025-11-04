@@ -139,25 +139,24 @@ export default function EventChip({
         onClick();
       }}
       className={cn(
-        "group w-full h-full rounded-lg border-l-4 px-3 py-2 relative",
+        "group w-full h-full rounded border-l-[3px] px-2 py-1.5 relative",
         "text-start overflow-hidden",
-        "transition-all duration-200 ease-out",
-        "hover:scale-[1.01] hover:z-20",
-        "focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-1",
-        "backdrop-blur-sm",
+        "transition-all duration-150 ease-out",
+        "hover:shadow-md hover:z-20",
+        "focus:outline-none focus:ring-1 focus:ring-primary/20",
         colors.bg,
         colors.border,
         colors.text,
         "animate-fade-in",
-        ongoing && "event-pulse-border ring-2 ring-blue-500/50",
-        status === 'cancelled' && "border-dashed opacity-60",
+        ongoing && "ring-1 ring-primary/30",
+        status === 'cancelled' && "opacity-60 line-through",
         className
       )}
       style={style}
       title={event.description || event.title}
     >
-      {/* Gradient overlay on hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl pointer-events-none" />
+      {/* Subtle hover effect */}
+      <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none" />
       
       {/* Priority indicator */}
       {priority !== 'normal' && (
@@ -175,16 +174,13 @@ export default function EventChip({
         </div>
       )}
       
-      <div className="relative z-10 space-y-1">
-        {/* Header: Category icon + Title + Status */}
-        <div className="flex items-start gap-1.5">
-          <span className="text-xs flex-shrink-0 mt-0.5" title={category}>
-            {CATEGORY_ICONS[category]}
-          </span>
+      <div className="relative z-10 space-y-0.5">
+        {/* Header: Title + Status */}
+        <div className="flex items-start gap-1">
           <div className="flex-1 min-w-0">
             <div className={cn(
-              "text-xs sm:text-sm font-semibold leading-tight truncate",
-              status === 'cancelled' && "line-through"
+              "text-[13px] font-medium leading-snug truncate",
+              status === 'cancelled' && "line-through opacity-60"
             )}>
               {event.title || "بدون عنوان"}
             </div>
@@ -192,24 +188,23 @@ export default function EventChip({
           {getStatusIcon()}
         </div>
         
-        {/* Timing information */}
+        {/* Timing information - Google style */}
         {!isAllDay && event.starts_at && (
-          <div className="flex items-center gap-2 text-[10px] sm:text-xs opacity-80 font-medium">
-            <Clock className="w-3 h-3 flex-shrink-0" />
+          <div className="flex items-center gap-1 text-[11px] opacity-75">
             <span>{formatTime(event.starts_at)}</span>
             {duration && (
               <>
-                <span className="opacity-50">•</span>
-                <span className="opacity-75">{duration}</span>
+                <span>•</span>
+                <span>{duration}</span>
               </>
             )}
           </div>
         )}
         
-        {/* Location */}
+        {/* Location - compact */}
         {event.location && (
-          <div className="flex items-center gap-1.5 text-[10px] sm:text-xs opacity-70 truncate">
-            <MapPin className="w-3 h-3 flex-shrink-0" />
+          <div className="flex items-center gap-1 text-[11px] opacity-60 truncate">
+            <MapPin className="w-2.5 h-2.5 flex-shrink-0" />
             <span className="truncate">{event.location}</span>
           </div>
         )}

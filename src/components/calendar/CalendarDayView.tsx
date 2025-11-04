@@ -149,10 +149,10 @@ export default function CalendarDayView({
 
 
   return (
-    <div className="w-full h-[calc(100vh-200px)] sm:h-[calc(100vh-160px)] flex flex-col bg-background rounded-lg overflow-hidden border border-border/20">
-      {/* Header */}
-      <div className="hidden sm:flex items-center justify-between px-4 sm:px-6 py-3 border-b border-border/20">
-        <h2 className="text-base sm:text-lg font-normal text-foreground">
+    <div className="w-full h-[calc(100vh-200px)] sm:h-[calc(100vh-160px)] flex flex-col bg-background overflow-hidden">
+      {/* Header - Google Calendar style */}
+      <div className="hidden sm:flex items-center justify-between px-4 sm:px-6 py-3 border-b border-border bg-background">
+        <h2 className="text-[15px] sm:text-base font-medium text-foreground">
           {anchor.toLocaleDateString("ar", {
             weekday: "long",
             day: "numeric",
@@ -164,7 +164,7 @@ export default function CalendarDayView({
         <button
           onClick={reload}
           disabled={loading}
-          className="px-4 py-2 text-sm font-medium rounded-md hover:bg-accent/50 transition-colors disabled:opacity-50"
+          className="px-3 py-1.5 text-[13px] font-medium text-muted-foreground rounded-md hover:bg-muted transition-colors disabled:opacity-50"
         >
           {loading ? "..." : "تحديث"}
         </button>
@@ -173,18 +173,18 @@ export default function CalendarDayView({
       {/* Day view container */}
       <div className="flex flex-1 overflow-hidden relative">
         <div className="flex flex-1 flex-col overflow-hidden">
-          {/* AI Insights Banner - Only for Today */}
+          {/* AI Insights Banner - Google style */}
           {isToday && aiInsights && (
-            <div className="px-4 py-3 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 border-b border-blue-500/20 backdrop-blur-sm animate-fade-in">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
-                  <span className="text-sm">🤖</span>
+            <div className="px-4 py-2.5 bg-primary/5 border-b border-primary/10 animate-fade-in">
+              <div className="flex items-start gap-2.5">
+                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-[13px]">🤖</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground leading-relaxed">
+                  <p className="text-[13px] text-foreground/90 leading-relaxed">
                     {loadingInsights ? (
                       <span className="flex items-center gap-2">
-                        <span className="inline-block w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                         جاري تحليل يومك...
                       </span>
                     ) : (
@@ -196,20 +196,20 @@ export default function CalendarDayView({
             </div>
           )}
 
-          {/* Day header */}
-          <div className="flex border-b border-border/10 bg-background h-12 sm:h-12 sticky top-0 z-20">
-            <div className="w-14 sm:w-16 flex-shrink-0" />
-            <div className="flex-1 flex flex-col items-center justify-center gap-1 px-1 text-center">
-              <div className="text-xs sm:text-[11px] text-muted-foreground font-normal">
+          {/* Day header - Google style */}
+          <div className="flex border-b border-border bg-background h-[52px] sticky top-0 z-20">
+            <div className="w-14 sm:w-16 flex-shrink-0 border-r border-border" />
+            <div className="flex-1 flex flex-col items-center justify-center gap-0.5 px-1 text-center">
+              <div className="text-[11px] text-muted-foreground font-normal uppercase tracking-wide">
                 {anchor.toLocaleDateString("ar", { weekday: "short" })}
               </div>
               <div
                 className={cn(
-                  "flex items-center justify-center rounded-full transition-all font-medium",
-                  "w-7 h-7 sm:w-7 sm:h-7 text-sm sm:text-sm",
+                  "flex items-center justify-center rounded-full transition-all",
+                  "w-10 h-10 text-[15px]",
                   isToday
-                    ? "bg-[#1a73e8] text-white shadow-md"
-                    : "text-foreground"
+                    ? "bg-primary text-white font-medium shadow-sm"
+                    : "text-foreground font-normal hover:bg-muted"
                 )}
               >
                 {anchor.getDate()}
@@ -221,10 +221,10 @@ export default function CalendarDayView({
           <AllDayRow events={allEvents} days={[anchor]} onEventClick={handleEventClick} />
 
           {/* Scrollable container */}
-          <div className="flex-1 overflow-auto relative" ref={gridRef}>
+          <div className="flex-1 overflow-auto relative bg-background" ref={gridRef}>
             <div className="flex relative">
-              {/* Time gutter */}
-              <div className="w-14 sm:w-16 flex-shrink-0 bg-background">
+              {/* Time gutter - Google style */}
+              <div className="w-14 sm:w-16 flex-shrink-0 bg-background border-r border-border">
                 <div className="relative">
                   {Array.from({ length: 24 }, (_, h) => {
                     const period = h < 12 ? 'AM' : 'PM';
@@ -235,15 +235,15 @@ export default function CalendarDayView({
                         className="relative text-right pr-2 sm:pr-3"
                         style={{ height: pxPerHour }}
                       >
-                        <span className="absolute -top-2.5 right-1 sm:right-2 text-[10px] sm:text-[11px] text-muted-foreground font-normal leading-tight">
+                        <span className="absolute -top-2 right-1 sm:right-2 text-[10px] text-muted-foreground font-normal">
                           {h === 0 ? "" : (
                             <>
-                              <span className="block sm:inline">{displayHour.toString().padStart(2, "0")}:00</span>
-                              <span className="block sm:inline sm:ml-1 text-[8px] sm:text-[10px]">{period}</span>
+                              {displayHour}
+                              <span className="ml-0.5 text-[9px]">{period}</span>
                             </>
                           )}
                         </span>
-                        <div className="absolute top-0 left-0 right-0 border-t border-border/10" />
+                        <div className="absolute top-0 left-0 right-0 border-t border-border" />
                       </div>
                     );
                   })}
@@ -279,13 +279,13 @@ export default function CalendarDayView({
                   pxPerHour={pxPerHour}
                 />
 
-                {/* Current time indicator */}
+                {/* Current time indicator - Google style */}
                 {isToday && (
                   <div
-                    className="absolute left-0 right-0 h-[2px] bg-red-500 z-30 pointer-events-none"
+                    className="absolute left-0 right-0 h-[2px] bg-[#ea4335] z-30 pointer-events-none"
                     style={{ top: getCurrentTimePosition(pxPerMin) }}
                   >
-                    <div className="absolute -right-1 -top-1.5 w-3 h-3 rounded-full bg-red-500 shadow-lg" />
+                    <div className="absolute -left-1.5 -top-1.5 w-3 h-3 rounded-full bg-[#ea4335]" />
                   </div>
                 )}
               </div>

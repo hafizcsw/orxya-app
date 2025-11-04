@@ -1,0 +1,101 @@
+/* Google Calendar Design System */
+
+:root {
+  /* Base colors (HSL format ONLY) */
+  --background: 0 0% 100%;
+  --foreground: 217 8% 25%; /* #3c4043 */
+  --card: 0 0% 100%;
+  --card-foreground: 217 8% 25%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 217 8% 25%;
+
+  /* Google Calendar Blue */
+  --primary: 217 91% 51%; /* #1a73e8 */
+  --primary-foreground: 0 0% 100%;
+  
+  /* Neutral grays matching Google Calendar */
+  --secondary: 220 13% 95%; /* #f1f3f4 */
+  --secondary-foreground: 217 8% 25%;
+  --muted: 220 13% 96%;
+  --muted-foreground: 217 8% 37%; /* #5f6368 */
+  --accent: 220 13% 95%;
+  --accent-foreground: 217 8% 25%;
+  
+  /* Status colors */
+  --destructive: 4 90% 58%;
+  --destructive-foreground: 0 0% 100%;
+  --success: 142 76% 36%;
+  --success-foreground: 0 0% 100%;
+  --warning: 38 92% 50%;
+  --warning-foreground: 0 0% 100%;
+  
+  /* Borders - very light like Google */
+  --border: 220 13% 86%; /* #dadce0 */
+  --input: 220 13% 91%;
+  --ring: 217 91% 51%;
+
+  /* Sidebar colors */
+  --sidebar-background: 0 0% 100%;
+  --sidebar-foreground: 217 8% 25%;
+  --sidebar-primary: 217 91% 51%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 220 13% 95%;
+  --sidebar-accent-foreground: 217 8% 25%;
+  --sidebar-border: 220 13% 86%;
+  --sidebar-ring: 217 91% 51%;
+
+  /* Google Calendar Event Colors */
+  --gcal-blue: 217 91% 51%;
+  --gcal-red: 4 90% 58%;
+  --gcal-yellow: 45 100% 51%;
+  --gcal-green: 142 76% 36%;
+  --gcal-orange: 24 100% 50%;
+  --gcal-purple: 271 76% 53%;
+  --gcal-teal: 174 72% 56%;
+  --gcal-pink: 340 82% 52%;
+}
+
+.dark {
+  /* Google Calendar Dark Mode */
+  --background: 217 8% 10%; /* #171717 dark gray */
+  --foreground: 0 0% 95%;
+  --card: 217 8% 13%; /* #202124 */
+  --card-foreground: 0 0% 95%;
+  --popover: 217 8% 13%;
+  --popover-foreground: 0 0% 95%;
+  
+  /* Primary stays same in dark */
+  --primary: 217 91% 60%; /* lighter blue for dark mode */
+  --primary-foreground: 0 0% 100%;
+  
+  /* Dark mode neutrals */
+  --secondary: 217 8% 16%; /* #292a2d */
+  --secondary-foreground: 0 0% 85%;
+  --muted: 217 8% 18%;
+  --muted-foreground: 0 0% 65%; /* #9aa0a6 */
+  --accent: 217 8% 16%;
+  --accent-foreground: 0 0% 85%;
+  
+  /* Status colors for dark */
+  --destructive: 0 62% 50%;
+  --destructive-foreground: 0 0% 100%;
+  --success: 142 76% 36%;
+  --success-foreground: 0 0% 100%;
+  --warning: 38 92% 50%;
+  --warning-foreground: 0 0% 100%;
+  
+  /* Dark borders */
+  --border: 217 8% 22%; /* #3c4043 */
+  --input: 217 8% 22%;
+  --ring: 217 91% 60%;
+
+  /* Sidebar dark */
+  --sidebar-background: 217 8% 13%;
+  --sidebar-foreground: 0 0% 95%;
+  --sidebar-primary: 217 91% 60%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 217 8% 16%;
+  --sidebar-accent-foreground: 0 0% 85%;
+  --sidebar-border: 217 8% 22%;
+  --sidebar-ring: 217 91% 60%;
+}
