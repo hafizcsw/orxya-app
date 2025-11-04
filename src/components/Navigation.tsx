@@ -167,9 +167,8 @@ const Navigation = () => {
             </div>
           )}
 
-          {/* Right: Logo + Theme Toggle */}
+          {/* Right: Logo Only */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            <ThemeToggle />
             <Link
               to="/"
               className="text-lg font-bold text-foreground hover:text-primary transition-colors"
