@@ -121,10 +121,10 @@ function CalendarDay({
 
   return (
     <div
-      className="relative border-l border-border/20 h-full select-none bg-background hover:bg-accent/5 transition-all duration-300"
+      className="relative border-l border-border/20 h-full select-none bg-background"
       onMouseLeave={() => drag && setDrag(null)}
     >
-      {/* Hour grid - Fixed, no conditional rendering to prevent flicker */}
+      {/* Hour grid - نظيف جداً */}
       <div
         className="absolute inset-0"
         ref={containerRef}
@@ -135,7 +135,7 @@ function CalendarDay({
         {HOURS.map((h) => (
           <div
             key={h}
-            className="border-b border-border/20 hover:bg-gradient-to-r hover:from-accent/5 hover:to-transparent transition-all duration-200 cursor-crosshair"
+            className="border-b border-border/5 hover:bg-accent/5 transition-colors cursor-crosshair"
             style={{ height: pxPerHour }}
           />
         ))}
@@ -179,15 +179,19 @@ function CalendarDay({
         })}
       </div>
 
-      {/* Drag creation preview - Enhanced with gradient */}
+      {/* Drag creation preview - معاينة نظيفة */}
       {drag && (
         <div
-          className="absolute left-1 right-1 rounded-lg bg-gradient-to-br from-primary/40 via-primary/30 to-primary/20 border-2 border-primary/60 z-30 pointer-events-none shadow-lg shadow-primary/20 backdrop-blur-sm animate-scale-in"
+          className="absolute left-1 right-1 rounded shadow-lg z-30 pointer-events-none bg-blue-100 dark:bg-blue-950/40 border-2 border-blue-400 flex items-center justify-center"
           style={{
             top: Math.min(drag.y0, drag.y1),
             height: Math.abs(drag.y1 - drag.y0)
           }}
-        />
+        >
+          <div className="text-blue-700 dark:text-blue-300 text-xs font-medium">
+            {toTime(Math.min(drag.y0, drag.y1)).slice(11, 16)} - {toTime(Math.max(drag.y0, drag.y1)).slice(11, 16)}
+          </div>
+        </div>
       )}
     </div>
   );

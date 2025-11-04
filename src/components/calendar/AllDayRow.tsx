@@ -69,8 +69,8 @@ export default function AllDayRow({ events, days, onEventClick }: Props) {
   }
 
   return (
-    <div className="border-b border-border bg-background" style={{ minHeight: rows.length * 26 + 8 }}>
-      <div className="relative grid grid-cols-7" style={{ minHeight: rows.length * 26 + 8 }}>
+    <div className="border-b border-border/10 bg-muted/10" style={{ minHeight: rows.length * 24 + 8 }}>
+      <div className="relative grid grid-cols-7" style={{ minHeight: rows.length * 24 + 8 }}>
         {rows.map((row, rowIdx) => (
           <div key={rowIdx} className="contents">
             {row.map((event, idx) => {
@@ -80,12 +80,12 @@ export default function AllDayRow({ events, days, onEventClick }: Props) {
               return (
                 <div
                   key={event.id || idx}
-                  className="absolute px-0.5"
+                  className="absolute px-1"
                   style={{
-                    top: rowIdx * 26 + 4,
+                    top: rowIdx * 24 + 4,
                     left: `${(span.start / 7) * 100}%`,
                     width: `${(span.span / 7) * 100}%`,
-                    height: 22,
+                    height: 20,
                     gridColumn: `${span.start + 1} / span ${span.span}`
                   }}
                 >
@@ -93,7 +93,7 @@ export default function AllDayRow({ events, days, onEventClick }: Props) {
                     event={event}
                     onClick={() => onEventClick(event)}
                     isAllDay
-                    className="text-[11px]"
+                    className="text-[10px]"
                   />
                 </div>
               );

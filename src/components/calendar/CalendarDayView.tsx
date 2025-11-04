@@ -202,19 +202,21 @@ export default function CalendarDayView({
           {/* Scrollable container */}
           <div className="flex-1 overflow-auto relative bg-background scroll-smooth" ref={gridRef}>
             <div className="flex relative">
-              {/* Clean Time Gutter - Google Calendar Style */}
+              {/* Time Gutter - نظيف وبسيط */}
               <div className="w-14 sm:w-16 flex-shrink-0 bg-background border-l border-border/10 relative">
                 {Array.from({ length: 24 }, (_, h) => {
+                  // عرض كل 3 ساعات فقط
+                  if (h % 3 !== 0) return <div key={h} style={{ height: pxPerHour }} />;
+                  
                   const period = h < 12 ? 'ص' : 'م';
                   const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
                   
                   return (
-                    <div key={h} className="relative" style={{ height: pxPerHour }}>
-                      {/* Time label - clean and simple */}
+                    <div key={h} className="relative" style={{ height: pxPerHour * 3 }}>
                       {h !== 0 && (
-                        <div className="absolute -top-2.5 right-2 text-[11px] text-muted-foreground/70 font-medium flex items-baseline gap-0.5">
+                        <div className="absolute -top-2.5 right-2 text-[10px] text-muted-foreground/60 font-normal flex items-baseline gap-0.5">
                           <span>{displayHour}</span>
-                          <span className="text-[9px]">{period}</span>
+                          <span className="text-[8px]">{period}</span>
                         </div>
                       )}
                     </div>
@@ -262,17 +264,18 @@ export default function CalendarDayView({
                   pxPerHour={pxPerHour}
                 />
 
-                {/* Current time indicator - Google style */}
+                {/* Current time indicator - خط أحمر أنيق */}
                 {isToday && (
                   <div
-                    className="absolute left-0 right-0 pointer-events-none transition-all"
+                    className="absolute left-0 right-0 pointer-events-none"
                     style={{ 
                       top: getCurrentTimePosition(pxPerMin),
                       zIndex: zIndex.currentTimeLine 
                     }}
                   >
-                    <div className="relative h-[2px] bg-red-500 shadow-sm">
-                      <div className="absolute -left-1.5 -top-1.5 w-3 h-3 rounded-full bg-red-500 shadow-md" />
+                    <div className="flex items-center">
+                      <div className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-lg -ml-1.5" />
+                      <div className="flex-1 h-[2px] bg-red-500 shadow-md" />
                     </div>
                   </div>
                 )}

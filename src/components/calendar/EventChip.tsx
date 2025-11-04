@@ -40,44 +40,42 @@ export default function EventChip({
   const priority: EventPriority = event.priority || 'normal';
   const status: EventStatus = event.status || 'scheduled';
   
-  const countdown = useCountdown(event.starts_at || new Date());
   const now = new Date();
   const start = event.starts_at ? new Date(event.starts_at) : now;
   const end = event.ends_at ? new Date(event.ends_at) : now;
   const isOngoing = now >= start && now < end;
   const isPast = now >= end;
-  const isUpcoming = now < start;
   
   const getEventColor = () => {
     if (event.is_cancelled || status === 'cancelled') {
       return {
-        bg: "bg-muted/30",
-        border: "border-muted/30",
-        text: "text-muted-foreground"
+        bg: "bg-muted/40",
+        text: "text-muted-foreground",
+        hex: "#9ca3af"
       };
     }
     
     if (status === 'completed' || isPast) {
       return {
-        bg: "bg-muted/20",
-        border: "border-border/30",
-        text: "text-muted-foreground"
+        bg: "bg-muted/30",
+        text: "text-muted-foreground",
+        hex: "#6b7280"
       };
     }
     
     if (hasConflict) {
       return {
-        bg: "bg-red-50 dark:bg-red-950/30",
-        border: "border-red-400",
-        text: "text-red-900 dark:text-red-100"
+        bg: "bg-red-100 dark:bg-red-950/40",
+        text: "text-red-700 dark:text-red-300",
+        hex: "#ef4444"
       };
     }
 
     if (isOngoing) {
       return {
-        bg: "bg-blue-50 dark:bg-blue-950/30",
-        border: "border-blue-400",
-        text: "text-blue-900 dark:text-blue-100"
+        bg: "bg-blue-100 dark:bg-blue-950/40",
+        text: "text-blue-700 dark:text-blue-300",
+        hex: "#3b82f6"
       };
     }
     
@@ -86,8 +84,8 @@ export default function EventChip({
     
     return {
       bg: color.bg,
-      border: color.border,
-      text: color.text
+      text: color.text,
+      hex: color.hex
     };
   };
   
@@ -127,7 +125,7 @@ export default function EventChip({
     return Math.min(100, Math.max(0, (elapsed / total) * 100));
   };
 
-  // تصميم مختصر للأحداث طوال اليوم
+  // تصميم نظيف للأحداث طوال اليوم
   if (isAllDay) {
     return (
       <button
@@ -136,22 +134,19 @@ export default function EventChip({
           onClick();
         }}
         className={cn(
-          "w-full rounded-lg px-2.5 py-1.5 text-start",
-          "transition-all duration-200 hover:scale-[1.01]",
-          "border backdrop-blur-sm",
+          "w-full rounded px-2 py-0.5 text-start",
+          "transition-all duration-150 hover:opacity-90",
           colors.bg,
-          colors.border,
           colors.text,
-          "animate-fade-in",
+          "shadow-sm",
           className
         )}
         style={style}
         title={event.description || event.title}
       >
         <div className="flex items-center gap-1.5">
-          <span className="text-sm shrink-0">{CATEGORY_ICONS[category]}</span>
-          <span className="font-medium text-[13px] truncate">{event.title || "بدون عنوان"}</span>
-          {isPast && <CheckCircle2 className="w-3 h-3 text-success shrink-0 ml-auto" />}
+          <span className="font-medium text-xs truncate">{event.title || "بدون عنوان"}</span>
+          {isPast && <CheckCircle2 className="w-3 h-3 shrink-0 ml-auto opacity-70" />}
         </div>
       </button>
     );
@@ -164,32 +159,25 @@ export default function EventChip({
         onClick();
       }}
       className={cn(
-        "group w-full h-full rounded-lg border-l-4 px-2 py-1.5 relative",
+        "group w-full h-full rounded px-2 py-1 relative",
         "text-start overflow-hidden",
-        "transition-all duration-200",
-        "hover:shadow-md hover:scale-[1.01]",
+        "transition-all duration-150",
+        "hover:shadow-lg hover:-translate-y-0.5",
         "focus:outline-none focus:ring-2 focus:ring-primary/20",
         colors.bg,
-        colors.border,
         colors.text,
-        isOngoing && "ring-2 ring-blue-400/30",
-        hasConflict && "ring-2 ring-red-400/50",
+        "shadow-sm",
+        isOngoing && "ring-2 ring-blue-500/40",
+        hasConflict && "ring-2 ring-red-500/50",
         isPast && "opacity-60",
         className
       )}
       style={{ ...style, zIndex: zIndex.eventBubble }}
       title={event.description || event.title}
     >
-      {/* تحذير التعارض */}
-      {hasConflict && (
-        <div className="absolute bottom-1 left-1 bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-md font-bold animate-pulse">
-          ⚠️ تعارض
-        </div>
-      )}
-
-      {/* علامة الأولوية */}
+      {/* مؤشر الأولوية */}
       {priority === 'high' && !hasConflict && (
-        <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500" />
+        <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-500 shadow-sm" />
       )}
       
       {/* Get event height from style prop */}
@@ -198,35 +186,48 @@ export default function EventChip({
         
         return (
           <>
-            {/* الوقت - يظهر فقط للبطاقات الأكبر من 40px */}
-            {height > 40 && (
-              <div className="flex items-center gap-1 mb-1">
-                <Clock className="w-3 h-3" />
-                <span className="text-xs font-semibold">
-                  {event.starts_at && formatTime(event.starts_at)}
-                </span>
+            {/* الوقت - للبطاقات أكبر من 35px */}
+            {height > 35 && event.starts_at && (
+              <div className="text-xs font-medium mb-0.5 opacity-90">
+                {formatTime(event.starts_at)}
               </div>
             )}
 
             {/* العنوان - دائماً */}
-            <div className="font-medium text-sm truncate">
-              {CATEGORY_ICONS[category]} {event.title || "بدون عنوان"}
+            <div className="font-medium text-sm leading-tight truncate">
+              {event.title || "بدون عنوان"}
             </div>
 
-            {/* الموقع - يظهر فقط للبطاقات الأكبر من 60px */}
-            {height > 60 && event.location && (
-              <div className="text-[10px] text-muted-foreground truncate mt-1">
-                📍 {event.location}
+            {/* الموقع - للبطاقات أكبر من 55px */}
+            {height > 55 && event.location && (
+              <div className="flex items-center gap-1 text-xs opacity-75 truncate mt-1">
+                <MapPin className="w-3 h-3 shrink-0" />
+                <span className="truncate">{event.location}</span>
               </div>
             )}
 
-            {/* شريط التقدم - يظهر فقط للبطاقات الأكبر من 80px */}
-            {height > 80 && isOngoing && (
-              <div className="mt-2 h-1 bg-border/30 rounded-full overflow-hidden">
+            {/* شريط التقدم - للأحداث الجارية والبطاقات أكبر من 70px */}
+            {height > 70 && isOngoing && (
+              <div className="mt-2 h-1 bg-white/20 dark:bg-black/20 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-blue-500 transition-all"
+                  className="h-full bg-white/50 dark:bg-white/40 transition-all"
                   style={{ width: `${getProgressPercentage()}%` }}
                 />
+              </div>
+            )}
+
+            {/* مؤشر الحالة - للبطاقات أكبر من 85px */}
+            {height > 85 && (
+              <div className="absolute bottom-1 left-1 flex items-center gap-1">
+                {getStatusIcon()}
+              </div>
+            )}
+
+            {/* تحذير التعارض */}
+            {hasConflict && (
+              <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded font-medium">
+                <AlertCircle className="w-2.5 h-2.5" />
+                <span>تعارض</span>
               </div>
             )}
           </>

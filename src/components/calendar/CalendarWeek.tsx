@@ -169,22 +169,27 @@ export default function CalendarWeek({
           {/* Scrollable container */}
           <div className="flex-1 overflow-auto relative" ref={gridRef}>
             <div className="flex relative">
-              {/* Time gutter - Clean design */}
+              {/* Time gutter - نظيف */}
               <div className="w-14 sm:w-16 flex-shrink-0 bg-background">
                 <div className="relative">
-                  {Array.from({ length: 24 }, (_, h) => (
-                    <div 
-                      key={h} 
-                      className="relative text-right pr-2 sm:pr-3" 
-                      style={{ height: pxPerHour }}
-                    >
-                      {h > 0 && h % 3 === 0 && (
-                        <span className="absolute -top-2.5 right-1 sm:right-2 text-[10px] sm:text-xs text-muted-foreground/70 font-light">
-                          {h.toString().padStart(2, "0")}
-                        </span>
-                      )}
-                    </div>
-                  ))}
+                  {Array.from({ length: 24 }, (_, h) => {
+                    // عرض كل 3 ساعات فقط
+                    if (h % 3 !== 0) return <div key={h} style={{ height: pxPerHour }} />;
+                    
+                    return (
+                      <div 
+                        key={h} 
+                        className="relative text-right pr-2 sm:pr-3" 
+                        style={{ height: pxPerHour * 3 }}
+                      >
+                        {h > 0 && (
+                          <span className="absolute -top-2.5 right-1 sm:right-2 text-[10px] text-muted-foreground/60 font-normal">
+                            {h.toString().padStart(2, "0")}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -211,12 +216,18 @@ export default function CalendarWeek({
                 }} visibleRange={visibleRange} pxPerHour={pxPerHour} />;
               })}
 
-                {/* Current time indicator - red line */}
-                {days.some(d => d.toDateString() === new Date().toDateString()) && <div className="absolute left-0 right-0 h-[2px] bg-red-500 z-30 pointer-events-none" style={{
-                top: getCurrentTimePosition(pxPerMin)
-              }}>
-                    <div className="absolute -right-1 -top-1.5 w-3 h-3 rounded-full bg-red-500 shadow-lg" />
-                  </div>}
+                {/* Current time indicator - خط أحمر أنيق */}
+                {days.some(d => d.toDateString() === new Date().toDateString()) && (
+                  <div 
+                    className="absolute left-0 right-0 z-30 pointer-events-none" 
+                    style={{ top: getCurrentTimePosition(pxPerMin) }}
+                  >
+                    <div className="flex items-center">
+                      <div className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-lg -ml-1.5" />
+                      <div className="flex-1 h-[2px] bg-red-500 shadow-md" />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
