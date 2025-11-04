@@ -137,20 +137,20 @@ export function BottomNav() {
                 to={item.path}
                 className={cn(
                   "flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-all min-w-[60px]",
-                  "md:scale-110", // Slightly larger on tablets
+                  "md:scale-110",
                   isActive 
                     ? "text-primary" 
-                    : "text-muted-foreground hover:text-foreground"
+                    : "text-foreground/80 hover:text-foreground"
                 )}
               >
                 <Icon className={cn(
                   "transition-all",
-                  "w-5 h-5 md:w-6 md:h-6", // Responsive icon size
+                  "w-5 h-5 md:w-6 md:h-6",
                   isActive && "scale-110"
                 )} />
                 <span className={cn(
                   "text-[10px] transition-all",
-                  "md:text-sm", // Larger text on tablets
+                  "md:text-sm",
                   isActive && "font-semibold"
                 )}>
                   {item.label}
@@ -190,8 +190,8 @@ export function BottomNav() {
             onClick={() => setMenuOpen(true)}
             className={cn(
               "flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-all min-w-[60px]",
-              "md:scale-110", // Slightly larger on tablets
-              "text-muted-foreground hover:text-foreground"
+              "md:scale-110",
+              "text-foreground/80 hover:text-foreground"
             )}
           >
             <Menu className="w-5 h-5 md:w-6 md:h-6" />
