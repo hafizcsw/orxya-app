@@ -35,16 +35,21 @@ export default function PrayerBand({
 
       return (
         <div key={k} className="pointer-events-none">
+          {/* Prayer time window background */}
           <div
-            className="absolute left-0 right-0 bg-amber-500/5 border-y border-amber-500/20"
+            className="absolute left-0 right-0 bg-gradient-to-r from-amber-500/5 via-amber-400/8 to-amber-500/5 border-y border-amber-500/20 backdrop-blur-sm"
             style={{ top: bandTop, height: bandH }}
           />
+          
+          {/* Prayer time line with glow effect */}
           <div
-            className="absolute left-0 right-0 border-t-2 border-amber-500"
+            className="absolute left-0 right-0 border-t-2 border-amber-500 shadow-lg shadow-amber-500/30"
             style={{ top: y }}
           >
-            <span className="absolute -top-2 left-1 text-[10px] bg-gradient-to-r from-amber-500 to-amber-600 text-white px-2 py-0.5 rounded-full shadow-md font-medium">
-              🕌 {label} {timeStr}
+            <span className="absolute -top-3 left-2 text-[10px] sm:text-xs bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 text-white px-3 py-1 rounded-full shadow-lg shadow-amber-500/40 font-bold backdrop-blur-sm border border-amber-300/30 flex items-center gap-1.5 animate-fade-in">
+              <span className="text-sm">🕌</span>
+              <span>{label}</span>
+              <span className="opacity-90 font-medium">{timeStr}</span>
             </span>
           </div>
         </div>

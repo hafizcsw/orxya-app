@@ -121,7 +121,7 @@ function CalendarDay({
 
   return (
     <div
-      className="relative border-l border-border/30 h-full select-none bg-background hover:bg-accent/5 transition-colors"
+      className="relative border-l border-border/20 h-full select-none bg-background hover:bg-accent/5 transition-all duration-300"
       onMouseLeave={() => drag && setDrag(null)}
     >
       {/* Hour grid - Fixed, no conditional rendering to prevent flicker */}
@@ -135,7 +135,7 @@ function CalendarDay({
         {HOURS.map((h) => (
           <div
             key={h}
-            className="border-b border-border/30 hover:bg-accent/10 transition-colors"
+            className="border-b border-border/20 hover:bg-gradient-to-r hover:from-accent/5 hover:to-transparent transition-all duration-200 cursor-crosshair"
             style={{ height: pxPerHour }}
           />
         ))}
@@ -175,10 +175,10 @@ function CalendarDay({
         })}
       </div>
 
-      {/* Drag creation preview - Google style */}
+      {/* Drag creation preview - Enhanced with gradient */}
       {drag && (
         <div
-          className="absolute left-1 right-1 rounded bg-primary/30 border border-primary z-30 pointer-events-none"
+          className="absolute left-1 right-1 rounded-lg bg-gradient-to-br from-primary/40 via-primary/30 to-primary/20 border-2 border-primary/60 z-30 pointer-events-none shadow-lg shadow-primary/20 backdrop-blur-sm animate-scale-in"
           style={{
             top: Math.min(drag.y0, drag.y1),
             height: Math.abs(drag.y1 - drag.y0)

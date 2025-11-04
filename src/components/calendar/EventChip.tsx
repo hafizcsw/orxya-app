@@ -22,17 +22,19 @@ export default function EventChip({
   const getEventColor = () => {
     if (event.is_cancelled) {
       return {
-        bg: "bg-muted",
+        bg: "bg-muted/50",
         border: "border-muted",
-        text: "text-muted-foreground line-through"
+        text: "text-muted-foreground line-through",
+        shadow: ""
       };
     }
     
     if (hasConflict) {
       return {
-        bg: "bg-[#d50000]",
-        border: "border-[#d50000]",
-        text: "text-white"
+        bg: "bg-destructive",
+        border: "border-destructive",
+        text: "text-destructive-foreground",
+        shadow: "shadow-lg shadow-destructive/30"
       };
     }
     
@@ -42,7 +44,8 @@ export default function EventChip({
     return {
       bg: color.bg,
       border: color.border,
-      text: color.text
+      text: color.text,
+      shadow: "shadow-md shadow-primary/10"
     };
   };
   
@@ -60,38 +63,48 @@ export default function EventChip({
         onClick();
       }}
       className={cn(
-        "w-full h-full rounded-md border-l-[3px] px-1.5 py-0.5 relative",
+        "group w-full h-full rounded-lg border-l-4 px-2 py-1 relative",
         "text-start overflow-hidden",
-        "transition-all duration-200",
-        "hover:shadow-md hover:scale-[1.02] hover:z-10",
-        "focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/30",
+        "transition-all duration-300 ease-out",
+        "hover:scale-[1.03] hover:z-20 hover:rotate-[0.5deg]",
+        "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-1",
+        "backdrop-blur-sm",
         colors.bg,
         colors.border,
         colors.text,
+        colors.shadow,
+        "animate-fade-in",
         className
       )}
       style={style}
     >
+      {/* Gradient overlay on hover */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg pointer-events-none" />
+      
       {hasConflict && (
-        <div className="w-1.5 h-1.5 rounded-full bg-red-500 absolute top-0.5 left-0.5 animate-pulse" />
+        <div className="absolute top-1 right-1 flex items-center gap-1 z-10">
+          <div className="w-2 h-2 rounded-full bg-destructive animate-pulse shadow-lg shadow-destructive/50" />
+        </div>
       )}
       
-      <div className="text-[10px] sm:text-xs font-medium leading-tight truncate">
-        {event.title || "بدون عنوان"}
+      <div className="relative z-10">
+        <div className="text-[11px] sm:text-xs font-semibold leading-tight truncate mb-0.5">
+          {event.title || "بدون عنوان"}
+        </div>
+        
+        {!isAllDay && event.starts_at && (
+          <div className="text-[9px] sm:text-[10px] opacity-75 leading-tight font-medium">
+            {formatTime(event.starts_at)}
+          </div>
+        )}
+        
+        {event.location && (
+          <div className="flex items-center gap-1 text-[9px] opacity-60 truncate mt-1">
+            <MapPin className="w-2.5 h-2.5 flex-shrink-0" />
+            <span className="truncate">{event.location}</span>
+          </div>
+        )}
       </div>
-      
-      {!isAllDay && event.starts_at && (
-        <div className="text-[8px] sm:text-[10px] opacity-80 leading-tight">
-          {formatTime(event.starts_at)}
-        </div>
-      )}
-      
-      {event.location && (
-        <div className="flex items-center gap-0.5 text-[8px] opacity-60 truncate mt-0.5">
-          <MapPin className="w-2 h-2 flex-shrink-0" />
-          <span className="truncate">{event.location}</span>
-        </div>
-      )}
     </button>
   );
 }
