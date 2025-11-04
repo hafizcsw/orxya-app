@@ -183,7 +183,7 @@ export default function EventChip({
     >
       {/* تحذير التعارض */}
       {hasConflict && (
-        <div className="absolute -top-2 -right-2 z-20 bg-destructive text-destructive-foreground text-[10px] px-2 py-0.5 rounded-full shadow-lg font-bold animate-pulse">
+        <div className="absolute -bottom-2 left-0 z-20 bg-destructive text-destructive-foreground text-[10px] px-2 py-0.5 rounded-full shadow-lg font-bold animate-pulse">
           ⚠️ تعارض
         </div>
       )}
