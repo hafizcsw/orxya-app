@@ -6,11 +6,18 @@ import EventDetailsDrawer from "./EventDetailsDrawer";
 import AllDayRow from "./AllDayRow";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/telemetry";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, HelpCircle, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCurrentTimePosition } from "@/lib/eventPacking";
 import { useVisibleHours } from "@/hooks/useVisibleHours";
 import { useSelectedDate } from "@/contexts/DateContext";
+import { useNavigate } from "react-router-dom";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 type Props = {
   anchor?: Date;
   startOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -23,6 +30,7 @@ export default function CalendarWeek({
   onDateChange,
   showPrayerTimes = true
 }: Props) {
+  const navigate = useNavigate();
   const {
     setSelectedDate: setGlobalDate
   } = useSelectedDate();
@@ -30,6 +38,7 @@ export default function CalendarWeek({
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('week');
   const [conflictData, setConflictData] = useState<{
     hasConflict: boolean;
     conflictId: string | null;
@@ -116,22 +125,81 @@ export default function CalendarWeek({
     });
   };
   return <div className="w-full h-[calc(100vh-200px)] sm:h-[calc(100vh-160px)] flex flex-col bg-white dark:bg-background overflow-hidden">
-      {/* Navigation header - Hidden on mobile */}
-      <div className="hidden sm:flex items-center justify-between px-4 sm:px-6 py-3 border-b border-border/10 bg-white dark:bg-background">
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Navigation buttons would go here */}
+      {/* Top Navigation Bar - Google Calendar Style */}
+      <div className="flex items-center justify-between px-4 py-2 border-b border-border/20 bg-white dark:bg-background">
+        {/* Left Section */}
+        <div className="flex items-center gap-3">
+          {/* Today Button */}
+          <button 
+            onClick={goToToday}
+            className="px-5 py-2 text-sm font-medium text-foreground border border-border/30 rounded-md hover:bg-muted/50 transition-colors"
+          >
+            اليوم
+          </button>
+          
+          {/* Navigation Arrows */}
+          <div className="flex items-center gap-1">
+            <button 
+              onClick={() => navigateWeek("prev")}
+              className="p-2 hover:bg-muted/50 rounded-full transition-colors"
+            >
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            </button>
+            <button 
+              onClick={() => navigateWeek("next")}
+              className="p-2 hover:bg-muted/50 rounded-full transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+            </button>
+          </div>
+
+          {/* Month/Year Display */}
+          <h2 className="text-xl font-normal text-foreground">
+            {start.toLocaleDateString("ar", {
+              month: "long",
+              year: "numeric"
+            })}
+          </h2>
         </div>
 
-        <h2 className="text-base sm:text-lg font-normal text-foreground">
-          {start.toLocaleDateString("ar", {
-          month: "long",
-          year: "numeric"
-        })}
-        </h2>
+        {/* Right Section */}
+        <div className="flex items-center gap-2">
+          {/* Search Button */}
+          <button className="p-2 hover:bg-muted/50 rounded-full transition-colors">
+            <Search className="w-5 h-5 text-muted-foreground" />
+          </button>
 
-        <button onClick={reload} disabled={loading} className="px-4 py-2 text-sm font-medium rounded-md hover:bg-accent/50 transition-colors disabled:opacity-50">
-          {loading ? "..." : "تحديث"}
-        </button>
+          {/* Help Button */}
+          <button className="p-2 hover:bg-muted/50 rounded-full transition-colors">
+            <HelpCircle className="w-5 h-5 text-muted-foreground" />
+          </button>
+
+          {/* Settings Button */}
+          <button className="p-2 hover:bg-muted/50 rounded-full transition-colors">
+            <Settings className="w-5 h-5 text-muted-foreground" />
+          </button>
+
+          {/* View Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="px-4 py-2 text-sm font-medium text-foreground border border-border/30 rounded-md hover:bg-muted/50 transition-colors flex items-center gap-2">
+                أسبوع
+                <ChevronLeft className="w-4 h-4 rotate-[-90deg]" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem onClick={() => navigate('/calendar/day')}>
+                يوم
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/calendar')}>
+                أسبوع
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/calendar/month')}>
+                شهر
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Week view container */}
