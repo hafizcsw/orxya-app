@@ -192,24 +192,45 @@ export default function CalendarDayView({
 
   return (
     <div className="w-full h-[calc(100vh-200px)] sm:h-[calc(100vh-160px)] flex flex-col bg-background overflow-hidden">
-      {/* Header - Google Calendar style */}
-      <div className="hidden sm:flex items-center justify-between px-4 sm:px-6 py-3 border-b border-border bg-background">
-        <h2 className="text-[15px] sm:text-base font-medium text-foreground">
-          {anchor.toLocaleDateString("ar", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-            year: "numeric"
-          })}
-        </h2>
-
-        <button
-          onClick={reload}
-          disabled={loading}
-          className="px-3 py-1.5 text-[13px] font-medium text-muted-foreground rounded-md hover:bg-muted transition-colors disabled:opacity-50"
-        >
-          {loading ? "..." : "تحديث"}
-        </button>
+      {/* Enhanced Header - Google Calendar Style */}
+      <div className="sticky top-0 z-30 bg-background border-b border-border shadow-sm">
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-4">
+            {/* Day Circle - Large and prominent */}
+            <div className={cn(
+              "flex flex-col items-center justify-center rounded-full transition-all",
+              "w-16 h-16",
+              isToday
+                ? "bg-primary text-white shadow-lg"
+                : "text-foreground"
+            )}>
+              <span className="text-xs uppercase text-muted-foreground font-medium">
+                {anchor.toLocaleDateString("ar", { weekday: "short" })}
+              </span>
+              <span className="text-2xl font-bold">
+                {anchor.getDate()}
+              </span>
+            </div>
+            
+            {/* Month and Year */}
+            <div className="flex flex-col">
+              <h2 className="text-xl font-bold">
+                {anchor.toLocaleDateString("ar", { weekday: "long" })}
+              </h2>
+              <span className="text-sm text-muted-foreground">
+                {anchor.toLocaleDateString("ar", { month: "long", year: "numeric" })}
+              </span>
+            </div>
+          </div>
+          
+          <button 
+            onClick={reload}
+            disabled={loading}
+            className="px-4 py-2 text-sm font-medium rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
+          >
+            {loading ? "..." : "تحديث"}
+          </button>
+        </div>
       </div>
 
       {/* Day view container */}
@@ -225,26 +246,6 @@ export default function CalendarDayView({
             </div>
           )}
 
-          {/* Day header - Google style */}
-          <div className="flex border-b border-border bg-background h-[52px] sticky top-0 z-20">
-            <div className="w-14 sm:w-16 flex-shrink-0 border-r border-border" />
-            <div className="flex-1 flex flex-col items-center justify-center gap-0.5 px-1 text-center">
-              <div className="text-[11px] text-muted-foreground font-normal uppercase tracking-wide">
-                {anchor.toLocaleDateString("ar", { weekday: "short" })}
-              </div>
-              <div
-                className={cn(
-                  "flex items-center justify-center rounded-full transition-all",
-                  "w-10 h-10 text-[15px]",
-                  isToday
-                    ? "bg-primary text-white font-medium shadow-sm"
-                    : "text-foreground font-normal hover:bg-muted"
-                )}
-              >
-                {anchor.getDate()}
-              </div>
-            </div>
-          </div>
 
           {/* All-Day Row */}
           <AllDayRow events={allEvents} days={[anchor]} onEventClick={handleEventClick} />
@@ -252,30 +253,30 @@ export default function CalendarDayView({
           {/* Scrollable container */}
           <div className="flex-1 overflow-auto relative bg-background scroll-smooth" ref={gridRef}>
             <div className="flex relative">
-              {/* Time gutter - Google style */}
-              <div className="w-14 sm:w-16 flex-shrink-0 bg-background border-r border-border">
+              {/* Enhanced Time Gutter - Google Calendar Style */}
+              <div className="w-14 sm:w-16 flex-shrink-0 bg-background border-l border-border">
                 <div className="relative">
                   {Array.from({ length: 24 }, (_, h) => {
                     const period = h < 12 ? 'ص' : 'م';
                     const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
                     return (
                       <div key={h} className="relative" style={{ height: pxPerHour }}>
-                        {/* Hour line - واضح */}
-                        <div className="absolute top-0 left-0 right-0 border-t border-border/40" style={{ zIndex: zIndex.hourLines }} />
+                        {/* Main hour line - bold */}
+                        <div className="absolute top-0 left-0 right-0 border-t border-border/50" style={{ zIndex: zIndex.hourLines }} />
                         
-                        {/* Half-hour line - رفيع ومنقط */}
+                        {/* Half-hour line - subtle */}
                         <div 
-                          className="absolute left-0 right-0 border-t border-border/15 border-dashed" 
+                          className="absolute left-0 right-0 border-t border-border/20 border-dashed" 
                           style={{ top: pxPerHour / 2, zIndex: zIndex.hourLines }} 
                         />
                         
-                        {/* Time label */}
-                        <span className="absolute -top-2.5 right-2 text-[11px] font-medium text-muted-foreground">
+                        {/* Time label - larger and clearer */}
+                        <span className="absolute -top-3 left-1 text-xs font-medium text-muted-foreground flex items-baseline gap-1">
                           {h === 0 ? "" : (
-                            <span className="flex items-baseline gap-0.5">
-                              <span>{displayHour}</span>
-                              <span className="text-[9px] opacity-70">{period}</span>
-                            </span>
+                            <>
+                              <span className="text-base">{displayHour}</span>
+                              <span className="text-[10px] opacity-70">{period}</span>
+                            </>
                           )}
                         </span>
                       </div>

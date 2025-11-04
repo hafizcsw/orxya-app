@@ -5,6 +5,7 @@ import { snapDeltaMins, minutesSinceMidnight, isoWithDeltaMin, type DragState } 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { track } from "@/lib/telemetry";
+import { cn } from "@/lib/utils";
 
 type Event = {
   id: string; 
@@ -138,14 +139,28 @@ export default function WeekView({ anchor, eventsByDate, prayersByDate, onEventC
   return (
     <div ref={gridRef} className="h-[72vh] border rounded-2xl overflow-auto">
       <div className="flex">
-        {/* Time gutter - scrolls with content */}
-        <div className="w-16 flex-shrink-0 bg-background border-r">
-          {Array.from({length:24}, (_,h)=>(
-            <div key={h} className="h-16 text-[11px] pr-3 border-b flex items-start relative">
-              <span className="absolute -top-2.5 right-2 text-muted-foreground">{h === 0 ? "" : `${h.toString().padStart(2, "0")}:00`}</span>
-              <div className="absolute top-0 left-0 right-0 border-t border-border/10" />
-            </div>
-          ))}
+        {/* Enhanced Time Gutter - Google Style */}
+        <div className="w-16 flex-shrink-0 bg-background border-l">
+          {Array.from({length:24}, (_,h)=>{
+            const period = h < 12 ? 'ص' : 'م';
+            const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
+            return (
+              <div key={h} className="h-16 relative border-b border-border/10">
+                {/* Main hour line */}
+                <div className="absolute top-0 left-0 right-0 border-t border-border/50" />
+                
+                {/* Time label - larger and clearer */}
+                <span className="absolute -top-3 left-1 text-xs font-medium text-muted-foreground flex items-baseline gap-1">
+                  {h === 0 ? "" : (
+                    <>
+                      <span className="text-base">{displayHour}</span>
+                      <span className="text-[10px] opacity-70">{period}</span>
+                    </>
+                  )}
+                </span>
+              </div>
+            );
+          })}
         </div>
 
         {/* Days grid */}
@@ -153,12 +168,25 @@ export default function WeekView({ anchor, eventsByDate, prayersByDate, onEventC
           {days.map((d, idx) => {
             const iso = toISODate(d);
             const list = (eventsByDate[iso] ?? []).map(ev => optimisticEvents[ev.id] || ev);
-            const dayName = d.toLocaleDateString(undefined, { weekday: 'short' });
+            const dayName = d.toLocaleDateString("ar", { weekday: 'short' });
+            const isToday = d.toDateString() === new Date().toDateString();
             
             return (
-              <div key={idx} className="relative border-r">
-                <div className="sticky top-0 bg-background border-b p-1 text-xs text-center font-medium z-10">
-                  {dayName} {d.getDate()}
+              <div key={idx} className="relative border-l">
+                {/* Enhanced Day Header */}
+                <div className="sticky top-0 bg-background border-b p-3 z-10 flex flex-col items-center gap-1">
+                  <span className="text-xs text-muted-foreground uppercase tracking-wide">
+                    {dayName}
+                  </span>
+                  <div className={cn(
+                    "flex items-center justify-center rounded-full transition-all",
+                    "w-10 h-10 text-base font-semibold",
+                    isToday
+                      ? "bg-primary text-white shadow-md"
+                      : "text-foreground hover:bg-muted"
+                  )}>
+                    {d.getDate()}
+                  </div>
                 </div>
                 <div className="relative" style={{ height: '1536px' }}>
                   {Array.from({length:24}, (_,h)=>(
