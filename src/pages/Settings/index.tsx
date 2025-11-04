@@ -9,6 +9,7 @@ import { LocationSettings } from './components/LocationSettings';
 import { PrayerSettings } from './components/PrayerSettings';
 import { IntegrationSettings } from './components/IntegrationSettings';
 import { PrivacySettings } from './components/PrivacySettings';
+import { CalendarParitySettings } from '@/components/calendar/CalendarParitySettings';
 import { SettingsSection } from '@/types/settings';
 
 export default function Settings() {
@@ -34,6 +35,8 @@ export default function Settings() {
         return <IntegrationSettings />;
       case 'privacy':
         return <PrivacySettings />;
+      case 'calendar-parity':
+        return <CalendarParitySettings />;
       default:
         return <GeneralSettings />;
     }
