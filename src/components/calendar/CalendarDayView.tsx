@@ -66,32 +66,44 @@ export default function CalendarDayView({
     const fetchInsights = async () => {
       setLoadingInsights(true);
       try {
-        // Get current session first
+        // Get current session
         const { data: { session } } = await supabase.auth.getSession();
         
-        if (!session) {
+        if (!session?.access_token) {
           console.log('No active session for AI insights');
           setLoadingInsights(false);
           return;
         }
 
-        const { data, error } = await supabase.functions.invoke('calendar-ai-insights', {
-          body: { 
+        // Call the edge function with explicit auth header
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/calendar-ai-insights`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY
+          },
+          body: JSON.stringify({
             date: anchor.toISOString().split('T')[0],
             currentTime: new Date().toISOString()
-          },
-          headers: {
-            Authorization: `Bearer ${session.access_token}`
-          }
+          })
         });
         
-        if (error) {
-          console.error('Error fetching AI insights:', error);
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Error fetching AI insights:', errorData);
           setAiInsights(null);
-        } else if (data?.insights) {
+          return;
+        }
+
+        const data = await response.json();
+        
+        if (data?.insights) {
           setAiInsights(data.insights);
         } else if (data?.fallback) {
           setAiInsights(data.fallback);
+        } else {
+          setAiInsights(null);
         }
       } catch (err) {
         console.error('Failed to fetch AI insights:', err);
