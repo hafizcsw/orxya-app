@@ -49,6 +49,31 @@ startLocationTracking(15); // Capture location every 15 minutes on native
   }
 })();
 
+// Register Service Worker for PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(registration => {
+        console.log('✅ Service Worker registered:', registration.scope);
+        
+        // Check for updates
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                // New content available, reload
+                console.log('🔄 New version available, updating...');
+                window.location.reload();
+              }
+            });
+          }
+        });
+      })
+      .catch(err => console.error('❌ Service Worker registration failed:', err));
+  });
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ErrorBoundary>
