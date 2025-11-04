@@ -15,11 +15,13 @@ type Props = {
   anchor?: Date;
   startOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
   onDateChange?: (date: Date) => void;
+  showPrayerTimes?: boolean;
 };
 export default function CalendarWeek({
   anchor = new Date(),
   startOn = 6,
-  onDateChange
+  onDateChange,
+  showPrayerTimes = true
 }: Props) {
   const {
     setSelectedDate: setGlobalDate
@@ -189,7 +191,7 @@ export default function CalendarWeek({
                 const iso = d.toISOString().slice(0, 10);
                 const dayEvents = events[iso] ?? [];
                 const prayers = prayersByDay[iso] ?? null;
-                return <CalendarDay key={i} date={d} events={dayEvents} prayers={prayers} onReload={reload} onEventClick={handleEventClick} onCreate={payload => {
+                return <CalendarDay key={i} date={d} events={dayEvents} prayers={showPrayerTimes ? prayers : null} onReload={reload} onEventClick={handleEventClick} onCreate={payload => {
                   track("cal_create_drag", {
                     durMin: payload.durationMin
                   });

@@ -13,11 +13,13 @@ import { useVisibleHours } from "@/hooks/useVisibleHours";
 type Props = {
   anchor?: Date;
   onDateChange?: (date: Date) => void;
+  showPrayerTimes?: boolean;
 };
 
 export default function CalendarDayView({
   anchor = new Date(),
-  onDateChange
+  onDateChange,
+  showPrayerTimes = true
 }: Props) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
@@ -179,7 +181,7 @@ export default function CalendarDayView({
                 <CalendarDay
                   date={anchor}
                   events={dayEvents}
-                  prayers={prayers}
+                  prayers={showPrayerTimes ? prayers : null}
                   onReload={reload}
                   onEventClick={handleEventClick}
                   onCreate={(payload) => {

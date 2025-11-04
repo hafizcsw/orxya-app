@@ -41,5 +41,19 @@ export function ThemeToggle() {
     localStorage.setItem('theme', newTheme ? 'dark' : 'light');
     applyTheme(newTheme);
   };
-  return;
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={toggle}
+      className="h-9 w-9"
+    >
+      {isDark ? (
+        <Sun className="h-4 w-4" />
+      ) : (
+        <Moon className="h-4 w-4" />
+      )}
+      <span className="sr-only">Toggle theme</span>
+    </Button>
+  );
 }

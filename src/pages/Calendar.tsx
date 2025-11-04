@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Protected } from "@/components/Protected";
 import CalendarWeek from "@/components/calendar/CalendarWeek";
 import CalendarDayView from "@/components/calendar/CalendarDayView";
-import { Calendar as CalendarIcon, Grid3x3, Plus, Search, Settings, Menu } from "lucide-react";
+import { Calendar as CalendarIcon, Grid3x3, Plus, Search, Settings, Menu, Moon } from "lucide-react";
 import MonthGrid from "@/components/calendar/MonthGrid";
 import { CalendarWeekErrorBoundary } from "@/components/calendar/CalendarWeekErrorBoundary";
 import { startOfMonth, endOfMonth, toISODate } from "@/lib/dates";
@@ -43,6 +43,7 @@ export default function CalendarPage() {
   const [eventsByDate, setEventsByDate] = useState<Record<string, DbEvent[]>>({});
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showPrayerTimes, setShowPrayerTimes] = useState(true);
 
   // Sync with global date from Navigation
   useEffect(() => {
@@ -202,6 +203,17 @@ export default function CalendarPage() {
                   >
                     اليوم
                   </Button>
+
+                  <Button
+                    onClick={() => setShowPrayerTimes(!showPrayerTimes)}
+                    variant={showPrayerTimes ? "default" : "outline"}
+                    size="sm"
+                    className="h-8 sm:h-9 gap-2"
+                    title={showPrayerTimes ? "إخفاء أوقات الصلاة" : "إظهار أوقات الصلاة"}
+                  >
+                    <Moon className="w-4 h-4" />
+                    <span className="hidden sm:inline">الصلاة</span>
+                  </Button>
                    
                   <h2 className="text-lg sm:text-xl font-medium">
                     {currentDate.toLocaleDateString('ar', { month: 'long', year: 'numeric' })}
@@ -257,6 +269,7 @@ export default function CalendarPage() {
                     setCurrentDate(date);
                     setGlobalDate(date);
                   }}
+                  showPrayerTimes={showPrayerTimes}
                 />
               ) : mode === "week" ? (
                 <CalendarWeekErrorBoundary>
@@ -268,6 +281,7 @@ export default function CalendarPage() {
                       setCurrentDate(date);
                       setGlobalDate(date);
                     }}
+                    showPrayerTimes={showPrayerTimes}
                   />
                 </CalendarWeekErrorBoundary>
               ) : (
