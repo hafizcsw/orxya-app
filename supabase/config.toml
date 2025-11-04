@@ -96,3 +96,6 @@ verify_jwt = true
 [functions.plans-manage]
 verify_jwt = true
 
+[functions.glances-feed]
+verify_jwt = true
+

@@ -47,6 +47,7 @@ import TestConflicts from "./pages/TestConflicts";
 import Expenses from "./pages/Expenses";
 import TodayWHOOP from "./pages/TodayWHOOP";
 import Settings from "./pages/Settings";
+import GlancesSettings from "./pages/GlancesSettings";
 import { Protected } from "./components/Protected";
 import { useAutopilotNotifications } from "./hooks/useAutopilotNotifications";
 
@@ -87,6 +88,7 @@ function AppContent() {
         <Route path="/settings/external" element={<Protected><SettingsExternal /></Protected>} />
         <Route path="/settings/notifications" element={<Protected><SettingsNotifications /></Protected>} />
         <Route path="/settings/prayer" element={<Protected><SettingsPrayer /></Protected>} />
+        <Route path="/settings/glances" element={<Protected><GlancesSettings /></Protected>} />
         <Route path="/planner" element={<Protected><PlannerChat /></Protected>} />
         <Route path="/conflicts" element={<Protected><Conflicts /></Protected>} />
         <Route path="/test-conflicts" element={<Protected><TestConflicts /></Protected>} />

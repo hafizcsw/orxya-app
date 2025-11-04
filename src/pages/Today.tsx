@@ -25,6 +25,8 @@ import { PlanCard } from '@/components/plans/PlanCard'
 import { PlanFormDialog } from '@/components/plans/PlanFormDialog'
 import { PlansAnalytics } from '@/components/plans/PlansAnalytics'
 import { BusinessPlan, BusinessPlanFormData } from '@/types/business-plan'
+import { GlancesBar } from '@/components/glances/GlancesBar'
+import { getUserFlags } from '@/lib/featureFlags'
 
 // Validation schemas
 const dailyLogSchema = z.object({
@@ -71,6 +73,9 @@ const Today = () => {
   const [editingPlan, setEditingPlan] = useState<BusinessPlan | null>(null)
   const [showAnalytics, setShowAnalytics] = useState(false)
   const [plansLoading, setPlansLoading] = useState(false)
+  
+  // Glances state
+  const [showGlances, setShowGlances] = useState(false)
 
   // Responsive sizing helpers - محسّنة
   const getFinancialRingSize = () => {
@@ -112,8 +117,14 @@ const Today = () => {
     if (user) {
       fetchReport()
       fetchPlans()
+      checkGlancesFlag()
     }
   }, [user?.id, period, selectedDate])
+
+  async function checkGlancesFlag() {
+    const flags = await getUserFlags()
+    setShowGlances(!!flags.ff_glances)
+  }
 
   async function fetchPlans() {
     if (!user) return
@@ -452,6 +463,16 @@ const Today = () => {
           device === 'desktop' && "px-8 py-8 space-y-8 max-w-5xl mx-auto"
         )}>
           <SessionBanner />
+
+          {/* Glances Section - فقط إذا كان العلم مفعل */}
+          {showGlances && (
+            <section className="mb-6">
+              <h2 className="text-sm font-semibold text-muted-foreground mb-3 px-1">
+                نظرة سريعة
+              </h2>
+              <GlancesBar />
+            </section>
+          )}
 
           {loading ? (
             <HolographicCard variant="glass" className="p-6 text-center">
