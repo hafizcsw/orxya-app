@@ -180,7 +180,7 @@ export function BottomNav() {
                 boxShadow: "0 0 24px hsl(var(--primary) / 0.6), 0 6px 16px hsl(var(--primary) / 0.4)",
               }}
             >
-              <Sparkles className="w-7 h-7 md:w-8 md:h-8 lg:w-9 lg:h-9 text-primary-foreground" />
+              <Sparkles className="w-6 h-6 md:w-7 md:h-7 text-primary-foreground" />
             </div>
             <span className="text-xs md:text-sm mt-1 font-semibold text-primary">AI</span>
           </button>
