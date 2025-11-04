@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.78.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,23 +12,48 @@ serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get('Authorization');
+    console.log('[plans-manage] Auth header present:', !!authHeader);
+    
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Unauthorized - Missing Authorization header' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Create admin client for auth verification
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    );
+
+    // Verify JWT token
+    console.log('[plans-manage] Verifying JWT...');
+    const jwt = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(jwt);
+    console.log('[plans-manage] User result:', { hasUser: !!user, error: userError?.message });
+    
+    if (userError || !user) {
+      console.error('[plans-manage] Auth failed:', userError);
+      return new Response(JSON.stringify({ error: 'Unauthorized - Invalid token', details: userError?.message }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log('[plans-manage] User authenticated:', user.id);
+
+    // Create user client for database operations (with RLS)
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
         global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
+          headers: { Authorization: authHeader },
         },
       }
     );
-
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
 
     const { action, id, name, slug, icon, color, category, target_monthly, description, order_pos } = await req.json();
 

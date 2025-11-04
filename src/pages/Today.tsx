@@ -119,13 +119,16 @@ const Today = () => {
     if (!user) return
     setPlansLoading(true)
     try {
+      console.log('[fetchPlans] Starting request...');
       const { data, error } = await supabase.functions.invoke('plans-manage', {
         body: { action: 'list' }
       })
+      console.log('[fetchPlans] Response:', { data, error });
       if (error) throw error
       setPlans(data?.plans || [])
     } catch (e: any) {
-      console.error('Error fetching plans:', e)
+      console.error('[fetchPlans] Error:', e)
+      setToast('حدث خطأ في تحميل الخطط ❌')
     } finally {
       setPlansLoading(false)
     }
