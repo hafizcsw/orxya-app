@@ -10,16 +10,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Loader2, Trash2, Save, Sparkles, AlertTriangle, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import EventColorPicker from "./EventColorPicker";
@@ -62,7 +52,6 @@ export default function EventDetailsDrawer({
   const [color, setColor] = useState<CalendarColor>("peacock");
   const [aiSuggestion, setAiSuggestion] = useState<AISuggestion | null>(null);
   const [loadingAI, setLoadingAI] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -141,7 +130,6 @@ export default function EventDetailsDrawer({
       toast({ title: "تم حذف الحدث ✅" });
       onUpdate();
       onClose();
-      setShowDeleteDialog(false);
     } catch (e) {
       console.error("Failed to delete event:", e);
       toast({ 
@@ -407,7 +395,7 @@ export default function EventDetailsDrawer({
               حفظ
             </ActionButton>
             <ActionButton
-              onClick={() => setShowDeleteDialog(true)}
+              onClick={handleDelete}
               variant="destructive"
               icon={<Trash2 className="w-4 h-4" />}
             >
@@ -416,24 +404,6 @@ export default function EventDetailsDrawer({
           </div>
         </div>
       </aside>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
-            <AlertDialogDescription>
-              سيتم حذف الحدث "{event?.title}" بشكل نهائي. لا يمكن التراجع عن هذا الإجراء.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              حذف نهائياً
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Portal>
   );
 }
