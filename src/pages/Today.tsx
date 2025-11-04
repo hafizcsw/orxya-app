@@ -538,12 +538,7 @@ const Today = () => {
                     الأنشطة اليومية
                   </h2>
                   
-                  <div className={cn(
-                    "grid gap-3",
-                    "grid-cols-2", // Mobile: 2 columns
-                    "md:grid-cols-3", // Tablet: 3 columns
-                    "lg:grid-cols-4" // Desktop: 4 columns
-                  )}>
+                  <div className="grid grid-cols-3 gap-3">
                     {renderEditableCard('study_hours', <BookOpen className="w-5 h-5" />, 'دراسة', report.study_hours, 'bg-[hsl(var(--whoop-blue))]/10', 'h')}
                     {renderEditableCard('mma_hours', <Dumbbell className="w-5 h-5" />, 'رياضة', report.mma_hours, 'bg-[hsl(var(--whoop-green))]/10', 'h')}
                     {renderEditableCard('work_hours', <Building className="w-5 h-5" />, 'عمل', report.work_hours, 'bg-[hsl(var(--whoop-yellow))]/10', 'h')}
