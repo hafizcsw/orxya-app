@@ -121,10 +121,10 @@ function CalendarDay({
 
   return (
     <div
-      className="relative border-l border-border/20 h-full select-none bg-background"
+      className="relative border-l border-border/10 first:border-l-0 h-full select-none bg-white dark:bg-background"
       onMouseLeave={() => drag && setDrag(null)}
     >
-      {/* Hour grid - نظيف جداً */}
+      {/* Hour grid - Google Calendar style - extremely subtle */}
       <div
         className="absolute inset-0"
         ref={containerRef}
@@ -135,7 +135,7 @@ function CalendarDay({
         {HOURS.map((h) => (
           <div
             key={h}
-            className="border-b border-border/5 hover:bg-accent/5 transition-colors cursor-crosshair"
+            className="border-b border-border/[0.08] hover:bg-[#f1f3f4] dark:hover:bg-accent/5 transition-colors cursor-crosshair"
             style={{ height: pxPerHour }}
           />
         ))}
