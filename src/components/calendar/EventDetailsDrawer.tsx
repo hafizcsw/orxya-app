@@ -250,12 +250,12 @@ export default function EventDetailsDrawer({
       <SheetContent 
         side="bottom" 
         className={cn(
-          "h-[85vh] rounded-t-3xl border-t-2 p-0 bg-background flex flex-col",
+          "h-[85vh] rounded-t-3xl border-t-2 p-0 bg-muted flex flex-col",
           "md:h-full md:w-[480px] md:rounded-none md:border-l-2 md:border-t-0 md:side-right"
         )}
       >
         {/* Quick Actions Bar */}
-        <div className="flex items-center justify-between px-6 py-3 border-b bg-background/95 backdrop-blur-sm shrink-0">
+        <div className="flex items-center justify-between px-6 py-3 border-b bg-muted shrink-0">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -493,7 +493,7 @@ export default function EventDetailsDrawer({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t bg-background/95 backdrop-blur-sm shrink-0">
+        <div className="px-6 py-4 border-t bg-muted shrink-0">
           <Button 
             onClick={handleSave} 
             className="w-full shadow-lg" 
