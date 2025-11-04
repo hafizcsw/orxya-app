@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Protected } from "@/components/Protected";
 import CalendarWeek from "@/components/calendar/CalendarWeek";
+import CalendarDayView from "@/components/calendar/CalendarDayView";
 import { Calendar as CalendarIcon, Grid3x3, Plus, Search, Settings, Menu } from "lucide-react";
 import MonthGrid from "@/components/calendar/MonthGrid";
 import { CalendarWeekErrorBoundary } from "@/components/calendar/CalendarWeekErrorBoundary";
@@ -36,7 +37,7 @@ type PT = {
 export default function CalendarPage() {
   const { user } = useUser();
   const { selectedDate: globalDate, setSelectedDate: setGlobalDate } = useSelectedDate();
-  const [mode, setMode] = useState<"week" | "month">("week");
+  const [mode, setMode] = useState<"day" | "week" | "month">("week");
   const [currentDate, setCurrentDate] = useState(globalDate);
   const [loading, setLoading] = useState(false);
   const [eventsByDate, setEventsByDate] = useState<Record<string, DbEvent[]>>({});
@@ -68,7 +69,12 @@ export default function CalendarPage() {
   // Keyboard shortcuts
   useCalendarShortcuts({
     onQuickAdd: () => setQuickAddOpen(true),
-    onToday: () => setCurrentDate(new Date()),
+    onToday: () => {
+      const today = new Date();
+      setCurrentDate(today);
+      setGlobalDate(today);
+      setMode("day");
+    },
     onWeekView: () => setMode("week"),
     onMonthView: () => setMode("month"),
     onEscape: () => setQuickAddOpen(false),
@@ -188,6 +194,7 @@ export default function CalendarPage() {
                       const today = new Date();
                       setCurrentDate(today);
                       setGlobalDate(today);
+                      setMode("day");
                     }}
                     variant="outline"
                     size="sm"
@@ -202,6 +209,17 @@ export default function CalendarPage() {
                 </div>
 
                 <div className="flex items-center gap-1 bg-secondary/60 p-1 rounded-lg">
+                  <button
+                    onClick={() => setMode("day")}
+                    className={cn(
+                      "px-2 sm:px-3 py-1.5 rounded-md transition-all text-xs font-medium",
+                      mode === "day" 
+                        ? "bg-background shadow-sm" 
+                        : "hover:bg-background/50"
+                    )}
+                  >
+                    يوم
+                  </button>
                   <button
                     onClick={() => setMode("week")}
                     className={cn(
@@ -231,7 +249,16 @@ export default function CalendarPage() {
               </div>
 
               {/* Calendar View */}
-              {mode === "week" ? (
+              {mode === "day" ? (
+                <CalendarDayView
+                  key={currentDate.getTime()}
+                  anchor={currentDate}
+                  onDateChange={(date) => {
+                    setCurrentDate(date);
+                    setGlobalDate(date);
+                  }}
+                />
+              ) : mode === "week" ? (
                 <CalendarWeekErrorBoundary>
                   <CalendarWeek 
                     key={currentDate.getTime()}
