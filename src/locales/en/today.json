@@ -57,6 +57,19 @@
     "title": "Trends",
     "viewChart": "View Chart"
   },
+  "health": {
+    "title": "Health & Recovery",
+    "recovery": "Recovery",
+    "sleep": "Sleep",
+    "strain": "Strain",
+    "activity": "Activity",
+    "excellent": "Excellent",
+    "good": "Good",
+    "fair": "Fair",
+    "poor": "Needs Work",
+    "vs_yesterday": "vs Yesterday",
+    "viewDetails": "View WHOOP Data"
+  },
   "messages": {
     "saved": "Saved successfully ✅",
     "error": "An error occurred ❌",

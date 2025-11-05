@@ -17,13 +17,31 @@ import { QuickSummaryCard } from "@/components/today/QuickSummaryCard";
 import { QuickActionsDock } from "@/components/today/QuickActionsDock";
 import { PeriodSelector } from "@/components/today/PeriodSelector";
 import { useTodayReport, type Period } from "@/hooks/useTodayReport";
+import { useHealthData } from "@/hooks/useHealthData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { StatRing } from "@/components/oryxa/StatRing";
 import { OryxaCard } from "@/components/oryxa/Card";
 import { DailyReportCard } from "@/components/DailyReportCard";
-import { Activity } from "lucide-react";
+import { 
+  Activity, 
+  Heart, 
+  Moon, 
+  Zap, 
+  Footprints, 
+  Briefcase, 
+  GraduationCap, 
+  Dumbbell 
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { 
+  getRecoveryStatus, 
+  getSleepStatus, 
+  getStrainStatus, 
+  getActivityStatus,
+  formatSleepTime,
+  formatDistance
+} from '@/lib/health-calculations';
 
 export default function Today() {
   const { t } = useTranslation("today");
@@ -42,6 +60,7 @@ export default function Today() {
   const [planScrollSnaps, setPlanScrollSnaps] = useState<number[]>([]);
 
   const { report, loading: reportLoading } = useTodayReport(period, selectedDate);
+  const { healthData, loading: healthLoading } = useHealthData(period, selectedDate);
 
   const { data: plans, isLoading: plansLoading, refetch: refetchPlans } = useQuery({
     queryKey: ["business-plans"],
@@ -131,24 +150,96 @@ export default function Today() {
           <DailyReportCard />
         </motion.div>
 
-        {/* WHOOP/Health Data Section */}
+        {/* Health & Recovery Section */}
         <DashboardSection 
-          title="البيانات الصحية"
+          title={t('health.title')}
           action={
             <Button variant="outline" size="sm" onClick={() => navigate("/today-whoop")}>
               <Activity className="w-4 h-4 mr-2" />
-              عرض بيانات WHOOP
+              {t('health.viewDetails')}
             </Button>
           }
         >
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center py-8"
-          >
-            <div className="text-6xl mb-4">💪</div>
-            <p className="text-muted-foreground mb-4">اضغط لعرض البيانات الصحية التفصيلية</p>
-          </motion.div>
+          {healthLoading ? (
+            <DashboardGrid columns={4} gap="md">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-48 w-full rounded-2xl" />
+              ))}
+            </DashboardGrid>
+          ) : healthData ? (
+            <DashboardGrid columns={4} gap="md">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <StatRing
+                  value={healthData.recovery}
+                  label={t('health.recovery')}
+                  color="hsl(142, 76%, 36%)"
+                  gradientColors={["hsl(142, 76%, 36%)", "hsl(142, 76%, 50%)"]}
+                  icon={<Heart className="w-6 h-6" />}
+                  trend={healthData.recoveryTrend.direction}
+                  trendValue={healthData.recoveryTrend.percentage}
+                  status={getRecoveryStatus(healthData.recovery)}
+                  size="lg"
+                />
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <StatRing
+                  value={healthData.sleep}
+                  label={t('health.sleep')}
+                  color="hsl(217, 91%, 60%)"
+                  gradientColors={["hsl(217, 91%, 60%)", "hsl(217, 91%, 75%)"]}
+                  icon={<Moon className="w-6 h-6" />}
+                  trend={healthData.sleepTrend.direction}
+                  trendValue={healthData.sleepTrend.percentage}
+                  status={getSleepStatus(healthData.sleep)}
+                  customDisplay={formatSleepTime(healthData.sleepMinutes)}
+                  size="lg"
+                />
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <StatRing
+                  value={(healthData.strain / 21) * 100}
+                  label={t('health.strain')}
+                  color="hsl(38, 92%, 50%)"
+                  gradientColors={["hsl(38, 92%, 50%)", "hsl(38, 92%, 70%)"]}
+                  icon={<Zap className="w-6 h-6" />}
+                  trend={healthData.strainTrend.direction}
+                  trendValue={healthData.strainTrend.percentage}
+                  status={getStrainStatus(healthData.strain)}
+                  customDisplay={`${healthData.strain.toFixed(1)}`}
+                  size="lg"
+                />
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <StatRing
+                  value={healthData.activity}
+                  label={t('health.activity')}
+                  color="hsl(262, 83%, 58%)"
+                  gradientColors={["hsl(262, 83%, 58%)", "hsl(262, 83%, 75%)"]}
+                  icon={<Activity className="w-6 h-6" />}
+                  trend={healthData.activityTrend.direction}
+                  trendValue={healthData.activityTrend.percentage}
+                  status={getActivityStatus(healthData.activity)}
+                  size="lg"
+                />
+              </motion.div>
+            </DashboardGrid>
+          ) : null}
         </DashboardSection>
 
         {/* Glances Bar */}
@@ -223,33 +314,74 @@ export default function Today() {
 
         {/* Activities */}
         <DashboardSection title={t("activities.title")}>
-          {reportLoading ? (
+          {reportLoading || healthLoading ? (
             <DashboardGrid columns={4} gap="md">
               {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} className="h-32 w-full rounded-2xl" />
+                <Skeleton key={i} className="h-48 w-full rounded-2xl" />
               ))}
             </DashboardGrid>
           ) : (
             <DashboardGrid columns={4} gap="md">
-              {[
-                { icon: "📚", value: report?.study_hours || 0, label: t("activities.study"), delay: 0.1 },
-                { icon: "🥊", value: report?.sports_hours || 0, label: t("activities.mma"), delay: 0.2 },
-                { icon: "💼", value: report?.work_hours || 0, label: t("activities.work"), delay: 0.3 },
-                { icon: "🚶", value: report?.walk_minutes || 0, label: t("activities.walk"), delay: 0.4 },
-              ].map((activity, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: activity.delay }}
-                >
-                  <OryxaCard className="text-center p-6 hover:scale-105 transition-transform duration-200">
-                    <div className="text-4xl mb-2">{activity.icon}</div>
-                    <div className="text-2xl font-bold">{activity.value}</div>
-                    <div className="text-sm text-muted-foreground">{activity.label}</div>
-                  </OryxaCard>
-                </motion.div>
-              ))}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <StatRing
+                  value={healthData?.meters ? (healthData.meters / 10000) * 100 : 0}
+                  label={t('activities.walk')}
+                  color="hsl(262, 83%, 58%)"
+                  gradientColors={["hsl(262, 83%, 58%)", "hsl(262, 83%, 75%)"]}
+                  icon={<Footprints className="w-5 h-5" />}
+                  customDisplay={healthData?.meters ? formatDistance(healthData.meters) : '0 km'}
+                  size="md"
+                />
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <StatRing
+                  value={(report?.work_hours || 0) * 10}
+                  label={t('activities.work')}
+                  color="hsl(217, 91%, 60%)"
+                  gradientColors={["hsl(217, 91%, 60%)", "hsl(217, 91%, 75%)"]}
+                  icon={<Briefcase className="w-5 h-5" />}
+                  customDisplay={`${report?.work_hours || 0}h`}
+                  size="md"
+                />
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <StatRing
+                  value={(report?.study_hours || 0) * 10}
+                  label={t('activities.study')}
+                  color="hsl(38, 92%, 50%)"
+                  gradientColors={["hsl(38, 92%, 50%)", "hsl(38, 92%, 70%)"]}
+                  icon={<GraduationCap className="w-5 h-5" />}
+                  customDisplay={`${report?.study_hours || 0}h`}
+                  size="md"
+                />
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <StatRing
+                  value={(report?.sports_hours || 0) * 10}
+                  label={t('activities.mma')}
+                  color="hsl(142, 76%, 36%)"
+                  gradientColors={["hsl(142, 76%, 36%)", "hsl(142, 76%, 50%)"]}
+                  icon={<Dumbbell className="w-5 h-5" />}
+                  customDisplay={`${report?.sports_hours || 0}h`}
+                  size="md"
+                />
+              </motion.div>
             </DashboardGrid>
           )}
         </DashboardSection>

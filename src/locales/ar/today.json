@@ -57,6 +57,19 @@
     "title": "الاتجاهات",
     "viewChart": "عرض الرسم البياني"
   },
+  "health": {
+    "title": "الصحة والتعافي",
+    "recovery": "التعافي",
+    "sleep": "النوم",
+    "strain": "الإجهاد",
+    "activity": "النشاط",
+    "excellent": "ممتاز",
+    "good": "جيد",
+    "fair": "مقبول",
+    "poor": "يحتاج تحسين",
+    "vs_yesterday": "مقارنة بالأمس",
+    "viewDetails": "عرض بيانات WHOOP"
+  },
   "messages": {
     "saved": "تم الحفظ بنجاح ✅",
     "error": "حدث خطأ ❌",
