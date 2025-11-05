@@ -1,0 +1,78 @@
+{
+  "title": "Bandeja de Conflictos",
+  "subtitle": "Gestionar conflictos entre eventos y horarios de oración",
+  "stats": {
+    "total": "Total",
+    "open": "Abiertos",
+    "resolved": "Resueltos",
+    "critical": "Críticos"
+  },
+  "filters": {
+    "title": "Filtros",
+    "clear": "Limpiar Filtros",
+    "status": {
+      "label": "Estado",
+      "all": "Todos los Estados",
+      "open": "Abierto",
+      "suggested": "Sugerido",
+      "auto_applied": "Aplicado Automáticamente",
+      "resolved": "Resuelto",
+      "undone": "Deshecho"
+    },
+    "severity": {
+      "label": "Severidad",
+      "all": "Todos los Niveles",
+      "high": "Alta",
+      "medium": "Media",
+      "low": "Baja",
+      "critical": "Crítica"
+    },
+    "prayer": {
+      "label": "Oración",
+      "all": "Todas las Oraciones",
+      "fajr": "Fajr",
+      "dhuhr": "Dhuhr",
+      "asr": "Asr",
+      "maghrib": "Maghrib",
+      "isha": "Isha"
+    }
+  },
+  "actions": {
+    "apply": "Aplicar",
+    "ignore": "Ignorar",
+    "undo": "Deshacer",
+    "reopen": "Reabrir",
+    "aiSuggest": "Sugerencia IA",
+    "selectAll": "Seleccionar Todo",
+    "clearSelection": "Limpiar Selección",
+    "applying": "Aplicando...",
+    "ignoring": "Ignorando...",
+    "undoing": "Deshaciendo..."
+  },
+  "bulk": {
+    "selected": "seleccionado"
+  },
+  "suggestions": {
+    "moveEvent": "Mover evento {minutes} minutos",
+    "shortenEvent": "Acortar evento",
+    "cancelEvent": "Cancelar evento",
+    "delay": "Retrasar {minutes} minutos",
+    "makeTransparent": "Hacer evento transparente (Libre)",
+    "makeTentative": "Marcar evento como tentativo",
+    "noDetails": "Sin detalles disponibles"
+  },
+  "messages": {
+    "loading": "Cargando...",
+    "noConflicts": "Sin conflictos",
+    "noConflictsFiltered": "Sin conflictos que coincidan con los filtros actuales",
+    "loadError": "Error al cargar conflictos",
+    "actionSuccess": "Acción completada con éxito",
+    "actionError": "Acción fallida — revertida",
+    "aiSuccess": "Sugerencia IA creada con éxito ✨",
+    "aiError": "Error al generar sugerencia IA"
+  },
+  "event": {
+    "title": "Evento",
+    "time": "Hora"
+  }
+}

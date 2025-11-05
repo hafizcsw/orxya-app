@@ -1,0 +1,78 @@
+{
+  "title": "Conflicts Inbox",
+  "subtitle": "Manage conflicts between events and prayer times",
+  "stats": {
+    "total": "Total",
+    "open": "Open",
+    "resolved": "Resolved",
+    "critical": "Critical"
+  },
+  "filters": {
+    "title": "Filters",
+    "clear": "Clear Filters",
+    "status": {
+      "label": "Status",
+      "all": "All Statuses",
+      "open": "Open",
+      "suggested": "Suggested",
+      "auto_applied": "Auto Applied",
+      "resolved": "Resolved",
+      "undone": "Undone"
+    },
+    "severity": {
+      "label": "Severity",
+      "all": "All Levels",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low",
+      "critical": "Critical"
+    },
+    "prayer": {
+      "label": "Prayer",
+      "all": "All Prayers",
+      "fajr": "Fajr",
+      "dhuhr": "Dhuhr",
+      "asr": "Asr",
+      "maghrib": "Maghrib",
+      "isha": "Isha"
+    }
+  },
+  "actions": {
+    "apply": "Apply",
+    "ignore": "Ignore",
+    "undo": "Undo",
+    "reopen": "Reopen",
+    "aiSuggest": "AI Suggestion",
+    "selectAll": "Select All",
+    "clearSelection": "Clear Selection",
+    "applying": "Applying...",
+    "ignoring": "Ignoring...",
+    "undoing": "Undoing..."
+  },
+  "bulk": {
+    "selected": "selected"
+  },
+  "suggestions": {
+    "moveEvent": "Move event by {minutes} minutes",
+    "shortenEvent": "Shorten event",
+    "cancelEvent": "Cancel event",
+    "delay": "Delay {minutes} minutes",
+    "makeTransparent": "Make event transparent (Free)",
+    "makeTentative": "Mark event as tentative",
+    "noDetails": "No details available"
+  },
+  "messages": {
+    "loading": "Loading...",
+    "noConflicts": "No conflicts",
+    "noConflictsFiltered": "No conflicts matching current filters",
+    "loadError": "Failed to load conflicts",
+    "actionSuccess": "Action completed successfully",
+    "actionError": "Action failed — rolled back",
+    "aiSuccess": "AI suggestion created successfully ✨",
+    "aiError": "Failed to generate AI suggestion"
+  },
+  "event": {
+    "title": "Event",
+    "time": "Time"
+  }
+}

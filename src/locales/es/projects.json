@@ -1,0 +1,77 @@
+{
+  "title": "Proyectos",
+  "subtitle": "Gestionar proyectos y tareas",
+  "emptyState": {
+    "noProjects": "Aún no hay proyectos",
+    "createFirst": "Crea tu primer proyecto para comenzar",
+    "noTasks": "Aún no hay tareas",
+    "addTask": "Agrega una tarea a este proyecto"
+  },
+  "columns": {
+    "todo": "Por Hacer",
+    "doing": "En Progreso",
+    "done": "Hecho"
+  },
+  "filters": {
+    "search": "Buscar tareas...",
+    "today": "Solo hoy",
+    "overdue": "Solo vencidas",
+    "dateFrom": "Desde",
+    "dateTo": "Hasta",
+    "clearFilters": "Limpiar Filtros"
+  },
+  "stats": {
+    "total": "Total",
+    "overdue": "Vencidas",
+    "today": "Hoy"
+  },
+  "actions": {
+    "addProject": "Agregar Proyecto",
+    "addTask": "Agregar Tarea",
+    "export": "Exportar",
+    "exportAll": "Exportar Todo",
+    "exportProject": "Exportar Proyecto",
+    "moveUp": "Mover Arriba",
+    "moveDown": "Mover Abajo",
+    "delete": "Eliminar",
+    "showFilters": "Mostrar Filtros",
+    "hideFilters": "Ocultar Filtros",
+    "switchColumn": "Cambiar Columna"
+  },
+  "form": {
+    "projectName": "Nombre del proyecto",
+    "taskTitle": "Título de la tarea",
+    "dueDate": "Fecha de vencimiento",
+    "status": "Estado",
+    "create": "Crear",
+    "cancel": "Cancelar"
+  },
+  "messages": {
+    "loading": "Cargando...",
+    "savedOffline": "Guardado offline, se sincronizará 🔄",
+    "taskSaved": "Tarea guardada",
+    "taskMoved": "Tarea movida",
+    "taskDeleted": "Tarea eliminada",
+    "projectCreated": "Proyecto creado",
+    "exported": "Exportado con éxito",
+    "error": "Ocurrió un error"
+  },
+  "ai": {
+    "title": "Asistente IA",
+    "placeholder": "Pregunta a la IA sobre tu proyecto...",
+    "send": "Enviar",
+    "thinking": "Pensando...",
+    "noConsent": "Las funciones de IA requieren tu consentimiento",
+    "enableAI": "Activar IA"
+  },
+  "keyboard": {
+    "title": "Atajos de Teclado",
+    "search": "Buscar",
+    "newTask": "Nueva tarea",
+    "column1": "Cambiar a Por Hacer",
+    "column2": "Cambiar a En Progreso",
+    "column3": "Cambiar a Hecho",
+    "help": "Mostrar ayuda",
+    "escape": "Cerrar diálogos"
+  }
+}

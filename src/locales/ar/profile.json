@@ -1,0 +1,50 @@
+{
+  "title": "حسابي",
+  "subtitle": "إدارة الملف الشخصي والتفضيلات",
+  "sections": {
+    "basic": "المعلومات الأساسية",
+    "location": "الموقع",
+    "preferences": "التفضيلات",
+    "ai": "أذونات الذكاء الاصطناعي",
+    "advanced": "إعدادات متقدمة",
+    "integrations": "التكاملات"
+  },
+  "fields": {
+    "displayName": "الاسم المعروض",
+    "email": "البريد الإلكتروني",
+    "currency": "العملة",
+    "timezone": "المنطقة الزمنية",
+    "prayerMethod": "طريقة حساب الصلاة",
+    "latitude": "خط العرض",
+    "longitude": "خط الطول",
+    "telemetry": "التحليلات"
+  },
+  "actions": {
+    "save": "حفظ التغييرات",
+    "saving": "جار الحفظ...",
+    "captureLocation": "التقاط الموقع",
+    "capturing": "جار الالتقاط...",
+    "uploadAvatar": "رفع الصورة الرمزية",
+    "flushQueue": "مسح قائمة الانتظار",
+    "rescheduleReminders": "إعادة جدولة التذكيرات",
+    "disableTelemetry": "تعطيل التحليلات"
+  },
+  "links": {
+    "notifications": "إعدادات الإشعارات",
+    "prayer": "إعدادات الصلاة",
+    "externalCalendars": "التقويمات الخارجية"
+  },
+  "messages": {
+    "loginRequired": "يرجى تسجيل الدخول لعرض ملفك الشخصي",
+    "saveSuccess": "تم تحديث الملف الشخصي بنجاح",
+    "saveError": "فشل تحديث الملف الشخصي",
+    "locationSuccess": "تم التقاط الموقع بنجاح",
+    "locationError": "فشل التقاط الموقع"
+  },
+  "ai": {
+    "title": "أذونات الذكاء الاصطناعي",
+    "description": "تحكم في ميزات الذكاء الاصطناعي التي يمكنها الوصول إلى بياناتك",
+    "enableAll": "تفعيل الكل",
+    "disableAll": "تعطيل الكل"
+  }
+}

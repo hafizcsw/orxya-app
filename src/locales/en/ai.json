@@ -1,0 +1,31 @@
+{
+  "title": "AI Assistant",
+  "subtitle": "Intelligent features powered by AI",
+  "location": {
+    "title": "Location Update",
+    "description": "Automatically update your location for accurate prayer times",
+    "updateButton": "Update Location",
+    "updating": "Updating...",
+    "success": "Location updated successfully",
+    "error": "Failed to update location",
+    "permissionNote": "Requires browser location permission"
+  },
+  "consents": {
+    "title": "AI Permissions",
+    "description": "Manage which AI features you want to enable",
+    "enableAll": "Enable All",
+    "disableAll": "Disable All",
+    "features": {
+      "conflicts": "Conflict Resolution",
+      "suggestions": "Smart Suggestions",
+      "insights": "Calendar Insights",
+      "assistant": "AI Assistant"
+    }
+  },
+  "messages": {
+    "thinkingTitle": "Thinking...",
+    "thinkingDesc": "AI is processing your request",
+    "noConsentTitle": "AI Features Disabled",
+    "noConsentDesc": "Enable AI permissions to use this feature"
+  }
+}

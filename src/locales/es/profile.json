@@ -1,0 +1,50 @@
+{
+  "title": "Mi Cuenta",
+  "subtitle": "Gestionar perfil y preferencias",
+  "sections": {
+    "basic": "Información Básica",
+    "location": "Ubicación",
+    "preferences": "Preferencias",
+    "ai": "Permisos IA",
+    "advanced": "Configuración Avanzada",
+    "integrations": "Integraciones"
+  },
+  "fields": {
+    "displayName": "Nombre para Mostrar",
+    "email": "Correo Electrónico",
+    "currency": "Moneda",
+    "timezone": "Zona Horaria",
+    "prayerMethod": "Método de Cálculo de Oración",
+    "latitude": "Latitud",
+    "longitude": "Longitud",
+    "telemetry": "Analíticas"
+  },
+  "actions": {
+    "save": "Guardar Cambios",
+    "saving": "Guardando...",
+    "captureLocation": "Capturar Ubicación",
+    "capturing": "Capturando...",
+    "uploadAvatar": "Subir Avatar",
+    "flushQueue": "Vaciar Cola Offline",
+    "rescheduleReminders": "Reprogramar Recordatorios",
+    "disableTelemetry": "Deshabilitar Analíticas"
+  },
+  "links": {
+    "notifications": "Configuración de Notificaciones",
+    "prayer": "Configuración de Oración",
+    "externalCalendars": "Calendarios Externos"
+  },
+  "messages": {
+    "loginRequired": "Por favor inicia sesión para ver tu perfil",
+    "saveSuccess": "Perfil actualizado con éxito",
+    "saveError": "Error al actualizar perfil",
+    "locationSuccess": "Ubicación capturada con éxito",
+    "locationError": "Error al capturar ubicación"
+  },
+  "ai": {
+    "title": "Permisos IA",
+    "description": "Controla qué funciones de IA pueden acceder a tus datos",
+    "enableAll": "Habilitar Todo",
+    "disableAll": "Deshabilitar Todo"
+  }
+}

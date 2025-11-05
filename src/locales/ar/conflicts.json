@@ -1,0 +1,78 @@
+{
+  "title": "صندوق التعارضات",
+  "subtitle": "إدارة التعارضات بين الأحداث وأوقات الصلاة",
+  "stats": {
+    "total": "إجمالي",
+    "open": "مفتوحة",
+    "resolved": "محلولة",
+    "critical": "حرجة"
+  },
+  "filters": {
+    "title": "فلاتر",
+    "clear": "مسح الفلاتر",
+    "status": {
+      "label": "الحالة",
+      "all": "كل الحالات",
+      "open": "مفتوحة",
+      "suggested": "مقترحة",
+      "auto_applied": "مطبقة تلقائيًا",
+      "resolved": "محلولة",
+      "undone": "ملغية"
+    },
+    "severity": {
+      "label": "الخطورة",
+      "all": "كل المستويات",
+      "high": "عالية",
+      "medium": "متوسطة",
+      "low": "منخفضة",
+      "critical": "حرج"
+    },
+    "prayer": {
+      "label": "الصلاة",
+      "all": "كل الصلوات",
+      "fajr": "الفجر",
+      "dhuhr": "الظهر",
+      "asr": "العصر",
+      "maghrib": "المغرب",
+      "isha": "العشاء"
+    }
+  },
+  "actions": {
+    "apply": "تطبيق",
+    "ignore": "تجاهل",
+    "undo": "تراجع",
+    "reopen": "إعادة فتح",
+    "aiSuggest": "اقتراح ذكي",
+    "selectAll": "تحديد الكل",
+    "clearSelection": "إلغاء التحديد",
+    "applying": "جار التطبيق...",
+    "ignoring": "جار التجاهل...",
+    "undoing": "جار التراجع..."
+  },
+  "bulk": {
+    "selected": "محدد"
+  },
+  "suggestions": {
+    "moveEvent": "تحريك الحدث بمقدار {minutes} دقيقة",
+    "shortenEvent": "تقصير الحدث",
+    "cancelEvent": "إلغاء الحدث",
+    "delay": "تأخير {minutes} دقيقة",
+    "makeTransparent": "جعل الحدث شفافًا (Free)",
+    "makeTentative": "وضع الحدث كمؤقت",
+    "noDetails": "لا توجد تفاصيل"
+  },
+  "messages": {
+    "loading": "جار التحميل...",
+    "noConflicts": "لا توجد تعارضات",
+    "noConflictsFiltered": "لا توجد تعارضات مطابقة للفلاتر الحالية",
+    "loadError": "تعذّر تحميل التعارضات",
+    "actionSuccess": "تمت العملية بنجاح",
+    "actionError": "تعذّر التنفيذ — تمت الاستعادة",
+    "aiSuccess": "تم إنشاء اقتراح ذكي بنجاح ✨",
+    "aiError": "تعذّر توليد الاقتراح الذكي"
+  },
+  "event": {
+    "title": "الحدث",
+    "time": "الوقت"
+  }
+}

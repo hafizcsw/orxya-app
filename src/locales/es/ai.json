@@ -1,0 +1,31 @@
+{
+  "title": "Asistente IA",
+  "subtitle": "Funciones inteligentes impulsadas por IA",
+  "location": {
+    "title": "Actualización de Ubicación",
+    "description": "Actualiza automáticamente tu ubicación para horarios de oración precisos",
+    "updateButton": "Actualizar Ubicación",
+    "updating": "Actualizando...",
+    "success": "Ubicación actualizada con éxito",
+    "error": "Error al actualizar ubicación",
+    "permissionNote": "Requiere permiso de ubicación del navegador"
+  },
+  "consents": {
+    "title": "Permisos IA",
+    "description": "Gestiona qué funciones de IA deseas habilitar",
+    "enableAll": "Habilitar Todo",
+    "disableAll": "Deshabilitar Todo",
+    "features": {
+      "conflicts": "Resolución de Conflictos",
+      "suggestions": "Sugerencias Inteligentes",
+      "insights": "Perspectivas de Calendario",
+      "assistant": "Asistente IA"
+    }
+  },
+  "messages": {
+    "thinkingTitle": "Pensando...",
+    "thinkingDesc": "IA está procesando tu solicitud",
+    "noConsentTitle": "Funciones IA Deshabilitadas",
+    "noConsentDesc": "Habilita permisos de IA para usar esta función"
+  }
+}

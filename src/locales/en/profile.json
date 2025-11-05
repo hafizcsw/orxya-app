@@ -1,0 +1,50 @@
+{
+  "title": "My Account",
+  "subtitle": "Manage your profile and preferences",
+  "sections": {
+    "basic": "Basic Information",
+    "location": "Location",
+    "preferences": "Preferences",
+    "ai": "AI Permissions",
+    "advanced": "Advanced Settings",
+    "integrations": "Integrations"
+  },
+  "fields": {
+    "displayName": "Display Name",
+    "email": "Email",
+    "currency": "Currency",
+    "timezone": "Timezone",
+    "prayerMethod": "Prayer Calculation Method",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "telemetry": "Analytics"
+  },
+  "actions": {
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "captureLocation": "Capture Location",
+    "capturing": "Capturing...",
+    "uploadAvatar": "Upload Avatar",
+    "flushQueue": "Flush Offline Queue",
+    "rescheduleReminders": "Reschedule Reminders",
+    "disableTelemetry": "Disable Analytics"
+  },
+  "links": {
+    "notifications": "Notification Settings",
+    "prayer": "Prayer Settings",
+    "externalCalendars": "External Calendars"
+  },
+  "messages": {
+    "loginRequired": "Please log in to view your profile",
+    "saveSuccess": "Profile updated successfully",
+    "saveError": "Failed to update profile",
+    "locationSuccess": "Location captured successfully",
+    "locationError": "Failed to capture location"
+  },
+  "ai": {
+    "title": "AI Permissions",
+    "description": "Control which AI features can access your data",
+    "enableAll": "Enable All",
+    "disableAll": "Disable All"
+  }
+}

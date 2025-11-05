@@ -1,0 +1,77 @@
+{
+  "title": "Projects",
+  "subtitle": "Manage your projects and tasks",
+  "emptyState": {
+    "noProjects": "No projects yet",
+    "createFirst": "Create your first project to get started",
+    "noTasks": "No tasks yet",
+    "addTask": "Add a task to this project"
+  },
+  "columns": {
+    "todo": "To-Do",
+    "doing": "Doing",
+    "done": "Done"
+  },
+  "filters": {
+    "search": "Search tasks...",
+    "today": "Today only",
+    "overdue": "Overdue only",
+    "dateFrom": "From",
+    "dateTo": "To",
+    "clearFilters": "Clear Filters"
+  },
+  "stats": {
+    "total": "Total",
+    "overdue": "Overdue",
+    "today": "Today"
+  },
+  "actions": {
+    "addProject": "Add Project",
+    "addTask": "Add Task",
+    "export": "Export",
+    "exportAll": "Export All",
+    "exportProject": "Export Project",
+    "moveUp": "Move Up",
+    "moveDown": "Move Down",
+    "delete": "Delete",
+    "showFilters": "Show Filters",
+    "hideFilters": "Hide Filters",
+    "switchColumn": "Switch Column"
+  },
+  "form": {
+    "projectName": "Project name",
+    "taskTitle": "Task title",
+    "dueDate": "Due date",
+    "status": "Status",
+    "create": "Create",
+    "cancel": "Cancel"
+  },
+  "messages": {
+    "loading": "Loading...",
+    "savedOffline": "Saved offline, will sync 🔄",
+    "taskSaved": "Task saved",
+    "taskMoved": "Task moved",
+    "taskDeleted": "Task deleted",
+    "projectCreated": "Project created",
+    "exported": "Exported successfully",
+    "error": "An error occurred"
+  },
+  "ai": {
+    "title": "AI Assistant",
+    "placeholder": "Ask AI about your project...",
+    "send": "Send",
+    "thinking": "Thinking...",
+    "noConsent": "AI features require your consent",
+    "enableAI": "Enable AI"
+  },
+  "keyboard": {
+    "title": "Keyboard Shortcuts",
+    "search": "Focus search",
+    "newTask": "New task",
+    "column1": "Switch to To-Do",
+    "column2": "Switch to Doing",
+    "column3": "Switch to Done",
+    "help": "Show help",
+    "escape": "Close dialogs"
+  }
+}
