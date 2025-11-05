@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import useEmblaCarousel from 'embla-carousel-react';
 import { Plus } from "lucide-react";
 import { BusinessPlan, BusinessPlanFormData } from "@/types/business-plan";
 import { PlanCard } from "@/components/plans/PlanCard";
@@ -22,6 +23,7 @@ import { StatRing } from "@/components/oryxa/StatRing";
 import { OryxaCard } from "@/components/oryxa/Card";
 import { DailyReportCard } from "@/components/DailyReportCard";
 import { Activity } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function Today() {
   const { t } = useTranslation("today");
@@ -30,6 +32,14 @@ export default function Today() {
   const [selectedDate] = useState(new Date());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<BusinessPlan | null>(null);
+  
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: false, 
+    align: 'start',
+    dragFree: true,
+  });
+  const [selectedPlanIndex, setSelectedPlanIndex] = useState(0);
+  const [planScrollSnaps, setPlanScrollSnaps] = useState<number[]>([]);
 
   const { report, loading: reportLoading } = useTodayReport(period, selectedDate);
 
@@ -81,6 +91,21 @@ export default function Today() {
       toast.error(t("messages.error"));
     }
   };
+
+  const onPlanSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setSelectedPlanIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    setPlanScrollSnaps(emblaApi.scrollSnapList());
+    emblaApi.on('select', onPlanSelect);
+    onPlanSelect();
+    return () => {
+      emblaApi.off('select', onPlanSelect);
+    };
+  }, [emblaApi, onPlanSelect]);
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -246,25 +271,76 @@ export default function Today() {
               ))}
             </DashboardGrid>
           ) : plans && plans.length > 0 ? (
-            <DashboardGrid columns={3} gap="md">
-              {plans.map((plan: BusinessPlan, i: number) => (
-                <motion.div
-                  key={plan.plan_id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                >
-                  <PlanCard
-                    plan={plan}
-                    onEdit={(p) => {
-                      setEditingPlan(p);
-                      setDialogOpen(true);
-                    }}
-                    onDelete={handleDeletePlan}
-                  />
-                </motion.div>
-              ))}
-            </DashboardGrid>
+            <div className="relative">
+              {/* Desktop Grid View */}
+              <div className="hidden md:grid md:grid-cols-3 gap-4">
+                {plans.map((plan: BusinessPlan, i: number) => (
+                  <motion.div
+                    key={plan.plan_id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                  >
+                    <PlanCard
+                      plan={plan}
+                      onEdit={(p) => {
+                        setEditingPlan(p);
+                        setDialogOpen(true);
+                      }}
+                      onDelete={handleDeletePlan}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Mobile Carousel View */}
+              <div className="md:hidden">
+                <div className="overflow-hidden" ref={emblaRef}>
+                  <div className="flex gap-4 touch-pan-y">
+                    {plans.map((plan: BusinessPlan, i: number) => (
+                      <div 
+                        key={plan.plan_id} 
+                        className="flex-[0_0_90%] min-w-0"
+                      >
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.1 }}
+                        >
+                          <PlanCard
+                            plan={plan}
+                            onEdit={(p) => {
+                              setEditingPlan(p);
+                              setDialogOpen(true);
+                            }}
+                            onDelete={handleDeletePlan}
+                          />
+                        </motion.div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Carousel Indicators */}
+                {planScrollSnaps.length > 1 && (
+                  <div className="flex justify-center gap-2 mt-4">
+                    {planScrollSnaps.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => emblaApi?.scrollTo(index)}
+                        className={cn(
+                          "h-2 rounded-full transition-all duration-300",
+                          index === selectedPlanIndex 
+                            ? "w-8 bg-primary" 
+                            : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                        )}
+                        aria-label={`Go to plan ${index + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           ) : (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
