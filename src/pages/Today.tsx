@@ -32,8 +32,7 @@ import { ComparisonCard } from '@/components/dashboard/ComparisonCard'
 import { SmartInsight } from '@/components/dashboard/SmartInsight'
 import { generateInsights } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
-import { AutopilotLearningCard } from '@/components/ai/AutopilotLearningCard'
-import { SmartDailyPlan } from '@/components/ai/SmartDailyPlan'
+import { AIFeaturesDialog } from '@/components/ai/AIFeaturesDialog'
 
 // Validation schemas
 const dailyLogSchema = z.object({
@@ -583,6 +582,13 @@ const Today = () => {
                 <span>Y</span>
               </button>
             </div>
+
+            {/* AI Features Button - يظهر فقط في الوضع اليومي */}
+            {period === 'daily' && (
+              <div className="ml-3">
+                <AIFeaturesDialog />
+              </div>
+            )}
           </div>
         </div>
 
@@ -626,25 +632,6 @@ const Today = () => {
                     {glancesExpanded && <GlancesBar />}
                   </section>
                   )}
-
-                {/* المرحلة 1: مكونات الذكاء الاصطناعي المحسنة */}
-                {period === 'daily' && (
-                  <section className="mb-8">
-                    <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
-                      🤖 المساعد الذكي
-                    </h2>
-                    <div className={cn(
-                      "grid gap-4",
-                      device === 'mobile' && "grid-cols-1 gap-3",
-                      device === 'tablet' && "grid-cols-2 gap-3",
-                      device === 'desktop' && "grid-cols-2 gap-4"
-                    )}>
-                      <SmartDailyPlan />
-                      <AutopilotLearningCard />
-                    </div>
-                  </section>
-                )}
-
                 {/* Section 1: Comparison - للأسبوع/الشهر/السنة فقط */}
                 {period !== 'daily' && comparisonData && (
                   <section className="mb-8">
