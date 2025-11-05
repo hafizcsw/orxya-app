@@ -163,6 +163,16 @@ All colors MUST be HSL.
     --popover-foreground: 240 10% 3.9%;
     --primary: 240 5.9% 10%;
     --primary-foreground: 0 0% 98%;
+    
+    /* Ring Status Colors */
+    --ring-excellent: 142 76% 36%;
+    --ring-excellent-glow: 34 197 94;
+    --ring-good: 180 70% 40%;
+    --ring-good-glow: 59 130 246;
+    --ring-fair: 45 93% 47%;
+    --ring-fair-glow: 251 191 36;
+    --ring-poor: 0 84% 60%;
+    --ring-poor-glow: 239 68 68;
     --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;
     --muted: 220 13% 96%;

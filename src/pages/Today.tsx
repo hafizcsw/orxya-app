@@ -160,6 +160,9 @@ export default function Today() {
         {/* Header with Greeting */}
         <TodayHeader selectedDate={selectedDate} />
 
+        {/* Period Selector - moved up */}
+        <PeriodSelector value={period} onChange={setPeriod} className="mb-2" />
+
         {/* Quick Summary */}
         <QuickSummaryCard 
           achievements={[
@@ -167,15 +170,6 @@ export default function Today() {
             report && report.work_hours > 5 ? `عملت ${report.work_hours} ساعات` : null,
           ].filter(Boolean) as string[]}
         />
-
-        {/* Daily Report Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <DailyReportCard />
-        </motion.div>
 
         {/* Health & Recovery Section */}
         <DashboardSection 
@@ -269,13 +263,6 @@ export default function Today() {
           ) : null}
         </DashboardSection>
 
-        {/* Glances Bar */}
-        <DashboardSection title="نظرة سريعة">
-          <GlancesBar />
-        </DashboardSection>
-
-        {/* Period Selector */}
-        <PeriodSelector value={period} onChange={setPeriod} className="mb-6" />
 
         {/* Financial Section */}
         <DashboardSection 
@@ -468,6 +455,20 @@ export default function Today() {
             </DashboardGrid>
           )}
         </DashboardSection>
+
+        {/* Glances Bar */}
+        <DashboardSection title="نظرة سريعة">
+          <GlancesBar />
+        </DashboardSection>
+
+        {/* Daily Report Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <DailyReportCard />
+        </motion.div>
 
         {/* Business Plans */}
         <DashboardSection

@@ -1,6 +1,8 @@
+import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { ArrowUp, ArrowDown, Minus } from 'lucide-react';
+import { hslToRgba, getGlowIntensity } from '@/lib/animations';
 
 interface StatRingProps {
   value: number; // 0-100
@@ -64,16 +66,33 @@ export function StatRing({
   const offset = circumference - (progressValue / 100) * circumference
   const percentage = Math.round(progressValue)
   
-  // Dynamic color based on progress
+  // Dynamic color and gradient based on progress
   const getDynamicColor = () => {
     if (!targetValue || !gradientColors) return color;
     const progress = (currentValue || 0) / targetValue;
-    if (progress >= 0.8) return 'hsl(142 76% 36%)'; // Green
-    if (progress >= 0.5) return 'hsl(45 93% 47%)'; // Yellow
-    return 'hsl(0 84% 60%)'; // Red
+    if (progress >= 0.9) return 'hsl(142, 76%, 36%)'; // Excellent - Green
+    if (progress >= 0.7) return 'hsl(180, 70%, 40%)'; // Good - Blue-green
+    if (progress >= 0.5) return 'hsl(45, 93%, 47%)'; // Fair - Yellow
+    return 'hsl(0, 84%, 60%)'; // Poor - Red
+  };
+  
+  const getDynamicGradient = (): [string, string] => {
+    if (!targetValue) return gradientColors || [color, color];
+    const progress = (currentValue || 0) / targetValue;
+    
+    if (progress >= 0.9) {
+      return ['hsl(142, 76%, 36%)', 'hsl(142, 76%, 60%)']; // Excellent gradient
+    } else if (progress >= 0.7) {
+      return ['hsl(180, 70%, 40%)', 'hsl(180, 70%, 60%)']; // Good gradient
+    } else if (progress >= 0.5) {
+      return ['hsl(45, 93%, 47%)', 'hsl(45, 93%, 65%)']; // Fair gradient
+    } else {
+      return ['hsl(0, 84%, 50%)', 'hsl(0, 84%, 70%)']; // Poor gradient
+    }
   };
   
   const ringColor = getDynamicColor();
+  const dynamicGradient = targetValue ? getDynamicGradient() : gradientColors;
 
   // Gradient ID for unique gradients per ring
   const gradientId = `gradient-${label.replace(/\s/g, '-')}`
@@ -93,10 +112,12 @@ export function StatRing({
     poor: 'يحتاج تحسين',
   }
 
-  const [isHovered, setIsHovered] = React.useState(false)
+  const [isHovered, setIsHovered] = React.useState(false);
+  const glowIntensity = getGlowIntensity(status);
+  const shadowColor = hslToRgba(ringColor, 0.6);
 
   return (
-    <div 
+    <motion.div 
       className={cn(
         'group flex flex-col items-center gap-3 transition-all duration-300',
         onTargetClick && 'cursor-pointer',
@@ -106,15 +127,18 @@ export function StatRing({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onTargetClick}
+      // Shake animation for poor status
+      animate={status === 'poor' ? { x: [-2, 2, -2, 2, 0] } : {}}
+      transition={status === 'poor' ? { repeat: 2, duration: 0.4 } : {}}
     >
       <div className="relative" style={{ width: scaledWidth, height: scaledWidth }}>
         <svg width={scaledWidth} height={scaledWidth} className="transform -rotate-90">
-          {/* Define gradient if provided */}
-          {gradientColors && (
+          {/* Define gradient */}
+          {dynamicGradient && (
             <defs>
               <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor={gradientColors[0]} />
-                <stop offset="100%" stopColor={gradientColors[1]} />
+                <stop offset="0%" stopColor={dynamicGradient[0]} />
+                <stop offset="100%" stopColor={dynamicGradient[1]} />
               </linearGradient>
             </defs>
           )}
@@ -139,13 +163,13 @@ export function StatRing({
             opacity={0.2}
           />
           
-          {/* Animated progress circle with gradient */}
+          {/* Animated progress circle with dynamic gradient */}
           <motion.circle
             cx={scaledWidth / 2}
             cy={scaledWidth / 2}
             r={radius}
             fill="none"
-            stroke={gradientColors ? `url(#${gradientId})` : ringColor}
+            stroke={dynamicGradient ? `url(#${gradientId})` : ringColor}
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeDasharray={circumference}
@@ -158,18 +182,39 @@ export function StatRing({
               delay: 0.2 
             }}
             style={{
-              filter: `drop-shadow(0 0 ${isHovered ? '16px' : '12px'} ${ringColor})`,
+              filter: `drop-shadow(0 0 ${isHovered ? glowIntensity : '12px'} ${shadowColor})`,
             }}
           />
           
-          {/* Pulse effect on hover */}
-          {isHovered && (
+          {/* Pulse effect for excellent status */}
+          {status === 'excellent' && (
             <motion.circle
               cx={scaledWidth / 2}
               cy={scaledWidth / 2}
               r={radius}
               fill="none"
-              stroke={gradientColors ? gradientColors[1] : ringColor}
+              stroke={dynamicGradient ? dynamicGradient[1] : ringColor}
+              strokeWidth={2}
+              animate={{ 
+                scale: [1, 1.05, 1],
+                opacity: [0.5, 0.8, 0.5]
+              }}
+              transition={{ 
+                repeat: Infinity, 
+                duration: 2,
+                ease: "easeInOut"
+              }}
+            />
+          )}
+          
+          {/* Pulse effect on hover */}
+          {isHovered && status !== 'excellent' && (
+            <motion.circle
+              cx={scaledWidth / 2}
+              cy={scaledWidth / 2}
+              r={radius}
+              fill="none"
+              stroke={dynamicGradient ? dynamicGradient[1] : ringColor}
               strokeWidth={1}
               initial={{ opacity: 0.8, scale: 1 }}
               animate={{ opacity: 0, scale: 1.1 }}
@@ -261,9 +306,6 @@ export function StatRing({
           </div>
         ) : null}
       </div>
-    </div>
+    </motion.div>
   );
 }
-
-// Add missing React import
-import React from 'react';
