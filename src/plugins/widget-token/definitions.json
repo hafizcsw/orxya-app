@@ -1,0 +1,48 @@
+{
+  "api": {
+    "name": "WidgetTokenPlugin",
+    "slug": "widgettoken",
+    "docs": "",
+    "tags": [],
+    "methods": [
+      {
+        "name": "saveToken",
+        "signature": "(options: { token: string }) => Promise<{ success: boolean }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ token: string; }"
+          }
+        ],
+        "returns": "Promise<{ success: boolean; }>",
+        "tags": [],
+        "docs": "Save JWT token for widget access",
+        "complexTypes": [],
+        "slug": "savetoken"
+      },
+      {
+        "name": "removeToken",
+        "signature": "() => Promise<{ success: boolean }>",
+        "parameters": [],
+        "returns": "Promise<{ success: boolean; }>",
+        "tags": [],
+        "docs": "Remove JWT token",
+        "complexTypes": [],
+        "slug": "removetoken"
+      },
+      {
+        "name": "getToken",
+        "signature": "() => Promise<{ token: string | null }>",
+        "parameters": [],
+        "returns": "Promise<{ token: string | null; }>",
+        "tags": [],
+        "docs": "Get current saved token (for debugging)",
+        "complexTypes": [],
+        "slug": "gettoken"
+      }
+    ],
+    "properties": []
+  },
+  "interfaces": []
+}

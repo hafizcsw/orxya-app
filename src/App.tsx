@@ -52,11 +52,13 @@ import Settings from "./pages/Settings";
 import GlancesSettings from "./pages/GlancesSettings";
 import { Protected } from "./components/Protected";
 import { useAutopilotNotifications } from "./hooks/useAutopilotNotifications";
+import { useWidgetTokenSync } from "./hooks/useWidgetToken";
 
 const queryClient = new QueryClient();
 
 function AppContent() {
   useAutopilotNotifications();
+  useWidgetTokenSync(); // Auto-sync JWT token for widgets
   const location = useLocation();
   const { i18n } = useTranslation();
   
