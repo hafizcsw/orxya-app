@@ -45,9 +45,6 @@ verify_jwt = true
 [functions.gcal-sync]
 verify_jwt = true
 
-[functions.oauth-gcal-start]
-verify_jwt = true
-
 [functions.oauth-gcal-callback]
 verify_jwt = false
 

@@ -1926,6 +1926,41 @@ export type Database = {
           },
         ]
       }
+      sync_audit: {
+        Row: {
+          action: string
+          created_at: string
+          id: number
+          meta: Json | null
+          provider: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: number
+          meta?: Json | null
+          provider?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: number
+          meta?: Json | null
+          provider?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sync_audit_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       task_lists: {
         Row: {
           color: string | null
