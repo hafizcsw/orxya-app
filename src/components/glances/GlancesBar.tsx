@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { GlanceTile } from "./GlanceTile";
 import { useNavigate } from "react-router-dom";
+import useEmblaCarousel from 'embla-carousel-react';
+import { cn } from "@/lib/utils";
 
 interface GlancesFeed {
   now: string;
@@ -22,6 +24,13 @@ export function GlancesBar() {
   const [layout, setLayout] = useState<any>(null);
   const [focus, setFocus] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: false, 
+    align: 'start',
+    dragFree: true,
+  });
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [scrollSnaps, setScrollSnaps] = useState<number[]>([]);
 
   async function loadFeed() {
     try {
@@ -88,6 +97,21 @@ export function GlancesBar() {
     return () => clearInterval(interval);
   }, []);
 
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setSelectedIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    setScrollSnaps(emblaApi.scrollSnapList());
+    emblaApi.on('select', onSelect);
+    onSelect();
+    return () => {
+      emblaApi.off('select', onSelect);
+    };
+  }, [emblaApi, onSelect]);
+
   async function toggleFocus(active: boolean) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -127,23 +151,71 @@ export function GlancesBar() {
   const visibleSlots = layout.slots.filter((s: any) => s.visible);
 
   return (
-    <div className="grid gap-3 md:gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
-      {visibleSlots.map((slot: any) => (
-        <GlanceTile
-          key={slot.id}
-          kind={slot.kind}
-          data={mapData(slot.kind)}
-          onOpen={() => {
-            // Navigate to calendar or event details
-            if (slot.kind === "next_task" && feed.glances.next_task) {
-              navigate('/calendar');
-            } else if (slot.kind === "conflicts_badge") {
-              navigate('/conflicts');
-            }
-          }}
-          onToggleFocus={toggleFocus}
-        />
-      ))}
+    <div className="relative">
+      {/* Desktop Grid View */}
+      <div className="hidden md:grid gap-3 md:gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
+        {visibleSlots.map((slot: any) => (
+          <GlanceTile
+            key={slot.id}
+            kind={slot.kind}
+            data={mapData(slot.kind)}
+            onOpen={() => {
+              if (slot.kind === "next_task" && feed.glances.next_task) {
+                navigate('/calendar');
+              } else if (slot.kind === "conflicts_badge") {
+                navigate('/conflicts');
+              }
+            }}
+            onToggleFocus={toggleFocus}
+          />
+        ))}
+      </div>
+
+      {/* Mobile Carousel View */}
+      <div className="md:hidden">
+        <div className="overflow-hidden" ref={emblaRef}>
+          <div className="flex gap-3 touch-pan-y">
+            {visibleSlots.map((slot: any, index: number) => (
+              <div 
+                key={slot.id} 
+                className="flex-[0_0_85%] min-w-0"
+              >
+                <GlanceTile
+                  kind={slot.kind}
+                  data={mapData(slot.kind)}
+                  onOpen={() => {
+                    if (slot.kind === "next_task" && feed.glances.next_task) {
+                      navigate('/calendar');
+                    } else if (slot.kind === "conflicts_badge") {
+                      navigate('/conflicts');
+                    }
+                  }}
+                  onToggleFocus={toggleFocus}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Carousel Indicators */}
+        {scrollSnaps.length > 1 && (
+          <div className="flex justify-center gap-2 mt-4">
+            {scrollSnaps.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => emblaApi?.scrollTo(index)}
+                className={cn(
+                  "h-2 rounded-full transition-all duration-300",
+                  index === selectedIndex 
+                    ? "w-8 bg-primary" 
+                    : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                )}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
