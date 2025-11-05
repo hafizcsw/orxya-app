@@ -245,7 +245,7 @@ export function BottomNav() {
                   to={item.path}
                   onClick={triggerHaptic}
                   className={cn(
-                    "flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-all min-w-[60px]",
+                    "flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-all min-w-[60px] relative",
                     "md:scale-110",
                     isActive 
                       ? "text-primary" 
@@ -264,6 +264,21 @@ export function BottomNav() {
                   )}>
                     {item.label}
                   </span>
+                  
+                  {/* Animated Active Indicator */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="bottomNavIndicator"
+                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 bg-primary rounded-full"
+                      initial={{ width: "40%" }}
+                      animate={{ width: "60%" }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 380,
+                        damping: 30
+                      }}
+                    />
+                  )}
                 </Link>
               </motion.div>
             );
