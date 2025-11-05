@@ -138,3 +138,9 @@ verify_jwt = true
 [functions.text-to-voice]
 verify_jwt = true
 
+[functions.today-realtime-data]
+verify_jwt = true
+
+[functions.today-ai-insights]
+verify_jwt = true
+
