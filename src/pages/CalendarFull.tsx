@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Loader2, Calendar as CalendarIcon } from 'lucide-react';
 import { SessionBanner } from '@/components/SessionBanner';
+import { useTranslation } from 'react-i18next';
 
 type Row = {
   id: string;
@@ -29,6 +30,7 @@ type Row = {
 export default function CalendarFullPage() {
   const { user } = useUser();
   const { toast } = useToast();
+  const { t } = useTranslation('calendar');
   const calRef = useRef<FullCalendar | null>(null);
   const [range, setRange] = useState<{ from: string; to: string } | null>(null);
   const [events, setEvents] = useState<Row[]>([]);
@@ -292,16 +294,16 @@ export default function CalendarFullPage() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <CalendarIcon className="h-8 w-8 text-primary" />
-            التقويم الكامل
+            {t('title')}
           </h1>
           <p className="text-muted-foreground mt-1">
-            إدارة الأحداث ومواقيت الصلاة مع السحب والتحجيم
+            {t('header.agenda')}
           </p>
         </div>
         {loading && (
           <div className="flex items-center gap-2 text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="text-sm">جارٍ التحميل…</span>
+            <span className="text-sm">{t('common:messages.loading')}</span>
           </div>
         )}
       </div>

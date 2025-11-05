@@ -9,6 +9,7 @@ import { track } from '@/lib/telemetry'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 type DayReport = {
   date: string;
@@ -49,6 +50,7 @@ function subDays(d: Date, n: number) {
 
 export default function Reports() {
   const { user } = useUser();
+  const { t } = useTranslation('reports');
   const [date, setDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<DayReport[] | null>(null);
@@ -161,19 +163,19 @@ export default function Reports() {
     <Protected>
       <div className="max-w-4xl mx-auto p-4 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">التقارير</h1>
+          <h1 className="text-3xl font-bold">{t('title')}</h1>
         </div>
 
         {!user && (
           <div className="text-sm text-muted-foreground">
-            سجّل الدخول لعرض التقارير المباشرة.
+            {t('common:messages.loading')}
           </div>
         )}
 
         <Tabs defaultValue="daily" className="w-full">
           <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="daily">التقارير اليومية</TabsTrigger>
-            <TabsTrigger value="ai">الملخصات الذكية</TabsTrigger>
+            <TabsTrigger value="daily">{t('daily')}</TabsTrigger>
+            <TabsTrigger value="ai">{t('monthly')}</TabsTrigger>
           </TabsList>
 
           {/* Daily Reports Tab */}
@@ -195,28 +197,28 @@ export default function Reports() {
                   disabled={loading || !user} 
                   onClick={loadSingle}
                 >
-                  {loading ? '...' : 'اليوم فقط'}
+                  {loading ? '...' : t('daily')}
                 </button>
                 <button 
                   className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50" 
                   disabled={loading || !user} 
                   onClick={() => loadRange(7)}
                 >
-                  {loading ? '...' : 'آخر 7 أيام'}
+                  {loading ? '...' : t('weekly')}
                 </button>
                 <button 
                   className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50" 
                   disabled={loading || !user} 
                   onClick={() => loadRange(30)}
                 >
-                  {loading ? '...' : 'آخر 30 يومًا'}
+                  {loading ? '...' : t('monthly')}
                 </button>
                 <button 
                   className="px-4 py-2 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors disabled:opacity-50" 
                   disabled={loading || !rows?.length} 
                   onClick={exportCSV}
                 >
-                  تصدير CSV
+                  {t('export')}
                 </button>
               </div>
             </div>

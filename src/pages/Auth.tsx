@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { Mail, ArrowRight } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { toast } from '@/hooks/use-toast'
+import { useTranslation } from 'react-i18next'
 
 const siteUrl = import.meta.env.VITE_SITE_URL ?? window.location.origin
 const redirectTo = `${siteUrl}/auth/callback`
@@ -13,6 +14,7 @@ const redirectTo = `${siteUrl}/auth/callback`
 export default function Auth() {
   const { user } = useUser()
   const navigate = useNavigate()
+  const { t } = useTranslation('auth')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -39,7 +41,7 @@ export default function Auth() {
       if (mode === 'signin') {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
-        toast({ title: "✅ تم تسجيل الدخول بنجاح" })
+        toast({ title: t('login.submit') + ' ✅' })
         setShowEmailDialog(false)
       } else {
         const { error } = await supabase.auth.signUp({ 
@@ -48,11 +50,11 @@ export default function Auth() {
           options: { emailRedirectTo: redirectTo }
         })
         if (error) throw error
-        toast({ title: "✅ تم إنشاء الحساب بنجاح!" })
+        toast({ title: t('signup.submit') + ' ✅' })
         setShowEmailDialog(false)
       }
     } catch (e: any) {
-      toast({ title: "❌ خطأ", description: e?.message ?? 'حدث خطأ', variant: "destructive" })
+      toast({ title: t('errors.loginFailed'), description: e?.message ?? t('errors.loginFailed'), variant: "destructive" })
     } finally { setLoading(false) }
   }
 
@@ -71,7 +73,7 @@ export default function Auth() {
       })
       if (error) throw error
     } catch (e: any) {
-      toast({ title: "❌ خطأ", description: e?.message ?? 'فشل تسجيل الدخول', variant: "destructive" })
+      toast({ title: t('errors.loginFailed'), description: e?.message ?? t('errors.loginFailed'), variant: "destructive" })
       setLoading(false)
     }
   }
@@ -90,7 +92,7 @@ export default function Auth() {
         onClick={() => navigate('/today')} 
         className="absolute top-6 right-6 z-50 text-zinc-400 hover:text-white transition-colors text-sm font-medium"
       >
-        تخطّي →
+        {t('common:buttons.skip', { defaultValue: 'Skip' })} →
       </button>
       
       {/* Content */}
@@ -130,7 +132,7 @@ export default function Auth() {
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
               <span className="text-white font-medium text-base">
-                {loading ? 'جاري المعالجة...' : 'المتابعة بحساب Google'}
+                {loading ? t('common:buttons.loading') : 'Google'}
               </span>
             </button>
 
@@ -151,7 +153,7 @@ export default function Auth() {
             >
               <Mail className="w-6 h-6 text-zinc-400 group-hover:text-zinc-300 transition-colors" />
               <span className="text-white font-medium text-base">
-                المتابعة بالبريد الإلكتروني
+                {t('login.email')}
               </span>
             </button>
           </div>
@@ -171,13 +173,13 @@ export default function Auth() {
         <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-md">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-center">
-              {mode === 'signin' ? 'تسجيل الدخول' : 'إنشاء حساب جديد'}
+              {mode === 'signin' ? t('login.title') : t('signup.title')}
             </DialogTitle>
           </DialogHeader>
           
           <form onSubmit={handleSubmit} className="space-y-5 mt-4">
             <div className="space-y-2">
-              <label className="text-sm text-zinc-400">البريد الإلكتروني</label>
+              <label className="text-sm text-zinc-400">{t('login.email')}</label>
               <input
                 type="email"
                 value={email}
@@ -191,7 +193,7 @@ export default function Auth() {
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm text-zinc-400">كلمة المرور</label>
+              <label className="text-sm text-zinc-400">{t('login.password')}</label>
               <input
                 type="password"
                 value={password}
@@ -220,11 +222,11 @@ export default function Auth() {
               {loading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                  <span>جاري المعالجة...</span>
+                  <span>{t('common:buttons.loading')}</span>
                 </>
               ) : (
                 <>
-                  <span>{mode === 'signin' ? 'دخول' : 'إنشاء حساب'}</span>
+                  <span>{mode === 'signin' ? t('login.submit') : t('signup.submit')}</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -236,7 +238,7 @@ export default function Auth() {
               onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
               className="text-sm text-zinc-400 hover:text-white transition-colors"
             >
-              {mode === 'signin' ? 'ليس لديك حساب؟ سجل الآن' : 'لديك حساب؟ سجل الدخول'}
+              {mode === 'signin' ? t('login.noAccount') + ' ' + t('signup.signupLink') : t('signup.haveAccount') + ' ' + t('login.loginLink')}
             </button>
           </div>
         </DialogContent>
