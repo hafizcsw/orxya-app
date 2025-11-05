@@ -177,23 +177,38 @@ export function BottomNav() {
               "flex flex-col items-center justify-center",
               "relative mt-0 md:mt-0",
               "transition-all duration-300",
-              "hover:scale-105 active:scale-95"
+              "hover:scale-110 active:scale-95",
+              "group"
             )}
           >
+            {/* Animated Ring */}
+            <div className="absolute inset-0 rounded-full animate-pulse opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              style={{
+                background: "radial-gradient(circle, hsl(var(--primary) / 0.3) 0%, transparent 70%)",
+                filter: "blur(8px)",
+              }}
+            />
+            
+            {/* Main Button */}
             <div className={cn(
               "rounded-full flex items-center justify-center",
               "bg-gradient-to-br from-primary to-primary/80",
               "shadow-lg hover:shadow-xl",
               "transition-all duration-300",
-              "w-7 h-7 md:w-8 md:h-8"
+              "w-7 h-7 md:w-8 md:h-8",
+              "relative z-10",
+              "group-active:animate-[scale-in_0.15s_ease-out]"
             )}
               style={{
                 boxShadow: "0 0 20px hsl(var(--primary) / 0.5), 0 4px 12px hsl(var(--primary) / 0.3)",
               }}
             >
-              <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary-foreground" />
+              <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary-foreground transition-transform duration-300 group-hover:rotate-12 group-active:scale-110" />
             </div>
-            <span className="text-[10px] md:text-sm mt-1 font-semibold text-primary">AI</span>
+            
+            <span className="text-[10px] md:text-sm mt-1 font-semibold text-primary transition-all duration-300 group-hover:scale-105">
+              AI
+            </span>
           </button>
 
           {/* More Button */}
