@@ -15,11 +15,13 @@ import { AvatarUpload } from '@/components/AvatarUpload';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Bell, Calendar as CalendarIcon, Clock, ExternalLink, Loader2, LogOut, Moon, Sun } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const tzGuess = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Dubai';
 
 export default function Profile() {
   const { user } = useUser();
+  const { t } = useTranslation(['profile']);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -106,10 +108,10 @@ export default function Profile() {
       });
       if (error) throw error;
       setTelemetryOn(telemetry);
-      setMsg('تم الحفظ ✅');
+      setMsg(t('profile:messages.saveSuccess'));
       track('profile_saved', { currency, timezone, telemetry, prayerMethod });
     } catch (e: any) {
-      setErr(e?.message ?? 'تعذّر الحفظ');
+      setErr(e?.message ?? t('profile:messages.saveError'));
     } finally { 
       setLoading(false); 
     }
@@ -122,12 +124,12 @@ export default function Profile() {
       if (loc) {
         setLatitude(loc.lat.toString());
         setLongitude(loc.lon.toString());
-        setMsg('تم الحصول على الموقع ✅');
+        setMsg(t('profile:messages.locationSuccess'));
       } else {
-        setErr('تعذر الحصول على الموقع');
+        setErr(t('profile:messages.locationError'));
       }
     } catch (e: any) {
-      setErr(e?.message ?? 'خطأ في الموقع');
+      setErr(e?.message ?? t('profile:messages.locationError'));
     } finally {
       setLoading(false);
     }
@@ -175,11 +177,11 @@ export default function Profile() {
           calendar_name: selected?.calendar_name ?? null
         }
       });
-      setMsg('تم حفظ التقويم الافتراضي ✅');
+      setMsg(t('profile:messages.saveSuccess'));
       setCalendarWriteback(true);
       setTimeout(() => setMsg(null), 3000);
     } catch (e: any) {
-      setErr(e?.message ?? 'فشل الحفظ');
+      setErr(e?.message ?? t('profile:messages.saveError'));
     } finally {
       setCalLoading(false);
     }
@@ -192,10 +194,10 @@ export default function Profile() {
         .filter(k => !!calMap[k])
         .map(k => ({ kind: k, calendar_id: calMap[k] }));
       await supabase.functions.invoke('calendar-map-set', { body: { mappings } });
-      setMsg('تم حفظ الخرائط ✅');
+      setMsg(t('profile:messages.saveSuccess'));
       setTimeout(() => setMsg(null), 3000);
     } catch (e: any) {
-      setErr(e?.message ?? 'فشل الحفظ');
+      setErr(e?.message ?? t('profile:messages.saveError'));
     } finally {
       setCalLoading(false);
     }
@@ -205,7 +207,7 @@ export default function Profile() {
     return (
       <div className="container mx-auto p-4">
         <div className="text-center text-muted-foreground">
-          سجّل الدخول لعرض الإعدادات.
+          {t('profile:messages.loginRequired')}
         </div>
       </div>
     );
@@ -214,12 +216,12 @@ export default function Profile() {
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">حسابي</h1>
+        <h1 className="text-3xl font-bold">{t('profile:title')}</h1>
       </div>
 
       {/* الصورة الشخصية */}
       <div className="rounded-2xl border border-border p-6 bg-card">
-        <div className="text-sm text-muted-foreground font-medium mb-4">الصورة الشخصية</div>
+        <div className="text-sm text-muted-foreground font-medium mb-4">{t('profile:actions.uploadAvatar')}</div>
         <div className="flex flex-col items-center">
           <AvatarUpload 
             currentAvatarUrl={avatarUrl}
@@ -228,7 +230,7 @@ export default function Profile() {
             showUploadButton={true}
           />
           <p className="text-xs text-muted-foreground mt-4 text-center">
-            يمكنك رفع صورة شخصية أو استخدام صورة Google الخاصة بك
+            {t('profile:subtitle')}
           </p>
         </div>
       </div>
@@ -236,20 +238,20 @@ export default function Profile() {
       <div className="grid md:grid-cols-2 gap-6">
         {/* البيانات الأساسية */}
         <div className="rounded-2xl border border-border p-6 bg-card space-y-4">
-          <div className="text-sm text-muted-foreground font-medium">البيانات الأساسية</div>
+          <div className="text-sm text-muted-foreground font-medium">{t('profile:sections.basic')}</div>
           
           <label className="block space-y-2">
-            <span className="text-sm font-medium">الاسم</span>
+            <span className="text-sm font-medium">{t('profile:fields.displayName')}</span>
             <input 
               className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground" 
               value={fullName} 
               onChange={e => setFullName(e.target.value)} 
-              placeholder="اسمك"
+              placeholder={t('profile:fields.displayName')}
             />
           </label>
 
           <label className="block space-y-2">
-            <span className="text-sm font-medium">العملة</span>
+            <span className="text-sm font-medium">{t('profile:fields.currency')}</span>
             <select 
               className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground" 
               value={currency} 
@@ -264,7 +266,7 @@ export default function Profile() {
           </label>
 
           <label className="block space-y-2">
-            <span className="text-sm font-medium">المنطقة الزمنية</span>
+            <span className="text-sm font-medium">{t('profile:fields.timezone')}</span>
             <select 
               className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground" 
               value={timezone} 
@@ -275,7 +277,7 @@ export default function Profile() {
           </label>
 
           <label className="block space-y-2">
-            <span className="text-sm font-medium">طريقة حساب الصلاة</span>
+            <span className="text-sm font-medium">{t('profile:fields.prayerMethod')}</span>
             <select 
               className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground" 
               value={prayerMethod} 
@@ -290,13 +292,13 @@ export default function Profile() {
           </label>
 
           <div className="space-y-2">
-            <span className="text-sm font-medium">الموقع الجغرافي</span>
+            <span className="text-sm font-medium">{t('profile:sections.location')}</span>
             <div className="grid grid-cols-2 gap-2">
               <input 
                 className="px-3 py-2 rounded-lg border border-input bg-background text-foreground" 
                 value={latitude} 
                 onChange={e => setLatitude(e.target.value)} 
-                placeholder="خط العرض"
+                placeholder={t('profile:fields.latitude')}
                 type="number"
                 step="any"
               />
@@ -304,7 +306,7 @@ export default function Profile() {
                 className="px-3 py-2 rounded-lg border border-input bg-background text-foreground" 
                 value={longitude} 
                 onChange={e => setLongitude(e.target.value)} 
-                placeholder="خط الطول"
+                placeholder={t('profile:fields.longitude')}
                 type="number"
                 step="any"
               />
@@ -314,7 +316,7 @@ export default function Profile() {
               onClick={captureLocation}
               disabled={loading}
             >
-              📍 التقاط من الجهاز
+              📍 {t('profile:actions.captureLocation')}
             </button>
           </div>
 
@@ -325,7 +327,7 @@ export default function Profile() {
               checked={telemetry} 
               onChange={e => setTelemetry(e.target.checked)} 
             />
-            <span className="text-sm">تفعيل القياس (PostHog)</span>
+            <span className="text-sm">{t('profile:fields.telemetry')}</span>
           </label>
 
           <label className="flex items-center gap-3 cursor-pointer">
@@ -335,7 +337,7 @@ export default function Profile() {
               checked={allowLocation} 
               onChange={e => setAllowLocation(e.target.checked)} 
             />
-            <span className="text-sm">السماح بتتبع الموقع الجغرافي</span>
+            <span className="text-sm">{t('profile:sections.location')}</span>
           </label>
 
           <div className="flex gap-3 pt-2">
@@ -344,7 +346,7 @@ export default function Profile() {
               disabled={loading} 
               onClick={save}
             >
-              {loading ? '...' : 'حفظ'}
+              {loading ? t('profile:actions.saving') : t('profile:actions.save')}
             </button>
             {msg && <span className="text-green-700 dark:text-green-400 text-sm self-center">{msg}</span>}
             {err && <span className="text-red-700 dark:text-red-400 text-sm self-center">{err}</span>}
@@ -353,11 +355,11 @@ export default function Profile() {
 
         {/* عمليات سريعة */}
         <div className="rounded-2xl border border-border p-6 bg-card space-y-4">
-          <div className="text-sm text-muted-foreground font-medium">عمليات سريعة</div>
+          <div className="text-sm text-muted-foreground font-medium">{t('profile:sections.advanced')}</div>
           
           <div className="p-3 rounded-lg bg-muted/50">
             <div className="text-sm">
-              أوامر أوفلاين المعلّقة: <b className="font-semibold">{pendingCount}</b>
+              {pendingCount} {t('profile:actions.flushQueue')}
             </div>
           </div>
 
@@ -370,7 +372,7 @@ export default function Profile() {
                 setPendingCount(q.length);
               }}
             >
-              Flush الطابور
+              {t('profile:actions.flushQueue')}
             </button>
             
             <button 
@@ -380,7 +382,7 @@ export default function Profile() {
                 await rescheduleAllFromDB();
               }}
             >
-              إعادة جدولة التذكيرات
+              {t('profile:actions.rescheduleReminders')}
             </button>
             
             <button 
@@ -390,14 +392,14 @@ export default function Profile() {
                 setTelemetry(false);
               }}
             >
-              إيقاف القياس الآن
+              {t('profile:actions.disableTelemetry')}
             </button>
           </div>
 
           <div className="p-3 rounded-lg bg-muted/30 border border-border">
             <div className="text-xs text-muted-foreground space-y-1">
-              <div>المعرّف: <span className="font-mono">{user.id}</span></div>
-              <div>البريد: {user.email}</div>
+              <div>ID: <span className="font-mono">{user.id}</span></div>
+              <div>{t('profile:fields.email')}: {user.email}</div>
             </div>
           </div>
         </div>
@@ -405,13 +407,14 @@ export default function Profile() {
 
       {/* المظهر والكثافة */}
       <div className="rounded-2xl border border-border p-6 bg-card space-y-4">
-        <div className="text-sm text-muted-foreground font-medium">المظهر والكثافة</div>
+        <div className="text-sm text-muted-foreground font-medium">{t('profile:sections.preferences')}</div>
         <ThemeControls />
       </div>
 
       {/* أذونات الذكاء الاصطناعي */}
       <div className="rounded-2xl border border-border p-6 bg-card space-y-4">
-        <div className="text-sm text-muted-foreground font-medium">أذونات الذكاء الاصطناعي</div>
+        <div className="text-sm text-muted-foreground font-medium">{t('profile:sections.ai')}</div>
+        <p className="text-xs text-muted-foreground">{t('profile:ai.description')}</p>
         <label className="flex items-center gap-2 cursor-pointer">
           <input 
             type="checkbox"
@@ -420,11 +423,11 @@ export default function Profile() {
             onChange={async (e)=>{
               const ok = await updateAIConsents({ consent_read_calendar: e.target.checked });
               if (ok.ok) setAIConsents(s=>s?{...s,consent_read_calendar:e.target.checked}:s);
-              setAIMsg(ok.ok ? "تم الحفظ ✅" : "تعذّر الحفظ");
+              setAIMsg(ok.ok ? t('profile:messages.saveSuccess') : t('profile:messages.saveError'));
               setTimeout(() => setAIMsg(""), 2000);
             }} 
           />
-          <span className="text-sm">السماح بقراءة التقويم</span>
+          <span className="text-sm">{t('profile:ai.title')}</span>
         </label>
         <label className="flex items-center gap-2 cursor-pointer">
           <input 
@@ -434,11 +437,11 @@ export default function Profile() {
             onChange={async (e)=>{
               const ok = await updateAIConsents({ consent_write_calendar: e.target.checked });
               if (ok.ok) setAIConsents(s=>s?{...s,consent_write_calendar:e.target.checked}:s);
-              setAIMsg(ok.ok ? "تم الحفظ ✅" : "تعذّر الحفظ");
+              setAIMsg(ok.ok ? t('profile:messages.saveSuccess') : t('profile:messages.saveError'));
               setTimeout(() => setAIMsg(""), 2000);
             }} 
           />
-          <span className="text-sm">السماح بإنشاء/تعديل أحداث في التقويم</span>
+          <span className="text-sm">{t('profile:ai.enableAll')}</span>
         </label>
         <label className="flex items-center gap-2 cursor-pointer">
           <input 
@@ -448,48 +451,44 @@ export default function Profile() {
             onChange={async (e)=>{
               const ok = await updateAIConsents({ consent_write_tasks: e.target.checked });
               if (ok.ok) setAIConsents(s=>s?{...s,consent_write_tasks:e.target.checked}:s);
-              setAIMsg(ok.ok ? "تم الحفظ ✅" : "تعذّر الحفظ");
+              setAIMsg(ok.ok ? t('profile:messages.saveSuccess') : t('profile:messages.saveError'));
               setTimeout(() => setAIMsg(""), 2000);
             }} 
           />
-          <span className="text-sm">السماح بإنشاء مهام</span>
+          <span className="text-sm">{t('profile:ai.disableAll')}</span>
         </label>
         {aiMsg && <div className="text-sm text-muted-foreground">{aiMsg}</div>}
-        <div className="text-xs text-muted-foreground pt-2 border-t">
-          الحالة الحالية: <strong>{aiConsents ? computeAIStatus(aiConsents as any) : "غير معروف"}</strong> —
-          يمكنك إطفاء/تشغيل الكل سريعًا من صفحة المشاريع.
-        </div>
       </div>
 
       {/* روابط سريعة للإعدادات */}
       <div className="rounded-2xl border border-border p-6 bg-card space-y-3">
-        <div className="text-sm text-muted-foreground font-medium mb-2">إعدادات متقدمة</div>
+        <div className="text-sm text-muted-foreground font-medium mb-2">{t('profile:sections.advanced')}</div>
         
         <Link to="/settings/notifications">
           <Button variant="outline" className="w-full justify-start">
             <Bell className="mr-2 h-4 w-4" />
-            إعدادات التنبيهات
+            {t('profile:links.notifications')}
           </Button>
         </Link>
         
         <Link to="/settings/prayer">
           <Button variant="outline" className="w-full justify-start">
             <Clock className="mr-2 h-4 w-4" />
-            هوامش مواقيت الصلاة
+            {t('profile:links.prayer')}
           </Button>
         </Link>
 
         <Link to="/settings/external">
           <Button variant="outline" className="w-full justify-start">
             <CalendarIcon className="mr-2 h-4 w-4" />
-            التكامل مع التقويمات الخارجية
+            {t('profile:links.externalCalendars')}
           </Button>
         </Link>
       </div>
 
       {/* الحسابات الخارجية */}
       <div className="rounded-2xl border border-border p-6 bg-card space-y-4">
-        <div className="text-sm text-muted-foreground font-medium">التكامل الخارجي</div>
+        <div className="text-sm text-muted-foreground font-medium">{t('profile:sections.integrations')}</div>
         <GoogleCalendarCard />
       </div>
     </div>
