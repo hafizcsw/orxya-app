@@ -13,6 +13,24 @@ export function BottomNav() {
   const { toggleAI } = useAI();
   const { t } = useTranslation('navigation');
   
+  // Haptic feedback function
+  const triggerHaptic = () => {
+    // Check if device supports vibration
+    if ('vibrate' in navigator) {
+      navigator.vibrate(10); // Light vibration for 10ms
+    }
+    
+    // For Capacitor apps, you can also use Haptics API for better native feel
+    // This will work if @capacitor/haptics is installed
+    const Capacitor = (window as any).Capacitor;
+    if (Capacitor?.isNativePlatform?.()) {
+      const Haptics = (window as any).Capacitor?.Plugins?.Haptics;
+      if (Haptics) {
+        Haptics.impact({ style: 'light' });
+      }
+    }
+  };
+  
   const [isDark, setIsDark] = useState(() => {
     const stored = localStorage.getItem('theme');
     if (stored) return stored === 'dark';
@@ -156,6 +174,7 @@ export function BottomNav() {
               >
                 <Link
                   to={item.path}
+                  onClick={triggerHaptic}
                   className={cn(
                     "flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-all min-w-[60px]",
                     "md:scale-110",
@@ -183,7 +202,10 @@ export function BottomNav() {
 
           {/* AI Button - Center with Responsive Size */}
           <motion.button
-            onClick={toggleAI}
+            onClick={() => {
+              triggerHaptic();
+              toggleAI();
+            }}
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ 
@@ -231,7 +253,10 @@ export function BottomNav() {
 
           {/* More Button */}
           <motion.button
-            onClick={() => setMenuOpen(true)}
+            onClick={() => {
+              triggerHaptic();
+              setMenuOpen(true);
+            }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ 
