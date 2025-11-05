@@ -126,3 +126,9 @@ verify_jwt = true
 [functions.ai-orchestrator-v2]
 verify_jwt = true
 
+[functions.prayer-aware-plan]
+verify_jwt = true
+
+[functions.prayer-reminders-smart]
+verify_jwt = true
+
