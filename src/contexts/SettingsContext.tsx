@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { UserSettings } from '@/types/settings';
 import { formatTime as formatTimeHelper, formatDate as formatDateHelper } from '@/lib/time';
