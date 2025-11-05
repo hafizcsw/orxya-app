@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, AlertTriangle, CheckCircle, XCircle, RotateCcw, Filter, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 type ConflictStatus = "open" | "suggested" | "auto_applied" | "resolved" | "undone";
 
@@ -37,6 +38,7 @@ type EventRow = {
 
 export default function ConflictsPage() {
   const { user } = useUser();
+  const { t } = useTranslation('conflicts');
   const [items, setItems] = useState<Conflict[]>([]);
   const [events, setEvents] = useState<Record<string, EventRow>>({});
   const [loading, setLoading] = useState(true);
@@ -101,7 +103,7 @@ export default function ConflictsPage() {
       }
     } catch (e: any) {
       toast({ 
-        title: "تعذّر تحميل التعارضات", 
+        title: t('messages.loadError'), 
         variant: "destructive" 
       });
     } finally {
@@ -150,25 +152,25 @@ export default function ConflictsPage() {
     const patch = sug.patch ?? {};
     
     if (sug.action === "move_event" && sug.shift_minutes) {
-      return `تحريك الحدث بمقدار ${Math.abs(sug.shift_minutes)} دقيقة`;
+      return t('suggestions.moveEvent', { minutes: Math.abs(sug.shift_minutes) });
     }
     if (sug.action === "shorten_event") {
-      return `تقصير الحدث → ${fmt(sug.new_start)} - ${fmt(sug.new_end)}`;
+      return `${t('suggestions.shortenEvent')} → ${fmt(sug.new_start)} - ${fmt(sug.new_end)}`;
     }
     if (sug.action === "cancel_event") {
-      return "إلغاء الحدث";
+      return t('suggestions.cancelEvent');
     }
     if (patch.shift_minutes) {
-      return `تأخير ${Math.abs(patch.shift_minutes)} دقيقة`;
+      return t('suggestions.delay', { minutes: Math.abs(patch.shift_minutes) });
     }
     if (patch.transparency === "transparent") {
-      return "جعل الحدث شفافًا (Free)";
+      return t('suggestions.makeTransparent');
     }
     if (patch.status === "tentative") {
-      return "وضع الحدث كمؤقت";
+      return t('suggestions.makeTentative');
     }
     
-    return sug.reasoning ?? sug.reason ?? "لا توجد تفاصيل";
+    return sug.reasoning ?? sug.reason ?? t('suggestions.noDetails');
   }
 
   async function requestAISuggestion(conflictId: string) {
@@ -188,12 +190,12 @@ export default function ConflictsPage() {
         confidence: data.suggestion?.confidence
       });
       
-      toast({ title: 'تم إنشاء اقتراح ذكي بنجاح ✨' });
+      toast({ title: t('messages.aiSuccess') });
       await load();
     } catch (e: any) {
       console.error('AI suggestion error:', e);
       toast({ 
-        title: 'تعذّر توليد الاقتراح الذكي',
+        title: t('messages.aiError'),
         variant: 'destructive'
       });
       track('conflict_ai_error', { conflict_id: conflictId, error: String(e) });
@@ -231,7 +233,7 @@ export default function ConflictsPage() {
       track("conflict_action", { command, count: ids.length });
       setSelected({});
       toast({ 
-        title: `تم ${command === "apply" ? "التطبيق" : command === "ignore" ? "التجاهل" : "التحديث"} بنجاح` 
+        title: t('messages.actionSuccess') 
       });
       
       await load();
@@ -239,7 +241,7 @@ export default function ConflictsPage() {
       // Rollback on error
       setItems(snapshot);
       toast({ 
-        title: "تعذّر التنفيذ — تمت الاستعادة",
+        title: t('messages.actionError'),
         variant: "destructive"
       });
     } finally {
@@ -256,9 +258,9 @@ export default function ConflictsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-              صندوق التعارضات
+              {t('title')}
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">إدارة التعارضات بين الأحداث وأوقات الصلاة</p>
+            <p className="text-sm text-muted-foreground mt-1">{t('subtitle')}</p>
           </div>
           
           <Button
@@ -267,26 +269,26 @@ export default function ConflictsPage() {
             size="sm"
           >
             <Filter className="w-4 h-4" />
-            فلاتر
+            {t('filters.title')}
           </Button>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="card p-4">
-            <div className="text-xs text-muted-foreground mb-1">إجمالي</div>
+            <div className="text-xs text-muted-foreground mb-1">{t('stats.total')}</div>
             <div className="text-2xl font-bold">{stats.total}</div>
           </div>
           <div className="card p-4 border-warning/30">
-            <div className="text-xs text-muted-foreground mb-1">مفتوحة</div>
+            <div className="text-xs text-muted-foreground mb-1">{t('stats.open')}</div>
             <div className="text-2xl font-bold text-warning">{stats.open}</div>
           </div>
           <div className="card p-4 border-success/30">
-            <div className="text-xs text-muted-foreground mb-1">محلولة</div>
+            <div className="text-xs text-muted-foreground mb-1">{t('stats.resolved')}</div>
             <div className="text-2xl font-bold text-success">{stats.resolved}</div>
           </div>
           <div className="card p-4 border-destructive/30">
-            <div className="text-xs text-muted-foreground mb-1">حرجة</div>
+            <div className="text-xs text-muted-foreground mb-1">{t('stats.critical')}</div>
             <div className="text-2xl font-bold text-destructive">{stats.critical}</div>
           </div>
         </div>
@@ -296,48 +298,48 @@ export default function ConflictsPage() {
           <div className="card-glass p-4 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="text-sm text-muted-foreground mb-2 block">الحالة</label>
+                <label className="text-sm text-muted-foreground mb-2 block">{t('filters.status.label')}</label>
                 <select
                   value={statusFilter}
                   onChange={e => setStatusFilter(e.target.value as any)}
                   className="input w-full"
                 >
-                  <option value="all">كل الحالات</option>
-                  <option value="open">مفتوحة</option>
-                  <option value="suggested">مقترحة</option>
-                  <option value="auto_applied">مطبقة تلقائيًا</option>
-                  <option value="resolved">محلولة</option>
-                  <option value="undone">ملغية</option>
+                  <option value="all">{t('filters.status.all')}</option>
+                  <option value="open">{t('filters.status.open')}</option>
+                  <option value="suggested">{t('filters.status.suggested')}</option>
+                  <option value="auto_applied">{t('filters.status.auto_applied')}</option>
+                  <option value="resolved">{t('filters.status.resolved')}</option>
+                  <option value="undone">{t('filters.status.undone')}</option>
                 </select>
               </div>
 
               <div>
-                <label className="text-sm text-muted-foreground mb-2 block">الخطورة</label>
+                <label className="text-sm text-muted-foreground mb-2 block">{t('filters.severity.label')}</label>
                 <select
                   value={severityFilter}
                   onChange={e => setSeverityFilter(e.target.value as "all" | "low" | "medium" | "high")}
                   className="input w-full"
                 >
-                  <option value="all">كل المستويات</option>
-                  <option value="high">عالية</option>
-                  <option value="medium">متوسطة</option>
-                  <option value="low">منخفضة</option>
+                  <option value="all">{t('filters.severity.all')}</option>
+                  <option value="high">{t('filters.severity.high')}</option>
+                  <option value="medium">{t('filters.severity.medium')}</option>
+                  <option value="low">{t('filters.severity.low')}</option>
                 </select>
               </div>
 
               <div>
-                <label className="text-sm text-muted-foreground mb-2 block">الصلاة</label>
+                <label className="text-sm text-muted-foreground mb-2 block">{t('filters.prayer.label')}</label>
                 <select
                   value={prayerFilter}
                   onChange={e => setPrayerFilter(e.target.value)}
                   className="input w-full"
                 >
-                  <option value="all">كل الصلوات</option>
-                  <option value="fajr">الفجر</option>
-                  <option value="dhuhr">الظهر</option>
-                  <option value="asr">العصر</option>
-                  <option value="maghrib">المغرب</option>
-                  <option value="isha">العشاء</option>
+                  <option value="all">{t('filters.prayer.all')}</option>
+                  <option value="fajr">{t('filters.prayer.fajr')}</option>
+                  <option value="dhuhr">{t('filters.prayer.dhuhr')}</option>
+                  <option value="asr">{t('filters.prayer.asr')}</option>
+                  <option value="maghrib">{t('filters.prayer.maghrib')}</option>
+                  <option value="isha">{t('filters.prayer.isha')}</option>
                 </select>
               </div>
             </div>
@@ -352,7 +354,7 @@ export default function ConflictsPage() {
                   setPrayerFilter("all");
                 }}
               >
-                مسح الفلاتر
+                {t('filters.clear')}
               </Button>
             </div>
           </div>
@@ -362,37 +364,37 @@ export default function ConflictsPage() {
         {selectedIds.length > 0 && (
           <div className="card-glass p-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <span className="text-sm font-medium">{selectedIds.length} محدد</span>
+              <span className="text-sm font-medium">{selectedIds.length} {t('bulk.selected')}</span>
               <div className="h-4 w-px bg-border" />
               <ActionButton
                 onClick={() => act("apply", selectedIds)}
                 disabled={busy}
-                loadingText="جار التطبيق..."
+                loadingText={t('actions.applying')}
                 variant="default"
                 size="sm"
                 icon={<CheckCircle className="w-4 h-4" />}
               >
-                تطبيق
+                {t('actions.apply')}
               </ActionButton>
               <ActionButton
                 onClick={() => act("ignore", selectedIds)}
                 disabled={busy}
-                loadingText="جار التجاهل..."
+                loadingText={t('actions.ignoring')}
                 variant="ghost"
                 size="sm"
                 icon={<XCircle className="w-4 h-4" />}
               >
-                تجاهل
+                {t('actions.ignore')}
               </ActionButton>
               <ActionButton
                 onClick={() => act("undo", selectedIds)}
                 disabled={busy}
-                loadingText="جار التراجع..."
+                loadingText={t('actions.undoing')}
                 variant="ghost"
                 size="sm"
                 icon={<RotateCcw className="w-4 h-4" />}
               >
-                تراجع
+                {t('actions.undo')}
               </ActionButton>
             </div>
             <Button
@@ -400,7 +402,7 @@ export default function ConflictsPage() {
               variant="ghost"
               size="sm"
             >
-              إلغاء التحديد
+              {t('actions.clearSelection')}
             </Button>
           </div>
         )}
@@ -414,7 +416,7 @@ export default function ConflictsPage() {
               onChange={toggleAll}
               className="w-4 h-4 rounded border-input"
             />
-            تحديد الكل
+            {t('actions.selectAll')}
           </label>
         )}
 
@@ -422,13 +424,13 @@ export default function ConflictsPage() {
         {loading ? (
           <div className="card-glass p-12 text-center">
             <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
-            <p className="mt-4 text-sm text-muted-foreground">جار التحميل...</p>
+            <p className="mt-4 text-sm text-muted-foreground">{t('messages.loading')}</p>
           </div>
         ) : visible.length === 0 ? (
           <div className="card-glass p-12 text-center">
             <CheckCircle className="w-16 h-16 mx-auto text-success/50" />
-            <p className="mt-4 text-lg font-medium">لا توجد تعارضات</p>
-            <p className="text-sm text-muted-foreground">لا توجد تعارضات مطابقة للفلاتر الحالية</p>
+            <p className="mt-4 text-lg font-medium">{t('messages.noConflicts')}</p>
+            <p className="text-sm text-muted-foreground">{t('messages.noConflictsFiltered')}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -462,10 +464,10 @@ export default function ConflictsPage() {
                             c.status === "resolved" && "bg-success/10 text-success",
                             c.status === "undone" && "bg-muted text-muted-foreground"
                           )}>
-                            {c.status === "open" ? "مفتوح" :
-                             c.status === "suggested" ? "مقترح" :
-                             c.status === "auto_applied" ? "مطبق تلقائيًا" :
-                             c.status === "resolved" ? "محلول" : "ملغي"}
+                            {c.status === "open" ? t('filters.status.open') :
+                             c.status === "suggested" ? t('filters.status.suggested') :
+                             c.status === "auto_applied" ? t('filters.status.auto_applied') :
+                             c.status === "resolved" ? t('filters.status.resolved') : t('filters.status.undone')}
                           </span>
                           
                           <span className={cn(
@@ -475,9 +477,9 @@ export default function ConflictsPage() {
                             c.severity === "medium" && "bg-info/10 text-info",
                             c.severity === "low" && "bg-muted text-muted-foreground"
                           )}>
-                            {c.severity === "critical" ? "حرج" :
-                             c.severity === "high" ? "عالي" :
-                             c.severity === "medium" ? "متوسط" : "منخفض"}
+                            {c.severity === "critical" ? t('filters.severity.critical') :
+                             c.severity === "high" ? t('filters.severity.high') :
+                             c.severity === "medium" ? t('filters.severity.medium') : t('filters.severity.low')}
                           </span>
 
                           <span className="px-2 py-0.5 rounded text-xs bg-primary/10 text-primary font-medium">
@@ -505,10 +507,10 @@ export default function ConflictsPage() {
                           <AlertTriangle className="w-4 h-4 text-primary mt-0.5" />
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium">الاقتراح الذكي:</span>
+                              <span className="font-medium">{t('actions.aiSuggest')}:</span>
                               {(c.suggested_change?.confidence || c.suggestion?.confidence) && (
                                 <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                                  ثقة: {Math.round((c.suggested_change?.confidence || c.suggestion?.confidence || 0) * 100)}%
+                                  {Math.round((c.suggested_change?.confidence || c.suggestion?.confidence || 0) * 100)}%
                                 </span>
                               )}
                             </div>
@@ -523,7 +525,7 @@ export default function ConflictsPage() {
                       </div>
                     ) : (
                       <div className="rounded-lg bg-muted/30 p-3 text-sm text-center">
-                        <span className="text-muted-foreground">لا يوجد اقتراح بعد</span>
+                        <span className="text-muted-foreground">{t('suggestions.noDetails')}</span>
                       </div>
                     )}
 
@@ -535,33 +537,33 @@ export default function ConflictsPage() {
                             <ActionButton
                               onClick={() => requestAISuggestion(c.id)}
                               disabled={busy}
-                              loadingText="جار التحليل..."
+                              loadingText={t('messages.loading')}
                               variant="ghost"
                               size="sm"
                               icon={<Sparkles className="w-4 h-4" />}
                             >
-                              اقترح حلًا (AI)
+                              {t('actions.aiSuggest')}
                             </ActionButton>
                           )}
                           <ActionButton
                             onClick={() => act("apply", [c.id])}
                             disabled={busy}
-                            loadingText="جار التطبيق..."
+                            loadingText={t('actions.applying')}
                             variant="default"
                             size="sm"
                             icon={<CheckCircle className="w-4 h-4" />}
                           >
-                            تطبيق
+                            {t('actions.apply')}
                           </ActionButton>
                           <ActionButton
                             onClick={() => act("ignore", [c.id])}
                             disabled={busy}
-                            loadingText="جار التجاهل..."
+                            loadingText={t('actions.ignoring')}
                             variant="ghost"
                             size="sm"
                             icon={<XCircle className="w-4 h-4" />}
                           >
-                            تجاهل
+                            {t('actions.ignore')}
                           </ActionButton>
                         </>
                       ) : (
@@ -569,21 +571,21 @@ export default function ConflictsPage() {
                           <ActionButton
                             onClick={() => act("reopen", [c.id])}
                             disabled={busy}
-                            loadingText="جار إعادة الفتح..."
+                            loadingText={t('messages.loading')}
                             variant="ghost"
                             size="sm"
                           >
-                            إعادة فتح
+                            {t('actions.reopen')}
                           </ActionButton>
                           <ActionButton
                             onClick={() => act("undo", [c.id])}
                             disabled={busy}
-                            loadingText="جار التراجع..."
+                            loadingText={t('actions.undoing')}
                             variant="ghost"
                             size="sm"
                             icon={<RotateCcw className="w-4 h-4" />}
                           >
-                            تراجع
+                            {t('actions.undo')}
                           </ActionButton>
                         </>
                       )}
