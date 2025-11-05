@@ -6,6 +6,7 @@ import { RadarChart } from '@/components/charts/RadarChart';
 import { NeonButton } from '@/components/ui/NeonButton';
 import { BusinessPlan } from '@/types/business-plan';
 import { useTranslation } from 'react-i18next';
+import { formatCurrency, formatNumber } from '@/lib/intl';
 
 type AnalyticsPeriod = 'today' | 'week' | 'month' | 'year';
 
@@ -105,25 +106,25 @@ export function PlansAnalytics({ plans }: PlansAnalyticsProps) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center">
             <div className="text-3xl font-bold gradient-text">
-              {plans.length}
+              {formatNumber(plans.length)}
             </div>
             <div className="text-sm text-muted-foreground mt-1">{t('stats.activePlans')}</div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold gradient-text">
-              ${totalProfit.toFixed(0)}
+              {formatCurrency(totalProfit)}
             </div>
             <div className="text-sm text-muted-foreground mt-1">{t('stats.totalProfit')} {periodLabel}</div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold gradient-text">
-              {plans.reduce((sum, p) => sum + p.month_transactions, 0)}
+              {formatNumber(plans.reduce((sum, p) => sum + p.month_transactions, 0))}
             </div>
             <div className="text-sm text-muted-foreground mt-1">{t('stats.transactions')}</div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold gradient-text">
-              {plans.length > 0 ? `$${(totalProfit / plans.length).toFixed(0)}` : '$0'}
+              {plans.length > 0 ? formatCurrency(totalProfit / plans.length) : formatCurrency(0)}
             </div>
             <div className="text-sm text-muted-foreground mt-1">{t('stats.avgProfit')}</div>
           </div>

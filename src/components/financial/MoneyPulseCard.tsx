@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { FinancialEvent, DailyFinancialSummary } from '@/types/financial';
 import { FinancialCorrectionSheet } from './FinancialCorrectionSheet';
 import { getTopPlacesToday } from '@/lib/financial-mock';
+import { formatCurrency, formatNumber, formatPercent } from '@/lib/intl';
 
 interface MoneyPulseCardProps {
   summary: DailyFinancialSummary;
@@ -44,7 +45,7 @@ export function MoneyPulseCard({ summary, onConfirm, onCorrect, className }: Mon
                 "text-2xl font-bold",
                 isPositive ? "text-success" : "text-destructive"
               )}>
-                {isPositive ? '+' : ''}{summary.netToday.toFixed(2)} {summary.currency}
+                {isPositive ? '+' : ''}{formatNumber(summary.netToday, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {summary.currency}
               </div>
             </div>
           </div>
@@ -58,11 +59,11 @@ export function MoneyPulseCard({ summary, onConfirm, onCorrect, className }: Mon
         <div className="flex gap-2 text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-success" />
-            <span>↑ {summary.totalIncome.toFixed(2)}</span>
+            <span>↑ {formatNumber(summary.totalIncome, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-destructive" />
-            <span>↓ {summary.totalExpense.toFixed(2)}</span>
+            <span>↓ {formatNumber(summary.totalExpense, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
           </div>
           {unconfirmedCount > 0 && (
             <div className="ml-auto text-warning">
@@ -106,7 +107,7 @@ export function MoneyPulseCard({ summary, onConfirm, onCorrect, className }: Mon
                       "font-medium",
                       event.direction === 1 ? "text-success" : "text-destructive"
                     )}>
-                      {event.direction === 1 ? '+' : '-'}{event.amount.toFixed(2)} {event.currency}
+                      {event.direction === 1 ? '+' : '-'}{formatNumber(event.amount, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {event.currency}
                     </span>
                     {event.merchant && (
                       <span className="text-xs text-muted-foreground truncate">
@@ -115,7 +116,7 @@ export function MoneyPulseCard({ summary, onConfirm, onCorrect, className }: Mon
                     )}
                   </div>
                   <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
-                    <div>Confidence: {event.confidence}%</div>
+                    <div>Confidence: {formatPercent(event.confidence)}</div>
                     {event.placeName && (
                       <div className="flex items-center gap-1">
                         <MapPin className="w-3 h-3" />

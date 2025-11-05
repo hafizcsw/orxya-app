@@ -4,6 +4,7 @@ import { useUser } from "@/lib/auth";
 import { Card } from "./ui/card";
 import { Loader2, DollarSign, TrendingUp, TrendingDown, Clock, BookOpen, Dumbbell, Footprints, Award, Building } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatCurrency, formatNumber, formatDate } from "@/lib/intl";
 
 interface DailyReport {
   date: string;
@@ -175,7 +176,7 @@ export const DailyReportCard = ({ date }: { date?: string }) => {
           التقرير اليومي
         </h3>
         <div className="text-sm text-muted-foreground font-medium px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
-          {report.date}
+          {formatDate(report.date)}
         </div>
       </div>
       
@@ -184,7 +185,7 @@ export const DailyReportCard = ({ date }: { date?: string }) => {
         <StatCard
           icon={<DollarSign className="w-5 h-5" />}
           label="الدخل"
-          value={`$${report.income_usd}`}
+          value={formatCurrency(report.income_usd)}
           iconBgColor="bg-green-500/10"
           iconColor="text-green-600 dark:text-green-400"
           trend="up"
@@ -193,7 +194,7 @@ export const DailyReportCard = ({ date }: { date?: string }) => {
         <StatCard
           icon={<DollarSign className="w-5 h-5" />}
           label="المصروفات"
-          value={`$${report.spend_usd}`}
+          value={formatCurrency(report.spend_usd)}
           iconBgColor="bg-red-500/10"
           iconColor="text-red-600 dark:text-red-400"
           trend="down"
@@ -202,7 +203,7 @@ export const DailyReportCard = ({ date }: { date?: string }) => {
         <StatCard
           icon={<TrendingUp className="w-5 h-5" />}
           label="الصافي"
-          value={`$${report.net_usd}`}
+          value={formatCurrency(report.net_usd)}
           iconBgColor={report.net_usd >= 0 ? "bg-green-500/10" : "bg-red-500/10"}
           iconColor={report.net_usd >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}
           trend={report.net_usd >= 0 ? 'up' : 'down'}
@@ -212,7 +213,7 @@ export const DailyReportCard = ({ date }: { date?: string }) => {
         <StatCard
           icon={<Clock className="w-5 h-5" />}
           label="ساعات العمل"
-          value={`${report.work_hours}س`}
+          value={`${formatNumber(report.work_hours)}س`}
           iconBgColor="bg-blue-500/10"
           iconColor="text-blue-600 dark:text-blue-400"
         />
@@ -220,7 +221,7 @@ export const DailyReportCard = ({ date }: { date?: string }) => {
         <StatCard
           icon={<BookOpen className="w-5 h-5" />}
           label="ساعات الدراسة"
-          value={`${report.study_hours}س`}
+          value={`${formatNumber(report.study_hours)}س`}
           iconBgColor="bg-purple-500/10"
           iconColor="text-purple-600 dark:text-purple-400"
         />
@@ -228,7 +229,7 @@ export const DailyReportCard = ({ date }: { date?: string }) => {
         <StatCard
           icon={<Dumbbell className="w-5 h-5" />}
           label="ساعات MMA"
-          value={`${report.mma_hours}س`}
+          value={`${formatNumber(report.mma_hours)}س`}
           iconBgColor="bg-orange-500/10"
           iconColor="text-orange-600 dark:text-orange-400"
         />
@@ -236,7 +237,7 @@ export const DailyReportCard = ({ date }: { date?: string }) => {
         <StatCard
           icon={<Footprints className="w-5 h-5" />}
           label="المشي"
-          value={`${report.walk_min}د`}
+          value={`${formatNumber(report.walk_min)}د`}
           iconBgColor="bg-teal-500/10"
           iconColor="text-teal-600 dark:text-teal-400"
         />
@@ -245,7 +246,7 @@ export const DailyReportCard = ({ date }: { date?: string }) => {
         <StatCard
           icon={<Award className="w-5 h-5" />}
           label="المنح الدراسية"
-          value={report.scholarships_sold}
+          value={formatNumber(report.scholarships_sold)}
           iconBgColor="bg-amber-500/10"
           iconColor="text-amber-600 dark:text-amber-400"
         />
@@ -253,7 +254,7 @@ export const DailyReportCard = ({ date }: { date?: string }) => {
         <StatCard
           icon={<Building className="w-5 h-5" />}
           label="الفلل"
-          value={report.villas_sold}
+          value={formatNumber(report.villas_sold)}
           iconBgColor="bg-indigo-500/10"
           iconColor="text-indigo-600 dark:text-indigo-400"
         />

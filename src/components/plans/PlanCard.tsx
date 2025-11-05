@@ -3,6 +3,7 @@ import * as LucideIcons from 'lucide-react';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { cn } from '@/lib/utils';
 import { BusinessPlan } from '@/types/business-plan';
+import { formatCurrency, formatNumber, formatPercent } from '@/lib/intl';
 
 interface PlanCardProps {
   plan: BusinessPlan;
@@ -76,12 +77,12 @@ export function PlanCard({ plan, onEdit, onDelete, onClick }: PlanCardProps) {
             textShadow: `0 0 20px ${plan.color}40`
           }}
         >
-          ${plan.today_profit?.toFixed(0) || 0}
+          {formatCurrency(plan.today_profit || 0)}
         </div>
         
         {/* Month stats */}
         <div className="text-xs text-muted-foreground pt-1">
-          الشهر: ${plan.month_profit?.toFixed(0) || 0} • {plan.month_transactions || 0} معاملة
+          الشهر: {formatCurrency(plan.month_profit || 0)} • {formatNumber(plan.month_transactions || 0)} معاملة
         </div>
         
         {/* Progress bar for monthly target */}
@@ -89,7 +90,7 @@ export function PlanCard({ plan, onEdit, onDelete, onClick }: PlanCardProps) {
           <div className="mt-3">
             <div className="flex justify-between text-xs mb-1">
               <span>الهدف الشهري</span>
-              <span className="font-semibold">{progress.toFixed(0)}%</span>
+              <span className="font-semibold">{formatPercent(progress)}</span>
             </div>
             <div className="h-1.5 bg-muted rounded-full overflow-hidden">
               <div 
