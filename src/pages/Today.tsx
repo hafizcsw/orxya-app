@@ -178,8 +178,9 @@ export default function Today() {
   };
 
   // Determine responsive columns
-  const activityColumns = device === 'mobile' ? 2 : 4;
-  const financialColumns = device === 'mobile' ? 2 : 3;
+  const healthColumns = device === 'mobile' ? 3 : 5;
+  const activityColumns = device === 'mobile' ? 3 : 3;
+  const financialColumns = device === 'mobile' ? 3 : 3;
 
   return (
     <SimplePullToRefresh onRefresh={handleRefresh}>
@@ -222,7 +223,8 @@ export default function Today() {
               ))}
             </DashboardGrid>
           ) : healthData ? (
-            <DashboardGrid columns={device === 'mobile' ? 2 : 4} gap="md">
+            <DashboardGrid columns={healthColumns} gap="md">
+              {/* Recovery */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -237,11 +239,12 @@ export default function Today() {
                   trend={healthData.recoveryTrend.direction}
                   trendValue={healthData.recoveryTrend.percentage}
                   status={getRecoveryStatus(healthData.recovery)}
-                  size={device === 'mobile' ? "md" : "lg"}
+                  size={device === 'mobile' ? "sm" : "lg"}
                   targetValue={100}
                   currentValue={healthData.recovery}
                 />
               </motion.div>
+              {/* Sleep */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -257,11 +260,13 @@ export default function Today() {
                   trendValue={healthData.sleepTrend.percentage}
                   status={getSleepStatus(healthData.sleep)}
                   customDisplay={formatSleepTime(healthData.sleepMinutes)}
-                  size={device === 'mobile' ? "md" : "lg"}
+                  size={device === 'mobile' ? "sm" : "lg"}
                   targetValue={100}
                   currentValue={healthData.sleep}
                 />
               </motion.div>
+              
+              {/* Strain */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -277,11 +282,12 @@ export default function Today() {
                   trendValue={healthData.strainTrend.percentage}
                   status={getStrainStatus(healthData.strain)}
                   customDisplay={`${healthData.strain.toFixed(1)}`}
-                  size={device === 'mobile' ? "md" : "lg"}
+                  size={device === 'mobile' ? "sm" : "lg"}
                   targetValue={21}
                   currentValue={healthData.strain}
                 />
               </motion.div>
+              {/* Activity */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -296,9 +302,59 @@ export default function Today() {
                   trend={healthData.activityTrend.direction}
                   trendValue={healthData.activityTrend.percentage}
                   status={getActivityStatus(healthData.activity)}
-                  size={device === 'mobile' ? "md" : "lg"}
+                  size={device === 'mobile' ? "sm" : "lg"}
                   targetValue={100}
                   currentValue={healthData.activity}
+                />
+              </motion.div>
+              
+              {/* Walk - moved from Activities */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <StatRing
+                  value={(healthData?.meters || 0) / 1000}
+                  targetValue={getGoal('walk_km')}
+                  currentValue={(healthData?.meters || 0) / 1000}
+                  label={t('activities.walk')}
+                  unit="km"
+                  showTarget={true}
+                  color="hsl(142, 76%, 36%)"
+                  gradientColors={["hsl(142, 76%, 36%)", "hsl(142, 76%, 50%)"]}
+                  icon={<Footprints className="w-5 h-5" />}
+                  trend={healthData?.activityTrend?.direction}
+                  trendValue={healthData?.activityTrend?.percentage}
+                  status={getWalkStatus((healthData?.meters || 0) / 1000, getGoal('walk_km'))}
+                  customDisplay={healthData?.meters ? formatDistance(healthData.meters) : '0 km'}
+                  size={device === 'mobile' ? "sm" : "lg"}
+                  onTargetClick={() => openGoalDialog('walk_km')}
+                />
+              </motion.div>
+              
+              {/* Walk - moved from Activities */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <StatRing
+                  value={(healthData?.meters || 0) / 1000}
+                  targetValue={getGoal('walk_km')}
+                  currentValue={(healthData?.meters || 0) / 1000}
+                  label={t('activities.walk')}
+                  unit="km"
+                  showTarget={true}
+                  color="hsl(142, 76%, 36%)"
+                  gradientColors={["hsl(142, 76%, 36%)", "hsl(142, 76%, 50%)"]}
+                  icon={<Footprints className="w-5 h-5" />}
+                  trend={healthData?.activityTrend?.direction}
+                  trendValue={healthData?.activityTrend?.percentage}
+                  status={getWalkStatus((healthData?.meters || 0) / 1000, getGoal('walk_km'))}
+                  customDisplay={healthData?.meters ? formatDistance(healthData.meters) : '0 km'}
+                  size={device === 'mobile' ? "sm" : "lg"}
+                  onTargetClick={() => openGoalDialog('walk_km')}
                 />
               </motion.div>
             </DashboardGrid>
@@ -392,43 +448,21 @@ export default function Today() {
           )}
         </DashboardSection>
 
-        {/* Activities */}
+        {/* Activities - Work, Study, MMA only */}
         <DashboardSection title={t("activities.title")}>
           {reportLoading || healthLoading ? (
             <DashboardGrid columns={activityColumns} gap="md">
-              {[...Array(activityColumns)].map((_, i) => (
+              {[...Array(3)].map((_, i) => (
                 <Skeleton key={i} className="h-48 w-full rounded-2xl" />
               ))}
             </DashboardGrid>
           ) : (
             <DashboardGrid columns={activityColumns} gap="md">
+              {/* Work */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-              >
-                <StatRing
-                  value={(healthData?.meters || 0) / 1000}
-                  targetValue={getGoal('walk_km')}
-                  currentValue={(healthData?.meters || 0) / 1000}
-                  label={t('activities.walk')}
-                  unit="km"
-                  showTarget={true}
-                  color="hsl(262, 83%, 58%)"
-                  gradientColors={["hsl(262, 83%, 58%)", "hsl(262, 83%, 75%)"]}
-                  icon={<Footprints className="w-5 h-5" />}
-                  trend={healthData?.activityTrend?.direction}
-                  trendValue={healthData?.activityTrend?.percentage}
-                  status={getWalkStatus((healthData?.meters || 0) / 1000, getGoal('walk_km'))}
-                  customDisplay={healthData?.meters ? formatDistance(healthData.meters) : '0 km'}
-                  size={device === 'mobile' ? "sm" : "md"}
-                  onTargetClick={() => openGoalDialog('walk_km')}
-                />
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
               >
                 <StatRing
                   value={report?.work_hours || 0}
@@ -448,10 +482,12 @@ export default function Today() {
                   onTargetClick={() => openGoalDialog('work_hours')}
                 />
               </motion.div>
+              
+              {/* Study */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
+                transition={{ delay: 0.2 }}
               >
                 <StatRing
                   value={report?.study_hours || 0}
@@ -471,10 +507,12 @@ export default function Today() {
                   onTargetClick={() => openGoalDialog('study_hours')}
                 />
               </motion.div>
+              
+              {/* MMA */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
+                transition={{ delay: 0.3 }}
               >
                 <StatRing
                   value={report?.sports_hours || 0}
