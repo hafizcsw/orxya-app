@@ -64,7 +64,7 @@ export default function Reports() {
 
   async function loadSingle() {
     if (!user) {
-      setError('الرجاء تسجيل الدخول أولاً');
+      setError(t('loginRequired'));
       return;
     }
     setLoading(true); 
@@ -82,7 +82,7 @@ export default function Reports() {
 
   async function loadRange(days: number) {
     if (!user) {
-      setError('الرجاء تسجيل الدخول أولاً');
+      setError(t('loginRequired'));
       return;
     }
     setLoading(true); 
@@ -116,7 +116,7 @@ export default function Reports() {
 
   async function loadAISummary(span: 'day' | 'week' | 'month', startDate?: string) {
     if (!user) {
-      setSummaryError('الرجاء تسجيل الدخول أولاً');
+      setSummaryError(t('loginRequired'));
       return;
     }
     setSummaryLoading(true);
@@ -131,7 +131,7 @@ export default function Reports() {
       if (error) throw error;
       
       if (!data?.ok) {
-        throw new Error(data?.error || 'فشل في توليد الملخص');
+        throw new Error(data?.error || t('summaryGenerationFailed'));
       }
       
       setSummary(data.summary);
@@ -175,14 +175,14 @@ export default function Reports() {
         <Tabs defaultValue="daily" className="w-full">
           <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="daily">{t('daily')}</TabsTrigger>
-            <TabsTrigger value="ai">{t('monthly')}</TabsTrigger>
+            <TabsTrigger value="ai">{t('aiSummary')}</TabsTrigger>
           </TabsList>
 
           {/* Daily Reports Tab */}
           <TabsContent value="daily" className="space-y-6">
             <div className="flex flex-col md:flex-row gap-4 items-start">
               <label className="flex flex-col gap-2">
-                <span className="text-sm font-medium">التاريخ الأساسي</span>
+                <span className="text-sm font-medium">{t('baseDate')}</span>
                 <input
                   className="px-3 py-2 rounded-lg border border-input bg-background text-foreground"
                   type="date"
@@ -234,39 +234,39 @@ export default function Reports() {
                 {/* بطاقات الملخّص */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <StatCard 
-                    title="إجمالي الدخل $" 
+                    title={t('totalIncome')} 
                     value={totals?.income.toFixed(2) ?? 0} 
                     tone="good" 
                   />
                   <StatCard 
-                    title="إجمالي المصروف $" 
+                    title={t('totalExpense')} 
                     value={totals?.spend.toFixed(2) ?? 0} 
                     tone="bad" 
                   />
                   <StatCard 
-                    title="الصافي $" 
+                    title={t('netTotal')} 
                     value={totals?.net.toFixed(2) ?? 0} 
                     tone={(totals?.net ?? 0) >= 0 ? 'good' : 'bad'} 
                   />
                   <StatCard 
-                    title="مشي (د)" 
+                    title={t('walkMinutes')} 
                     value={totals?.walk ?? 0} 
                   />
                   <StatCard 
-                    title="دراسة (س)" 
+                    title={t('studyHours')} 
                     value={totals?.study.toFixed(1) ?? 0} 
                   />
                   <StatCard 
-                    title="MMA (س)" 
+                    title={t('mmaHours')} 
                     value={totals?.mma.toFixed(1) ?? 0} 
                   />
                   <StatCard 
-                    title="عمل (س)" 
+                    title={t('workHours')} 
                     value={totals?.work.toFixed(1) ?? 0} 
                   />
                   <StatCard 
-                    title="مبيعات" 
-                    value={`${totals?.sch ?? 0} منح / ${totals?.villas ?? 0} فلل`} 
+                    title={t('sales')} 
+                    value={`${totals?.sch ?? 0} ${t('scholarships')} / ${totals?.villas ?? 0} ${t('villas')}`} 
                   />
                 </div>
 
@@ -274,10 +274,10 @@ export default function Reports() {
                 {netSeries.length > 1 && (
                   <div className="rounded-2xl border border-border p-4 bg-card">
                     <div className="text-sm text-muted-foreground mb-2">
-                      اتجاه الصافي (أقدم ← أحدث)
+                      {t('netTrend')}
                     </div>
                     <div className="text-xs text-muted-foreground mb-2">
-                      نقاط: {netSeries.length}
+                      {t('dataPoints')} {netSeries.length}
                     </div>
                     <div className="w-full overflow-x-auto">
                       <Sparkline points={netSeries} width={Math.min(600, netSeries.length * 40)} />
@@ -290,17 +290,17 @@ export default function Reports() {
                   <table className="min-w-full text-sm">
                     <thead className="bg-muted">
                       <tr>
-                        <th className="text-right p-3 font-medium">التاريخ</th>
-                        <th className="text-right p-3 font-medium">دخل $</th>
-                        <th className="text-right p-3 font-medium">مصروف $</th>
-                        <th className="text-right p-3 font-medium">صافي $</th>
-                        <th className="text-right p-3 font-medium">دراسة</th>
-                        <th className="text-right p-3 font-medium">MMA</th>
-                        <th className="text-right p-3 font-medium">عمل</th>
-                        <th className="text-right p-3 font-medium">مشي (د)</th>
-                        <th className="text-right p-3 font-medium">منح</th>
-                        <th className="text-right p-3 font-medium">فلل</th>
-                        <th className="text-right p-3 font-medium">أحداث</th>
+                        <th className="text-right p-3 font-medium">{t('date')}</th>
+                        <th className="text-right p-3 font-medium">{t('income')}</th>
+                        <th className="text-right p-3 font-medium">{t('expense')}</th>
+                        <th className="text-right p-3 font-medium">{t('net')}</th>
+                        <th className="text-right p-3 font-medium">{t('study')}</th>
+                        <th className="text-right p-3 font-medium">{t('mma')}</th>
+                        <th className="text-right p-3 font-medium">{t('work')}</th>
+                        <th className="text-right p-3 font-medium">{t('walk')}</th>
+                        <th className="text-right p-3 font-medium">{t('scholarships')}</th>
+                        <th className="text-right p-3 font-medium">{t('villas')}</th>
+                        <th className="text-right p-3 font-medium">{t('events')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -354,7 +354,7 @@ export default function Reports() {
 
             {!rows && !loading && (
               <div className="text-center text-muted-foreground py-8">
-                اختر نطاقًا زمنيًا لعرض التقارير
+                {t('selectTimeRange')}
               </div>
             )}
           </TabsContent>
@@ -363,15 +363,15 @@ export default function Reports() {
           <TabsContent value="ai" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>الملخص الذكي</CardTitle>
+                <CardTitle>{t('aiSummary')}</CardTitle>
                 <CardDescription>
-                  احصل على تحليل AI شامل لإنتاجيتك، المهام، الأحداث، والتعارضات مع الصلاة
+                  {t('aiSummaryDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex flex-col md:flex-row gap-4 items-start">
                   <label className="flex flex-col gap-2">
-                    <span className="text-sm font-medium">تاريخ البداية</span>
+                    <span className="text-sm font-medium">{t('startDate')}</span>
                     <input
                       className="px-3 py-2 rounded-lg border border-input bg-background text-foreground"
                       type="date"
@@ -387,7 +387,7 @@ export default function Reports() {
                       onClick={() => loadAISummary('day')}
                     >
                       {summaryLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                      اليوم
+                      {t('today')}
                     </button>
                     <button 
                       className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2" 
@@ -395,7 +395,7 @@ export default function Reports() {
                       onClick={() => loadAISummary('week')}
                     >
                       {summaryLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                      هذا الأسبوع
+                      {t('thisWeek')}
                     </button>
                     <button 
                       className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2" 
@@ -403,7 +403,7 @@ export default function Reports() {
                       onClick={() => loadAISummary('month')}
                     >
                       {summaryLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                      هذا الشهر
+                      {t('thisMonth')}
                     </button>
                   </div>
                 </div>
@@ -419,31 +419,31 @@ export default function Reports() {
                     <Card>
                       <CardContent className="pt-4">
                         <div className="text-2xl font-bold">{summaryStats.total_tasks}</div>
-                        <div className="text-xs text-muted-foreground">إجمالي المهام</div>
+                        <div className="text-xs text-muted-foreground">{t('totalTasks')}</div>
                       </CardContent>
                     </Card>
                     <Card>
                       <CardContent className="pt-4">
                         <div className="text-2xl font-bold text-green-600">{summaryStats.done_tasks}</div>
-                        <div className="text-xs text-muted-foreground">مهام منجزة</div>
+                        <div className="text-xs text-muted-foreground">{t('doneTasks')}</div>
                       </CardContent>
                     </Card>
                     <Card>
                       <CardContent className="pt-4">
                         <div className="text-2xl font-bold">{summaryStats.total_events}</div>
-                        <div className="text-xs text-muted-foreground">أحداث</div>
+                        <div className="text-xs text-muted-foreground">{t('totalEvents')}</div>
                       </CardContent>
                     </Card>
                     <Card>
                       <CardContent className="pt-4">
                         <div className="text-2xl font-bold text-blue-600">{summaryStats.ai_events}</div>
-                        <div className="text-xs text-muted-foreground">أحداث AI</div>
+                        <div className="text-xs text-muted-foreground">{t('aiEvents')}</div>
                       </CardContent>
                     </Card>
                     <Card>
                       <CardContent className="pt-4">
                         <div className="text-2xl font-bold text-orange-600">{summaryStats.conflicts}</div>
-                        <div className="text-xs text-muted-foreground">تعارضات</div>
+                        <div className="text-xs text-muted-foreground">{t('conflicts')}</div>
                       </CardContent>
                     </Card>
                   </div>
@@ -452,7 +452,7 @@ export default function Reports() {
                 {summary && (
                   <Card className="bg-muted/50">
                     <CardHeader>
-                      <CardTitle className="text-lg">التحليل والتوصيات</CardTitle>
+                      <CardTitle className="text-lg">{t('analysisRecommendations')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
@@ -464,7 +464,7 @@ export default function Reports() {
 
                 {!summary && !summaryLoading && (
                   <div className="text-center text-muted-foreground py-8">
-                    اختر نطاقًا زمنيًا للحصول على ملخص ذكي
+                    {t('selectTimeRangeForSummary')}
                   </div>
                 )}
               </CardContent>
