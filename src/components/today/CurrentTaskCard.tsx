@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { Clock, ChevronRight, Zap } from 'lucide-react';
+import { Clock, ChevronRight, Zap, Briefcase, BookOpen, Activity, Users, Coffee } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -31,16 +32,30 @@ const categoryColors = {
 };
 
 export function CurrentTaskCard({ task, timeRemaining, progress, nextTask }: CurrentTaskCardProps) {
+  const { t } = useTranslation();
+
+  const getCategoryIcon = (category?: string) => {
+    const icons = {
+      work: Briefcase,
+      study: BookOpen,
+      sport: Activity,
+      mma: Activity,
+      meeting: Users,
+      break: Coffee,
+    };
+    return icons[category?.toLowerCase() || 'work'] || Clock;
+  };
+
   if (!task) {
     return (
-      <Card className="p-6 bg-muted/30 border-muted">
+      <Card className="p-4 md:p-6 bg-muted/30 border-muted">
         <div className="text-center text-muted-foreground">
-          <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
-          <p className="text-sm">لا توجد مهمة حالية</p>
+          <Clock className="w-6 h-6 md:w-8 md:h-8 mx-auto mb-2 opacity-50" />
+          <p className="text-xs md:text-sm">{t('today.currentTask.noTask')}</p>
           {nextTask && (
-            <div className="mt-4 text-xs">
-              <p className="font-medium text-foreground mb-1">المهمة التالية:</p>
-              <p>{nextTask.title}</p>
+            <div className="mt-3 md:mt-4 text-xs">
+              <p className="font-medium text-foreground mb-1">{t('today.currentTask.nextTask')}:</p>
+              <p className="text-xs md:text-sm">{nextTask.title}</p>
               <p className="text-muted-foreground mt-1">
                 {new Date(nextTask.starts_at).toLocaleTimeString('ar-EG', { 
                   hour: '2-digit', 
@@ -56,6 +71,7 @@ export function CurrentTaskCard({ task, timeRemaining, progress, nextTask }: Cur
 
   const category = task.category as keyof typeof categoryColors;
   const gradientClass = categoryColors[category] || categoryColors.other;
+  const TaskIcon = getCategoryIcon(task.category);
 
   const formatTime = (minutes: number) => {
     const hrs = Math.floor(minutes / 60);
@@ -89,36 +105,42 @@ export function CurrentTaskCard({ task, timeRemaining, progress, nextTask }: Cur
           }}
         />
 
-        <div className="relative p-6 space-y-4">
+        <div className="relative p-4 md:p-6 space-y-3 md:space-y-4">
           {/* Header */}
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <Badge variant="secondary" className="mb-2">
-                <Zap className="w-3 h-3 mr-1" />
-                مهمة حالية
-              </Badge>
-              <h3 className="text-xl font-bold text-foreground">{task.title}</h3>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
+              <TaskIcon className="w-5 h-5 md:w-6 md:h-6 text-primary shrink-0" />
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold text-sm md:text-lg leading-tight truncate">{task.title}</h3>
+                <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
+                  {new Date(task.starts_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })} - {new Date(task.ends_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
             </div>
+            <Badge variant="secondary" className="shrink-0 gap-1 px-2 md:px-3 py-0.5 md:py-1">
+              <Zap className="w-2.5 h-2.5 md:w-3 md:h-3" />
+              <span className="text-[10px] md:text-xs">{t('today.currentTask.liveBadge')}</span>
+            </Badge>
           </div>
 
           {/* Time Remaining */}
-          <div className="flex items-center gap-3">
-            <Clock className="w-5 h-5 text-primary" />
+          <div className="flex items-center gap-2 md:gap-3">
+            <Clock className="w-4 h-4 md:w-5 md:h-5 text-primary" />
             <div>
-              <p className="text-sm text-muted-foreground">الوقت المتبقي</p>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-xs text-muted-foreground">{t('today.currentTask.timeRemaining')}</p>
+              <p className="text-lg md:text-2xl font-bold text-foreground">
                 {formatTime(timeRemaining)}
               </p>
             </div>
           </div>
 
           {/* Progress Bar */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">التقدم</span>
+          <div className="space-y-1.5 md:space-y-2">
+            <div className="flex justify-between text-xs md:text-sm">
+              <span className="text-muted-foreground">{t('today.currentTask.progress')}</span>
               <span className="font-medium text-foreground">{progress}%</span>
             </div>
-            <Progress value={progress} className="h-2" />
+            <Progress value={progress} className="h-1.5 md:h-2" />
           </div>
 
           {/* Next Task Preview */}
@@ -127,14 +149,14 @@ export function CurrentTaskCard({ task, timeRemaining, progress, nextTask }: Cur
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="flex items-center gap-2 p-3 rounded-lg bg-background/50 backdrop-blur-sm"
+              className="flex items-center gap-2 p-2 md:p-3 rounded-lg bg-background/50 backdrop-blur-sm"
             >
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              <div className="flex-1">
-                <p className="text-xs text-muted-foreground">التالي</p>
-                <p className="text-sm font-medium text-foreground">{nextTask.title}</p>
+              <ChevronRight className="w-3 h-3 md:w-4 md:h-4 text-muted-foreground shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] md:text-xs text-muted-foreground">{t('today.currentTask.next')}</p>
+                <p className="text-xs md:text-sm font-medium text-foreground truncate">{nextTask.title}</p>
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[10px] md:text-xs text-muted-foreground shrink-0">
                 {new Date(nextTask.starts_at).toLocaleTimeString('ar-EG', {
                   hour: '2-digit',
                   minute: '2-digit'

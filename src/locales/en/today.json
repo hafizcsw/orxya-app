@@ -108,5 +108,42 @@
     "edit": "Edit",
     "save": "Save",
     "cancel": "Cancel"
+  },
+  "currentTask": {
+    "title": "Current Task",
+    "noTask": "No current task",
+    "nextTask": "Next Task",
+    "timeRemaining": "Time Remaining",
+    "progress": "Progress",
+    "next": "Next",
+    "liveBadge": "LIVE",
+    "completedToday": "Completed Today"
+  },
+  "aiInsights": {
+    "title": "AI Insights",
+    "focusLevel": "Focus Level",
+    "energyLevel": "Energy Level",
+    "suggestions": "Suggestions",
+    "warnings": "Warnings",
+    "energy": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
+    }
+  },
+  "sections": {
+    "health": "Health & Recovery",
+    "activities": "Daily Activities",
+    "financial": "Financial Status"
+  },
+  "shortcuts": {
+    "recovery": "Recov.",
+    "sleep": "Sleep",
+    "strain": "Strain",
+    "activity": "Active",
+    "walk": "Walk",
+    "work": "Work",
+    "study": "Study",
+    "mma": "MMA"
   }
 }

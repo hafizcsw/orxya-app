@@ -108,5 +108,42 @@
     "edit": "Editar",
     "save": "Guardar",
     "cancel": "Cancelar"
+  },
+  "currentTask": {
+    "title": "Tarea Actual",
+    "noTask": "Sin tarea actual",
+    "nextTask": "Siguiente Tarea",
+    "timeRemaining": "Tiempo Restante",
+    "progress": "Progreso",
+    "next": "Siguiente",
+    "liveBadge": "EN VIVO",
+    "completedToday": "Completadas Hoy"
+  },
+  "aiInsights": {
+    "title": "Perspectivas IA",
+    "focusLevel": "Nivel de Enfoque",
+    "energyLevel": "Nivel de Energía",
+    "suggestions": "Sugerencias",
+    "warnings": "Advertencias",
+    "energy": {
+      "low": "Baja",
+      "medium": "Media",
+      "high": "Alta"
+    }
+  },
+  "sections": {
+    "health": "Salud y Recuperación",
+    "activities": "Actividades Diarias",
+    "financial": "Estado Financiero"
+  },
+  "shortcuts": {
+    "recovery": "Recup.",
+    "sleep": "Sueño",
+    "strain": "Esf.",
+    "activity": "Activ.",
+    "walk": "Camin.",
+    "work": "Trab.",
+    "study": "Estud.",
+    "mma": "MMA"
   }
 }

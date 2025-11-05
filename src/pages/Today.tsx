@@ -208,7 +208,7 @@ export default function Today() {
 
         {/* Health & Recovery Section */}
         <DashboardSection 
-          title={t('health.title')}
+          title={t('today.sections.health')}
           action={
             <Button variant="outline" size="sm" onClick={() => navigate("/today-whoop")}>
               <Activity className="w-4 h-4 mr-2" />
@@ -308,32 +308,7 @@ export default function Today() {
                 />
               </motion.div>
               
-              {/* Walk - moved from Activities */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                <StatRing
-                  value={(healthData?.meters || 0) / 1000}
-                  targetValue={getGoal('walk_km')}
-                  currentValue={(healthData?.meters || 0) / 1000}
-                  label={t('activities.walk')}
-                  unit="km"
-                  showTarget={true}
-                  color="hsl(142, 76%, 36%)"
-                  gradientColors={["hsl(142, 76%, 36%)", "hsl(142, 76%, 50%)"]}
-                  icon={<Footprints className="w-5 h-5" />}
-                  trend={healthData?.activityTrend?.direction}
-                  trendValue={healthData?.activityTrend?.percentage}
-                  status={getWalkStatus((healthData?.meters || 0) / 1000, getGoal('walk_km'))}
-                  customDisplay={healthData?.meters ? formatDistance(healthData.meters) : '0 km'}
-                  size={device === 'mobile' ? "sm" : "lg"}
-                  onTargetClick={() => openGoalDialog('walk_km')}
-                />
-              </motion.div>
-              
-              {/* Walk - moved from Activities */}
+              {/* Walk */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -449,7 +424,7 @@ export default function Today() {
         </DashboardSection>
 
         {/* Activities - Work, Study, MMA only */}
-        <DashboardSection title={t("activities.title")}>
+        <DashboardSection title={t("today.sections.activities")}>
           {reportLoading || healthLoading ? (
             <DashboardGrid columns={activityColumns} gap="md">
               {[...Array(3)].map((_, i) => (

@@ -108,5 +108,42 @@
     "edit": "تعديل",
     "save": "حفظ",
     "cancel": "إلغاء"
+  },
+  "currentTask": {
+    "title": "المهمة الحالية",
+    "noTask": "لا توجد مهمة حالية",
+    "nextTask": "المهمة التالية",
+    "timeRemaining": "الوقت المتبقي",
+    "progress": "التقدم",
+    "next": "التالي",
+    "liveBadge": "مباشر",
+    "completedToday": "المكتمل اليوم"
+  },
+  "aiInsights": {
+    "title": "رؤى الذكاء الاصطناعي",
+    "focusLevel": "مستوى التركيز",
+    "energyLevel": "مستوى الطاقة",
+    "suggestions": "اقتراحات",
+    "warnings": "تحذيرات",
+    "energy": {
+      "low": "منخفضة",
+      "medium": "متوسطة",
+      "high": "عالية"
+    }
+  },
+  "sections": {
+    "health": "الصحة والتعافي",
+    "activities": "الأنشطة اليومية",
+    "financial": "الوضع المالي"
+  },
+  "shortcuts": {
+    "recovery": "تعافي",
+    "sleep": "نوم",
+    "strain": "إجهاد",
+    "activity": "نشاط",
+    "walk": "مشي",
+    "work": "عمل",
+    "study": "دراسة",
+    "mma": "رياضة"
   }
 }
