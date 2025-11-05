@@ -132,3 +132,9 @@ verify_jwt = true
 [functions.prayer-reminders-smart]
 verify_jwt = true
 
+[functions.voice-to-text]
+verify_jwt = true
+
+[functions.text-to-voice]
+verify_jwt = true
+

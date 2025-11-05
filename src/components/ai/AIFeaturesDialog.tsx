@@ -7,6 +7,7 @@ import { SmartDailyPlan } from './SmartDailyPlan';
 import { AutopilotLearningCard } from './AutopilotLearningCard';
 import { PrayerWindowsCard } from '@/components/prayer/PrayerWindowsCard';
 import { PrayerAwareScheduler } from '@/components/prayer/PrayerAwareScheduler';
+import { VoiceAssistant } from './VoiceAssistant';
 
 export function AIFeaturesDialog() {
   const [open, setOpen] = useState(false);
@@ -32,8 +33,9 @@ export function AIFeaturesDialog() {
         </DialogHeader>
 
         <Tabs defaultValue="planner" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="planner">المخطط</TabsTrigger>
+            <TabsTrigger value="voice">🎙️ الصوت</TabsTrigger>
             <TabsTrigger value="prayer">الصلاة 🕌</TabsTrigger>
             <TabsTrigger value="windows">الأوقات</TabsTrigger>
             <TabsTrigger value="learning">التعلم</TabsTrigger>
@@ -41,6 +43,10 @@ export function AIFeaturesDialog() {
 
           <TabsContent value="planner" className="space-y-4 mt-4">
             <SmartDailyPlan />
+          </TabsContent>
+
+          <TabsContent value="voice" className="space-y-4 mt-4">
+            <VoiceAssistant />
           </TabsContent>
 
           <TabsContent value="prayer" className="space-y-4 mt-4">
