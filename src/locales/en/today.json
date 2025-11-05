@@ -70,6 +70,22 @@
     "vs_yesterday": "vs Yesterday",
     "viewDetails": "View WHOOP Data"
   },
+  "goals": {
+    "title": "Daily Goals",
+    "workHours": "Work Hours",
+    "studyHours": "Study Hours",
+    "mmaHours": "MMA Hours",
+    "walking": "Walking",
+    "income": "Income",
+    "expenses": "Expenses",
+    "setGoal": "Set Goal",
+    "editGoal": "Edit Goal",
+    "targetValue": "Target Value",
+    "targetReached": "Goal Reached!",
+    "almostThere": "Almost There!",
+    "keepGoing": "Keep Going!",
+    "overBudget": "Over Budget!"
+  },
   "messages": {
     "saved": "Saved successfully ✅",
     "error": "An error occurred ❌",

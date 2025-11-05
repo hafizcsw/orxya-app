@@ -70,6 +70,22 @@
     "vs_yesterday": "مقارنة بالأمس",
     "viewDetails": "عرض بيانات WHOOP"
   },
+  "goals": {
+    "title": "الأهداف اليومية",
+    "workHours": "ساعات العمل",
+    "studyHours": "ساعات الدراسة",
+    "mmaHours": "ساعات MMA",
+    "walking": "المشي",
+    "income": "الدخل",
+    "expenses": "المصروفات",
+    "setGoal": "تحديد هدف",
+    "editGoal": "تعديل الهدف",
+    "targetValue": "القيمة المستهدفة",
+    "targetReached": "تم تحقيق الهدف!",
+    "almostThere": "قريباً من الهدف!",
+    "keepGoing": "استمر!",
+    "overBudget": "تجاوزت الميزانية!"
+  },
   "messages": {
     "saved": "تم الحفظ بنجاح ✅",
     "error": "حدث خطأ ❌",

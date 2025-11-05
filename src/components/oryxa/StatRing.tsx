@@ -16,6 +16,11 @@ interface StatRingProps {
   trend?: 'up' | 'down' | 'neutral'; // Trend direction
   trendValue?: number; // Trend percentage
   status?: 'excellent' | 'good' | 'fair' | 'poor'; // Status indicator
+  targetValue?: number; // القيمة المستهدفة
+  currentValue?: number; // القيمة الحالية
+  unit?: string; // الوحدة (hours, km, USD)
+  showTarget?: boolean; // عرض الهدف في subtitle
+  onTargetClick?: () => void; // عند الضغط لتعديل الهدف
 }
 
 export function StatRing({
@@ -32,6 +37,11 @@ export function StatRing({
   trend,
   trendValue,
   status,
+  targetValue,
+  currentValue,
+  unit,
+  showTarget,
+  onTargetClick,
 }: StatRingProps) {
   const sizes = {
     sm: { width: 120, strokeWidth: 6, fontSize: '1.5rem', iconSize: 20 },
@@ -45,8 +55,25 @@ export function StatRing({
   const radius = (scaledWidth - strokeWidth) / 2
   const innerRadius = radius - strokeWidth / 2
   const circumference = 2 * Math.PI * radius
-  const offset = circumference - (Math.min(value, 100) / 100) * circumference
-  const percentage = Math.round((value / (scale || 100)) * 100)
+  
+  // Calculate progress based on target if provided
+  const progressValue = targetValue && currentValue !== undefined 
+    ? Math.min((currentValue / targetValue) * 100, 100)
+    : Math.min(value, 100);
+  
+  const offset = circumference - (progressValue / 100) * circumference
+  const percentage = Math.round(progressValue)
+  
+  // Dynamic color based on progress
+  const getDynamicColor = () => {
+    if (!targetValue || !gradientColors) return color;
+    const progress = (currentValue || 0) / targetValue;
+    if (progress >= 0.8) return 'hsl(142 76% 36%)'; // Green
+    if (progress >= 0.5) return 'hsl(45 93% 47%)'; // Yellow
+    return 'hsl(0 84% 60%)'; // Red
+  };
+  
+  const ringColor = getDynamicColor();
 
   // Gradient ID for unique gradients per ring
   const gradientId = `gradient-${label.replace(/\s/g, '-')}`
@@ -70,10 +97,15 @@ export function StatRing({
 
   return (
     <div 
-      className={cn('group flex flex-col items-center gap-3 transition-all duration-300', className)}
+      className={cn(
+        'group flex flex-col items-center gap-3 transition-all duration-300',
+        onTargetClick && 'cursor-pointer',
+        className
+      )}
       title={`${label}: ${customDisplay || `${percentage}%`}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={onTargetClick}
     >
       <div className="relative" style={{ width: scaledWidth, height: scaledWidth }}>
         <svg width={scaledWidth} height={scaledWidth} className="transform -rotate-90">
@@ -113,7 +145,7 @@ export function StatRing({
             cy={scaledWidth / 2}
             r={radius}
             fill="none"
-            stroke={gradientColors ? `url(#${gradientId})` : color}
+            stroke={gradientColors ? `url(#${gradientId})` : ringColor}
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeDasharray={circumference}
@@ -126,7 +158,7 @@ export function StatRing({
               delay: 0.2 
             }}
             style={{
-              filter: `drop-shadow(0 0 ${isHovered ? '16px' : '12px'} ${color})`,
+              filter: `drop-shadow(0 0 ${isHovered ? '16px' : '12px'} ${ringColor})`,
             }}
           />
           
@@ -137,7 +169,7 @@ export function StatRing({
               cy={scaledWidth / 2}
               r={radius}
               fill="none"
-              stroke={gradientColors ? gradientColors[1] : color}
+              stroke={gradientColors ? gradientColors[1] : ringColor}
               strokeWidth={1}
               initial={{ opacity: 0.8, scale: 1 }}
               animate={{ opacity: 0, scale: 1.1 }}
@@ -219,11 +251,15 @@ export function StatRing({
           </motion.div>
         )}
         
-        {subtitle && !trend && (
+        {showTarget && targetValue && currentValue !== undefined ? (
+          <div className="text-xs text-muted-foreground">
+            {currentValue.toFixed(1)} / {targetValue} {unit}
+          </div>
+        ) : subtitle && !trend ? (
           <div className="text-xs text-muted-foreground">
             {subtitle}
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

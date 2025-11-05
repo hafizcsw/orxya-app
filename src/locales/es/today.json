@@ -70,6 +70,22 @@
     "vs_yesterday": "vs Ayer",
     "viewDetails": "Ver Datos WHOOP"
   },
+  "goals": {
+    "title": "Metas Diarias",
+    "workHours": "Horas de Trabajo",
+    "studyHours": "Horas de Estudio",
+    "mmaHours": "Horas de MMA",
+    "walking": "Caminar",
+    "income": "Ingresos",
+    "expenses": "Gastos",
+    "setGoal": "Establecer Meta",
+    "editGoal": "Editar Meta",
+    "targetValue": "Valor Objetivo",
+    "targetReached": "¡Meta Alcanzada!",
+    "almostThere": "¡Casi!",
+    "keepGoing": "¡Continúa!",
+    "overBudget": "¡Sobrepasado!"
+  },
   "messages": {
     "saved": "Guardado exitosamente ✅",
     "error": "Ocurrió un error ❌",

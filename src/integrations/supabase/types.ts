@@ -2249,6 +2249,47 @@ export type Database = {
           },
         ]
       }
+      user_goals: {
+        Row: {
+          created_at: string | null
+          goal_type: string
+          id: string
+          is_active: boolean | null
+          owner_id: string
+          period: string
+          target_value: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          goal_type: string
+          id?: string
+          is_active?: boolean | null
+          owner_id: string
+          period?: string
+          target_value: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          goal_type?: string
+          id?: string
+          is_active?: boolean | null
+          owner_id?: string
+          period?: string
+          target_value?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_goals_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       user_privacy_prefs: {
         Row: {
           calendar_enabled: boolean

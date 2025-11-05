@@ -18,10 +18,10 @@ import { QuickActionsDock } from "@/components/today/QuickActionsDock";
 import { PeriodSelector } from "@/components/today/PeriodSelector";
 import { useTodayReport, type Period } from "@/hooks/useTodayReport";
 import { useHealthData } from "@/hooks/useHealthData";
+import { useUserGoals, GoalType } from "@/hooks/useUserGoals";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { StatRing } from "@/components/oryxa/StatRing";
-import { OryxaCard } from "@/components/oryxa/Card";
 import { DailyReportCard } from "@/components/DailyReportCard";
 import { 
   Activity, 
@@ -31,7 +31,10 @@ import {
   Footprints, 
   Briefcase, 
   GraduationCap, 
-  Dumbbell 
+  Dumbbell,
+  DollarSign,
+  TrendingDown,
+  Wallet
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { 
@@ -42,6 +45,7 @@ import {
   formatSleepTime,
   formatDistance
 } from '@/lib/health-calculations';
+import { GoalSettingsDialog } from "@/components/goals/GoalSettingsDialog";
 
 export default function Today() {
   const { t } = useTranslation("today");
@@ -50,6 +54,8 @@ export default function Today() {
   const [selectedDate] = useState(new Date());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<BusinessPlan | null>(null);
+  const [goalDialogOpen, setGoalDialogOpen] = useState(false);
+  const [editingGoalType, setEditingGoalType] = useState<GoalType | null>(null);
   
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
     loop: false, 
@@ -61,6 +67,7 @@ export default function Today() {
 
   const { report, loading: reportLoading } = useTodayReport(period, selectedDate);
   const { healthData, loading: healthLoading } = useHealthData(period, selectedDate);
+  const { getGoal, updateGoal } = useUserGoals();
 
   const { data: plans, isLoading: plansLoading, refetch: refetchPlans } = useQuery({
     queryKey: ["business-plans"],
@@ -72,6 +79,17 @@ export default function Today() {
       return data?.plans || [];
     },
   });
+
+  const openGoalDialog = (goalType: GoalType) => {
+    setEditingGoalType(goalType);
+    setGoalDialogOpen(true);
+  };
+
+  const handleSaveGoal = async (value: number) => {
+    if (editingGoalType) {
+      await updateGoal(editingGoalType, value);
+    }
+  };
 
   const handlePlanSubmit = async (formData: BusinessPlanFormData) => {
     try {
@@ -250,7 +268,7 @@ export default function Today() {
         {/* Period Selector */}
         <PeriodSelector value={period} onChange={setPeriod} className="mb-6" />
 
-        {/* Financial Summary */}
+        {/* Financial Section */}
         <DashboardSection 
           title={t("financial.title")}
           action={
@@ -262,7 +280,7 @@ export default function Today() {
           {reportLoading ? (
             <DashboardGrid columns={3} gap="md">
               {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} className="h-40 w-full rounded-2xl" />
+                <Skeleton key={i} className="h-48 w-full rounded-2xl" />
               ))}
             </DashboardGrid>
           ) : (
@@ -273,11 +291,18 @@ export default function Today() {
                 transition={{ delay: 0.1 }}
               >
                 <StatRing
-                  value={report?.balance || 0}
-                  label={t("financial.balance")}
-                  color="hsl(var(--chart-1))"
-                  customDisplay={`$${report?.balance || 0}`}
-                  scale={10000}
+                  value={report?.income || 0}
+                  targetValue={getGoal('income_monthly')}
+                  currentValue={report?.income || 0}
+                  label={t("financial.income")}
+                  unit="USD"
+                  showTarget={true}
+                  color="hsl(142, 76%, 36%)"
+                  gradientColors={["hsl(142, 76%, 36%)", "hsl(142, 76%, 50%)"]}
+                  icon={<DollarSign className="w-6 h-6" />}
+                  size="lg"
+                  customDisplay={`$${report?.income || 0}`}
+                  onTargetClick={() => openGoalDialog('income_monthly')}
                 />
               </motion.div>
               <motion.div
@@ -286,26 +311,34 @@ export default function Today() {
                 transition={{ delay: 0.2 }}
               >
                 <StatRing
-                  value={report?.income || 0}
-                  label={t("financial.income")}
-                  color="hsl(var(--success))"
-                  customDisplay={`$${report?.income || 0}`}
-                  scale={5000}
+                  value={report?.expenses || 0}
+                  targetValue={getGoal('expenses_daily')}
+                  currentValue={report?.expenses || 0}
+                  label={t("financial.expenses")}
+                  unit="USD"
+                  showTarget={true}
+                  color="hsl(0, 84%, 60%)"
+                  gradientColors={["hsl(0, 84%, 60%)", "hsl(0, 84%, 75%)"]}
+                  icon={<TrendingDown className="w-6 h-6" />}
+                  size="lg"
+                  customDisplay={`$${report?.expenses || 0}`}
+                  onTargetClick={() => openGoalDialog('expenses_daily')}
                 />
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                onClick={() => navigate("/expenses")} 
-                className="cursor-pointer"
               >
                 <StatRing
-                  value={report?.expenses || 0}
-                  label={t("financial.expenses")}
-                  color="hsl(var(--destructive))"
-                  customDisplay={`$${report?.expenses || 0}`}
-                  scale={5000}
+                  value={Math.abs(report?.balance || 0)}
+                  label={t("financial.balance")}
+                  unit="USD"
+                  color="hsl(217, 91%, 60%)"
+                  gradientColors={["hsl(217, 91%, 60%)", "hsl(217, 91%, 75%)"]}
+                  icon={<Wallet className="w-6 h-6" />}
+                  size="lg"
+                  customDisplay={`$${report?.balance || 0}`}
                 />
               </motion.div>
             </DashboardGrid>
@@ -328,13 +361,18 @@ export default function Today() {
                 transition={{ delay: 0.1 }}
               >
                 <StatRing
-                  value={healthData?.meters ? (healthData.meters / 10000) * 100 : 0}
+                  value={(healthData?.meters || 0) / 1000}
+                  targetValue={getGoal('walk_km')}
+                  currentValue={(healthData?.meters || 0) / 1000}
                   label={t('activities.walk')}
+                  unit="km"
+                  showTarget={true}
                   color="hsl(262, 83%, 58%)"
                   gradientColors={["hsl(262, 83%, 58%)", "hsl(262, 83%, 75%)"]}
                   icon={<Footprints className="w-5 h-5" />}
                   customDisplay={healthData?.meters ? formatDistance(healthData.meters) : '0 km'}
                   size="md"
+                  onTargetClick={() => openGoalDialog('walk_km')}
                 />
               </motion.div>
               <motion.div
@@ -343,13 +381,18 @@ export default function Today() {
                 transition={{ delay: 0.2 }}
               >
                 <StatRing
-                  value={(report?.work_hours || 0) * 10}
+                  value={report?.work_hours || 0}
+                  targetValue={getGoal('work_hours')}
+                  currentValue={report?.work_hours || 0}
                   label={t('activities.work')}
+                  unit="hrs"
+                  showTarget={true}
                   color="hsl(217, 91%, 60%)"
                   gradientColors={["hsl(217, 91%, 60%)", "hsl(217, 91%, 75%)"]}
                   icon={<Briefcase className="w-5 h-5" />}
                   customDisplay={`${report?.work_hours || 0}h`}
                   size="md"
+                  onTargetClick={() => openGoalDialog('work_hours')}
                 />
               </motion.div>
               <motion.div
@@ -358,13 +401,18 @@ export default function Today() {
                 transition={{ delay: 0.3 }}
               >
                 <StatRing
-                  value={(report?.study_hours || 0) * 10}
+                  value={report?.study_hours || 0}
+                  targetValue={getGoal('study_hours')}
+                  currentValue={report?.study_hours || 0}
                   label={t('activities.study')}
+                  unit="hrs"
+                  showTarget={true}
                   color="hsl(38, 92%, 50%)"
                   gradientColors={["hsl(38, 92%, 50%)", "hsl(38, 92%, 70%)"]}
                   icon={<GraduationCap className="w-5 h-5" />}
                   customDisplay={`${report?.study_hours || 0}h`}
                   size="md"
+                  onTargetClick={() => openGoalDialog('study_hours')}
                 />
               </motion.div>
               <motion.div
@@ -373,13 +421,18 @@ export default function Today() {
                 transition={{ delay: 0.4 }}
               >
                 <StatRing
-                  value={(report?.sports_hours || 0) * 10}
+                  value={report?.sports_hours || 0}
+                  targetValue={getGoal('mma_hours')}
+                  currentValue={report?.sports_hours || 0}
                   label={t('activities.mma')}
+                  unit="hrs"
+                  showTarget={true}
                   color="hsl(142, 76%, 36%)"
                   gradientColors={["hsl(142, 76%, 36%)", "hsl(142, 76%, 50%)"]}
                   icon={<Dumbbell className="w-5 h-5" />}
                   customDisplay={`${report?.sports_hours || 0}h`}
                   size="md"
+                  onTargetClick={() => openGoalDialog('mma_hours')}
                 />
               </motion.div>
             </DashboardGrid>
@@ -461,12 +514,12 @@ export default function Today() {
                         key={index}
                         onClick={() => emblaApi?.scrollTo(index)}
                         className={cn(
-                          "h-2 rounded-full transition-all duration-300",
+                          'w-2 h-2 rounded-full transition-all',
                           index === selectedPlanIndex 
-                            ? "w-8 bg-primary" 
-                            : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                            ? 'bg-primary w-6' 
+                            : 'bg-muted-foreground/30'
                         )}
-                        aria-label={`Go to plan ${index + 1}`}
+                        aria-label={`Go to slide ${index + 1}`}
                       />
                     ))}
                   </div>
@@ -474,35 +527,43 @@ export default function Today() {
               </div>
             </div>
           ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center py-12"
-            >
-              <div className="text-6xl mb-4">📊</div>
-              <p className="text-muted-foreground mb-4">{t("plans.noPlans")}</p>
+            <div className="text-center py-12">
+              <p className="text-muted-foreground mb-4">
+                {t("plans.empty")}
+              </p>
               <Button onClick={() => setDialogOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" />
-                {t("plans.add")}
+                {t("plans.addFirst")}
               </Button>
-            </motion.div>
+            </div>
           )}
         </DashboardSection>
-
       </div>
 
       {/* Quick Actions Dock */}
       <QuickActionsDock />
 
+      {/* Plan Dialog */}
       <PlanFormDialog
-        plan={editingPlan}
         isOpen={dialogOpen}
         onClose={() => {
           setDialogOpen(false);
           setEditingPlan(null);
         }}
+        plan={editingPlan}
         onSave={handlePlanSubmit}
       />
+
+      {/* Goal Settings Dialog */}
+      {editingGoalType && (
+        <GoalSettingsDialog
+          open={goalDialogOpen}
+          onOpenChange={setGoalDialogOpen}
+          goalType={editingGoalType}
+          currentValue={getGoal(editingGoalType)}
+          onSave={handleSaveGoal}
+        />
+      )}
     </div>
   );
 }
