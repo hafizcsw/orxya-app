@@ -172,9 +172,8 @@ const Navigation = () => {
               </button>
             </div>}
 
-          {/* Right: Language Switcher & Logo */}
+          {/* Right: Logo only */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            <LanguageSwitcher />
             <Link to="/" className="text-lg font-bold text-foreground hover:text-primary transition-colors">
               Oryxa
             </Link>

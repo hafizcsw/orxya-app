@@ -79,19 +79,21 @@ export function BottomNav() {
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-border/50 bg-card/50">
               <h2 className="text-xl font-bold">{t('menu.title')}</h2>
-              <div className="flex items-center gap-2">
-                <LanguageSwitcher />
-                <button
-                  onClick={() => setMenuOpen(false)}
-                  className="p-2 hover:bg-secondary rounded-lg transition-colors"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
+              <button
+                onClick={() => setMenuOpen(false)}
+                className="p-2 hover:bg-secondary rounded-lg transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
             </div>
 
             {/* Menu Items */}
             <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-background/95">
+              {/* Language Switcher */}
+              <div className="px-4 py-3">
+                <LanguageSwitcher />
+              </div>
+              
               {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
