@@ -585,16 +585,6 @@ const Today = () => {
         )}>
           <SessionBanner />
 
-          {/* Glances Section - فقط إذا كان العلم مفعل */}
-          {showGlances && (
-            <section className="mb-6">
-              <h2 className="text-sm font-semibold text-muted-foreground mb-3 px-1">
-                نظرة سريعة
-              </h2>
-              <GlancesBar />
-            </section>
-          )}
-
           {loading ? (
             <HolographicCard variant="glass" className="p-6 text-center">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -713,6 +703,16 @@ const Today = () => {
                     </div>
                   </div>
                 </section>
+
+                {/* Glances Section - فقط إذا كان العلم مفعل */}
+                {showGlances && (
+                  <section className="mb-8">
+                    <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
+                      نظرة سريعة
+                    </h2>
+                    <GlancesBar />
+                  </section>
+                )}
 
                 {/* Section 2: Today's Stats - دوائر اليوم */}
                 <section className="mb-8">
