@@ -99,15 +99,66 @@ const Today = () => {
     setLoading(true)
     try {
       const dateStr = selectedDate.toISOString().slice(0, 10)
+      let startDate = dateStr
+      let endDate = dateStr
+      
+      // Calculate date ranges based on period
+      if (period === 'weekly') {
+        const date = new Date(selectedDate)
+        const day = date.getDay()
+        const diff = date.getDate() - day + (day === 0 ? -6 : 1) // Monday as first day
+        const monday = new Date(date.setDate(diff))
+        startDate = monday.toISOString().slice(0, 10)
+        
+        const sunday = new Date(monday)
+        sunday.setDate(monday.getDate() + 6)
+        endDate = sunday.toISOString().slice(0, 10)
+      } else if (period === 'monthly') {
+        const date = new Date(selectedDate)
+        startDate = new Date(date.getFullYear(), date.getMonth(), 1).toISOString().slice(0, 10)
+        endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0).toISOString().slice(0, 10)
+      } else if (period === 'yearly') {
+        const date = new Date(selectedDate)
+        startDate = new Date(date.getFullYear(), 0, 1).toISOString().slice(0, 10)
+        endDate = new Date(date.getFullYear(), 11, 31).toISOString().slice(0, 10)
+      }
+      
       const { data, error } = await supabase.functions.invoke('report-daily', {
         body: { 
-          start: dateStr,
-          end: dateStr
+          start: startDate,
+          end: endDate
         }
       })
       if (error) throw error
-      setReport(data?.items?.[0] ?? null)
-      track('report_daily_loaded', { hasReport: !!data?.items?.[0], date: dateStr })
+      
+      // For daily, take first item; for others, aggregate the data
+      if (period === 'daily') {
+        setReport(data?.items?.[0] ?? null)
+      } else {
+        // Aggregate data for weekly/monthly/yearly
+        const items = data?.items || []
+        if (items.length > 0) {
+          const aggregated = {
+            current_balance: items[items.length - 1]?.current_balance || 0,
+            total_income: items.reduce((sum: number, item: any) => sum + (item.total_income || 0), 0),
+            total_spend: items.reduce((sum: number, item: any) => sum + (item.total_spend || 0), 0),
+            income_usd: items.reduce((sum: number, item: any) => sum + (item.income_usd || 0), 0),
+            spend_usd: items.reduce((sum: number, item: any) => sum + (item.spend_usd || 0), 0),
+            net_usd: items.reduce((sum: number, item: any) => sum + (item.net_usd || 0), 0),
+            study_hours: items.reduce((sum: number, item: any) => sum + (item.study_hours || 0), 0),
+            mma_hours: items.reduce((sum: number, item: any) => sum + (item.mma_hours || 0), 0),
+            work_hours: items.reduce((sum: number, item: any) => sum + (item.work_hours || 0), 0),
+            walk_min: items.reduce((sum: number, item: any) => sum + (item.walk_min || 0), 0),
+            sleep_hours: items.reduce((sum: number, item: any) => sum + (item.sleep_hours || 0), 0) / items.length,
+            recovery_score: items.reduce((sum: number, item: any) => sum + (item.recovery_score || 0), 0) / items.length,
+          }
+          setReport(aggregated)
+        } else {
+          setReport(null)
+        }
+      }
+      
+      track('report_loaded', { hasReport: !!data?.items?.[0], period, startDate, endDate })
     } catch (e: any) {
       setReport(null)
     } finally { setLoading(false) }
@@ -484,7 +535,10 @@ const Today = () => {
                 {/* Section 1: Financial Overview - الدوائر المالية الكبيرة */}
                 <section className="mb-8">
                   <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
-                    النظرة المالية
+                    {period === 'daily' && 'النظرة المالية - اليوم'}
+                    {period === 'weekly' && 'النظرة المالية - الأسبوع'}
+                    {period === 'monthly' && 'النظرة المالية - الشهر'}
+                    {period === 'yearly' && 'النظرة المالية - السنة'}
                   </h2>
                   
                   <div className="relative py-4">
@@ -593,7 +647,10 @@ const Today = () => {
                 {/* Section 2: Today's Stats - دوائر اليوم */}
                 <section className="mb-8">
                   <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
-                    إحصائيات اليوم
+                    {period === 'daily' && 'إحصائيات اليوم'}
+                    {period === 'weekly' && 'إحصائيات الأسبوع'}
+                    {period === 'monthly' && 'إحصائيات الشهر'}
+                    {period === 'yearly' && 'إحصائيات السنة'}
                   </h2>
                   
                   <div className="relative py-4">
@@ -617,12 +674,12 @@ const Today = () => {
                           <div className="absolute inset-0 bg-[hsl(var(--whoop-green))] opacity-10 blur-xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-500" />
                           <div className="relative transform transition-all duration-300 hover:scale-105">
                             <StatRing
-                              value={Math.min(100, Math.max(0, ((report.income_usd || 0) / 1000) * 100))}
-                              label="دخل اليوم"
-                              subtitle="TODAY"
+                              value={Math.min(100, Math.max(0, ((report.income_usd || 0) / (period === 'daily' ? 1000 : period === 'weekly' ? 5000 : period === 'monthly' ? 20000 : 100000)) * 100))}
+                              label={period === 'daily' ? 'دخل اليوم' : period === 'weekly' ? 'دخل الأسبوع' : period === 'monthly' ? 'دخل الشهر' : 'دخل السنة'}
+                              subtitle={period === 'daily' ? 'TODAY' : period === 'weekly' ? 'WEEK' : period === 'monthly' ? 'MONTH' : 'YEAR'}
                               color="hsl(var(--whoop-green))"
                               size={getDailyRingSize()}
-                              customDisplay={`$${report.income_usd || 0}`}
+                              customDisplay={`$${Math.round(report.income_usd || 0)}`}
                             />
                           </div>
                         </div>
@@ -640,12 +697,12 @@ const Today = () => {
                           <div className="absolute inset-0 bg-[hsl(var(--whoop-red))] opacity-10 blur-xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-500" />
                           <div className="relative transform transition-all duration-300 hover:scale-105">
                             <StatRing
-                              value={Math.min(100, Math.max(0, ((report.spend_usd || 0) / 1000) * 100))}
-                              label="مصروف اليوم"
-                              subtitle="TODAY"
+                              value={Math.min(100, Math.max(0, ((report.spend_usd || 0) / (period === 'daily' ? 1000 : period === 'weekly' ? 5000 : period === 'monthly' ? 20000 : 100000)) * 100))}
+                              label={period === 'daily' ? 'مصروف اليوم' : period === 'weekly' ? 'مصروف الأسبوع' : period === 'monthly' ? 'مصروف الشهر' : 'مصروف السنة'}
+                              subtitle={period === 'daily' ? 'TODAY' : period === 'weekly' ? 'WEEK' : period === 'monthly' ? 'MONTH' : 'YEAR'}
                               color="hsl(var(--whoop-red))"
                               size={getDailyRingSize()}
-                              customDisplay={`$${report.spend_usd || 0}`}
+                              customDisplay={`$${Math.round(report.spend_usd || 0)}`}
                             />
                           </div>
                         </div>
@@ -666,12 +723,12 @@ const Today = () => {
                           )} />
                           <div className="relative transform transition-all duration-300 hover:scale-105">
                             <StatRing
-                              value={Math.min(100, Math.max(0, ((Math.abs(report.net_usd || 0)) / 1000) * 100))}
-                              label="صافي اليوم"
+                              value={Math.min(100, Math.max(0, ((Math.abs(report.net_usd || 0)) / (period === 'daily' ? 1000 : period === 'weekly' ? 5000 : period === 'monthly' ? 20000 : 100000)) * 100))}
+                              label={period === 'daily' ? 'صافي اليوم' : period === 'weekly' ? 'صافي الأسبوع' : period === 'monthly' ? 'صافي الشهر' : 'صافي السنة'}
                               subtitle="NET"
                               color={report.net_usd >= 0 ? "hsl(var(--whoop-green))" : "hsl(var(--whoop-red))"}
                               size={getDailyRingSize()}
-                              customDisplay={`${report.net_usd >= 0 ? '+' : ''}$${report.net_usd || 0}`}
+                              customDisplay={`${report.net_usd >= 0 ? '+' : ''}$${Math.round(report.net_usd || 0)}`}
                             />
                           </div>
                         </div>
@@ -683,7 +740,10 @@ const Today = () => {
                 {/* Section 3: Activity Cards - الأنشطة اليومية */}
                 <section className="mb-8">
                   <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
-                    الأنشطة اليومية
+                    {period === 'daily' && 'الأنشطة اليومية'}
+                    {period === 'weekly' && 'الأنشطة الأسبوعية'}
+                    {period === 'monthly' && 'الأنشطة الشهرية'}
+                    {period === 'yearly' && 'الأنشطة السنوية'}
                   </h2>
                   
                   <div className={cn(
