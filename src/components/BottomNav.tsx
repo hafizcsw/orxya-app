@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useAI } from "@/contexts/AIContext";
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function BottomNav() {
   const location = useLocation();
@@ -92,62 +92,105 @@ export function BottomNav() {
   return (
     <>
       {/* Full Screen Menu */}
-      {menuOpen && (
-        <div className="fixed inset-0 z-[100] bg-background/98 backdrop-blur-xl animate-fade-in">
-          <div className="flex flex-col h-full">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-border/50 bg-card/50">
-              <h2 className="text-xl font-bold">{t('menu.title')}</h2>
-              <button
-                onClick={() => setMenuOpen(false)}
-                className="p-2 hover:bg-secondary rounded-lg transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            {/* Menu Items */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-background/95">
-              {/* Language Switcher */}
-              <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-accent/50 border border-border/50">
-                <Globe className="w-5 h-5 text-primary flex-shrink-0" />
-                <div className="flex-1">
-                  <LanguageSwitcher />
+      <AnimatePresence>
+        {menuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-md"
+              onClick={() => setMenuOpen(false)}
+            />
+            
+            {/* Menu Content */}
+            <motion.div 
+              initial={{ y: "100%", opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: "100%", opacity: 0 }}
+              transition={{ 
+                type: "spring",
+                damping: 25,
+                stiffness: 300
+              }}
+              className="fixed inset-x-0 bottom-0 z-[101] bg-background/98 backdrop-blur-xl rounded-t-3xl shadow-2xl"
+              style={{ maxHeight: "85vh" }}
+            >
+            <div className="flex flex-col h-full">
+              {/* Header with drag indicator */}
+              <div className="flex flex-col items-center pt-3 pb-2 border-b border-border/50 bg-card/50 rounded-t-3xl">
+                <div className="w-12 h-1.5 bg-border rounded-full mb-3" />
+                <div className="flex items-center justify-between w-full px-4 pb-2">
+                  <h2 className="text-xl font-bold">{t('menu.title')}</h2>
+                  <button
+                    onClick={() => setMenuOpen(false)}
+                    className="p-2 hover:bg-secondary rounded-lg transition-colors"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
                 </div>
               </div>
-              
-              {/* Theme Toggle */}
-              <button
-                onClick={toggleTheme}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors w-full text-right text-muted-foreground hover:bg-accent"
-              >
-                {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                <span>{isDark ? t('menu.lightMode') : t('menu.darkMode')}</span>
-              </button>
-              
-              {menuLinks.map((link) => {
-                const Icon = link.icon;
-                return (
-                  <Link
-                    key={link.to}
-                    to={link.to}
-                    onClick={() => setMenuOpen(false)}
-                    className={cn(
-                      "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
-                      location.pathname === link.to
-                        ? "bg-primary text-primary-foreground font-medium"
-                        : "text-muted-foreground hover:bg-accent"
-                    )}
-                  >
-                    <Icon className="w-5 h-5" />
-                    {link.label}
-                  </Link>
-                );
-              })}
+
+              {/* Menu Items */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-background/95">
+                {/* Language Switcher */}
+                <motion.div 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg bg-accent/50 border border-border/50"
+                >
+                  <Globe className="w-5 h-5 text-primary flex-shrink-0" />
+                  <div className="flex-1">
+                    <LanguageSwitcher />
+                  </div>
+                </motion.div>
+                
+                {/* Theme Toggle */}
+                <motion.button
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.15 }}
+                  onClick={toggleTheme}
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors w-full text-right text-muted-foreground hover:bg-accent"
+                >
+                  {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                  <span>{isDark ? t('menu.lightMode') : t('menu.darkMode')}</span>
+                </motion.button>
+                
+                {menuLinks.map((link, index) => {
+                  const Icon = link.icon;
+                  return (
+                    <motion.div
+                      key={link.to}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.2 + (index * 0.05) }}
+                    >
+                      <Link
+                        to={link.to}
+                        onClick={() => setMenuOpen(false)}
+                        className={cn(
+                          "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                          location.pathname === link.to
+                            ? "bg-primary text-primary-foreground font-medium"
+                            : "text-muted-foreground hover:bg-accent"
+                        )}
+                      >
+                        <Icon className="w-5 h-5" />
+                        {link.label}
+                      </Link>
+                    </motion.div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </>
       )}
+    </AnimatePresence>
 
       {/* Bottom Navigation - Responsive */}
       <nav className={cn(
