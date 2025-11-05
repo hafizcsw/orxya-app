@@ -2,7 +2,6 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { supabase } from '@/integrations/supabase/client';
 import { UserSettings } from '@/types/settings';
 import { formatTime as formatTimeHelper, formatDate as formatDateHelper } from '@/lib/time';
-import i18n from '@/i18n';
 
 interface SettingsContextValue {
   settings: UserSettings | null;
@@ -26,7 +25,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         // For unauthenticated users: detect browser language
         const browserLang = navigator.language.split('-')[0];
         const supportedLang = ['ar', 'en', 'es'].includes(browserLang) ? browserLang : 'ar';
+        
+        // Dynamic import to avoid circular dependency
+        const { default: i18n } = await import('@/i18n');
         await i18n.changeLanguage(supportedLang);
+        
         setSettings(null);
         setLoading(false);
         return;
@@ -47,8 +50,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         const browserLang = navigator.language.split('-')[0];
         const supportedLang = ['ar', 'en', 'es'].includes(browserLang) ? browserLang : 'ar';
         await updateSettings({ language: supportedLang });
+        
+        // Dynamic import to avoid circular dependency
+        const { default: i18n } = await import('@/i18n');
         await i18n.changeLanguage(supportedLang);
       } else {
+        // Dynamic import to avoid circular dependency
+        const { default: i18n } = await import('@/i18n');
         await i18n.changeLanguage(data.language);
       }
     } catch (error) {
@@ -72,6 +80,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
       // If language changed, update i18n
       if (updates.language) {
+        // Dynamic import to avoid circular dependency
+        const { default: i18n } = await import('@/i18n');
         await i18n.changeLanguage(updates.language);
       }
 

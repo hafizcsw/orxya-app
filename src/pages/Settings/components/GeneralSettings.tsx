@@ -2,7 +2,6 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTranslation } from 'react-i18next';
-import i18n from '@/i18n';
 
 const languages = [
   { value: 'ar', label: 'العربية 🇸🇦' },
@@ -38,6 +37,8 @@ export function GeneralSettings() {
   if (!settings) return null;
 
   const handleLanguageChange = async (value: string) => {
+    // Dynamic import to avoid circular dependency
+    const { default: i18n } = await import('@/i18n');
     await updateSettings({ language: value });
     await i18n.changeLanguage(value);
   };
