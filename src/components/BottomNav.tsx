@@ -54,7 +54,6 @@ export function BottomNav() {
   const navItems = [
     { icon: Home, label: t('bottomNav.today'), path: "/" },
     { icon: Calendar, label: t('bottomNav.calendar'), path: "/calendar" },
-    { icon: Settings, label: t('bottomNav.settings'), path: "/settings" },
   ];
 
   const menuLinks = [
