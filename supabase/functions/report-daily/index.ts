@@ -48,6 +48,7 @@ serve(async (req) => {
 
     console.log(`[report-daily] user=${user.id} start=${start} end=${end}`);
 
+    // Get daily metrics from RPC
     const { data, error } = await supabase.rpc("get_daily_metrics", {
       p_user_id: user.id,
       p_start: start,
@@ -62,8 +63,72 @@ serve(async (req) => {
       );
     }
 
+    // Get initial balance from profiles
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('initial_balance_usd')
+      .eq('id', user.id)
+      .single();
+
+    const initialBalance = profile?.initial_balance_usd || 0;
+
+    // Get detailed income/spend for each day
+    const { data: financeData } = await supabase
+      .from('finance_entries')
+      .select('entry_date, type, amount_usd')
+      .eq('owner_id', user.id)
+      .gte('entry_date', start)
+      .lte('entry_date', end);
+
+    // Group by date and type
+    const financeByDate = (financeData || []).reduce((acc: any, entry: any) => {
+      const dateKey = entry.entry_date;
+      if (!acc[dateKey]) {
+        acc[dateKey] = { income: 0, spend: 0 };
+      }
+      if (entry.type === 'income') {
+        acc[dateKey].income += parseFloat(entry.amount_usd) || 0;
+      } else if (entry.type === 'spend') {
+        acc[dateKey].spend += parseFloat(entry.amount_usd) || 0;
+      }
+      return acc;
+    }, {});
+
+    // Transform data to include calculated fields
+    const items = (data || []).map((item: any) => {
+      // Calculate cumulative balance up to this date
+      const cumulativeNetCashflow = (data || [])
+        .filter((d: any) => d.day <= item.day)
+        .reduce((sum: number, d: any) => sum + (d.net_cashflow || 0), 0);
+      
+      const currentBalance = initialBalance + cumulativeNetCashflow;
+      
+      // Get income and spend for this specific day
+      const dayFinance = financeByDate[item.day] || { income: 0, spend: 0 };
+
+      return {
+        ...item,
+        current_balance: currentBalance,
+        total_income: initialBalance + (data || [])
+          .filter((d: any) => d.day <= item.day)
+          .reduce((sum: number, d: any) => {
+            const df = financeByDate[d.day] || { income: 0, spend: 0 };
+            return sum + df.income;
+          }, 0),
+        total_spend: (data || [])
+          .filter((d: any) => d.day <= item.day)
+          .reduce((sum: number, d: any) => {
+            const df = financeByDate[d.day] || { income: 0, spend: 0 };
+            return sum + df.spend;
+          }, 0),
+        income_usd: dayFinance.income,
+        spend_usd: dayFinance.spend,
+        net_usd: item.net_cashflow
+      };
+    });
+
     return new Response(
-      JSON.stringify({ items: data ?? [] }), 
+      JSON.stringify({ items }), 
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
