@@ -1,5 +1,6 @@
 {
   "title": "Integrations",
+  "description": "Connect your calendar with external services",
   "googleCalendar": {
     "title": "Google Calendar",
     "description": "Automatically sync events",

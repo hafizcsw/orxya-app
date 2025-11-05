@@ -1,5 +1,6 @@
 {
   "title": "التكاملات",
+  "description": "ربط التقويم مع خدمات خارجية",
   "googleCalendar": {
     "title": "Google Calendar",
     "description": "مزامنة الأحداث تلقائياً",
