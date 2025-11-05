@@ -6,25 +6,72 @@
     "evening": "Good Evening",
     "night": "Good Night"
   },
-  "sections": {
-    "financial": "Financial Status",
-    "tasks": "Tasks",
-    "events": "Events",
-    "plans": "Plans",
-    "analytics": "Analytics",
-    "insights": "Smart Insights"
+  "periods": {
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "yearly": "Yearly"
   },
-  "stats": {
-    "activePlans": "Active Plans",
-    "totalMonth": "Total Month",
-    "transactions": "Transactions",
-    "todayProfit": "Today's Profit",
-    "avgProfit": "Avg Profit"
+  "financial": {
+    "title": "Financial Status",
+    "balance": "Current Balance",
+    "income": "Income",
+    "expenses": "Expenses",
+    "net": "Net",
+    "viewDetails": "View Details"
   },
-  "quickActions": {
-    "addTask": "Add Task",
-    "addEvent": "Add Event",
-    "viewCalendar": "View Calendar",
-    "viewReports": "View Reports"
+  "activities": {
+    "title": "Daily Activities",
+    "work": "Work",
+    "study": "Study",
+    "mma": "MMA",
+    "walk": "Walk",
+    "sleep": "Sleep",
+    "recovery": "Recovery Score"
+  },
+  "units": {
+    "hours": "hrs",
+    "minutes": "min",
+    "usd": "USD"
+  },
+  "plans": {
+    "title": "Business Plans",
+    "active": "Active Plans",
+    "add": "Add Plan",
+    "edit": "Edit Plan",
+    "delete": "Delete",
+    "viewAnalytics": "View Analytics",
+    "hideAnalytics": "Hide Analytics",
+    "loading": "Loading plans...",
+    "noPlans": "No active plans"
+  },
+  "insights": {
+    "title": "Smart Insights"
+  },
+  "comparison": {
+    "title": "Comparison",
+    "current": "Current",
+    "previous": "Previous"
+  },
+  "trends": {
+    "title": "Trends",
+    "viewChart": "View Chart"
+  },
+  "messages": {
+    "saved": "Saved successfully ✅",
+    "error": "An error occurred ❌",
+    "invalidValue": "Invalid value ❌",
+    "balanceUpdated": "Balance updated ✅",
+    "savingOffline": "Saved offline, will sync later 🔄",
+    "invalidData": "Invalid data entered ❌",
+    "planAdded": "Plan added successfully! ✅",
+    "planUpdated": "Plan updated ✅",
+    "planDeleted": "Plan deleted ✅",
+    "planError": "Error loading plans ❌"
+  },
+  "actions": {
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel"
   }
 }

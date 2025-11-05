@@ -31,6 +31,7 @@ import { TrendsChart } from '@/components/charts/TrendsChart'
 import { ComparisonCard } from '@/components/dashboard/ComparisonCard'
 import { SmartInsight } from '@/components/dashboard/SmartInsight'
 import { generateInsights } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 // Validation schemas
 const dailyLogSchema = z.object({
@@ -61,6 +62,7 @@ const Today = () => {
   const navigate = useNavigate()
   const { selectedDate } = useSelectedDate()
   const device = useDeviceType()
+  const { t } = useTranslation('today')
   const [loading, setLoading] = useState(false)
   const [report, setReport] = useState<any | null>(null)
   const [rawDailyData, setRawDailyData] = useState<any[]>([])
@@ -264,7 +266,7 @@ const Today = () => {
       setPlans(data?.plans || [])
     } catch (e: any) {
       console.error('[fetchPlans] Error:', e)
-      setToast('حدث خطأ في تحميل الخطط ❌')
+      setToast(t('messages.planError'))
     } finally {
       setPlansLoading(false)
     }
@@ -278,9 +280,9 @@ const Today = () => {
       })
       if (error) throw error
       await fetchPlans()
-      setToast('تمت إضافة الخطة بنجاح! ✅')
+      setToast(t('messages.planAdded'))
     } catch (e: any) {
-      setToast('حدث خطأ ❌')
+      setToast(t('messages.error'))
     }
   }
 
@@ -292,9 +294,9 @@ const Today = () => {
       })
       if (error) throw error
       await fetchPlans()
-      setToast('تم التحديث ✅')
+      setToast(t('messages.planUpdated'))
     } catch (e: any) {
-      setToast('حدث خطأ ❌')
+      setToast(t('messages.error'))
     }
   }
 
@@ -306,9 +308,9 @@ const Today = () => {
       })
       if (error) throw error
       await fetchPlans()
-      setToast('تم الحذف ✅')
+      setToast(t('messages.planDeleted'))
     } catch (e: any) {
-      setToast('حدث خطأ ❌')
+      setToast(t('messages.error'))
     }
   }
 
@@ -332,7 +334,7 @@ const Today = () => {
     try {
       const parsedValue = Number(value)
       if (isNaN(parsedValue) || parsedValue < 0) {
-        setToast('❌ قيمة غير صحيحة')
+        setToast(t('messages.invalidValue'))
         return
       }
 
@@ -360,11 +362,11 @@ const Today = () => {
         if (error) throw error
       }
       
-      setToast('تم التحديث ✅')
+      setToast(t('messages.saved'))
       setEditingField(null)
       await fetchReport()
     } catch (error: any) {
-      setToast('❌ حدث خطأ في التحديث')
+      setToast(t('messages.error'))
     }
   }
 
@@ -373,7 +375,7 @@ const Today = () => {
     
     const parsedAmount = Number(value);
     if (isNaN(parsedAmount)) {
-      setToast('❌ قيمة غير صحيحة');
+      setToast(t('messages.invalidValue'));
       return;
     }
     
@@ -385,12 +387,12 @@ const Today = () => {
       
       if (error) throw error;
       
-      setToast('تم تحديث الرصيد ✅');
+      setToast(t('messages.balanceUpdated'));
       setEditingBalance(false);
       await fetchReport();
     } catch (error: any) {
       console.error('Error updating balance:', error);
-      setToast('❌ حدث خطأ في الحفظ');
+      setToast(t('messages.error'));
     }
   }
 
@@ -408,17 +410,17 @@ const Today = () => {
         body: { command, idempotency_key: genIdem(), payload }
       })
       if (error) throw error
-      setToast('تم الحفظ ✅')
+      setToast(t('messages.saved'))
       track('command_sent', { command })
       await fetchReport()
     } catch (error: any) {
       if (error.name === 'ZodError') {
-        setToast('❌ البيانات المدخلة غير صحيحة')
+        setToast(t('messages.invalidData'))
         return
       }
       await enqueueCommand(command, payload)
       track('command_queued_offline', { command })
-      setToast('تم الحفظ أوفلاين وسيُرفع بعد تسجيل الدخول/الاتصال 🔄')
+      setToast(t('messages.savingOffline'))
     }
   }
 
@@ -484,7 +486,7 @@ const Today = () => {
                   onClick={() => updateField(field, editValue)}
                   className="flex-1"
                 >
-                  حفظ
+                  {t('actions.save')}
                 </NeonButton>
                 <NeonButton
                   size="sm"
@@ -493,7 +495,7 @@ const Today = () => {
                   onClick={() => setEditingField(null)}
                   className="flex-1"
                 >
-                  إلغاء
+                  {t('actions.cancel')}
                 </NeonButton>
               </div>
             </div>
@@ -599,10 +601,10 @@ const Today = () => {
                 {/* Section 1: Financial Overview - الدوائر المالية الكبيرة */}
                 <section className="mb-8">
                   <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
-                    {period === 'daily' && 'النظرة المالية - اليوم'}
-                    {period === 'weekly' && 'النظرة المالية - الأسبوع'}
-                    {period === 'monthly' && 'النظرة المالية - الشهر'}
-                    {period === 'yearly' && 'النظرة المالية - السنة'}
+                   {t(`financial.title`)} - {period === 'daily' && t('periods.daily')}
+                    {period === 'weekly' && t('periods.weekly')}
+                    {period === 'monthly' && t('periods.monthly')}
+                    {period === 'yearly' && t('periods.yearly')}
                   </h2>
                   
                   <div className="relative py-4">
@@ -636,7 +638,7 @@ const Today = () => {
                           >
                             <StatRing
                               value={Math.min(100, Math.max(0, ((report.current_balance || 0) / 10000) * 100))}
-                              label="الرصيد"
+                              label={t('financial.balance')}
                               subtitle="BALANCE"
                               color="hsl(var(--whoop-blue))"
                               size={getFinancialRingSize()}
@@ -671,7 +673,7 @@ const Today = () => {
                           <div className="relative transform transition-all duration-300 hover:scale-105">
                             <StatRing
                               value={Math.min(100, Math.max(0, ((report.total_income || 0) / 5000) * 100))}
-                              label="الدخل الكلي"
+                              label={t('financial.income')}
                               subtitle="INCOME"
                               color="hsl(var(--whoop-green))"
                               size={getFinancialRingSize()}
@@ -695,7 +697,7 @@ const Today = () => {
                           <div className="relative transform transition-all duration-300 hover:scale-105">
                             <StatRing
                               value={Math.min(100, Math.max(0, ((report.total_spend || 0) / 5000) * 100))}
-                              label="المصروفات الكلية"
+                              label={t('financial.expenses')}
                               subtitle="EXPENSES"
                               color="hsl(var(--whoop-red))"
                               size={getFinancialRingSize()}
@@ -738,10 +740,10 @@ const Today = () => {
                 {/* Section 2: Today's Stats - دوائر اليوم */}
                 <section className="mb-8">
                   <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
-                    {period === 'daily' && 'إحصائيات اليوم'}
-                    {period === 'weekly' && 'إحصائيات الأسبوع'}
-                    {period === 'monthly' && 'إحصائيات الشهر'}
-                    {period === 'yearly' && 'إحصائيات السنة'}
+                    {t('activities.title')} - {period === 'daily' && t('periods.daily')}
+                    {period === 'weekly' && t('periods.weekly')}
+                    {period === 'monthly' && t('periods.monthly')}
+                    {period === 'yearly' && t('periods.yearly')}
                   </h2>
                   
                   <div className="relative py-4">
@@ -766,7 +768,7 @@ const Today = () => {
                           <div className="relative transform transition-all duration-300 hover:scale-105">
                             <StatRing
                               value={Math.min(100, Math.max(0, ((report.income_usd || 0) / (period === 'daily' ? 1000 : period === 'weekly' ? 5000 : period === 'monthly' ? 20000 : 100000)) * 100))}
-                              label={period === 'daily' ? 'دخل اليوم' : period === 'weekly' ? 'دخل الأسبوع' : period === 'monthly' ? 'دخل الشهر' : 'دخل السنة'}
+                              label={`${t('financial.income')} - ${t(`periods.${period}`)}`}
                               subtitle={period === 'daily' ? 'TODAY' : period === 'weekly' ? 'WEEK' : period === 'monthly' ? 'MONTH' : 'YEAR'}
                               color="hsl(var(--whoop-green))"
                               size={getDailyRingSize()}
@@ -789,7 +791,7 @@ const Today = () => {
                           <div className="relative transform transition-all duration-300 hover:scale-105">
                             <StatRing
                               value={Math.min(100, Math.max(0, ((report.spend_usd || 0) / (period === 'daily' ? 1000 : period === 'weekly' ? 5000 : period === 'monthly' ? 20000 : 100000)) * 100))}
-                              label={period === 'daily' ? 'مصروف اليوم' : period === 'weekly' ? 'مصروف الأسبوع' : period === 'monthly' ? 'مصروف الشهر' : 'مصروف السنة'}
+                              label={`${t('financial.expenses')} - ${t(`periods.${period}`)}`}
                               subtitle={period === 'daily' ? 'TODAY' : period === 'weekly' ? 'WEEK' : period === 'monthly' ? 'MONTH' : 'YEAR'}
                               color="hsl(var(--whoop-red))"
                               size={getDailyRingSize()}
@@ -815,7 +817,7 @@ const Today = () => {
                           <div className="relative transform transition-all duration-300 hover:scale-105">
                             <StatRing
                               value={Math.min(100, Math.max(0, ((Math.abs(report.net_usd || 0)) / (period === 'daily' ? 1000 : period === 'weekly' ? 5000 : period === 'monthly' ? 20000 : 100000)) * 100))}
-                              label={period === 'daily' ? 'صافي اليوم' : period === 'weekly' ? 'صافي الأسبوع' : period === 'monthly' ? 'صافي الشهر' : 'صافي السنة'}
+                              label={`${t('financial.net')} - ${t(`periods.${period}`)}`}
                               subtitle="NET"
                               color={report.net_usd >= 0 ? "hsl(var(--whoop-green))" : "hsl(var(--whoop-red))"}
                               size={getDailyRingSize()}
@@ -831,10 +833,7 @@ const Today = () => {
                 {/* Section 3: Activity Cards - الأنشطة اليومية */}
                 <section className="mb-8">
                   <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
-                    {period === 'daily' && 'الأنشطة اليومية'}
-                    {period === 'weekly' && 'الأنشطة الأسبوعية'}
-                    {period === 'monthly' && 'الأنشطة الشهرية'}
-                    {period === 'yearly' && 'الأنشطة السنوية'}
+                    {t('activities.title')}
                   </h2>
                   
                   <div className={cn(
@@ -843,12 +842,12 @@ const Today = () => {
                     device === 'tablet' && "grid-cols-3 gap-3",
                     device === 'desktop' && "grid-cols-3 gap-4"
                   )}>
-                    {renderEditableCard('study_hours', <BookOpen className="w-5 h-5" />, 'دراسة', report.study_hours, 'bg-[hsl(var(--whoop-blue))]/10', 'h')}
-                    {renderEditableCard('mma_hours', <Dumbbell className="w-5 h-5" />, 'رياضة', report.mma_hours, 'bg-[hsl(var(--whoop-green))]/10', 'h')}
-                    {renderEditableCard('work_hours', <Building className="w-5 h-5" />, 'عمل', report.work_hours, 'bg-[hsl(var(--whoop-yellow))]/10', 'h')}
-                    {renderEditableCard('walk_min', <Footprints className="w-5 h-5" />, 'مشي', report.walk_min, 'bg-[hsl(var(--whoop-red))]/10', 'min')}
-                    {renderEditableCard('sleep_hours', <Moon className="w-5 h-5" />, 'نوم', report.sleep_hours, 'bg-purple-500/10', 'h')}
-                    {renderEditableCard('recovery_score', <Heart className="w-5 h-5" />, 'استشفاء', report.recovery_score, 'bg-pink-500/10', '%', 1)}
+                    {renderEditableCard('study_hours', <BookOpen className="w-5 h-5" />, t('activities.study'), report.study_hours, 'bg-[hsl(var(--whoop-blue))]/10', t('units.hours'))}
+                    {renderEditableCard('mma_hours', <Dumbbell className="w-5 h-5" />, t('activities.mma'), report.mma_hours, 'bg-[hsl(var(--whoop-green))]/10', t('units.hours'))}
+                    {renderEditableCard('work_hours', <Building className="w-5 h-5" />, t('activities.work'), report.work_hours, 'bg-[hsl(var(--whoop-yellow))]/10', t('units.hours'))}
+                    {renderEditableCard('walk_min', <Footprints className="w-5 h-5" />, t('activities.walk'), report.walk_min, 'bg-[hsl(var(--whoop-red))]/10', t('units.minutes'))}
+                    {renderEditableCard('sleep_hours', <Moon className="w-5 h-5" />, t('activities.sleep'), report.sleep_hours, 'bg-purple-500/10', t('units.hours'))}
+                    {renderEditableCard('recovery_score', <Heart className="w-5 h-5" />, t('activities.recovery'), report.recovery_score, 'bg-pink-500/10', '%', 1)}
                   </div>
                 </section>
 
@@ -856,7 +855,7 @@ const Today = () => {
                 {period !== 'daily' && comparisonData && (
                   <section className="mb-8">
                     <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
-                      المقارنة مع {period === 'weekly' ? 'الأسبوع السابق' : period === 'monthly' ? 'الشهر السابق' : 'السنة السابقة'}
+                      {t('comparison.title')} - {period === 'weekly' ? t('periods.weekly') : period === 'monthly' ? t('periods.monthly') : t('periods.yearly')}
                     </h2>
                     <div className={cn(
                       "grid gap-3",
@@ -865,14 +864,14 @@ const Today = () => {
                       device === 'desktop' && "grid-cols-4 gap-4"
                     )}>
                       <ComparisonCard 
-                        label="الدخل"
+                        label={t('financial.income')}
                         current={report.income_usd || 0}
                         previous={comparisonData.income_usd || 0}
                         format="currency"
                         sparklineData={rawDailyData.map(d => d.income_usd || 0)}
                       />
                       <ComparisonCard 
-                        label="المصروفات"
+                        label={t('financial.expenses')}
                         current={report.spend_usd || 0}
                         previous={comparisonData.spend_usd || 0}
                         format="currency"
@@ -880,14 +879,14 @@ const Today = () => {
                         sparklineData={rawDailyData.map(d => d.spend_usd || 0)}
                       />
                       <ComparisonCard 
-                        label="الصافي"
+                        label={t('financial.net')}
                         current={report.net_usd || 0}
                         previous={comparisonData.net_usd || 0}
                         format="currency"
                         sparklineData={rawDailyData.map(d => d.net_usd || 0)}
                       />
                       <ComparisonCard 
-                        label="ساعات العمل"
+                        label={t('activities.work')}
                         current={report.work_hours || 0}
                         previous={comparisonData.work_hours || 0}
                         format="hours"
@@ -901,7 +900,7 @@ const Today = () => {
                 {period !== 'daily' && rawDailyData.length > 0 && (
                   <section className="mb-8">
                     <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
-                      الاتجاهات والتحليلات
+                      {t('trends.title')}
                     </h2>
                     <TrendsChart data={rawDailyData} period={period} />
                   </section>
@@ -911,7 +910,7 @@ const Today = () => {
                 {period !== 'daily' && comparisonData && rawDailyData.length > 0 && (
                   <section className="mb-8">
                     <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
-                      رؤى ذكية
+                      {t('insights.title')}
                     </h2>
                     <div className="space-y-3">
                       {generateInsights(report, comparisonData, rawDailyData, period).map((insight, idx) => (
@@ -949,7 +948,7 @@ const Today = () => {
                         "font-bold mb-6 text-center bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-shimmer bg-[length:200%_auto]",
                         device === 'mobile' ? "text-xl" : "text-2xl"
                       )}>
-تعديل الرصيد الحقيقي
+{t('financial.balance')}
                       </h3>
                       <div className="relative mb-6">
                         <div className="absolute inset-0 bg-primary/10 blur-xl rounded-lg animate-pulse-glow" />
@@ -980,7 +979,7 @@ const Today = () => {
                           onClick={() => updateBalance(balanceValue)}
                           className="flex-1"
                         >
-                          حفظ
+                          {t('actions.save')}
                         </NeonButton>
                         <NeonButton
                           size="md"
@@ -989,7 +988,7 @@ const Today = () => {
                           onClick={() => setEditingBalance(false)}
                           className="flex-1"
                         >
-                          إلغاء
+                          {t('actions.cancel')}
                         </NeonButton>
                       </div>
                     </div>
@@ -1017,12 +1016,12 @@ const Today = () => {
                         "font-bold mb-6 text-center bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-shimmer bg-[length:200%_auto]",
                         device === 'mobile' ? "text-xl" : "text-2xl"
                       )}>
-                        {editingField === 'work_hours' && 'تعديل ساعات العمل'}
-                        {editingField === 'study_hours' && 'تعديل ساعات الدراسة'}
-                        {editingField === 'mma_hours' && 'تعديل ساعات MMA'}
-                        {editingField === 'walk_min' && 'تعديل دقائق المشي'}
-                        {editingField === 'sleep_hours' && 'تعديل ساعات النوم'}
-                        {editingField === 'recovery_score' && 'تعديل نسبة الاستشفاء'}
+                        {editingField === 'work_hours' && `${t('actions.edit')} ${t('activities.work')}`}
+                        {editingField === 'study_hours' && `${t('actions.edit')} ${t('activities.study')}`}
+                        {editingField === 'mma_hours' && `${t('actions.edit')} ${t('activities.mma')}`}
+                        {editingField === 'walk_min' && `${t('actions.edit')} ${t('activities.walk')}`}
+                        {editingField === 'sleep_hours' && `${t('actions.edit')} ${t('activities.sleep')}`}
+                        {editingField === 'recovery_score' && `${t('actions.edit')} ${t('activities.recovery')}`}
                       </h3>
                       <div className="relative mb-6">
                         <input
@@ -1052,7 +1051,7 @@ const Today = () => {
                           onClick={() => updateField(editingField, editValue)}
                           className="flex-1"
                         >
-                          حفظ
+                          {t('actions.save')}
                         </NeonButton>
                         <NeonButton
                           size="md"
@@ -1061,7 +1060,7 @@ const Today = () => {
                           onClick={() => setEditingField(null)}
                           className="flex-1"
                         >
-                          إلغاء
+                          {t('actions.cancel')}
                         </NeonButton>
                       </div>
                     </div>
@@ -1075,7 +1074,7 @@ const Today = () => {
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-bold gradient-text flex items-center gap-2">
                     <Briefcase className="w-5 h-5" />
-                    خطط الأعمال
+                    {t('plans.title')}
                   </h3>
                   <div className="flex gap-2">
                     <NeonButton 
@@ -1084,7 +1083,7 @@ const Today = () => {
                       onClick={() => setShowAnalytics(!showAnalytics)}
                     >
                       <BarChart3 className="w-4 h-4" />
-                      {device !== 'mobile' && 'التحليلات'}
+                      {device !== 'mobile' && t(showAnalytics ? 'plans.hideAnalytics' : 'plans.viewAnalytics')}
                     </NeonButton>
                     <NeonButton 
                       size="sm" 
@@ -1096,14 +1095,14 @@ const Today = () => {
                       }}
                     >
                       <Plus className="w-4 h-4" />
-                      {device !== 'mobile' && 'إضافة خطة'}
+                      {device !== 'mobile' && t('plans.add')}
                     </NeonButton>
                   </div>
                 </div>
 
                 {/* Plans Grid */}
                 {plansLoading ? (
-                  <div className="text-center text-muted-foreground py-8">جاري التحميل...</div>
+                  <div className="text-center text-muted-foreground py-8">{t('plans.loading')}</div>
                 ) : plans.length > 0 ? (
                   <div className={cn(
                     "grid gap-4",
@@ -1141,7 +1140,7 @@ const Today = () => {
                       >
                         <div className="text-center">
                           <Plus className="w-8 h-8 mx-auto mb-2 text-primary" />
-                          <p className="text-sm text-muted-foreground">إضافة خطة جديدة</p>
+                          <p className="text-sm text-muted-foreground">{t('plans.add')}</p>
                         </div>
                       </GlassPanel>
                     </div>
@@ -1152,7 +1151,7 @@ const Today = () => {
                     className="p-8 text-center"
                   >
                     <Briefcase className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
-                    <p className="text-muted-foreground mb-4">لا توجد خطط حتى الآن</p>
+                    <p className="text-muted-foreground mb-4">{t('plans.noPlans')}</p>
                     <NeonButton 
                       variant="primary"
                       glow
@@ -1162,7 +1161,7 @@ const Today = () => {
                       }}
                     >
                       <Plus className="w-4 h-4 ml-2" />
-                      إضافة خطتك الأولى
+                      {t('plans.add')}
                     </NeonButton>
                   </GlassPanel>
                 )}
@@ -1183,7 +1182,7 @@ const Today = () => {
                       <div className="w-8 h-8 rounded-full bg-[hsl(var(--whoop-blue)_/_0.1)] flex items-center justify-center">
                         <BarChart3 className="w-4 h-4 text-[hsl(var(--whoop-blue))]" />
                       </div>
-                      الدخل والمصروفات
+                      {t('financial.title')}
                     </h4>
                     <ResponsiveContainer 
                       width="100%" 

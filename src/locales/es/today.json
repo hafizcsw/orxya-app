@@ -6,25 +6,72 @@
     "evening": "Buenas Tardes",
     "night": "Buenas Noches"
   },
-  "sections": {
-    "financial": "Estado Financiero",
-    "tasks": "Tareas",
-    "events": "Eventos",
-    "plans": "Planes",
-    "analytics": "Análisis",
-    "insights": "Perspectivas Inteligentes"
+  "periods": {
+    "daily": "Diario",
+    "weekly": "Semanal",
+    "monthly": "Mensual",
+    "yearly": "Anual"
   },
-  "stats": {
-    "activePlans": "Planes Activos",
-    "totalMonth": "Total del Mes",
-    "transactions": "Transacciones",
-    "todayProfit": "Ganancia de Hoy",
-    "avgProfit": "Ganancia Promedio"
+  "financial": {
+    "title": "Estado Financiero",
+    "balance": "Saldo Actual",
+    "income": "Ingresos",
+    "expenses": "Gastos",
+    "net": "Neto",
+    "viewDetails": "Ver Detalles"
   },
-  "quickActions": {
-    "addTask": "Agregar Tarea",
-    "addEvent": "Agregar Evento",
-    "viewCalendar": "Ver Calendario",
-    "viewReports": "Ver Informes"
+  "activities": {
+    "title": "Actividades Diarias",
+    "work": "Trabajo",
+    "study": "Estudio",
+    "mma": "MMA",
+    "walk": "Caminar",
+    "sleep": "Dormir",
+    "recovery": "Puntuación de Recuperación"
+  },
+  "units": {
+    "hours": "hrs",
+    "minutes": "min",
+    "usd": "USD"
+  },
+  "plans": {
+    "title": "Planes de Negocio",
+    "active": "Planes Activos",
+    "add": "Agregar Plan",
+    "edit": "Editar Plan",
+    "delete": "Eliminar",
+    "viewAnalytics": "Ver Análisis",
+    "hideAnalytics": "Ocultar Análisis",
+    "loading": "Cargando planes...",
+    "noPlans": "No hay planes activos"
+  },
+  "insights": {
+    "title": "Perspectivas Inteligentes"
+  },
+  "comparison": {
+    "title": "Comparación",
+    "current": "Actual",
+    "previous": "Anterior"
+  },
+  "trends": {
+    "title": "Tendencias",
+    "viewChart": "Ver Gráfico"
+  },
+  "messages": {
+    "saved": "Guardado exitosamente ✅",
+    "error": "Ocurrió un error ❌",
+    "invalidValue": "Valor inválido ❌",
+    "balanceUpdated": "Saldo actualizado ✅",
+    "savingOffline": "Guardado sin conexión, se sincronizará más tarde 🔄",
+    "invalidData": "Datos ingresados inválidos ❌",
+    "planAdded": "¡Plan agregado exitosamente! ✅",
+    "planUpdated": "Plan actualizado ✅",
+    "planDeleted": "Plan eliminado ✅",
+    "planError": "Error al cargar planes ❌"
+  },
+  "actions": {
+    "edit": "Editar",
+    "save": "Guardar",
+    "cancel": "Cancelar"
   }
 }
