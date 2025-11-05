@@ -202,21 +202,18 @@ export default function CalendarDayView({
           {/* Scrollable container */}
           <div className="flex-1 overflow-auto relative bg-background scroll-smooth" ref={gridRef}>
             <div className="flex relative">
-              {/* Time Gutter - كل ساعتين لقراءة أفضل */}
+              {/* Time Gutter - عرض كل ساعة */}
               <div className="w-16 sm:w-20 flex-shrink-0 bg-background border-l border-border/20 relative">
                 {Array.from({ length: 24 }, (_, h) => {
-                  // عرض كل ساعتين
-                  if (h % 2 !== 0) return <div key={h} style={{ height: pxPerHour }} />;
-                  
                   const period = h < 12 ? 'ص' : 'م';
                   const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
                   
                   return (
-                    <div key={h} className="relative" style={{ height: pxPerHour * 2 }}>
-                      {h !== 0 && (
-                        <div className="absolute -top-2.5 right-3 text-[13px] text-muted-foreground font-medium flex items-baseline gap-1">
+                    <div key={h} className="relative" style={{ height: pxPerHour }}>
+                      {h > 0 && (
+                        <div className="absolute -top-2.5 right-3 text-[13px] text-foreground/70 font-medium flex items-baseline gap-1">
                           <span>{displayHour}</span>
-                          <span className="text-[11px] text-muted-foreground/70">{period}</span>
+                          <span className="text-[11px] text-muted-foreground">{period}</span>
                         </div>
                       )}
                     </div>
