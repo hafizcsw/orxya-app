@@ -15,7 +15,7 @@ import { GlassPanel } from '@/components/ui/GlassPanel'
 import { StatRing } from '@/components/oryxa/StatRing'
 import { BackgroundAI } from '@/components/oryxa/BackgroundAI'
 import { cn } from '@/lib/utils'
-import { Bell, Calendar, DollarSign, TrendingUp, TrendingDown, Clock, Dumbbell, BookOpen, Footprints, Award, Building, Edit2, BarChart3, User, Moon, Heart, Plus, Briefcase } from 'lucide-react'
+import { Bell, Calendar, DollarSign, TrendingUp, TrendingDown, Clock, Dumbbell, BookOpen, Footprints, Award, Building, Edit2, BarChart3, User, Moon, Heart, Plus, Briefcase, ChevronDown, ChevronUp } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { z } from 'zod'
@@ -82,6 +82,10 @@ const Today = () => {
   
   // Glances state
   const [showGlances, setShowGlances] = useState(false)
+  const [glancesExpanded, setGlancesExpanded] = useState(() => {
+    const saved = localStorage.getItem('glances-expanded')
+    return saved !== null ? JSON.parse(saved) : true
+  })
 
   // Responsive sizing helpers - محسّنة
   const getFinancialRingSize = () => {
@@ -707,10 +711,27 @@ const Today = () => {
                 {/* Glances Section - فقط إذا كان العلم مفعل */}
                 {showGlances && (
                   <section className="mb-8">
-                    <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
-                      نظرة سريعة
-                    </h2>
-                    <GlancesBar />
+                    <div className="flex items-center justify-between mb-4 px-1">
+                      <h2 className="text-sm font-semibold text-muted-foreground">
+                        نظرة سريعة
+                      </h2>
+                      <button
+                        onClick={() => {
+                          const newValue = !glancesExpanded
+                          setGlancesExpanded(newValue)
+                          localStorage.setItem('glances-expanded', JSON.stringify(newValue))
+                        }}
+                        className="p-1.5 rounded-lg hover:bg-secondary/80 transition-colors"
+                        aria-label={glancesExpanded ? 'إخفاء نظرة سريعة' : 'إظهار نظرة سريعة'}
+                      >
+                        {glancesExpanded ? (
+                          <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                        )}
+                      </button>
+                    </div>
+                    {glancesExpanded && <GlancesBar />}
                   </section>
                 )}
 
