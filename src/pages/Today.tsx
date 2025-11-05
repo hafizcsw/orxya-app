@@ -1148,7 +1148,9 @@ const Today = () => {
 
                 {/* Analytics Section */}
                 {showAnalytics && plans.length > 0 && (
-                  <PlansAnalytics plans={plans} />
+                  <div className="mt-6 animate-fade-in">
+                    <PlansAnalytics plans={plans} />
+                  </div>
                 )}
               </div>
 
