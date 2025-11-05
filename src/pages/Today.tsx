@@ -598,7 +598,108 @@ const Today = () => {
             </HolographicCard>
           ) : report ? (
               <>
-                {/* Section 1: Financial Overview - الدوائر المالية الكبيرة */}
+                {/* Glances Section - فقط إذا كان العلم مفعل */}
+                {showGlances && (
+                  <section className="mb-8">
+                    <div className="flex items-center justify-between mb-4 px-1">
+                      <h2 className="text-sm font-semibold text-muted-foreground">
+                        نظرة سريعة
+                      </h2>
+                      <button
+                        onClick={() => {
+                          const newValue = !glancesExpanded
+                          setGlancesExpanded(newValue)
+                          localStorage.setItem('glances-expanded', JSON.stringify(newValue))
+                        }}
+                        className="p-1.5 rounded-lg hover:bg-secondary/80 transition-colors"
+                        aria-label={glancesExpanded ? 'إخفاء نظرة سريعة' : 'إظهار نظرة سريعة'}
+                      >
+                        {glancesExpanded ? (
+                          <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                        )}
+                      </button>
+                    </div>
+                    {glancesExpanded && <GlancesBar />}
+                  </section>
+                )}
+
+                {/* Section 1: Comparison - للأسبوع/الشهر/السنة فقط */}
+                {period !== 'daily' && comparisonData && (
+                  <section className="mb-8">
+                    <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
+                      {t('comparison.title')} - {period === 'weekly' ? t('periods.weekly') : period === 'monthly' ? t('periods.monthly') : t('periods.yearly')}
+                    </h2>
+                    <div className={cn(
+                      "grid gap-3",
+                      device === 'mobile' && "grid-cols-1 gap-2.5",
+                      device === 'tablet' && "grid-cols-2 gap-3",
+                      device === 'desktop' && "grid-cols-4 gap-4"
+                    )}>
+                      <ComparisonCard 
+                        label={t('financial.income')}
+                        current={report.income_usd || 0}
+                        previous={comparisonData.income_usd || 0}
+                        format="currency"
+                        sparklineData={rawDailyData.map(d => d.income_usd || 0)}
+                      />
+                      <ComparisonCard 
+                        label={t('financial.expenses')}
+                        current={report.spend_usd || 0}
+                        previous={comparisonData.spend_usd || 0}
+                        format="currency"
+                        inverted
+                        sparklineData={rawDailyData.map(d => d.spend_usd || 0)}
+                      />
+                      <ComparisonCard 
+                        label={t('financial.net')}
+                        current={report.net_usd || 0}
+                        previous={comparisonData.net_usd || 0}
+                        format="currency"
+                        sparklineData={rawDailyData.map(d => d.net_usd || 0)}
+                      />
+                      <ComparisonCard 
+                        label={t('activities.work')}
+                        current={report.work_hours || 0}
+                        previous={comparisonData.work_hours || 0}
+                        format="hours"
+                        sparklineData={rawDailyData.map(d => d.work_hours || 0)}
+                      />
+                    </div>
+                  </section>
+                )}
+
+                {/* Section 5: Trends & Insights - للأسبوع/الشهر/السنة فقط */}
+                {period !== 'daily' && rawDailyData.length > 0 && (
+                  <section className="mb-8">
+                    <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
+                      {t('trends.title')}
+                    </h2>
+                    <TrendsChart data={rawDailyData} period={period} />
+                  </section>
+                )}
+
+                {/* Section 6: Smart Insights - للأسبوع/الشهر/السنة فقط */}
+                {period !== 'daily' && comparisonData && rawDailyData.length > 0 && (
+                  <section className="mb-8">
+                    <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
+                      {t('insights.title')}
+                    </h2>
+                    <div className="space-y-3">
+                      {generateInsights(report, comparisonData, rawDailyData, period).map((insight, idx) => (
+                        <SmartInsight 
+                          key={idx}
+                          type={insight.type}
+                          icon={insight.icon}
+                          text={insight.text}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* Section 7: Financial Overview - الدوائر المالية الكبيرة */}
                 <section className="mb-8">
                   <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
                    {t(`financial.title`)} - {period === 'daily' && t('periods.daily')}
@@ -710,34 +811,7 @@ const Today = () => {
                   </div>
                 </section>
 
-                {/* Glances Section - فقط إذا كان العلم مفعل */}
-                {showGlances && (
-                  <section className="mb-8">
-                    <div className="flex items-center justify-between mb-4 px-1">
-                      <h2 className="text-sm font-semibold text-muted-foreground">
-                        نظرة سريعة
-                      </h2>
-                      <button
-                        onClick={() => {
-                          const newValue = !glancesExpanded
-                          setGlancesExpanded(newValue)
-                          localStorage.setItem('glances-expanded', JSON.stringify(newValue))
-                        }}
-                        className="p-1.5 rounded-lg hover:bg-secondary/80 transition-colors"
-                        aria-label={glancesExpanded ? 'إخفاء نظرة سريعة' : 'إظهار نظرة سريعة'}
-                      >
-                        {glancesExpanded ? (
-                          <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                        )}
-                      </button>
-                    </div>
-                    {glancesExpanded && <GlancesBar />}
-                  </section>
-                )}
-
-                {/* Section 2: Today's Stats - دوائر اليوم */}
+                {/* Section 8: Today's Stats - دوائر اليوم */}
                 <section className="mb-8">
                   <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
                     {t('activities.title')} - {period === 'daily' && t('periods.daily')}
@@ -830,7 +904,7 @@ const Today = () => {
                   </div>
                 </section>
 
-                {/* Section 3: Activity Cards - الأنشطة اليومية */}
+                {/* Section 9: Activity Cards - الأنشطة اليومية */}
                 <section className="mb-8">
                   <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
                     {t('activities.title')}
@@ -850,80 +924,6 @@ const Today = () => {
                     {renderEditableCard('recovery_score', <Heart className="w-5 h-5" />, t('activities.recovery'), report.recovery_score, 'bg-pink-500/10', '%', 1)}
                   </div>
                 </section>
-
-                {/* Section 4: Comparison - للأسبوع/الشهر/السنة فقط */}
-                {period !== 'daily' && comparisonData && (
-                  <section className="mb-8">
-                    <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
-                      {t('comparison.title')} - {period === 'weekly' ? t('periods.weekly') : period === 'monthly' ? t('periods.monthly') : t('periods.yearly')}
-                    </h2>
-                    <div className={cn(
-                      "grid gap-3",
-                      device === 'mobile' && "grid-cols-1 gap-2.5",
-                      device === 'tablet' && "grid-cols-2 gap-3",
-                      device === 'desktop' && "grid-cols-4 gap-4"
-                    )}>
-                      <ComparisonCard 
-                        label={t('financial.income')}
-                        current={report.income_usd || 0}
-                        previous={comparisonData.income_usd || 0}
-                        format="currency"
-                        sparklineData={rawDailyData.map(d => d.income_usd || 0)}
-                      />
-                      <ComparisonCard 
-                        label={t('financial.expenses')}
-                        current={report.spend_usd || 0}
-                        previous={comparisonData.spend_usd || 0}
-                        format="currency"
-                        inverted
-                        sparklineData={rawDailyData.map(d => d.spend_usd || 0)}
-                      />
-                      <ComparisonCard 
-                        label={t('financial.net')}
-                        current={report.net_usd || 0}
-                        previous={comparisonData.net_usd || 0}
-                        format="currency"
-                        sparklineData={rawDailyData.map(d => d.net_usd || 0)}
-                      />
-                      <ComparisonCard 
-                        label={t('activities.work')}
-                        current={report.work_hours || 0}
-                        previous={comparisonData.work_hours || 0}
-                        format="hours"
-                        sparklineData={rawDailyData.map(d => d.work_hours || 0)}
-                      />
-                    </div>
-                  </section>
-                )}
-
-                {/* Section 5: Trends & Insights - للأسبوع/الشهر/السنة فقط */}
-                {period !== 'daily' && rawDailyData.length > 0 && (
-                  <section className="mb-8">
-                    <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
-                      {t('trends.title')}
-                    </h2>
-                    <TrendsChart data={rawDailyData} period={period} />
-                  </section>
-                )}
-
-                {/* Section 6: Smart Insights - للأسبوع/الشهر/السنة فقط */}
-                {period !== 'daily' && comparisonData && rawDailyData.length > 0 && (
-                  <section className="mb-8">
-                    <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
-                      {t('insights.title')}
-                    </h2>
-                    <div className="space-y-3">
-                      {generateInsights(report, comparisonData, rawDailyData, period).map((insight, idx) => (
-                        <SmartInsight 
-                          key={idx}
-                          type={insight.type}
-                          icon={insight.icon}
-                          text={insight.text}
-                        />
-                      ))}
-                    </div>
-                  </section>
-                )}
 
                 {/* Edit Modals - Enhanced with Animations */}
                 {editingBalance && (
