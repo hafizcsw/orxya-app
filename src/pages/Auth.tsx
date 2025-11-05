@@ -24,12 +24,8 @@ export default function Auth() {
 
   useEffect(() => {
     // Only redirect if user is logged in and we haven't navigated yet
-    // and we're not in the middle of a login/signup operation
     if (user && !hasNavigated && !loading) {
-      console.log('[Auth] User already logged in, redirecting to /today')
       setHasNavigated(true)
-      
-      // Small delay to prevent navigation loops
       setTimeout(() => {
         navigate('/today', { replace: true })
       }, 100)

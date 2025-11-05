@@ -57,10 +57,13 @@ function AppContent() {
   useAutopilotNotifications();
   const location = useLocation();
   
+  // Hide navigation on auth pages
+  const isAuthPage = location.pathname === '/auth' || location.pathname === '/auth/callback';
+  
   return (
     <>
-      <Navigation />
-      <div className="pb-20">
+      {!isAuthPage && <Navigation />}
+      <div className={isAuthPage ? '' : 'pb-20'}>
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}
@@ -109,8 +112,8 @@ function AppContent() {
           </motion.div>
         </AnimatePresence>
       </div>
-      <BottomNav />
-      <AIDock />
+      {!isAuthPage && <BottomNav />}
+      {!isAuthPage && <AIDock />}
     </>
   );
 }
