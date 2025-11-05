@@ -213,7 +213,7 @@ export default function CalendarWeek({
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Day headers - Google Calendar Exact 72px */}
           <div className="flex border-b bg-white dark:bg-background sticky top-0 z-20" style={{ height: '72px', borderColor: '#e0e0e0' }}>
-            <div className="flex-shrink-0 border-r" style={{ width: '56px', borderColor: '#e0e0e0' }} /> {/* Spacer for time gutter */}
+            <div className="flex-shrink-0 border-r" style={{ width: '72px', borderColor: '#e0e0e0' }} /> {/* Spacer for time gutter */}
             <div className="grid grid-cols-7 flex-1">
             {days.map((d, i) => {
               const isToday = d.toDateString() === new Date().toDateString();
@@ -248,11 +248,11 @@ export default function CalendarWeek({
           {/* Scrollable container */}
           <div className="flex-1 overflow-auto relative bg-white dark:bg-background" ref={gridRef}>
             <div className="flex relative">
-              {/* Time gutter - Google Calendar Exact 56px width */}
-              <div className="flex-shrink-0 bg-white dark:bg-background border-r" style={{ width: '56px', borderColor: '#e0e0e0' }}>
+              {/* Time gutter - Updated for better readability */}
+              <div className="flex-shrink-0 bg-white dark:bg-background border-r" style={{ width: '72px', borderColor: '#e0e0e0' }}>
                 <div className="relative">
                   {Array.from({ length: 24 }, (_, h) => {
-                    const period = h < 12 ? 'AM' : 'PM';
+                    const period = h < 12 ? 'ص' : 'م';
                     const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
                     
                     return (
@@ -262,11 +262,11 @@ export default function CalendarWeek({
                         style={{ height: pxPerHour }}
                       >
                         {h > 0 && (
-                          <div className="absolute left-0 right-0 flex flex-col items-end pr-2" style={{ top: '2px' }}>
-                            <span className="text-[10px] font-['Roboto'] font-normal leading-none" style={{ color: '#70757a' }}>
+                          <div className="absolute left-0 right-0 flex flex-col items-end pr-3" style={{ top: '2px' }}>
+                            <span className="text-[13px] font-medium leading-none text-muted-foreground">
                               {displayHour}
                             </span>
-                            <span className="text-[8px] font-['Roboto'] font-normal leading-none" style={{ color: '#70757a', marginTop: '-1px' }}>
+                            <span className="text-[11px] font-normal leading-none text-muted-foreground/70" style={{ marginTop: '1px' }}>
                               {period}
                             </span>
                           </div>
