@@ -4,5 +4,20 @@
   "markAsRead": "Marcar como leído",
   "markAllRead": "Marcar todo como leído",
   "clear": "Limpiar",
-  "clearAll": "Limpiar todo"
+  "clearAll": "Limpiar todo",
+  "notificationCenter": "Centro de Notificaciones",
+  "local": "Local",
+  "localDescription": "Notificaciones locales en el dispositivo",
+  "whatsapp": "WhatsApp",
+  "whatsappDescription": "Mensajes de WhatsApp",
+  "email": "Correo",
+  "emailDescription": "Notificaciones de correo",
+  "scheduledNotifications": "Notificaciones Programadas",
+  "sent": "Enviado",
+  "scheduled": "Programado",
+  "failed": "Fallido",
+  "channelEnabled": "Canal {{channel}} activado",
+  "channelDisabled": "Canal {{channel}} desactivado",
+  "notificationEnabled": "Notificación activada",
+  "notificationDisabled": "Notificación desactivada"
 }

@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/lib/auth";
 import { Bell, Mail, MessageCircle, Check, X } from "lucide-react";
 import { Toast } from "@/components/Toast";
+import { useTranslation } from "react-i18next";
 
 type Notification = {
   id: string;
@@ -17,6 +18,7 @@ type Notification = {
 
 const Inbox = () => {
   const { user } = useUser();
+  const { t } = useTranslation('inbox');
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [toast, setToast] = useState<string | null>(null);
   const [channels, setChannels] = useState({
@@ -71,7 +73,7 @@ const Inbox = () => {
     const newValue = !channels[channel];
     setChannels(prev => ({ ...prev, [channel]: newValue }));
     localStorage.setItem(`notify_${channel}`, String(newValue));
-    setToast(`قناة ${channel} ${newValue ? "مفعّلة" : "معطّلة"}`);
+    setToast(t(newValue ? 'channelEnabled' : 'channelDisabled', { channel }));
   }
 
   async function toggleNotification(id: string, currentEnabled: boolean) {
@@ -84,7 +86,7 @@ const Inbox = () => {
       setNotifications(prev => 
         prev.map(n => n.id === id ? { ...n, enabled: !currentEnabled } : n)
       );
-      setToast(currentEnabled ? "تم تعطيل التنبيه" : "تم تفعيل التنبيه");
+      setToast(t(currentEnabled ? 'notificationDisabled' : 'notificationEnabled'));
     }
   }
 
@@ -111,7 +113,7 @@ const Inbox = () => {
         {/* Header */}
         <div className="flex items-center gap-3">
           <Bell className="w-6 h-6" />
-          <h1 className="text-3xl font-bold">مركز التنبيهات</h1>
+          <h1 className="text-3xl font-bold">{t('notificationCenter')}</h1>
         </div>
 
         {/* Channel Controls */}
@@ -120,7 +122,7 @@ const Inbox = () => {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <Bell className="w-5 h-5" />
-                <span className="font-semibold">محلي</span>
+                <span className="font-semibold">{t('local')}</span>
               </div>
               <button
                 onClick={() => toggleChannel("local")}
@@ -135,14 +137,14 @@ const Inbox = () => {
                 />
               </button>
             </div>
-            <p className="text-xs text-muted-foreground">تنبيهات محلية على الجهاز</p>
+            <p className="text-xs text-muted-foreground">{t('localDescription')}</p>
           </div>
 
           <div className="p-4 rounded-2xl border bg-white">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <MessageCircle className="w-5 h-5 text-green-600" />
-                <span className="font-semibold">واتساب</span>
+                <span className="font-semibold">{t('whatsapp')}</span>
               </div>
               <button
                 onClick={() => toggleChannel("whatsapp")}
@@ -157,14 +159,14 @@ const Inbox = () => {
                 />
               </button>
             </div>
-            <p className="text-xs text-muted-foreground">رسائل واتساب</p>
+            <p className="text-xs text-muted-foreground">{t('whatsappDescription')}</p>
           </div>
 
           <div className="p-4 rounded-2xl border bg-white">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <Mail className="w-5 h-5 text-blue-600" />
-                <span className="font-semibold">بريد</span>
+                <span className="font-semibold">{t('email')}</span>
               </div>
               <button
                 onClick={() => toggleChannel("email")}
@@ -179,17 +181,17 @@ const Inbox = () => {
                 />
               </button>
             </div>
-            <p className="text-xs text-muted-foreground">إشعارات البريد</p>
+            <p className="text-xs text-muted-foreground">{t('emailDescription')}</p>
           </div>
         </div>
 
         {/* Notifications List */}
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold">التنبيهات المجدولة ({notifications.length})</h2>
+          <h2 className="text-lg font-semibold">{t('scheduledNotifications')} ({notifications.length})</h2>
           
           {notifications.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground rounded-2xl border bg-white">
-              لا توجد تنبيهات
+              {t('empty')}
             </div>
           ) : (
             notifications.map(notif => (
@@ -206,12 +208,12 @@ const Inbox = () => {
                   {notif.body && <div className="text-sm text-muted-foreground mt-1">{notif.body}</div>}
                   <div className="flex items-center gap-3 mt-2 text-xs">
                     <span className={getStatusColor(notif.status)}>
-                      {notif.status === "sent" ? "مُرسل" : 
-                       notif.status === "scheduled" ? "مجدول" : 
-                       notif.status === "failed" ? "فشل" : notif.status}
+                      {notif.status === "sent" ? t('sent') : 
+                       notif.status === "scheduled" ? t('scheduled') : 
+                       notif.status === "failed" ? t('failed') : notif.status}
                     </span>
                     <span className="text-muted-foreground">
-                      {new Date(notif.scheduled_at).toLocaleString("ar-EG")}
+                      {new Date(notif.scheduled_at).toLocaleString()}
                     </span>
                   </div>
                 </div>

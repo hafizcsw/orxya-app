@@ -4,5 +4,20 @@
   "markAsRead": "Mark as read",
   "markAllRead": "Mark all as read",
   "clear": "Clear",
-  "clearAll": "Clear all"
+  "clearAll": "Clear all",
+  "notificationCenter": "Notification Center",
+  "local": "Local",
+  "localDescription": "Local notifications on device",
+  "whatsapp": "WhatsApp",
+  "whatsappDescription": "WhatsApp messages",
+  "email": "Email",
+  "emailDescription": "Email notifications",
+  "scheduledNotifications": "Scheduled Notifications",
+  "sent": "Sent",
+  "scheduled": "Scheduled",
+  "failed": "Failed",
+  "channelEnabled": "Channel {{channel}} enabled",
+  "channelDisabled": "Channel {{channel}} disabled",
+  "notificationEnabled": "Notification enabled",
+  "notificationDisabled": "Notification disabled"
 }

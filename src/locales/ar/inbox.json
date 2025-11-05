@@ -4,5 +4,20 @@
   "markAsRead": "تعليم كمقروء",
   "markAllRead": "تعليم الكل كمقروء",
   "clear": "مسح",
-  "clearAll": "مسح الكل"
+  "clearAll": "مسح الكل",
+  "notificationCenter": "مركز التنبيهات",
+  "local": "محلي",
+  "localDescription": "تنبيهات محلية على الجهاز",
+  "whatsapp": "واتساب",
+  "whatsappDescription": "رسائل واتساب",
+  "email": "بريد",
+  "emailDescription": "إشعارات البريد",
+  "scheduledNotifications": "التنبيهات المجدولة",
+  "sent": "مُرسل",
+  "scheduled": "مجدول",
+  "failed": "فشل",
+  "channelEnabled": "قناة {{channel}} مفعّلة",
+  "channelDisabled": "قناة {{channel}} معطّلة",
+  "notificationEnabled": "تم تفعيل التنبيه",
+  "notificationDisabled": "تم تعطيل التنبيه"
 }
