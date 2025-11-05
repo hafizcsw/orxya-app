@@ -1,0 +1,30 @@
+{
+  "title": "Hoy",
+  "greeting": {
+    "morning": "Buenos Días",
+    "afternoon": "Buenas Tardes",
+    "evening": "Buenas Tardes",
+    "night": "Buenas Noches"
+  },
+  "sections": {
+    "financial": "Estado Financiero",
+    "tasks": "Tareas",
+    "events": "Eventos",
+    "plans": "Planes",
+    "analytics": "Análisis",
+    "insights": "Perspectivas Inteligentes"
+  },
+  "stats": {
+    "activePlans": "Planes Activos",
+    "totalMonth": "Total del Mes",
+    "transactions": "Transacciones",
+    "todayProfit": "Ganancia de Hoy",
+    "avgProfit": "Ganancia Promedio"
+  },
+  "quickActions": {
+    "addTask": "Agregar Tarea",
+    "addEvent": "Agregar Evento",
+    "viewCalendar": "Ver Calendario",
+    "viewReports": "Ver Informes"
+  }
+}

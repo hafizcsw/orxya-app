@@ -1,0 +1,27 @@
+{
+  "bottomNav": {
+    "today": "Hoy",
+    "calendar": "Calendario",
+    "settings": "Configuración",
+    "more": "Más",
+    "ai": "IA"
+  },
+  "menu": {
+    "title": "Menú",
+    "settings": "Configuración",
+    "projects": "Proyectos",
+    "reports": "Informes",
+    "planner": "Planificador Inteligente",
+    "assistant": "Asistente",
+    "conflicts": "Conflictos",
+    "notifications": "Notificaciones",
+    "automation": "Automatización",
+    "diagnostics": "Diagnóstico",
+    "profile": "Mi Cuenta",
+    "darkMode": "Modo Oscuro",
+    "lightMode": "Modo Claro",
+    "expenses": "Gastos",
+    "inbox": "Bandeja de entrada",
+    "glances": "Vistazos"
+  }
+}

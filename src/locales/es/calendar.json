@@ -1,0 +1,46 @@
+{
+  "title": "Calendario",
+  "header": {
+    "today": "Hoy",
+    "month": "Mes",
+    "week": "Semana",
+    "day": "Día",
+    "agenda": "Agenda"
+  },
+  "event": {
+    "new": "Nuevo Evento",
+    "edit": "Editar Evento",
+    "delete": "Eliminar Evento",
+    "title": "Título",
+    "description": "Descripción",
+    "startTime": "Hora de Inicio",
+    "endTime": "Hora de Fin",
+    "location": "Ubicación",
+    "allDay": "Todo el Día",
+    "repeat": "Repetir",
+    "reminder": "Recordatorio"
+  },
+  "days": {
+    "sunday": "Domingo",
+    "monday": "Lunes",
+    "tuesday": "Martes",
+    "wednesday": "Miércoles",
+    "thursday": "Jueves",
+    "friday": "Viernes",
+    "saturday": "Sábado"
+  },
+  "months": {
+    "january": "Enero",
+    "february": "Febrero",
+    "march": "Marzo",
+    "april": "Abril",
+    "may": "Mayo",
+    "june": "Junio",
+    "july": "Julio",
+    "august": "Agosto",
+    "september": "Septiembre",
+    "october": "Octubre",
+    "november": "Noviembre",
+    "december": "Diciembre"
+  }
+}

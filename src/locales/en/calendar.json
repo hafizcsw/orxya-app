@@ -1,0 +1,46 @@
+{
+  "title": "Calendar",
+  "header": {
+    "today": "Today",
+    "month": "Month",
+    "week": "Week",
+    "day": "Day",
+    "agenda": "Agenda"
+  },
+  "event": {
+    "new": "New Event",
+    "edit": "Edit Event",
+    "delete": "Delete Event",
+    "title": "Title",
+    "description": "Description",
+    "startTime": "Start Time",
+    "endTime": "End Time",
+    "location": "Location",
+    "allDay": "All Day",
+    "repeat": "Repeat",
+    "reminder": "Reminder"
+  },
+  "days": {
+    "sunday": "Sunday",
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday"
+  },
+  "months": {
+    "january": "January",
+    "february": "February",
+    "march": "March",
+    "april": "April",
+    "may": "May",
+    "june": "June",
+    "july": "July",
+    "august": "August",
+    "september": "September",
+    "october": "October",
+    "november": "November",
+    "december": "December"
+  }
+}

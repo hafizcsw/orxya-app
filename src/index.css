@@ -5,6 +5,25 @@
 @tailwind components;
 @tailwind utilities;
 
+/* RTL/LTR Support */
+[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+[dir="ltr"] {
+  direction: ltr;
+  text-align: left;
+}
+
+/* Flip icons for RTL except specific ones */
+[dir="rtl"] .lucide-chevron-left,
+[dir="rtl"] .lucide-chevron-right,
+[dir="rtl"] .lucide-arrow-left,
+[dir="rtl"] .lucide-arrow-right {
+  transform: scaleX(-1);
+}
+
 /* Import WHOOP theme */
 @import './styles/whoop.css';
 

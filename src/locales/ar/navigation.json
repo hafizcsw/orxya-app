@@ -1,0 +1,27 @@
+{
+  "bottomNav": {
+    "today": "اليوم",
+    "calendar": "التقويم",
+    "settings": "الإعدادات",
+    "more": "المزيد",
+    "ai": "الذكاء الاصطناعي"
+  },
+  "menu": {
+    "title": "القائمة",
+    "settings": "الإعدادات",
+    "projects": "المشاريع",
+    "reports": "التقارير",
+    "planner": "المخطط الذكي",
+    "assistant": "المساعد",
+    "conflicts": "التعارضات",
+    "notifications": "الإشعارات",
+    "automation": "الأتمتة",
+    "diagnostics": "التشخيص",
+    "profile": "حسابي",
+    "darkMode": "الوضع الليلي",
+    "lightMode": "الوضع النهاري",
+    "expenses": "المصروفات",
+    "inbox": "البريد الوارد",
+    "glances": "لمحات"
+  }
+}

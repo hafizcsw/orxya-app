@@ -11,6 +11,7 @@ import { CalendarPopover } from "@/components/CalendarPopover";
 import { useSelectedDate } from "@/contexts/DateContext";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 const Navigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -169,9 +170,9 @@ const Navigation = () => {
               </button>
             </div>}
 
-          {/* Right: Settings & Logo */}
+          {/* Right: Language Switcher & Logo */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            
+            <LanguageSwitcher />
             <Link to="/" className="text-lg font-bold text-foreground hover:text-primary transition-colors">
               Oryxa
             </Link>

@@ -1,0 +1,29 @@
+{
+  "title": "Planes",
+  "analytics": {
+    "title": "Análisis de Planes",
+    "distribution": "Distribución de Ganancias",
+    "performance": "Comparación de Rendimiento",
+    "summary": "Estadísticas",
+    "period": {
+      "today": "Hoy",
+      "week": "Semana",
+      "month": "Mes",
+      "year": "Año"
+    }
+  },
+  "stats": {
+    "activePlans": "Planes Activos",
+    "totalProfit": "Ganancia Total",
+    "transactions": "Transacciones",
+    "avgProfit": "Ganancia Promedio"
+  },
+  "form": {
+    "name": "Nombre del Plan",
+    "category": "Categoría",
+    "target": "Objetivo Mensual",
+    "description": "Descripción",
+    "icon": "Icono",
+    "color": "Color"
+  }
+}

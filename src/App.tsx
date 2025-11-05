@@ -1,8 +1,11 @@
+import './i18n';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ThemeProvider } from "next-themes";
 import { DateProvider } from "./contexts/DateContext";
@@ -56,6 +59,15 @@ const queryClient = new QueryClient();
 function AppContent() {
   useAutopilotNotifications();
   const location = useLocation();
+  const { i18n } = useTranslation();
+  
+  // Apply RTL/LTR on mount
+  useEffect(() => {
+    const currentLang = i18n.language || 'ar';
+    const dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.setAttribute('dir', dir);
+    document.documentElement.setAttribute('lang', currentLang);
+  }, [i18n.language]);
   
   // Hide navigation on auth pages
   const isAuthPage = location.pathname === '/auth' || location.pathname === '/auth/callback';

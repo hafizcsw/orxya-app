@@ -1,0 +1,35 @@
+{
+  "title": "Settings",
+  "sections": {
+    "general": "General",
+    "notifications": "Notifications",
+    "prayer": "Prayer",
+    "calendar": "Calendar",
+    "privacy": "Privacy",
+    "integrations": "Integrations"
+  },
+  "general": {
+    "language": "Language",
+    "theme": "Theme",
+    "timezone": "Timezone",
+    "dateFormat": "Date Format",
+    "timeFormat": "Time Format"
+  },
+  "languages": {
+    "ar": "Arabic 🇸🇦",
+    "en": "English 🇬🇧",
+    "es": "Spanish 🇪🇸"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "auto": "Auto"
+  },
+  "notifications": {
+    "enable": "Enable Notifications",
+    "sound": "Sound",
+    "vibration": "Vibration",
+    "preview": "Preview",
+    "reminderTime": "Reminder Time"
+  }
+}

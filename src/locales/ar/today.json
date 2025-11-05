@@ -1,0 +1,30 @@
+{
+  "title": "اليوم",
+  "greeting": {
+    "morning": "صباح الخير",
+    "afternoon": "مساء الخير",
+    "evening": "مساء الخير",
+    "night": "ليلة سعيدة"
+  },
+  "sections": {
+    "financial": "الوضع المالي",
+    "tasks": "المهام",
+    "events": "الأحداث",
+    "plans": "الخطط",
+    "analytics": "التحليلات",
+    "insights": "الرؤى الذكية"
+  },
+  "stats": {
+    "activePlans": "خطط نشطة",
+    "totalMonth": "إجمالي الشهر",
+    "transactions": "معاملات",
+    "todayProfit": "ربح اليوم",
+    "avgProfit": "متوسط الربح"
+  },
+  "quickActions": {
+    "addTask": "إضافة مهمة",
+    "addEvent": "إضافة حدث",
+    "viewCalendar": "عرض التقويم",
+    "viewReports": "عرض التقارير"
+  }
+}

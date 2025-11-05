@@ -1,0 +1,30 @@
+{
+  "title": "Today",
+  "greeting": {
+    "morning": "Good Morning",
+    "afternoon": "Good Afternoon",
+    "evening": "Good Evening",
+    "night": "Good Night"
+  },
+  "sections": {
+    "financial": "Financial Status",
+    "tasks": "Tasks",
+    "events": "Events",
+    "plans": "Plans",
+    "analytics": "Analytics",
+    "insights": "Smart Insights"
+  },
+  "stats": {
+    "activePlans": "Active Plans",
+    "totalMonth": "Total Month",
+    "transactions": "Transactions",
+    "todayProfit": "Today's Profit",
+    "avgProfit": "Avg Profit"
+  },
+  "quickActions": {
+    "addTask": "Add Task",
+    "addEvent": "Add Event",
+    "viewCalendar": "View Calendar",
+    "viewReports": "View Reports"
+  }
+}

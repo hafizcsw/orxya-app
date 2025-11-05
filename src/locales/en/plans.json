@@ -1,0 +1,29 @@
+{
+  "title": "Plans",
+  "analytics": {
+    "title": "Plans Analytics",
+    "distribution": "Profit Distribution",
+    "performance": "Performance Comparison",
+    "summary": "Statistics",
+    "period": {
+      "today": "Today",
+      "week": "Week",
+      "month": "Month",
+      "year": "Year"
+    }
+  },
+  "stats": {
+    "activePlans": "Active Plans",
+    "totalProfit": "Total Profit",
+    "transactions": "Transactions",
+    "avgProfit": "Avg Profit"
+  },
+  "form": {
+    "name": "Plan Name",
+    "category": "Category",
+    "target": "Monthly Target",
+    "description": "Description",
+    "icon": "Icon",
+    "color": "Color"
+  }
+}

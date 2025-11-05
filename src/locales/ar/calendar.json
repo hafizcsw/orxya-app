@@ -1,0 +1,46 @@
+{
+  "title": "التقويم",
+  "header": {
+    "today": "اليوم",
+    "month": "شهر",
+    "week": "أسبوع",
+    "day": "يوم",
+    "agenda": "جدول الأعمال"
+  },
+  "event": {
+    "new": "حدث جديد",
+    "edit": "تعديل الحدث",
+    "delete": "حذف الحدث",
+    "title": "العنوان",
+    "description": "الوصف",
+    "startTime": "وقت البدء",
+    "endTime": "وقت الانتهاء",
+    "location": "الموقع",
+    "allDay": "طوال اليوم",
+    "repeat": "تكرار",
+    "reminder": "تذكير"
+  },
+  "days": {
+    "sunday": "الأحد",
+    "monday": "الإثنين",
+    "tuesday": "الثلاثاء",
+    "wednesday": "الأربعاء",
+    "thursday": "الخميس",
+    "friday": "الجمعة",
+    "saturday": "السبت"
+  },
+  "months": {
+    "january": "يناير",
+    "february": "فبراير",
+    "march": "مارس",
+    "april": "أبريل",
+    "may": "مايو",
+    "june": "يونيو",
+    "july": "يوليو",
+    "august": "أغسطس",
+    "september": "سبتمبر",
+    "october": "أكتوبر",
+    "november": "نوفمبر",
+    "december": "ديسمبر"
+  }
+}

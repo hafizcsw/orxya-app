@@ -1,0 +1,55 @@
+{
+  "buttons": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "add": "Agregar",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "skip": "Omitir",
+    "loading": "Cargando...",
+    "view": "Ver",
+    "apply": "Aplicar",
+    "approve": "Aprobar",
+    "create": "Crear",
+    "update": "Actualizar"
+  },
+  "messages": {
+    "saved": "Guardado ✅",
+    "error": "Ocurrió un error inesperado",
+    "success": "Operación completada con éxito",
+    "loading": "Cargando...",
+    "noData": "No hay datos disponibles",
+    "deleted": "Eliminado",
+    "updated": "Actualizado",
+    "created": "Creado"
+  },
+  "time": {
+    "today": "Hoy",
+    "yesterday": "Ayer",
+    "tomorrow": "Mañana",
+    "week": "Semana",
+    "month": "Mes",
+    "year": "Año",
+    "day": "Día",
+    "hour": "Hora",
+    "minute": "Minuto",
+    "second": "Segundo"
+  },
+  "common": {
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "export": "Exportar",
+    "import": "Importar",
+    "refresh": "Actualizar",
+    "settings": "Configuración",
+    "profile": "Perfil",
+    "logout": "Cerrar sesión",
+    "login": "Iniciar sesión",
+    "signup": "Registrarse"
+  }
+}

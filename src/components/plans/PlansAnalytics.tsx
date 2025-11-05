@@ -5,6 +5,7 @@ import { DonutChart } from '@/components/charts/DonutChart';
 import { RadarChart } from '@/components/charts/RadarChart';
 import { NeonButton } from '@/components/ui/NeonButton';
 import { BusinessPlan } from '@/types/business-plan';
+import { useTranslation } from 'react-i18next';
 
 type AnalyticsPeriod = 'today' | 'week' | 'month' | 'year';
 
@@ -14,6 +15,7 @@ interface PlansAnalyticsProps {
 
 export function PlansAnalytics({ plans }: PlansAnalyticsProps) {
   const [period, setPeriod] = useState<AnalyticsPeriod>('month');
+  const { t } = useTranslation('plans');
 
   // دالة مساعدة للحصول على القيمة حسب الفترة
   const getProfitByPeriod = (plan: BusinessPlan): number => {
@@ -26,14 +28,7 @@ export function PlansAnalytics({ plans }: PlansAnalyticsProps) {
     }
   };
 
-  const periodLabels = {
-    today: 'اليوم',
-    week: 'الأسبوع',
-    month: 'الشهر',
-    year: 'السنة'
-  };
-
-  const periodLabel = periodLabels[period];
+  const periodLabel = t(`analytics.period.${period}`);
 
   const donutData = plans.map(p => ({
     name: p.name,
@@ -55,17 +50,17 @@ export function PlansAnalytics({ plans }: PlansAnalyticsProps) {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <h2 className="text-2xl font-bold flex items-center gap-2">
           <Calendar className="w-6 h-6 text-primary" />
-          تحليلات الخطط
+          {t('analytics.title')}
         </h2>
       </div>
 
       {/* Period Buttons */}
       <div className="grid grid-cols-2 md:flex gap-2">
         {[
-          { key: 'today' as AnalyticsPeriod, label: 'اليوم' },
-          { key: 'week' as AnalyticsPeriod, label: 'الأسبوع' },
-          { key: 'month' as AnalyticsPeriod, label: 'الشهر' },
-          { key: 'year' as AnalyticsPeriod, label: 'السنة' }
+          { key: 'today' as AnalyticsPeriod, label: t('analytics.period.today') },
+          { key: 'week' as AnalyticsPeriod, label: t('analytics.period.week') },
+          { key: 'month' as AnalyticsPeriod, label: t('analytics.period.month') },
+          { key: 'year' as AnalyticsPeriod, label: t('analytics.period.year') }
         ].map(({ key, label }) => (
           <NeonButton
             key={key}
@@ -84,7 +79,7 @@ export function PlansAnalytics({ plans }: PlansAnalyticsProps) {
       <HolographicCard variant="glass" className="p-6">
         <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
           <PieChart className="w-5 h-5" />
-          توزيع الأرباح - {periodLabel}
+          {t('analytics.distribution')} - {periodLabel}
         </h3>
         <DonutChart 
           data={donutData}
@@ -96,7 +91,7 @@ export function PlansAnalytics({ plans }: PlansAnalyticsProps) {
       <HolographicCard variant="glass" className="p-6">
         <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
           <Activity className="w-5 h-5" />
-          مقارنة الأداء - {periodLabel}
+          {t('analytics.performance')} - {periodLabel}
         </h3>
         <RadarChart 
           data={radarData}
@@ -106,31 +101,31 @@ export function PlansAnalytics({ plans }: PlansAnalyticsProps) {
 
       {/* Summary Statistics */}
       <HolographicCard variant="glass" className="p-6">
-        <h3 className="text-xl font-bold mb-4">إحصائيات {periodLabel}</h3>
+        <h3 className="text-xl font-bold mb-4">{t('analytics.summary')} {periodLabel}</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center">
             <div className="text-3xl font-bold gradient-text">
               {plans.length}
             </div>
-            <div className="text-sm text-muted-foreground mt-1">خطط نشطة</div>
+            <div className="text-sm text-muted-foreground mt-1">{t('stats.activePlans')}</div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold gradient-text">
               ${totalProfit.toFixed(0)}
             </div>
-            <div className="text-sm text-muted-foreground mt-1">إجمالي {periodLabel}</div>
+            <div className="text-sm text-muted-foreground mt-1">{t('stats.totalProfit')} {periodLabel}</div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold gradient-text">
               {plans.reduce((sum, p) => sum + p.month_transactions, 0)}
             </div>
-            <div className="text-sm text-muted-foreground mt-1">معاملات</div>
+            <div className="text-sm text-muted-foreground mt-1">{t('stats.transactions')}</div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold gradient-text">
               {plans.length > 0 ? `$${(totalProfit / plans.length).toFixed(0)}` : '$0'}
             </div>
-            <div className="text-sm text-muted-foreground mt-1">متوسط الربح</div>
+            <div className="text-sm text-muted-foreground mt-1">{t('stats.avgProfit')}</div>
           </div>
         </div>
       </HolographicCard>

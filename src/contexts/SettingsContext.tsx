@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { supabase } from '@/integrations/supabase/client';
 import { UserSettings } from '@/types/settings';
 import { formatTime as formatTimeHelper, formatDate as formatDateHelper } from '@/lib/time';
+import i18n from '@/i18n';
 
 interface SettingsContextValue {
   settings: UserSettings | null;
@@ -22,7 +23,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        // For unauthenticated users: detect browser language
+        const browserLang = navigator.language.split('-')[0];
+        const supportedLang = ['ar', 'en', 'es'].includes(browserLang) ? browserLang : 'ar';
+        await i18n.changeLanguage(supportedLang);
         setSettings(null);
+        setLoading(false);
         return;
       }
 
@@ -35,6 +41,16 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
 
       setSettings(data as unknown as UserSettings);
+      
+      // If user has no saved language, detect from browser
+      if (!data.language) {
+        const browserLang = navigator.language.split('-')[0];
+        const supportedLang = ['ar', 'en', 'es'].includes(browserLang) ? browserLang : 'ar';
+        await updateSettings({ language: supportedLang });
+        await i18n.changeLanguage(supportedLang);
+      } else {
+        await i18n.changeLanguage(data.language);
+      }
     } catch (error) {
       console.error('Error loading settings:', error);
     } finally {
@@ -53,6 +69,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         .eq('id', user.id);
 
       if (error) throw error;
+
+      // If language changed, update i18n
+      if (updates.language) {
+        await i18n.changeLanguage(updates.language);
+      }
 
       setSettings(prev => prev ? { ...prev, ...updates } : null);
     } catch (error) {

@@ -1,10 +1,13 @@
 import { useSettings } from '@/contexts/SettingsContext';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/i18n';
 
 const languages = [
-  { value: 'ar', label: 'العربية' },
-  { value: 'en', label: 'English' },
+  { value: 'ar', label: 'العربية 🇸🇦' },
+  { value: 'en', label: 'English 🇬🇧' },
+  { value: 'es', label: 'Español 🇪🇸' },
 ];
 
 const countries = [
@@ -30,8 +33,14 @@ const currencies = [
 
 export function GeneralSettings() {
   const { settings, updateSettings } = useSettings();
+  const { t } = useTranslation('settings');
 
   if (!settings) return null;
+
+  const handleLanguageChange = async (value: string) => {
+    await updateSettings({ language: value });
+    await i18n.changeLanguage(value);
+  };
 
   return (
     <div className="space-y-0">
@@ -41,7 +50,7 @@ export function GeneralSettings() {
             <h3 className="text-sm font-medium text-[#3c4043] dark:text-[#e8eaed]">اللغة</h3>
             <p className="text-xs text-[#5f6368] dark:text-[#9aa0a6] mt-0.5">Language</p>
           </div>
-          <Select value={settings.language} onValueChange={(value) => updateSettings({ language: value })}>
+          <Select value={settings.language} onValueChange={handleLanguageChange}>
             <SelectTrigger className="w-[200px] h-9">
               <SelectValue />
             </SelectTrigger>

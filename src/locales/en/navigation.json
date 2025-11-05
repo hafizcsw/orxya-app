@@ -1,0 +1,27 @@
+{
+  "bottomNav": {
+    "today": "Today",
+    "calendar": "Calendar",
+    "settings": "Settings",
+    "more": "More",
+    "ai": "AI"
+  },
+  "menu": {
+    "title": "Menu",
+    "settings": "Settings",
+    "projects": "Projects",
+    "reports": "Reports",
+    "planner": "Smart Planner",
+    "assistant": "Assistant",
+    "conflicts": "Conflicts",
+    "notifications": "Notifications",
+    "automation": "Automation",
+    "diagnostics": "Diagnostics",
+    "profile": "My Account",
+    "darkMode": "Dark Mode",
+    "lightMode": "Light Mode",
+    "expenses": "Expenses",
+    "inbox": "Inbox",
+    "glances": "Glances"
+  }
+}

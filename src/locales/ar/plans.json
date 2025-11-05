@@ -1,0 +1,29 @@
+{
+  "title": "الخطط",
+  "analytics": {
+    "title": "تحليلات الخطط",
+    "distribution": "توزيع الأرباح",
+    "performance": "مقارنة الأداء",
+    "summary": "إحصائيات",
+    "period": {
+      "today": "اليوم",
+      "week": "الأسبوع",
+      "month": "الشهر",
+      "year": "السنة"
+    }
+  },
+  "stats": {
+    "activePlans": "خطط نشطة",
+    "totalProfit": "إجمالي الأرباح",
+    "transactions": "معاملات",
+    "avgProfit": "متوسط الربح"
+  },
+  "form": {
+    "name": "اسم الخطة",
+    "category": "الفئة",
+    "target": "الهدف الشهري",
+    "description": "الوصف",
+    "icon": "الأيقونة",
+    "color": "اللون"
+  }
+}

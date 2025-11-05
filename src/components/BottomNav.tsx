@@ -3,11 +3,14 @@ import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { useAI } from "@/contexts/AIContext";
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 export function BottomNav() {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const { toggleAI } = useAI();
+  const { t } = useTranslation('navigation');
   
   const [isDark, setIsDark] = useState(() => {
     const stored = localStorage.getItem('theme');
@@ -49,22 +52,22 @@ export function BottomNav() {
   };
 
   const navItems = [
-    { icon: Home, label: "اليوم", path: "/" },
-    { icon: Calendar, label: "التقويم", path: "/calendar" },
-    { icon: Settings, label: "الإعدادات", path: "/settings" },
+    { icon: Home, label: t('bottomNav.today'), path: "/" },
+    { icon: Calendar, label: t('bottomNav.calendar'), path: "/calendar" },
+    { icon: Settings, label: t('bottomNav.settings'), path: "/settings" },
   ];
 
   const menuLinks = [
-    { to: "/settings", label: "الإعدادات", icon: Settings },
-    { to: "/projects", label: "المشاريع", icon: BarChart3 },
-    { to: "/reports", label: "التقارير", icon: BarChart3 },
-    { to: "/planner", label: "المخطط الذكي", icon: MessageSquare },
-    { to: "/assistant", label: "المساعد", icon: Bot },
-    { to: "/conflicts", label: "التعارضات", icon: Zap },
-    { to: "/inbox", label: "الإشعارات", icon: Bell },
-    { to: "/automation", label: "الأتمتة", icon: Zap },
-    { to: "/diagnostics", label: "التشخيص", icon: Activity },
-    { to: "/profile", label: "حسابي", icon: Settings },
+    { to: "/settings", label: t('menu.settings'), icon: Settings },
+    { to: "/projects", label: t('menu.projects'), icon: BarChart3 },
+    { to: "/reports", label: t('menu.reports'), icon: BarChart3 },
+    { to: "/planner", label: t('menu.planner'), icon: MessageSquare },
+    { to: "/assistant", label: t('menu.assistant'), icon: Bot },
+    { to: "/conflicts", label: t('menu.conflicts'), icon: Zap },
+    { to: "/inbox", label: t('menu.notifications'), icon: Bell },
+    { to: "/automation", label: t('menu.automation'), icon: Zap },
+    { to: "/diagnostics", label: t('menu.diagnostics'), icon: Activity },
+    { to: "/profile", label: t('menu.profile'), icon: Settings },
   ];
 
   return (
@@ -75,13 +78,16 @@ export function BottomNav() {
           <div className="flex flex-col h-full">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-border/50 bg-card/50">
-              <h2 className="text-xl font-bold">القائمة</h2>
-              <button
-                onClick={() => setMenuOpen(false)}
-                className="p-2 hover:bg-secondary rounded-lg transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
+              <h2 className="text-xl font-bold">{t('menu.title')}</h2>
+              <div className="flex items-center gap-2">
+                <LanguageSwitcher />
+                <button
+                  onClick={() => setMenuOpen(false)}
+                  className="p-2 hover:bg-secondary rounded-lg transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
             </div>
 
             {/* Menu Items */}
@@ -92,7 +98,7 @@ export function BottomNav() {
                 className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors w-full text-right text-muted-foreground hover:bg-accent"
               >
                 {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                <span>{isDark ? 'الوضع النهاري' : 'الوضع الليلي'}</span>
+                <span>{isDark ? t('menu.lightMode') : t('menu.darkMode')}</span>
               </button>
               
               {menuLinks.map((link) => {
@@ -195,7 +201,7 @@ export function BottomNav() {
             )}
           >
             <Menu className="w-5 h-5 md:w-6 md:h-6" />
-            <span className="text-[10px] md:text-sm font-medium">المزيد</span>
+            <span className="text-[10px] md:text-sm font-medium">{t('bottomNav.more')}</span>
           </button>
         </div>
       </nav>

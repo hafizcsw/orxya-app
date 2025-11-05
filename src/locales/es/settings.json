@@ -1,0 +1,35 @@
+{
+  "title": "Configuración",
+  "sections": {
+    "general": "General",
+    "notifications": "Notificaciones",
+    "prayer": "Oración",
+    "calendar": "Calendario",
+    "privacy": "Privacidad",
+    "integrations": "Integraciones"
+  },
+  "general": {
+    "language": "Idioma",
+    "theme": "Tema",
+    "timezone": "Zona Horaria",
+    "dateFormat": "Formato de Fecha",
+    "timeFormat": "Formato de Hora"
+  },
+  "languages": {
+    "ar": "Árabe 🇸🇦",
+    "en": "Inglés 🇬🇧",
+    "es": "Español 🇪🇸"
+  },
+  "theme": {
+    "light": "Claro",
+    "dark": "Oscuro",
+    "auto": "Automático"
+  },
+  "notifications": {
+    "enable": "Activar Notificaciones",
+    "sound": "Sonido",
+    "vibration": "Vibración",
+    "preview": "Vista Previa",
+    "reminderTime": "Hora del Recordatorio"
+  }
+}
