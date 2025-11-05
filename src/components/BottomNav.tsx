@@ -115,6 +115,15 @@ export function BottomNav() {
                 damping: 25,
                 stiffness: 300
               }}
+              drag="y"
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={{ top: 0, bottom: 0.5 }}
+              onDragEnd={(_, info) => {
+                // إغلاق القائمة إذا تم السحب لأسفل بسرعة أو لمسافة كافية
+                if (info.offset.y > 100 || info.velocity.y > 500) {
+                  setMenuOpen(false);
+                }
+              }}
               className="fixed inset-x-0 bottom-0 z-[101] bg-background/98 backdrop-blur-xl rounded-t-3xl shadow-2xl"
               style={{ maxHeight: "85vh" }}
             >
