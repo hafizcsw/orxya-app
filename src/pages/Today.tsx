@@ -27,6 +27,10 @@ import { PlansAnalytics } from '@/components/plans/PlansAnalytics'
 import { BusinessPlan, BusinessPlanFormData } from '@/types/business-plan'
 import { GlancesBar } from '@/components/glances/GlancesBar'
 import { getUserFlags } from '@/lib/featureFlags'
+import { TrendsChart } from '@/components/charts/TrendsChart'
+import { ComparisonCard } from '@/components/dashboard/ComparisonCard'
+import { SmartInsight } from '@/components/dashboard/SmartInsight'
+import { generateInsights } from '@/lib/utils'
 
 // Validation schemas
 const dailyLogSchema = z.object({
@@ -59,6 +63,8 @@ const Today = () => {
   const device = useDeviceType()
   const [loading, setLoading] = useState(false)
   const [report, setReport] = useState<any | null>(null)
+  const [rawDailyData, setRawDailyData] = useState<any[]>([])
+  const [comparisonData, setComparisonData] = useState<any | null>(null)
   const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('daily')
   const [toast, setToast] = useState<string | null>(null)
   const [editingField, setEditingField] = useState<string | null>(null)
@@ -134,9 +140,12 @@ const Today = () => {
       // For daily, take first item; for others, aggregate the data
       if (period === 'daily') {
         setReport(data?.items?.[0] ?? null)
+        setRawDailyData([])
       } else {
         // Aggregate data for weekly/monthly/yearly
         const items = data?.items || []
+        setRawDailyData(items) // Store raw data for charts
+        
         if (items.length > 0) {
           const aggregated = {
             current_balance: items[items.length - 1]?.current_balance || 0,
@@ -158,10 +167,71 @@ const Today = () => {
         }
       }
       
+      // Fetch comparison data if not daily
+      if (period !== 'daily') {
+        await fetchComparisonData(startDate, endDate)
+      } else {
+        setComparisonData(null)
+      }
+      
       track('report_loaded', { hasReport: !!data?.items?.[0], period, startDate, endDate })
     } catch (e: any) {
       setReport(null)
     } finally { setLoading(false) }
+  }
+
+  async function fetchComparisonData(currentStart: string, currentEnd: string) {
+    if (!user) return
+    try {
+      let prevStart: Date, prevEnd: Date
+      const startDate = new Date(currentStart)
+      const endDate = new Date(currentEnd)
+      
+      if (period === 'weekly') {
+        prevStart = new Date(startDate)
+        prevStart.setDate(prevStart.getDate() - 7)
+        prevEnd = new Date(endDate)
+        prevEnd.setDate(prevEnd.getDate() - 7)
+      } else if (period === 'monthly') {
+        prevStart = new Date(startDate)
+        prevStart.setMonth(prevStart.getMonth() - 1)
+        prevEnd = new Date(endDate)
+        prevEnd.setMonth(prevEnd.getMonth() - 1)
+      } else if (period === 'yearly') {
+        prevStart = new Date(startDate)
+        prevStart.setFullYear(prevStart.getFullYear() - 1)
+        prevEnd = new Date(endDate)
+        prevEnd.setFullYear(prevEnd.getFullYear() - 1)
+      } else {
+        return
+      }
+      
+      const { data, error } = await supabase.functions.invoke('report-daily', {
+        body: { 
+          start: prevStart.toISOString().slice(0, 10),
+          end: prevEnd.toISOString().slice(0, 10)
+        }
+      })
+      
+      if (error) throw error
+      
+      const items = data?.items || []
+      if (items.length > 0) {
+        const aggregated = {
+          income_usd: items.reduce((sum: number, item: any) => sum + (item.income_usd || 0), 0),
+          spend_usd: items.reduce((sum: number, item: any) => sum + (item.spend_usd || 0), 0),
+          net_usd: items.reduce((sum: number, item: any) => sum + (item.net_usd || 0), 0),
+          work_hours: items.reduce((sum: number, item: any) => sum + (item.work_hours || 0), 0),
+          study_hours: items.reduce((sum: number, item: any) => sum + (item.study_hours || 0), 0),
+          mma_hours: items.reduce((sum: number, item: any) => sum + (item.mma_hours || 0), 0),
+          sleep_hours: items.reduce((sum: number, item: any) => sum + (item.sleep_hours || 0), 0) / items.length,
+        }
+        setComparisonData(aggregated)
+      }
+    } catch (e) {
+      console.error('Error fetching comparison data:', e)
+      setComparisonData(null)
+    }
   }
 
   useEffect(() => { 
@@ -760,6 +830,80 @@ const Today = () => {
                     {renderEditableCard('recovery_score', <Heart className="w-5 h-5" />, 'استشفاء', report.recovery_score, 'bg-pink-500/10', '%', 1)}
                   </div>
                 </section>
+
+                {/* Section 4: Comparison - للأسبوع/الشهر/السنة فقط */}
+                {period !== 'daily' && comparisonData && (
+                  <section className="mb-8">
+                    <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
+                      المقارنة مع {period === 'weekly' ? 'الأسبوع السابق' : period === 'monthly' ? 'الشهر السابق' : 'السنة السابقة'}
+                    </h2>
+                    <div className={cn(
+                      "grid gap-3",
+                      device === 'mobile' && "grid-cols-1 gap-2.5",
+                      device === 'tablet' && "grid-cols-2 gap-3",
+                      device === 'desktop' && "grid-cols-4 gap-4"
+                    )}>
+                      <ComparisonCard 
+                        label="الدخل"
+                        current={report.income_usd || 0}
+                        previous={comparisonData.income_usd || 0}
+                        format="currency"
+                        sparklineData={rawDailyData.map(d => d.income_usd || 0)}
+                      />
+                      <ComparisonCard 
+                        label="المصروفات"
+                        current={report.spend_usd || 0}
+                        previous={comparisonData.spend_usd || 0}
+                        format="currency"
+                        inverted
+                        sparklineData={rawDailyData.map(d => d.spend_usd || 0)}
+                      />
+                      <ComparisonCard 
+                        label="الصافي"
+                        current={report.net_usd || 0}
+                        previous={comparisonData.net_usd || 0}
+                        format="currency"
+                        sparklineData={rawDailyData.map(d => d.net_usd || 0)}
+                      />
+                      <ComparisonCard 
+                        label="ساعات العمل"
+                        current={report.work_hours || 0}
+                        previous={comparisonData.work_hours || 0}
+                        format="hours"
+                        sparklineData={rawDailyData.map(d => d.work_hours || 0)}
+                      />
+                    </div>
+                  </section>
+                )}
+
+                {/* Section 5: Trends & Insights - للأسبوع/الشهر/السنة فقط */}
+                {period !== 'daily' && rawDailyData.length > 0 && (
+                  <section className="mb-8">
+                    <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
+                      الاتجاهات والتحليلات
+                    </h2>
+                    <TrendsChart data={rawDailyData} period={period} />
+                  </section>
+                )}
+
+                {/* Section 6: Smart Insights - للأسبوع/الشهر/السنة فقط */}
+                {period !== 'daily' && comparisonData && rawDailyData.length > 0 && (
+                  <section className="mb-8">
+                    <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
+                      رؤى ذكية
+                    </h2>
+                    <div className="space-y-3">
+                      {generateInsights(report, comparisonData, rawDailyData, period).map((insight, idx) => (
+                        <SmartInsight 
+                          key={idx}
+                          type={insight.type}
+                          icon={insight.icon}
+                          text={insight.text}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                )}
 
                 {/* Edit Modals - Enhanced with Animations */}
                 {editingBalance && (
