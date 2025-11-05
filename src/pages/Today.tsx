@@ -625,6 +625,24 @@ const Today = () => {
                     </div>
                     {glancesExpanded && <GlancesBar />}
                   </section>
+                  )}
+
+                {/* المرحلة 1: مكونات الذكاء الاصطناعي المحسنة */}
+                {period === 'daily' && (
+                  <section className="mb-8">
+                    <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-1">
+                      🤖 المساعد الذكي
+                    </h2>
+                    <div className={cn(
+                      "grid gap-4",
+                      device === 'mobile' && "grid-cols-1 gap-3",
+                      device === 'tablet' && "grid-cols-2 gap-3",
+                      device === 'desktop' && "grid-cols-2 gap-4"
+                    )}>
+                      <SmartDailyPlan />
+                      <AutopilotLearningCard />
+                    </div>
+                  </section>
                 )}
 
                 {/* Section 1: Comparison - للأسبوع/الشهر/السنة فقط */}
