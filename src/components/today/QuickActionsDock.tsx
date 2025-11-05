@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Calendar, DollarSign, CheckSquare, X } from "lucide-react";
+import { Plus, Calendar, DollarSign, CheckSquare, X, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 
@@ -26,6 +26,12 @@ export function QuickActionsDock() {
       label: "مهمة سريعة", 
       color: "bg-accent/10 text-accent-foreground hover:bg-accent/20",
       onClick: () => navigate("/inbox")
+    },
+    { 
+      icon: Activity, 
+      label: "بيانات WHOOP", 
+      color: "bg-destructive/10 text-destructive hover:bg-destructive/20",
+      onClick: () => navigate("/today-whoop")
     },
   ];
 

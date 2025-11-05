@@ -20,6 +20,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { StatRing } from "@/components/oryxa/StatRing";
 import { OryxaCard } from "@/components/oryxa/Card";
+import { DailyReportCard } from "@/components/DailyReportCard";
+import { Activity } from "lucide-react";
 
 export default function Today() {
   const { t } = useTranslation("today");
@@ -95,8 +97,37 @@ export default function Today() {
           ].filter(Boolean) as string[]}
         />
 
+        {/* Daily Report Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <DailyReportCard />
+        </motion.div>
+
+        {/* WHOOP/Health Data Section */}
+        <DashboardSection 
+          title="البيانات الصحية"
+          action={
+            <Button variant="outline" size="sm" onClick={() => navigate("/today-whoop")}>
+              <Activity className="w-4 h-4 mr-2" />
+              عرض بيانات WHOOP
+            </Button>
+          }
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-8"
+          >
+            <div className="text-6xl mb-4">💪</div>
+            <p className="text-muted-foreground mb-4">اضغط لعرض البيانات الصحية التفصيلية</p>
+          </motion.div>
+        </DashboardSection>
+
         {/* Glances Bar */}
-        <DashboardSection title={t("common.quickOverview") || "نظرة سريعة"}>
+        <DashboardSection title="نظرة سريعة">
           <GlancesBar />
         </DashboardSection>
 

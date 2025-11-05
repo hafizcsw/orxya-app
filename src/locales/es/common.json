@@ -50,6 +50,9 @@
     "profile": "Perfil",
     "logout": "Cerrar sesión",
     "login": "Iniciar sesión",
-    "signup": "Registrarse"
+    "signup": "Registrarse",
+    "quickOverview": "Vista Rápida",
+    "healthData": "Datos de Salud",
+    "viewWhoopData": "Ver Datos WHOOP"
   }
 }

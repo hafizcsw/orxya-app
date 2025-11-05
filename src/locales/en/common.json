@@ -50,6 +50,9 @@
     "profile": "Profile",
     "logout": "Logout",
     "login": "Login",
-    "signup": "Sign Up"
+    "signup": "Sign Up",
+    "quickOverview": "Quick Overview",
+    "healthData": "Health Data",
+    "viewWhoopData": "View WHOOP Data"
   }
 }

@@ -50,6 +50,9 @@
     "profile": "الملف الشخصي",
     "logout": "تسجيل الخروج",
     "login": "تسجيل الدخول",
-    "signup": "إنشاء حساب"
+    "signup": "إنشاء حساب",
+    "quickOverview": "نظرة سريعة",
+    "healthData": "البيانات الصحية",
+    "viewWhoopData": "عرض بيانات WHOOP"
   }
 }
