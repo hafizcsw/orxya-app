@@ -117,3 +117,12 @@ verify_jwt = true
 [functions.ics-import]
 verify_jwt = true
 
+[functions.conflict-autopilot-v2]
+verify_jwt = true
+
+[functions.smart-notifications]
+verify_jwt = true
+
+[functions.ai-orchestrator-v2]
+verify_jwt = true
+

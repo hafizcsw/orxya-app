@@ -32,6 +32,8 @@ import { ComparisonCard } from '@/components/dashboard/ComparisonCard'
 import { SmartInsight } from '@/components/dashboard/SmartInsight'
 import { generateInsights } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
+import { AutopilotLearningCard } from '@/components/ai/AutopilotLearningCard'
+import { SmartDailyPlan } from '@/components/ai/SmartDailyPlan'
 
 // Validation schemas
 const dailyLogSchema = z.object({

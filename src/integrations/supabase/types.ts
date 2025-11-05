@@ -566,6 +566,63 @@ export type Database = {
         }
         Relationships: []
       }
+      autopilot_learning: {
+        Row: {
+          applied_at: string | null
+          conflict_id: string | null
+          conflict_type: string
+          context: Json | null
+          created_at: string | null
+          day_of_week: number | null
+          id: string
+          owner_id: string
+          suggested_action: string
+          time_of_day: string | null
+          user_decision: string
+        }
+        Insert: {
+          applied_at?: string | null
+          conflict_id?: string | null
+          conflict_type: string
+          context?: Json | null
+          created_at?: string | null
+          day_of_week?: number | null
+          id?: string
+          owner_id: string
+          suggested_action: string
+          time_of_day?: string | null
+          user_decision: string
+        }
+        Update: {
+          applied_at?: string | null
+          conflict_id?: string | null
+          conflict_type?: string
+          context?: Json | null
+          created_at?: string | null
+          day_of_week?: number | null
+          id?: string
+          owner_id?: string
+          suggested_action?: string
+          time_of_day?: string | null
+          user_decision?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "autopilot_learning_conflict_id_fkey"
+            columns: ["conflict_id"]
+            isOneToOne: false
+            referencedRelation: "conflicts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "autopilot_learning_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       business_plans: {
         Row: {
           category: string | null
@@ -723,6 +780,8 @@ export type Database = {
           event_id: string | null
           id: string
           last_checked_at: string | null
+          learned_confidence: number | null
+          learning_applied: boolean | null
           notification_id: number | null
           object_id: string | null
           object_kind: string
@@ -745,6 +804,7 @@ export type Database = {
           suggestion: Json | null
           undo_patch: Json | null
           updated_at: string | null
+          user_feedback: string | null
         }
         Insert: {
           applied_event_patch?: Json | null
@@ -759,6 +819,8 @@ export type Database = {
           event_id?: string | null
           id?: string
           last_checked_at?: string | null
+          learned_confidence?: number | null
+          learning_applied?: boolean | null
           notification_id?: number | null
           object_id?: string | null
           object_kind: string
@@ -781,6 +843,7 @@ export type Database = {
           suggestion?: Json | null
           undo_patch?: Json | null
           updated_at?: string | null
+          user_feedback?: string | null
         }
         Update: {
           applied_event_patch?: Json | null
@@ -795,6 +858,8 @@ export type Database = {
           event_id?: string | null
           id?: string
           last_checked_at?: string | null
+          learned_confidence?: number | null
+          learning_applied?: boolean | null
           notification_id?: number | null
           object_id?: string | null
           object_kind?: string
@@ -817,6 +882,7 @@ export type Database = {
           suggestion?: Json | null
           undo_patch?: Json | null
           updated_at?: string | null
+          user_feedback?: string | null
         }
         Relationships: [
           {
@@ -1427,6 +1493,56 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "location_samples_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      notification_patterns: {
+        Row: {
+          action_taken: string | null
+          context: Json | null
+          created_at: string | null
+          day_of_week: number | null
+          dismissed_at: string | null
+          id: string
+          notification_type: string
+          opened_at: string | null
+          owner_id: string
+          sent_at: string
+          time_of_day: string | null
+        }
+        Insert: {
+          action_taken?: string | null
+          context?: Json | null
+          created_at?: string | null
+          day_of_week?: number | null
+          dismissed_at?: string | null
+          id?: string
+          notification_type: string
+          opened_at?: string | null
+          owner_id: string
+          sent_at: string
+          time_of_day?: string | null
+        }
+        Update: {
+          action_taken?: string | null
+          context?: Json | null
+          created_at?: string | null
+          day_of_week?: number | null
+          dismissed_at?: string | null
+          id?: string
+          notification_type?: string
+          opened_at?: string | null
+          owner_id?: string
+          sent_at?: string
+          time_of_day?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_patterns_owner_id_fkey"
             columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "vw_daily_metrics"
@@ -2602,6 +2718,10 @@ export type Database = {
           reason: string
         }[]
       }
+      calculate_learned_confidence: {
+        Args: { p_action: string; p_context: Json; p_owner_id: string }
+        Returns: number
+      }
       expand_instances: {
         Args: { p_from: string; p_to: string }
         Returns: undefined
@@ -2609,6 +2729,10 @@ export type Database = {
       fn_refresh_conflicts_for_date: {
         Args: { p_date: string; p_owner: string }
         Returns: undefined
+      }
+      get_best_notification_time: {
+        Args: { p_notification_type: string; p_owner_id: string }
+        Returns: string
       }
       get_daily_metrics: {
         Args: { p_end: string; p_start: string; p_user_id: string }
