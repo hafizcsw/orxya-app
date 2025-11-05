@@ -22,6 +22,9 @@
     "lightMode": "Light Mode",
     "expenses": "Expenses",
     "inbox": "Inbox",
-    "glances": "Glances"
+    "glances": "Glances",
+    "calendarSimple": "Simple Calendar",
+    "integrations": "Integrations",
+    "ai": "Artificial Intelligence"
   }
 }

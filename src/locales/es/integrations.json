@@ -1,0 +1,28 @@
+{
+  "title": "Integraciones",
+  "googleCalendar": {
+    "title": "Google Calendar",
+    "description": "Sincroniza eventos automáticamente",
+    "status": {
+      "connected": "Conectado",
+      "pending": "Conectando",
+      "error": "Error",
+      "disconnected": "Desconectado"
+    },
+    "lastSync": "Última sincronización",
+    "neverSynced": "Aún no sincronizado",
+    "connectButton": "Conectar Calendario",
+    "syncButton": "Sincronizar Ahora",
+    "reconnectButton": "Reconectar",
+    "syncing": "Sincronizando...",
+    "connecting": "Conectando...",
+    "syncInfo": "💡 Los conflictos con las horas de oración se verifican automáticamente después de cada sincronización",
+    "syncSuccess": "✅ Sincronización completa",
+    "syncSuccessDetails": "Agregado {added} eventos, actualizado {updated}, omitido {skipped}",
+    "connectSuccess": "✅ Conexión iniciada",
+    "connectSuccessDetails": "Por favor, complete la autorización en la ventana emergente",
+    "syncError": "❌ Falló la sincronización",
+    "connectError": "❌ Falló la conexión",
+    "description2": "Conecta tu cuenta de Google Calendar para importar y sincronizar automáticamente tus eventos. Se verificarán conflictos con horarios de oración después de cada sincronización."
+  }
+}

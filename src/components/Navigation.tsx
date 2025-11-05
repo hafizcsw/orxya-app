@@ -12,12 +12,14 @@ import { useSelectedDate } from "@/contexts/DateContext";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 const Navigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const {
     user
   } = useUser();
+  const { t } = useTranslation('navigation');
   const [authOpen, setAuthOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -93,49 +95,49 @@ const Navigation = () => {
   };
   const links = [{
     to: "/",
-    label: "اليوم"
+    label: t('bottomNav.today')
   }, {
     to: "/calendar",
-    label: "التقويم"
+    label: t('bottomNav.calendar')
   }, {
     to: "/inbox",
-    label: "الإشعارات"
+    label: t('menu.inbox')
   }, {
     to: "/calendar-simple",
-    label: "تقويم بسيط"
+    label: t('menu.calendarSimple')
   }, {
     to: "/planner",
-    label: "المخطط الذكي"
+    label: t('menu.planner')
   }, {
     to: "/conflicts",
-    label: "التعارضات"
+    label: t('menu.conflicts')
   }, {
     to: "/settings/external",
-    label: "التكاملات"
+    label: t('menu.integrations')
   }, {
     to: "/settings/notifications",
-    label: "التنبيهات"
+    label: t('menu.notifications')
   }, {
     to: "/projects",
-    label: "المشاريع"
+    label: t('menu.projects')
   }, {
     to: "/reports",
-    label: "التقارير"
+    label: t('menu.reports')
   }, {
     to: "/automation",
-    label: "الأتمتة"
+    label: t('menu.automation')
   }, {
     to: "/ai",
-    label: "الذكاء الاصطناعي"
+    label: t('menu.ai')
   }, {
     to: "/assistant",
-    label: "المساعد"
+    label: t('menu.assistant')
   }, {
     to: "/diagnostics",
-    label: "التشخيص"
+    label: t('menu.diagnostics')
   }, {
     to: "/profile",
-    label: "حسابي"
+    label: t('menu.profile')
   }];
   return <>
       <nav className="border-b bg-background/95 backdrop-blur-xl sticky top-0 z-50 shadow-sm">

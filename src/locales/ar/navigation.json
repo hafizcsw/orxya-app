@@ -22,6 +22,9 @@
     "lightMode": "الوضع النهاري",
     "expenses": "المصروفات",
     "inbox": "البريد الوارد",
-    "glances": "لمحات"
+    "glances": "لمحات",
+    "calendarSimple": "تقويم بسيط",
+    "integrations": "التكاملات",
+    "ai": "الذكاء الاصطناعي"
   }
 }

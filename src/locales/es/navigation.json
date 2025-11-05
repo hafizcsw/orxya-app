@@ -22,6 +22,9 @@
     "lightMode": "Modo Claro",
     "expenses": "Gastos",
     "inbox": "Bandeja de entrada",
-    "glances": "Vistazos"
+    "glances": "Vistazos",
+    "calendarSimple": "Calendario Simple",
+    "integrations": "Integraciones",
+    "ai": "Inteligencia Artificial"
   }
 }

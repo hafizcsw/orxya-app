@@ -11,6 +11,9 @@ import arCalendar from './locales/ar/calendar.json';
 import arSettings from './locales/ar/settings.json';
 import arPlans from './locales/ar/plans.json';
 import arReports from './locales/ar/reports.json';
+import arIntegrations from './locales/ar/integrations.json';
+import arExpenses from './locales/ar/expenses.json';
+import arInbox from './locales/ar/inbox.json';
 
 import enCommon from './locales/en/common.json';
 import enNavigation from './locales/en/navigation.json';
@@ -20,6 +23,9 @@ import enCalendar from './locales/en/calendar.json';
 import enSettings from './locales/en/settings.json';
 import enPlans from './locales/en/plans.json';
 import enReports from './locales/en/reports.json';
+import enIntegrations from './locales/en/integrations.json';
+import enExpenses from './locales/en/expenses.json';
+import enInbox from './locales/en/inbox.json';
 
 import esCommon from './locales/es/common.json';
 import esNavigation from './locales/es/navigation.json';
@@ -29,6 +35,9 @@ import esCalendar from './locales/es/calendar.json';
 import esSettings from './locales/es/settings.json';
 import esPlans from './locales/es/plans.json';
 import esReports from './locales/es/reports.json';
+import esIntegrations from './locales/es/integrations.json';
+import esExpenses from './locales/es/expenses.json';
+import esInbox from './locales/es/inbox.json';
 
 const resources = {
   ar: {
@@ -40,6 +49,9 @@ const resources = {
     settings: arSettings,
     plans: arPlans,
     reports: arReports,
+    integrations: arIntegrations,
+    expenses: arExpenses,
+    inbox: arInbox,
   },
   en: {
     common: enCommon,
@@ -50,6 +62,9 @@ const resources = {
     settings: enSettings,
     plans: enPlans,
     reports: enReports,
+    integrations: enIntegrations,
+    expenses: enExpenses,
+    inbox: enInbox,
   },
   es: {
     common: esCommon,
@@ -60,6 +75,9 @@ const resources = {
     settings: esSettings,
     plans: esPlans,
     reports: esReports,
+    integrations: esIntegrations,
+    expenses: esExpenses,
+    inbox: esInbox,
   },
 };
 
@@ -68,9 +86,9 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    fallbackLng: 'ar',
+    fallbackLng: 'en',
     defaultNS: 'common',
-    ns: ['common', 'navigation', 'auth', 'today', 'calendar', 'settings', 'plans', 'reports'],
+    ns: ['common', 'navigation', 'auth', 'today', 'calendar', 'settings', 'plans', 'reports', 'integrations', 'expenses', 'inbox'],
     
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],

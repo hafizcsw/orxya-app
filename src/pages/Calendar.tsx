@@ -20,6 +20,7 @@ import PullToRefresh from "react-simple-pull-to-refresh";
 import { SmartLamp } from "@/components/SmartLamp";
 import { AdvancedEventForm } from "@/components/calendar/AdvancedEventForm";
 import { toast } from "sonner";
+import { useTranslation } from 'react-i18next';
 
 type DbEvent = { 
   id: string; 
@@ -42,6 +43,7 @@ type PT = {
 export default function CalendarPage() {
   const navigate = useNavigate();
   const { user } = useUser();
+  const { t } = useTranslation('calendar');
   const { selectedDate: globalDate, setSelectedDate: setGlobalDate } = useSelectedDate();
   const [mode, setMode] = useState<"day" | "week" | "month">("day");
   const [currentDate, setCurrentDate] = useState(globalDate);
@@ -140,14 +142,14 @@ export default function CalendarPage() {
             
             <div className="flex items-center gap-2 group">
               <CalendarIcon className="w-6 h-6 sm:w-6 sm:h-6 text-primary transition-transform duration-300 group-hover:rotate-12" />
-              <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">التقويم</h1>
+              <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">{t('title')}</h1>
             </div>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="hidden md:flex items-center gap-2 bg-muted/30 px-4 py-2 rounded-full cursor-pointer hover:bg-muted/50 hover:shadow-md transition-all duration-200 border border-border/30 backdrop-blur-sm">
               <Search className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">بحث...</span>
+              <span className="text-sm text-muted-foreground">{t('search')}</span>
             </div>
             
             <Button
@@ -160,7 +162,7 @@ export default function CalendarPage() {
               className="bg-white dark:bg-background hover:bg-accent text-foreground gap-2 shadow-md hover:shadow-lg border border-border/50 font-semibold px-3 sm:px-4 h-9 sm:h-9 text-sm transition-all duration-200 hover:scale-105 active:scale-95"
             >
               <Plus className="w-4 h-4" />
-              <span>إنشاء</span>
+              <span>{t('create')}</span>
             </Button>
 
             <button 
@@ -210,7 +212,7 @@ export default function CalendarPage() {
             onRefresh={handleRefresh}
             pullingContent={
               <div className="flex justify-center py-4">
-                <div className="text-sm text-muted-foreground">↓ اسحب للتحديث</div>
+                <div className="text-sm text-muted-foreground">↓ {t('pullToRefresh')}</div>
               </div>
             }
             refreshingContent={
@@ -272,7 +274,7 @@ export default function CalendarPage() {
                     size="sm"
                     className="h-9"
                   >
-                    اليوم
+                    {t('today')}
                   </Button>
 
                   <Button
@@ -300,7 +302,7 @@ export default function CalendarPage() {
                         : "hover:bg-background/50 hover:scale-105"
                     )}
                   >
-                    يوم
+                    {t('views.day')}
                   </button>
                   <button
                     onClick={() => setMode("week")}
@@ -311,7 +313,7 @@ export default function CalendarPage() {
                         : "hover:bg-background/50 hover:scale-105"
                     )}
                   >
-                    أسبوع
+                    {t('views.week')}
                   </button>
                   <button
                     onClick={() => {
@@ -325,7 +327,7 @@ export default function CalendarPage() {
                         : "hover:bg-background/50 hover:scale-105"
                     )}
                   >
-                    شهر
+                    {t('views.month')}
                   </button>
                 </div>
               </div>

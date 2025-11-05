@@ -1,0 +1,14 @@
+{
+  "title": "Expenses",
+  "add": "Add Expense",
+  "income": "Income",
+  "spend": "Expense",
+  "category": "Category",
+  "amount": "Amount",
+  "note": "Note",
+  "date": "Date",
+  "total": "Total",
+  "balance": "Balance",
+  "editBalance": "Edit Balance",
+  "updateBalance": "Update Balance"
+}

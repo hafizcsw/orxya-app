@@ -1,0 +1,28 @@
+{
+  "title": "Integrations",
+  "googleCalendar": {
+    "title": "Google Calendar",
+    "description": "Automatically sync events",
+    "status": {
+      "connected": "Connected",
+      "pending": "Connecting",
+      "error": "Error",
+      "disconnected": "Disconnected"
+    },
+    "lastSync": "Last sync",
+    "neverSynced": "Not synced yet",
+    "connectButton": "Connect Calendar",
+    "syncButton": "Sync Now",
+    "reconnectButton": "Reconnect",
+    "syncing": "Syncing...",
+    "connecting": "Connecting...",
+    "syncInfo": "💡 Conflicts with prayer times are automatically checked after each sync",
+    "syncSuccess": "✅ Sync complete",
+    "syncSuccessDetails": "Added {added} events, updated {updated}, skipped {skipped}",
+    "connectSuccess": "✅ Connection started",
+    "connectSuccessDetails": "Please complete authorization in the popup window",
+    "syncError": "❌ Sync failed",
+    "connectError": "❌ Connection failed",
+    "description2": "Connect your Google Calendar account to import and automatically sync your events. Conflicts with prayer times will be checked after each sync."
+  }
+}

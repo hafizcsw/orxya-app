@@ -1,0 +1,14 @@
+{
+  "title": "Gastos",
+  "add": "Agregar Gasto",
+  "income": "Ingreso",
+  "spend": "Gasto",
+  "category": "Categoría",
+  "amount": "Monto",
+  "note": "Nota",
+  "date": "Fecha",
+  "total": "Total",
+  "balance": "Saldo",
+  "editBalance": "Editar Saldo",
+  "updateBalance": "Actualizar Saldo"
+}

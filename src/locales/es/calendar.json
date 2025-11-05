@@ -1,5 +1,8 @@
 {
   "title": "Calendario",
+  "search": "Buscar...",
+  "create": "Crear",
+  "today": "Hoy",
   "header": {
     "today": "Hoy",
     "month": "Mes",
@@ -7,6 +10,13 @@
     "day": "Día",
     "agenda": "Agenda"
   },
+  "views": {
+    "day": "Día",
+    "week": "Semana",
+    "month": "Mes"
+  },
+  "pullToRefresh": "Deslizar para actualizar",
+  "refreshing": "Actualizando...",
   "event": {
     "new": "Nuevo Evento",
     "edit": "Editar Evento",
