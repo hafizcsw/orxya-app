@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,8 +8,6 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, Clock, MapPin, Users, Video, Bell, Repeat, Shield } from "lucide-react";
 import { toast } from "sonner";
-
-const sb = createClient(import.meta.env.VITE_SUPABASE_URL!, import.meta.env.VITE_SUPABASE_ANON_KEY!);
 
 interface EventFormData {
   id?: string;
@@ -62,13 +60,13 @@ export function AdvancedEventForm({
   const handleCheckPrayer = async () => {
     setCheckingPrayer(true);
     try {
-      const { data: { user } } = await sb.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/conflict-check`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${(await sb.auth.getSession()).data.session?.access_token}`,
+          "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
@@ -99,13 +97,13 @@ export function AdvancedEventForm({
   const handleSuggestTimes = async () => {
     setSuggestingTimes(true);
     try {
-      const { data: { user } } = await sb.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-orchestrator`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${(await sb.auth.getSession()).data.session?.access_token}`,
+          "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
@@ -133,7 +131,7 @@ export function AdvancedEventForm({
 
   const handleSubmit = async () => {
     try {
-      const { data: { user } } = await sb.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
       const action = formData.id ? "update" : "create";
@@ -141,7 +139,7 @@ export function AdvancedEventForm({
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/calendar-apply`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${(await sb.auth.getSession()).data.session?.access_token}`,
+          "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
