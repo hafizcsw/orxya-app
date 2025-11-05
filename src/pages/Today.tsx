@@ -23,6 +23,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { StatRing } from "@/components/oryxa/StatRing";
 import { DailyReportCard } from "@/components/DailyReportCard";
+import { CurrentTaskCard } from "@/components/today/CurrentTaskCard";
+import { AIInsightsCard } from "@/components/today/AIInsightsCard";
+import { useLiveToday } from "@/hooks/useLiveToday";
+import { useAIInsights } from "@/hooks/useAIInsights";
+import SimplePullToRefresh from 'react-simple-pull-to-refresh';
 import { 
   Activity, 
   Heart, 
@@ -36,6 +41,7 @@ import {
   TrendingDown,
   Wallet
 } from "lucide-react";
+import { useDeviceType } from "@/hooks/useDeviceType";
 import { cn } from "@/lib/utils";
 import { 
   getRecoveryStatus, 
@@ -59,6 +65,7 @@ import { GoalSettingsDialog } from "@/components/goals/GoalSettingsDialog";
 export default function Today() {
   const { t } = useTranslation("today");
   const navigate = useNavigate();
+  const device = useDeviceType();
   const [period, setPeriod] = useState<Period>("daily");
   const [selectedDate] = useState(new Date());
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -74,9 +81,18 @@ export default function Today() {
   const [selectedPlanIndex, setSelectedPlanIndex] = useState(0);
   const [planScrollSnaps, setPlanScrollSnaps] = useState<number[]>([]);
 
-  const { report, loading: reportLoading } = useTodayReport(period, selectedDate);
-  const { healthData, loading: healthLoading } = useHealthData(period, selectedDate);
+  const { report, loading: reportLoading, refetch: refetchReport } = useTodayReport(period, selectedDate);
+  const { healthData, loading: healthLoading, refetch: refetchHealth } = useHealthData(period, selectedDate);
   const { getGoal, updateGoal } = useUserGoals();
+  
+  // Live data hooks
+  const { currentTask, nextTask, timeRemaining, progress, loading: taskLoading } = useLiveToday(selectedDate);
+  const { insights, loading: insightsLoading } = useAIInsights(
+    currentTask, 
+    healthData, 
+    { work: { actual: report?.work_hours || 0 }, study: { actual: report?.study_hours || 0 } },
+    []
+  );
 
   const { data: plans, isLoading: plansLoading, refetch: refetchPlans } = useQuery({
     queryKey: ["business-plans"],
@@ -149,27 +165,45 @@ export default function Today() {
     emblaApi.on('select', onPlanSelect);
     onPlanSelect();
     return () => {
-      emblaApi.off('select', onPlanSelect);
+    emblaApi.off('select', onPlanSelect);
     };
   }, [emblaApi, onPlanSelect]);
 
+  const handleRefresh = async () => {
+    await Promise.all([
+      refetchReport(),
+      refetchHealth(),
+      refetchPlans()
+    ]);
+  };
+
+  // Determine responsive columns
+  const activityColumns = device === 'mobile' ? 2 : 4;
+  const financialColumns = device === 'mobile' ? 2 : 3;
+
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <div className="container mx-auto p-4 md:p-6 max-w-7xl space-y-6">
-        
-        {/* Header with Greeting */}
-        <TodayHeader selectedDate={selectedDate} />
+    <SimplePullToRefresh onRefresh={handleRefresh}>
+      <div className="min-h-screen bg-background pb-20">
+        <div className="container mx-auto p-3 md:p-6 max-w-7xl space-y-4 md:space-y-6">
+          
+          {/* Header with Greeting */}
+          <TodayHeader selectedDate={selectedDate} />
 
-        {/* Period Selector - moved up */}
-        <PeriodSelector value={period} onChange={setPeriod} className="mb-2" />
+          {/* Period Selector */}
+          <PeriodSelector value={period} onChange={setPeriod} className="mb-2" />
 
-        {/* Quick Summary */}
-        <QuickSummaryCard 
-          achievements={[
-            report && report.income > 0 ? `حققت دخل ${report.income} دولار` : null,
-            report && report.work_hours > 5 ? `عملت ${report.work_hours} ساعات` : null,
-          ].filter(Boolean) as string[]}
-        />
+          {/* Current Task Card - Live */}
+          {!taskLoading && (
+            <CurrentTaskCard
+              task={currentTask}
+              timeRemaining={timeRemaining}
+              progress={progress}
+              nextTask={nextTask}
+            />
+          )}
+
+          {/* AI Insights Card */}
+          <AIInsightsCard insights={insights} loading={insightsLoading} />
 
         {/* Health & Recovery Section */}
         <DashboardSection 
@@ -188,7 +222,7 @@ export default function Today() {
               ))}
             </DashboardGrid>
           ) : healthData ? (
-            <DashboardGrid columns={4} gap="md">
+            <DashboardGrid columns={device === 'mobile' ? 2 : 4} gap="md">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -203,7 +237,9 @@ export default function Today() {
                   trend={healthData.recoveryTrend.direction}
                   trendValue={healthData.recoveryTrend.percentage}
                   status={getRecoveryStatus(healthData.recovery)}
-                  size="lg"
+                  size={device === 'mobile' ? "md" : "lg"}
+                  targetValue={100}
+                  currentValue={healthData.recovery}
                 />
               </motion.div>
               <motion.div
@@ -221,7 +257,9 @@ export default function Today() {
                   trendValue={healthData.sleepTrend.percentage}
                   status={getSleepStatus(healthData.sleep)}
                   customDisplay={formatSleepTime(healthData.sleepMinutes)}
-                  size="lg"
+                  size={device === 'mobile' ? "md" : "lg"}
+                  targetValue={100}
+                  currentValue={healthData.sleep}
                 />
               </motion.div>
               <motion.div
@@ -239,7 +277,9 @@ export default function Today() {
                   trendValue={healthData.strainTrend.percentage}
                   status={getStrainStatus(healthData.strain)}
                   customDisplay={`${healthData.strain.toFixed(1)}`}
-                  size="lg"
+                  size={device === 'mobile' ? "md" : "lg"}
+                  targetValue={21}
+                  currentValue={healthData.strain}
                 />
               </motion.div>
               <motion.div
@@ -256,7 +296,9 @@ export default function Today() {
                   trend={healthData.activityTrend.direction}
                   trendValue={healthData.activityTrend.percentage}
                   status={getActivityStatus(healthData.activity)}
-                  size="lg"
+                  size={device === 'mobile' ? "md" : "lg"}
+                  targetValue={100}
+                  currentValue={healthData.activity}
                 />
               </motion.div>
             </DashboardGrid>
@@ -274,13 +316,13 @@ export default function Today() {
           }
         >
           {reportLoading ? (
-            <DashboardGrid columns={3} gap="md">
-              {[...Array(3)].map((_, i) => (
+            <DashboardGrid columns={financialColumns} gap="md">
+              {[...Array(financialColumns)].map((_, i) => (
                 <Skeleton key={i} className="h-48 w-full rounded-2xl" />
               ))}
             </DashboardGrid>
           ) : (
-            <DashboardGrid columns={3} gap="md">
+            <DashboardGrid columns={financialColumns} gap="md">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -353,13 +395,13 @@ export default function Today() {
         {/* Activities */}
         <DashboardSection title={t("activities.title")}>
           {reportLoading || healthLoading ? (
-            <DashboardGrid columns={4} gap="md">
-              {[...Array(4)].map((_, i) => (
+            <DashboardGrid columns={activityColumns} gap="md">
+              {[...Array(activityColumns)].map((_, i) => (
                 <Skeleton key={i} className="h-48 w-full rounded-2xl" />
               ))}
             </DashboardGrid>
           ) : (
-            <DashboardGrid columns={4} gap="md">
+            <DashboardGrid columns={activityColumns} gap="md">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -379,7 +421,7 @@ export default function Today() {
                   trendValue={healthData?.activityTrend?.percentage}
                   status={getWalkStatus((healthData?.meters || 0) / 1000, getGoal('walk_km'))}
                   customDisplay={healthData?.meters ? formatDistance(healthData.meters) : '0 km'}
-                  size="md"
+                  size={device === 'mobile' ? "sm" : "md"}
                   onTargetClick={() => openGoalDialog('walk_km')}
                 />
               </motion.div>
@@ -402,7 +444,7 @@ export default function Today() {
                   trendValue={report?.workTrend?.percentage}
                   status={getWorkStatus(report?.work_hours || 0, getGoal('work_hours'))}
                   customDisplay={`${report?.work_hours || 0}h`}
-                  size="md"
+                  size={device === 'mobile' ? "sm" : "md"}
                   onTargetClick={() => openGoalDialog('work_hours')}
                 />
               </motion.div>
@@ -425,7 +467,7 @@ export default function Today() {
                   trendValue={report?.studyTrend?.percentage}
                   status={getStudyStatus(report?.study_hours || 0, getGoal('study_hours'))}
                   customDisplay={`${report?.study_hours || 0}h`}
-                  size="md"
+                  size={device === 'mobile' ? "sm" : "md"}
                   onTargetClick={() => openGoalDialog('study_hours')}
                 />
               </motion.div>
@@ -448,7 +490,7 @@ export default function Today() {
                   trendValue={report?.sportsTrend?.percentage}
                   status={getSportsStatus(report?.sports_hours || 0, getGoal('mma_hours'))}
                   customDisplay={`${report?.sports_hours || 0}h`}
-                  size="md"
+                  size={device === 'mobile' ? "sm" : "md"}
                   onTargetClick={() => openGoalDialog('mma_hours')}
                 />
               </motion.div>
@@ -595,6 +637,7 @@ export default function Today() {
           onSave={handleSaveGoal}
         />
       )}
-    </div>
+      </div>
+    </SimplePullToRefresh>
   );
 }

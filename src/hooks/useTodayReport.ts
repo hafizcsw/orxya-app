@@ -35,26 +35,47 @@ export function useTodayReport(period: Period, selectedDate: Date) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user");
 
-      // Current data (mock for now)
+      const dateStr = selectedDate.toISOString().split('T')[0];
+
+      // Fetch current period data from vw_today_activities
+      const { data: currentActivity } = await supabase
+        .from('vw_today_activities')
+        .select('*')
+        .eq('owner_id', user.id)
+        .eq('day', dateStr)
+        .single();
+
+      // Fetch previous period for trends
+      const prevDate = new Date(selectedDate);
+      prevDate.setDate(prevDate.getDate() - 1);
+      const prevDateStr = prevDate.toISOString().split('T')[0];
+
+      const { data: prevActivity } = await supabase
+        .from('vw_today_activities')
+        .select('*')
+        .eq('owner_id', user.id)
+        .eq('day', prevDateStr)
+        .single();
+
+      // Use real data or defaults
       const currentData = {
-        balance: 5000,
+        balance: 5000, // TODO: Fetch from financial_events
         income: 1200,
         expenses: 450,
-        study_hours: 3,
-        sports_hours: 2,
-        work_hours: 6,
-        walk_minutes: 45,
+        study_hours: currentActivity?.study_hours || 0,
+        sports_hours: currentActivity?.sports_hours || 0,
+        work_hours: currentActivity?.work_hours || 0,
+        walk_minutes: currentActivity?.walk_minutes || 0,
       };
 
-      // Previous period data (mock - in production, fetch from DB)
       const previousData = {
         balance: 4500,
         income: 1000,
         expenses: 500,
-        study_hours: 2.5,
-        sports_hours: 1.5,
-        work_hours: 5,
-        walk_minutes: 30,
+        study_hours: prevActivity?.study_hours || 0,
+        sports_hours: prevActivity?.sports_hours || 0,
+        work_hours: prevActivity?.work_hours || 0,
+        walk_minutes: prevActivity?.walk_minutes || 0,
       };
 
       // Calculate trends

@@ -2794,6 +2794,26 @@ export type Database = {
           },
         ]
       }
+      vw_today_activities: {
+        Row: {
+          day: string | null
+          owner_id: string | null
+          sleep_hours: number | null
+          sports_hours: number | null
+          study_hours: number | null
+          walk_minutes: number | null
+          work_hours: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
     }
     Functions: {
       admin_actions_daily: {
