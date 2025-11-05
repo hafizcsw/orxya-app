@@ -45,6 +45,15 @@ import {
   formatSleepTime,
   formatDistance
 } from '@/lib/health-calculations';
+import {
+  getWorkStatus,
+  getStudyStatus,
+  getSportsStatus,
+  getWalkStatus,
+  getIncomeStatus,
+  getExpensesStatus,
+  getBalanceStatus
+} from '@/lib/activity-calculations';
 import { GoalSettingsDialog } from "@/components/goals/GoalSettingsDialog";
 
 export default function Today() {
@@ -300,6 +309,9 @@ export default function Today() {
                   color="hsl(142, 76%, 36%)"
                   gradientColors={["hsl(142, 76%, 36%)", "hsl(142, 76%, 50%)"]}
                   icon={<DollarSign className="w-6 h-6" />}
+                  trend={report?.incomeTrend?.direction}
+                  trendValue={report?.incomeTrend?.percentage}
+                  status={getIncomeStatus(report?.income || 0, getGoal('income_monthly'))}
                   size="lg"
                   customDisplay={`$${report?.income || 0}`}
                   onTargetClick={() => openGoalDialog('income_monthly')}
@@ -320,6 +332,9 @@ export default function Today() {
                   color="hsl(0, 84%, 60%)"
                   gradientColors={["hsl(0, 84%, 60%)", "hsl(0, 84%, 75%)"]}
                   icon={<TrendingDown className="w-6 h-6" />}
+                  trend={report?.expensesTrend?.direction}
+                  trendValue={report?.expensesTrend?.percentage}
+                  status={getExpensesStatus(report?.expenses || 0, getGoal('expenses_daily'))}
                   size="lg"
                   customDisplay={`$${report?.expenses || 0}`}
                   onTargetClick={() => openGoalDialog('expenses_daily')}
@@ -337,6 +352,9 @@ export default function Today() {
                   color="hsl(217, 91%, 60%)"
                   gradientColors={["hsl(217, 91%, 60%)", "hsl(217, 91%, 75%)"]}
                   icon={<Wallet className="w-6 h-6" />}
+                  trend={report?.balanceTrend?.direction}
+                  trendValue={report?.balanceTrend?.percentage}
+                  status={getBalanceStatus(report?.balance || 0)}
                   size="lg"
                   customDisplay={`$${report?.balance || 0}`}
                 />
@@ -370,6 +388,9 @@ export default function Today() {
                   color="hsl(262, 83%, 58%)"
                   gradientColors={["hsl(262, 83%, 58%)", "hsl(262, 83%, 75%)"]}
                   icon={<Footprints className="w-5 h-5" />}
+                  trend={healthData?.activityTrend?.direction}
+                  trendValue={healthData?.activityTrend?.percentage}
+                  status={getWalkStatus((healthData?.meters || 0) / 1000, getGoal('walk_km'))}
                   customDisplay={healthData?.meters ? formatDistance(healthData.meters) : '0 km'}
                   size="md"
                   onTargetClick={() => openGoalDialog('walk_km')}
@@ -390,6 +411,9 @@ export default function Today() {
                   color="hsl(217, 91%, 60%)"
                   gradientColors={["hsl(217, 91%, 60%)", "hsl(217, 91%, 75%)"]}
                   icon={<Briefcase className="w-5 h-5" />}
+                  trend={report?.workTrend?.direction}
+                  trendValue={report?.workTrend?.percentage}
+                  status={getWorkStatus(report?.work_hours || 0, getGoal('work_hours'))}
                   customDisplay={`${report?.work_hours || 0}h`}
                   size="md"
                   onTargetClick={() => openGoalDialog('work_hours')}
@@ -410,6 +434,9 @@ export default function Today() {
                   color="hsl(38, 92%, 50%)"
                   gradientColors={["hsl(38, 92%, 50%)", "hsl(38, 92%, 70%)"]}
                   icon={<GraduationCap className="w-5 h-5" />}
+                  trend={report?.studyTrend?.direction}
+                  trendValue={report?.studyTrend?.percentage}
+                  status={getStudyStatus(report?.study_hours || 0, getGoal('study_hours'))}
                   customDisplay={`${report?.study_hours || 0}h`}
                   size="md"
                   onTargetClick={() => openGoalDialog('study_hours')}
@@ -430,6 +457,9 @@ export default function Today() {
                   color="hsl(142, 76%, 36%)"
                   gradientColors={["hsl(142, 76%, 36%)", "hsl(142, 76%, 50%)"]}
                   icon={<Dumbbell className="w-5 h-5" />}
+                  trend={report?.sportsTrend?.direction}
+                  trendValue={report?.sportsTrend?.percentage}
+                  status={getSportsStatus(report?.sports_hours || 0, getGoal('mma_hours'))}
                   customDisplay={`${report?.sports_hours || 0}h`}
                   size="md"
                   onTargetClick={() => openGoalDialog('mma_hours')}

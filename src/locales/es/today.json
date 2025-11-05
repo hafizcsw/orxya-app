@@ -70,6 +70,12 @@
     "vs_yesterday": "vs Ayer",
     "viewDetails": "Ver Datos WHOOP"
   },
+  "status": {
+    "excellent": "Excelente",
+    "good": "Bueno",
+    "fair": "Aceptable",
+    "poor": "Necesita Mejorar"
+  },
   "goals": {
     "title": "Metas Diarias",
     "workHours": "Horas de Trabajo",

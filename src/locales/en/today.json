@@ -70,6 +70,12 @@
     "vs_yesterday": "vs Yesterday",
     "viewDetails": "View WHOOP Data"
   },
+  "status": {
+    "excellent": "Excellent",
+    "good": "Good",
+    "fair": "Fair",
+    "poor": "Needs Improvement"
+  },
   "goals": {
     "title": "Daily Goals",
     "workHours": "Work Hours",

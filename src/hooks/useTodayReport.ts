@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { calculateTrend, TrendData } from "@/lib/health-calculations";
 
 export type Period = "daily" | "weekly" | "monthly" | "yearly";
 
@@ -11,6 +12,14 @@ export interface TodayReport {
   sports_hours: number;
   work_hours: number;
   walk_minutes: number;
+  
+  // Trends
+  workTrend: TrendData;
+  studyTrend: TrendData;
+  sportsTrend: TrendData;
+  incomeTrend: TrendData;
+  expensesTrend: TrendData;
+  balanceTrend: TrendData;
 }
 
 export function useTodayReport(period: Period, selectedDate: Date) {
@@ -26,8 +35,8 @@ export function useTodayReport(period: Period, selectedDate: Date) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user");
 
-      // Mock data for now since get_daily_report doesn't exist yet
-      setReport({
+      // Current data (mock for now)
+      const currentData = {
         balance: 5000,
         income: 1200,
         expenses: 450,
@@ -35,6 +44,35 @@ export function useTodayReport(period: Period, selectedDate: Date) {
         sports_hours: 2,
         work_hours: 6,
         walk_minutes: 45,
+      };
+
+      // Previous period data (mock - in production, fetch from DB)
+      const previousData = {
+        balance: 4500,
+        income: 1000,
+        expenses: 500,
+        study_hours: 2.5,
+        sports_hours: 1.5,
+        work_hours: 5,
+        walk_minutes: 30,
+      };
+
+      // Calculate trends
+      const workTrend = calculateTrend(currentData.work_hours, previousData.work_hours);
+      const studyTrend = calculateTrend(currentData.study_hours, previousData.study_hours);
+      const sportsTrend = calculateTrend(currentData.sports_hours, previousData.sports_hours);
+      const incomeTrend = calculateTrend(currentData.income, previousData.income);
+      const expensesTrend = calculateTrend(currentData.expenses, previousData.expenses);
+      const balanceTrend = calculateTrend(currentData.balance, previousData.balance);
+
+      setReport({
+        ...currentData,
+        workTrend,
+        studyTrend,
+        sportsTrend,
+        incomeTrend,
+        expensesTrend,
+        balanceTrend,
       });
     } catch (err) {
       console.error("Error fetching report:", err);

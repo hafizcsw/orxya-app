@@ -70,6 +70,12 @@
     "vs_yesterday": "مقارنة بالأمس",
     "viewDetails": "عرض بيانات WHOOP"
   },
+  "status": {
+    "excellent": "ممتاز",
+    "good": "جيد",
+    "fair": "مقبول",
+    "poor": "يحتاج تحسين"
+  },
   "goals": {
     "title": "الأهداف اليومية",
     "workHours": "ساعات العمل",
