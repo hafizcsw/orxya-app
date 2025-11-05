@@ -46,13 +46,37 @@ export function StatRing({
   onTargetClick,
 }: StatRingProps) {
   const sizes = {
-    sm: { width: 120, strokeWidth: 6, fontSize: '1.5rem', iconSize: 20 },
-    md: { width: 160, strokeWidth: 8, fontSize: '1.75rem', iconSize: 24 },
-    lg: { width: 200, strokeWidth: 10, fontSize: '2.25rem', iconSize: 28 },
+    sm: { 
+      width: 100, 
+      strokeWidth: 5, 
+      fontSize: '1.125rem', 
+      iconSize: 16,
+      labelSize: 'text-[10px]',
+      subtitleSize: 'text-[9px]',
+      padding: 'p-2'
+    },
+    md: { 
+      width: 140, 
+      strokeWidth: 7, 
+      fontSize: '1.5rem', 
+      iconSize: 20,
+      labelSize: 'text-xs',
+      subtitleSize: 'text-[10px]',
+      padding: 'p-3'
+    },
+    lg: { 
+      width: 180, 
+      strokeWidth: 9, 
+      fontSize: '2rem', 
+      iconSize: 24,
+      labelSize: 'text-sm',
+      subtitleSize: 'text-xs',
+      padding: 'p-4'
+    },
   }
 
   const actualScale = scale || 1
-  const { width, strokeWidth, fontSize, iconSize } = sizes[size]
+  const { width, strokeWidth, fontSize, iconSize, labelSize, subtitleSize, padding } = sizes[size]
   const scaledWidth = width * actualScale
   const radius = (scaledWidth - strokeWidth) / 2
   const innerRadius = radius - strokeWidth / 2
@@ -119,7 +143,8 @@ export function StatRing({
   return (
     <motion.div 
       className={cn(
-        'group flex flex-col items-center gap-3 transition-all duration-300',
+        'group flex flex-col items-center transition-all duration-300',
+        size === 'sm' ? 'gap-1' : size === 'md' ? 'gap-2' : 'gap-3',
         onTargetClick && 'cursor-pointer',
         className
       )}
@@ -228,7 +253,7 @@ export function StatRing({
         </svg>
 
         {/* Center content */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+        <div className={cn("absolute inset-0 flex flex-col items-center justify-center", size === 'sm' ? 'gap-0.5' : 'gap-1')}>
           {/* Icon */}
           {icon && (
             <motion.div
@@ -236,16 +261,23 @@ export function StatRing({
               animate={{ opacity: 0.7, scale: 1 }}
               transition={{ delay: 0.3, type: "spring" }}
               className="text-muted-foreground"
-              style={{ fontSize: iconSize }}
+              style={{ width: iconSize, height: iconSize }}
             >
-              {icon}
+              {React.cloneElement(icon as React.ReactElement, { 
+                className: cn((icon as React.ReactElement).props.className),
+                style: { width: iconSize, height: iconSize }
+              })}
             </motion.div>
           )}
           
           {/* Main value */}
           <motion.div
             className="font-bold leading-none"
-            style={{ fontSize: customDisplay ? (size === 'lg' ? '1.75rem' : '1.5rem') : fontSize }}
+            style={{ 
+              fontSize: customDisplay 
+                ? (size === 'sm' ? '1rem' : size === 'md' ? '1.25rem' : '1.75rem') 
+                : fontSize 
+            }}
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ 
@@ -261,7 +293,11 @@ export function StatRing({
           {/* Status text */}
           {status && (
             <motion.div
-              className={cn("text-xs font-medium", statusColors[status])}
+              className={cn(
+                "font-medium",
+                size === 'sm' ? 'text-[9px]' : size === 'md' ? 'text-[10px]' : 'text-xs',
+                statusColors[status]
+              )}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.7 }}
@@ -273,8 +309,11 @@ export function StatRing({
       </div>
 
       {/* Labels and trend */}
-      <div className="text-center space-y-1.5">
-        <div className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+      <div className={cn("text-center", size === 'sm' ? 'space-y-0.5' : 'space-y-1.5')}>
+        <div className={cn(
+          "font-medium text-foreground group-hover:text-primary transition-colors",
+          labelSize
+        )}>
           {label}
         </div>
         
@@ -282,26 +321,27 @@ export function StatRing({
         {trend && trendValue !== undefined && trendValue > 0 && (
           <motion.div
             className={cn(
-              "flex items-center justify-center gap-1 text-xs font-medium",
+              "flex items-center justify-center gap-1 font-medium",
+              size === 'sm' ? 'text-[9px]' : size === 'md' ? 'text-[10px]' : 'text-xs',
               trend === 'up' ? 'text-green-500' : trend === 'down' ? 'text-red-500' : 'text-muted-foreground'
             )}
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.9 }}
           >
-            {trend === 'up' && <ArrowUp className="w-3 h-3" />}
-            {trend === 'down' && <ArrowDown className="w-3 h-3" />}
-            {trend === 'neutral' && <Minus className="w-3 h-3" />}
+            {trend === 'up' && <ArrowUp className={size === 'sm' ? 'w-2 h-2' : 'w-3 h-3'} />}
+            {trend === 'down' && <ArrowDown className={size === 'sm' ? 'w-2 h-2' : 'w-3 h-3'} />}
+            {trend === 'neutral' && <Minus className={size === 'sm' ? 'w-2 h-2' : 'w-3 h-3'} />}
             <span>{trendValue}%</span>
           </motion.div>
         )}
         
         {showTarget && targetValue && currentValue !== undefined ? (
-          <div className="text-xs text-muted-foreground">
+          <div className={cn("text-muted-foreground", subtitleSize)}>
             {currentValue.toFixed(1)} / {targetValue} {unit}
           </div>
         ) : subtitle && !trend ? (
-          <div className="text-xs text-muted-foreground">
+          <div className={cn("text-muted-foreground", subtitleSize)}>
             {subtitle}
           </div>
         ) : null}
