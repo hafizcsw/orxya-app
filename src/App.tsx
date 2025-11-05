@@ -62,11 +62,9 @@ function AppContent() {
   const location = useLocation();
   const { i18n } = useTranslation();
   
-  // Apply RTL/LTR on mount
+  // Apply language attribute only (RTL is fixed for all languages)
   useEffect(() => {
     const currentLang = i18n.language || 'ar';
-    const dir = currentLang === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.setAttribute('dir', dir);
     document.documentElement.setAttribute('lang', currentLang);
   }, [i18n.language]);
   

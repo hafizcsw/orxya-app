@@ -128,10 +128,8 @@ i18n
     },
   });
 
-// Apply RTL/LTR based on language
+// Apply language attribute only (RTL is fixed for all languages)
 i18n.on('languageChanged', (lng) => {
-  const dir = lng === 'ar' ? 'rtl' : 'ltr';
-  document.documentElement.setAttribute('dir', dir);
   document.documentElement.setAttribute('lang', lng);
 });
 
