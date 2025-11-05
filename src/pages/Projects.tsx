@@ -21,13 +21,9 @@ import Spinner from '@/components/ui/Spinner';
 import { useNotify } from '@/lib/notify-utils';
 import { copy } from '@/lib/copy';
 import { aiAsk, getAIConsents, setAIConsentsPreset, computeAIStatus, type AIConsents } from '@/lib/ai';
+import { useTranslation } from 'react-i18next';
 
 const statusCols: Array<Task['status']> = ['todo', 'doing', 'done'];
-const statusLabel: Record<Task['status'], string> = {
-  todo: 'To-Do',
-  doing: 'Doing',
-  done: 'Done',
-};
 
 type PendingOp = { snapshot: Task[]; desc: string };
 
@@ -35,6 +31,13 @@ export default function Projects() {
   const { user } = useUser();
   const isMobile = useIsMobile();
   const notify = useNotify();
+  const { t } = useTranslation(['projects']);
+  
+  const statusLabel: Record<Task['status'], string> = {
+    todo: t('projects:columns.todo'),
+    doing: t('projects:columns.doing'),
+    done: t('projects:columns.done'),
+  };
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -210,7 +213,7 @@ export default function Projects() {
       
       if (e.key === 'n' && !isInputFocused) {
         e.preventDefault();
-        document.querySelector<HTMLInputElement>('input[placeholder="عنوان المهمة"]')?.focus();
+        document.querySelector<HTMLInputElement>('input[placeholder*="' + t('projects:form.taskTitle').slice(0, 5) + '"]')?.focus();
         track('kb_new_task');
       }
       
@@ -282,7 +285,7 @@ export default function Projects() {
     setLoading(true);
     track('projects_add_project');
     const { ok, data } = await sendCommand('add_project', { name: pname.trim() },
-      'حُفظ المشروع أوفلاين وسيُزامَن 🔄');
+      t('projects:messages.savedOffline'));
     setPname('');
     await loadProjects();
     if (ok && data?.saved_ids?.[0]) setSelected(data.saved_ids[0]);
@@ -304,45 +307,45 @@ export default function Projects() {
         order_pos,
         due_date: tDue || null,
       },
-      'حُفظت المهمة أوفلاين وسيُزامَن 🔄'
+      t('projects:messages.savedOffline')
     );
     setTTitle(''); setTDue('');
     await loadTasks(selected);
     setLoading(false);
   }
 
-  async function moveToStatus(t: Task, to: Task['status']) {
+  async function moveToStatus(task: Task, to: Task['status']) {
     if (!selected) return;
     track('projects_set_status', { to });
     const toList = grouped[to] ?? [];
     const new_order_pos = nextOrderPos(toList);
     await sendCommand(
       'move_task',
-      { task_id: t.id, to_status: to, new_order_pos },
-      'نُقلت المهمة أوفلاين وسيُزامَن 🔄'
+      { task_id: task.id, to_status: to, new_order_pos },
+      t('projects:messages.savedOffline')
     );
     await loadTasks(selected);
   }
 
-  async function moveUpDown(t: Task, dir: 'up' | 'down') {
-    const col = grouped[t.status] ?? [];
-    const idx = col.findIndex(x => x.id === t.id);
+  async function moveUpDown(task: Task, dir: 'up' | 'down') {
+    const col = grouped[task.status] ?? [];
+    const idx = col.findIndex(x => x.id === task.id);
     if (idx < 0) return;
 
     if (dir === 'up' && idx > 0) {
       const prev = col[idx - 1];
-      const new_order_pos = midpoint(prev.order_pos, t.order_pos);
+      const new_order_pos = midpoint(prev.order_pos, task.order_pos);
       await sendCommand('move_task',
-        { task_id: t.id, to_status: t.status, new_order_pos },
-        'أُعيد ترتيب المهمة أوفلاين 🔄');
+        { task_id: task.id, to_status: task.status, new_order_pos },
+        t('projects:messages.savedOffline'));
       await loadTasks(selected!);
     }
     if (dir === 'down' && idx < col.length - 1) {
       const next = col[idx + 1];
-      const new_order_pos = midpoint(t.order_pos, next.order_pos);
+      const new_order_pos = midpoint(task.order_pos, next.order_pos);
       await sendCommand('move_task',
-        { task_id: t.id, to_status: t.status, new_order_pos },
-        'أُعيد ترتيب المهمة أوفلاين 🔄');
+        { task_id: task.id, to_status: task.status, new_order_pos },
+        t('projects:messages.savedOffline'));
       await loadTasks(selected!);
     }
   }
@@ -470,7 +473,7 @@ export default function Projects() {
     // Send to server
     const { ok } = await sendCommand('move_task', 
       { task_id: taskToMove.id, to_status: toStatus, new_order_pos },
-      'نُقلت المهمة أوفلاين وسيُزامَن 🔄'
+      t('projects:messages.savedOffline')
     );
 
     if (!ok) {
@@ -557,11 +560,11 @@ export default function Projects() {
 
   return (
     <div className="container mx-auto p-4 space-y-6">
-      <h1 className="text-3xl font-bold mb-6">المشاريع</h1>
+      <h1 className="text-3xl font-bold mb-6">{t('projects:title')}</h1>
 
       {!user && (
         <div className="p-4 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-900">
-          سجّل الدخول لإدارة مشاريعك ومهامك.
+          {t('projects:emptyState.createFirst')}
         </div>
       )}
 
@@ -569,13 +572,13 @@ export default function Projects() {
         <>
           {/* إضافة مشروع */}
           <div className="rounded-2xl border border-border p-6 bg-card space-y-4">
-            <div className="font-semibold text-lg">إضافة مشروع</div>
+            <div className="font-semibold text-lg">{t('projects:actions.addProject')}</div>
             <div className="flex gap-3">
               <input
                 className="flex-1 px-3 py-2 rounded-lg border border-input bg-background text-foreground"
                 value={pname}
                 onChange={e => setPname(e.target.value)}
-                placeholder="اسم المشروع"
+                placeholder={t('projects:form.projectName')}
               />
               <Button 
                 variant="default"
@@ -583,7 +586,7 @@ export default function Projects() {
                 disabled={loading || !pname.trim()}
               >
                 {loading ? <Spinner className="mr-2" /> : null}
-                {loading ? 'جارٍ...' : 'إضافة'}
+                {loading ? t('projects:messages.loading') : t('projects:form.create')}
               </Button>
             </div>
           </div>
@@ -591,7 +594,7 @@ export default function Projects() {
           {/* قائمة المشاريع */}
           <div className="rounded-2xl border border-border p-6 bg-card space-y-4">
             <div className="flex items-center justify-between">
-              <div className="font-semibold text-lg">المشاريع</div>
+              <div className="font-semibold text-lg">{t('projects:title')}</div>
               {projects.length > 0 && (
                 <button
                   onClick={() => {
@@ -601,21 +604,21 @@ export default function Projects() {
                   className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors flex items-center gap-2"
                 >
                   <Download className="h-4 w-4" />
-                  تصدير JSON
+                  {t('projects:actions.exportAll')}
                 </button>
               )}
             </div>
             <div className="flex flex-wrap gap-2">
               {projects.length === 0 ? (
                 <EmptyState
-                  title="لا توجد مشاريع بعد"
-                  hint="ابدأ بإضافة مشروع جديد لتنظيم مهامك."
+                  title={t('projects:emptyState.noProjects')}
+                  hint={t('projects:emptyState.createFirst')}
                   cta={
                     <button
-                      onClick={() => document.querySelector<HTMLInputElement>('input[placeholder="اسم المشروع"]')?.focus()}
+                      onClick={() => document.querySelector<HTMLInputElement>(`input[placeholder="${t('projects:form.projectName')}"]`)?.focus()}
                       className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                     >
-                      + مشروع جديد
+                      {t('projects:actions.addProject')}
                     </button>
                   }
                 />
@@ -650,7 +653,7 @@ export default function Projects() {
                       setQ(e.target.value);
                       track('tasks_search', { query: e.target.value });
                     }}
-                    placeholder="بحث في المهام..."
+                    placeholder={t('projects:filters.search')}
                     className="w-full pl-10 pr-3 py-2 rounded-lg border border-input bg-background text-foreground"
                   />
                 </div>
@@ -662,7 +665,7 @@ export default function Projects() {
                   }`}
                 >
                   <Filter className="h-4 w-4" />
-                  {!isMobile && 'فلاتر'}
+                  {!isMobile && (showFilters ? t('projects:actions.hideFilters') : t('projects:actions.showFilters'))}
                 </button>
               </div>
 
@@ -671,7 +674,7 @@ export default function Projects() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-4 border-t border-border">
                   {/* Status filters */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">الحالة</label>
+                    <label className="text-sm font-medium">{t('projects:form.status')}</label>
                     <div className="flex flex-wrap gap-2">
                       {(['todo', 'doing', 'done'] as const).map(status => (
                         <button
@@ -698,7 +701,7 @@ export default function Projects() {
 
                   {/* Quick filters */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">سريع</label>
+                    <label className="text-sm font-medium">{t('projects:filters.today')}</label>
                     <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => {
@@ -713,7 +716,7 @@ export default function Projects() {
                         }`}
                       >
                         <Clock className="h-3 w-3" />
-                        اليوم
+                        {t('projects:filters.today')}
                       </button>
                       
                       <button
@@ -729,14 +732,14 @@ export default function Projects() {
                         }`}
                       >
                         <AlertCircle className="h-3 w-3" />
-                        متأخرة
+                        {t('projects:filters.overdue')}
                       </button>
                     </div>
                   </div>
 
                   {/* Date range */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">المدى الزمني</label>
+                    <label className="text-sm font-medium">{t('projects:filters.dateFrom')} - {t('projects:filters.dateTo')}</label>
                     <div className="flex gap-2">
                       <input
                         type="date"
@@ -746,7 +749,7 @@ export default function Projects() {
                           track('tasks_filter_date_from', { date: e.target.value });
                         }}
                         className="flex-1 px-2 py-1 text-sm rounded-lg border border-input bg-background"
-                        placeholder="من"
+                        placeholder={t('projects:filters.dateFrom')}
                       />
                       <input
                         type="date"
@@ -756,7 +759,7 @@ export default function Projects() {
                           track('tasks_filter_date_to', { date: e.target.value });
                         }}
                         className="flex-1 px-2 py-1 text-sm rounded-lg border border-input bg-background"
-                        placeholder="إلى"
+                        placeholder={t('projects:filters.dateTo')}
                       />
                     </div>
                   </div>
@@ -776,13 +779,13 @@ export default function Projects() {
                       className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
                     >
                       <X className="h-3 w-3" />
-                      مسح الكل
+                      {t('projects:filters.clearFilters')}
                     </button>
                     {selected && (
                       <button 
                         onClick={() => { setShowAIPanel(true); track('ai_panel_open'); }} 
                         className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:opacity-90 transition-opacity flex items-center gap-2"
-                        title="مساعد الذكاء الاصطناعي"
+                        title={t('projects:ai.title')}
                       >
                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                           <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"/>
@@ -796,8 +799,8 @@ export default function Projects() {
 
               {/* Results count */}
               <div className="text-sm text-muted-foreground">
-                {tasks.length} {tasks.length === 1 ? 'مهمة' : 'مهام'}
-                {(q || fOnlyToday || fOnlyOverdue || fFrom || fTo) && ' (مُفلتَرة)'}
+                {tasks.length} {t('projects:stats.total')}
+                {(q || fOnlyToday || fOnlyOverdue || fFrom || fTo) && ` (${t('projects:filters.clearFilters')})`}
               </div>
             </div>
           )}
@@ -813,18 +816,18 @@ export default function Projects() {
                     computeAIStatus(aiCons) === "limited" ? "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200" :
                     "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
                   }`}>
-                    🤖 الذكاء: {computeAIStatus(aiCons) === "on" ? "مُفعّل" : computeAIStatus(aiCons) === "limited" ? "مقيّد" : "مقفول"}
+                    🤖 {t('projects:ai.title')}: {computeAIStatus(aiCons) === "on" ? t('projects:messages.taskSaved') : computeAIStatus(aiCons) === "limited" ? t('projects:filters.today') : t('projects:actions.delete')}
                   </span>
                   {aiCons && (
                     <div className="hidden sm:flex items-center gap-2 text-xs">
                       <span className={`px-2 py-0.5 rounded ${aiCons.consent_read_calendar ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"}`}>
-                        قراءة التقويم
+                        {t('common:calendar')} {t('projects:actions.export')}
                       </span>
                       <span className={`px-2 py-0.5 rounded ${aiCons.consent_write_calendar ? "bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200" : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"}`}>
-                        كتابة التقويم
+                        {t('common:calendar')} {t('projects:form.create')}
                       </span>
                       <span className={`px-2 py-0.5 rounded ${aiCons.consent_write_tasks ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200" : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"}`}>
-                        إنشاء المهام
+                        {t('projects:actions.addTask')}
                       </span>
                     </div>
                   )}
@@ -838,12 +841,12 @@ export default function Projects() {
                       if (ok.ok) {
                         const c = await getAIConsents();
                         setAICons(c as any);
-                        setAIBarMsg("تم تفعيل جميع الأذونات ✅");
+                        setAIBarMsg(t('projects:ai.enableAI'));
                         setTimeout(() => setAIBarMsg(""), 3000);
-                      } else setAIBarMsg("تعذّر التفعيل");
+                      } else setAIBarMsg(t('projects:messages.error'));
                     }}
                   >
-                    تشغيل الكل
+                    {t('projects:ai.enableAI')}
                   </button>
                   <button
                     className="px-3 py-1.5 rounded-lg border border-border hover:bg-secondary text-sm transition-colors"
@@ -852,18 +855,18 @@ export default function Projects() {
                       if (ok.ok) {
                         const c = await getAIConsents();
                         setAICons(c as any);
-                        setAIBarMsg("تم إيقاف الذكاء كاملاً ⏹️");
+                        setAIBarMsg(t('projects:messages.taskDeleted'));
                         setTimeout(() => setAIBarMsg(""), 3000);
-                      } else setAIBarMsg("تعذّر الإيقاف");
+                      } else setAIBarMsg(t('projects:messages.error'));
                     }}
                   >
-                    إيقاف الكل
+                    {t('projects:actions.delete')} {t('projects:ai.title')}
                   </button>
                   <a
                     href="/profile"
                     className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm hover:opacity-90 transition-opacity"
                   >
-                    الإعدادات
+                    {t('settings:title')}
                   </a>
                 </div>
               </div>
@@ -871,11 +874,11 @@ export default function Projects() {
 
               {/* ذكاء المهام للمشروع */}
               <div className="rounded-2xl border border-border p-6 bg-card space-y-4">
-                <div className="font-semibold text-lg">توليد مهام بالذكاء للمشروع المحدّد</div>
+                <div className="font-semibold text-lg">{t('projects:ai.title')}</div>
                 <textarea
                   value={aiText}
                   onChange={(e)=>setAIText(e.target.value)}
-                  placeholder="اكتب ما تريد تنظيمه… مثال: 'قسّم خطة الأسبوع إلى مهام يومية قصيرة مع مواعيد نهائية قبل صلاة العشاء.'"
+                  placeholder={t('projects:ai.placeholder')}
                   className="w-full min-h-[90px] px-3 py-2 rounded-xl border border-input bg-background"
                 />
                 <div className="flex items-center gap-2 flex-wrap">
@@ -885,31 +888,31 @@ export default function Projects() {
                     onClick={async ()=>{
                       if (!selected) return;
                       if (!aiCons?.consent_write_tasks) {
-                        notify.error("⚠️ إنشاء المهام متوقف. استخدم شريط الأذونات لتفعيله أو افتح الإعدادات.");
+                        notify.error(t('projects:ai.noConsent'));
                         return;
                       }
                       setAIBusy(true); setAIReply(null);
                       const m = aiText.trim() + `\n\n[context] استخدم project_id=${selected} لأي مهام مناسبة. تأكد من إضافة due_date حيث يمكن.`;
                       const res = await aiAsk(m, { context_project_id: selected });
                       setAIBusy(false);
-                      if (!res.ok) { notify.error("فشل توليد المهام"); return; }
-                      setAIReply(res.reply || "تمت المعالجة.");
+                      if (!res.ok) { notify.error(t('projects:messages.error')); return; }
+                      setAIReply(res.reply || t('projects:messages.taskSaved'));
                       setAIText("");
                       if (selected) await loadTasks(selected);
                     }}
                   >
-                    {aiBusy ? <><Spinner className="h-4 w-4 mr-2" /> جارٍ التوليد…</> : "استخدم الذكاء"}
+                    {aiBusy ? <><Spinner className="h-4 w-4 mr-2" /> {t('projects:ai.thinking')}</> : t('projects:ai.send')}
                   </Button>
                   {aiReply && <div className="text-sm text-muted-foreground">{aiReply}</div>}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  * سيحترم النظام أذوناتك من الإعدادات (إنشاء مهام/أحداث، قراءة/كتابة التقويم).
+                  {t('projects:ai.noConsent')}
                 </div>
               </div>
 
               <div className="rounded-2xl border border-border p-6 bg-card space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="font-semibold text-lg">إضافة مهمة</div>
+                  <div className="font-semibold text-lg">{t('projects:actions.addTask')}</div>
                   {tasks.length > 0 && (
                     <button
                       onClick={() => {
@@ -922,7 +925,7 @@ export default function Projects() {
                       className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors flex items-center gap-2"
                     >
                       <Download className="h-4 w-4" />
-                      {!isMobile && 'تصدير المشروع'}
+                      {!isMobile && t('projects:actions.exportProject')}
                     </button>
                   )}
                 </div>
@@ -931,16 +934,16 @@ export default function Projects() {
                     className="px-3 py-2 rounded-lg border border-input bg-background text-foreground"
                     value={tTitle}
                     onChange={e => setTTitle(e.target.value)}
-                    placeholder="عنوان المهمة"
+                    placeholder={t('projects:form.taskTitle')}
                   />
                   <select
                     className="px-3 py-2 rounded-lg border border-input bg-background text-foreground"
                     value={tInitStatus}
                     onChange={e => setTInitStatus(e.target.value as Task['status'])}
                   >
-                    <option value="todo">To-Do</option>
-                    <option value="doing">Doing</option>
-                    <option value="done">Done</option>
+                    <option value="todo">{t('projects:columns.todo')}</option>
+                    <option value="doing">{t('projects:columns.doing')}</option>
+                    <option value="done">{t('projects:columns.done')}</option>
                   </select>
                   <input
                     className="px-3 py-2 rounded-lg border border-input bg-background text-foreground"
@@ -953,7 +956,7 @@ export default function Projects() {
                     onClick={addTask} 
                     disabled={!tTitle.trim()}
                   >
-                    حفظ
+                    {t('projects:form.create')}
                   </button>
                 </div>
               </div>
@@ -976,7 +979,7 @@ export default function Projects() {
                     <div className="flex-1 text-center">
                       <div className="font-semibold text-lg">{statusLabel[mobileColumn]}</div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        {(grouped[mobileColumn] ?? []).length} مهام
+                        {(grouped[mobileColumn] ?? []).length} {t('projects:stats.total')}
                       </div>
                     </div>
                     
@@ -1002,71 +1005,71 @@ export default function Projects() {
                     ) : (
                       <div className="space-y-2">
                         {(grouped[mobileColumn] ?? []).length === 0 ? (
-                          <div className="text-sm text-muted-foreground py-8 text-center">— لا مهام —</div>
+                          <div className="text-sm text-muted-foreground py-8 text-center">{t('projects:emptyState.noTasks')}</div>
                         ) : (
-                          (grouped[mobileColumn] ?? []).map((t, idx, arr) => (
+                          (grouped[mobileColumn] ?? []).map((task, idx, arr) => (
                             <div 
-                              key={t.id}
+                              key={task.id}
                               className="border border-border rounded-xl p-4 bg-background space-y-3"
                             >
                               <div className="flex items-start justify-between gap-2">
-                                <div className="font-medium flex-1">{t.title}</div>
-                                {isOverdue(t) && (
+                                <div className="font-medium flex-1">{task.title}</div>
+                                {isOverdue(task) && (
                                   <span className="text-xs px-2 py-1 rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 flex items-center gap-1">
                                     <AlertCircle className="h-3 w-3" />
-                                    متأخرة
+                                    {t('projects:filters.overdue')}
                                   </span>
                                 )}
-                                {!isOverdue(t) && isToday(t) && (
+                                {!isOverdue(task) && isToday(task) && (
                                   <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 flex items-center gap-1">
                                     <Clock className="h-3 w-3" />
-                                    اليوم
+                                    {t('projects:filters.today')}
                                   </span>
                                 )}
                               </div>
                               <div className="text-sm text-muted-foreground flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
-                                {t.due_date || '—'}
+                                {task.due_date || '—'}
                               </div>
                               <div className="flex gap-2 flex-wrap">
                                 {mobileColumn !== 'todo' && (
                                   <button 
                                     className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-                                    onClick={() => moveToStatus(t, 'todo')}
+                                    onClick={() => moveToStatus(task, 'todo')}
                                   >
-                                    ← To-Do
+                                    ← {t('projects:columns.todo')}
                                   </button>
                                 )}
                                 {mobileColumn !== 'doing' && (
                                   <button 
                                     className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-                                    onClick={() => moveToStatus(t, 'doing')}
+                                    onClick={() => moveToStatus(task, 'doing')}
                                   >
-                                    ↔ Doing
+                                    ↔ {t('projects:columns.doing')}
                                   </button>
                                 )}
                                 {mobileColumn !== 'done' && (
                                   <button 
                                     className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-                                    onClick={() => moveToStatus(t, 'done')}
+                                    onClick={() => moveToStatus(task, 'done')}
                                   >
-                                    → Done
+                                    → {t('projects:columns.done')}
                                   </button>
                                 )}
                                 {idx > 0 && (
                                   <button 
                                     className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-                                    onClick={() => moveUpDown(t, 'up')}
+                                    onClick={() => moveUpDown(task, 'up')}
                                   >
-                                    ↑
+                                    {t('projects:actions.moveUp')}
                                   </button>
                                 )}
                                 {idx < arr.length - 1 && (
                                   <button 
                                     className="px-3 py-1.5 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-                                    onClick={() => moveUpDown(t, 'down')}
+                                    onClick={() => moveUpDown(task, 'down')}
                                   >
-                                    ↓
+                                    {t('projects:actions.moveDown')}
                                   </button>
                                 )}
                               </div>
@@ -1111,7 +1114,7 @@ export default function Projects() {
                         {(grouped[col] ?? []).length === 0 ? (
                           <>
                             <DropZone status={col} beforeId={null} />
-                            <div className="text-sm text-muted-foreground py-4 text-center">— لا مهام —</div>
+                            <div className="text-sm text-muted-foreground py-4 text-center">{t('projects:emptyState.noTasks')}</div>
                             <DropZone status={col} beforeId={null} />
                           </>
                         ) : (
@@ -1120,8 +1123,8 @@ export default function Projects() {
                             <DropZone status={col} beforeId={(grouped[col] ?? [])[0]?.id ?? null} />
                             
                             <AnimatePresence initial={false}>
-                              {(grouped[col] ?? []).map((t, idx, arr) => (
-                                <div key={t.id}>
+                              {(grouped[col] ?? []).map((task, idx, arr) => (
+                                <div key={task.id}>
                                   <motion.div
                                     layout
                                     initial={{ opacity: 0.8, scale: 0.98 }}
@@ -1129,73 +1132,73 @@ export default function Projects() {
                                     exit={{ opacity: 0, scale: 0.98 }}
                                     transition={{ type: 'spring', stiffness: 280, damping: 24, mass: 0.6 }}
                                     className={`border border-border rounded-xl p-4 bg-background space-y-3 cursor-grab active:cursor-grabbing transition-all compact-py compact-px compact-text ${
-                                      draggedTask?.id === t.id ? 'opacity-50 scale-95' : 'hover:shadow-md'
+                                      draggedTask?.id === task.id ? 'opacity-50 scale-95' : 'hover:shadow-md'
                                     }`}
                                   >
                                     <div
                                       draggable
-                                      onDragStart={(e) => handleDragStart(e as any, t)}
+                                      onDragStart={(e) => handleDragStart(e as any, task)}
                                       onDragEnd={handleDragEnd}
                                       className="cursor-grab active:cursor-grabbing w-full"
                                     >
                                       <div className="flex items-start justify-between gap-2">
-                                    <div className="font-medium flex-1">{t.title}</div>
-                                    {isOverdue(t) && (
+                                    <div className="font-medium flex-1">{task.title}</div>
+                                    {isOverdue(task) && (
                                       <span className="text-xs px-2 py-1 rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 flex items-center gap-1">
                                         <AlertCircle className="h-3 w-3" />
-                                        متأخرة
+                                        {t('projects:filters.overdue')}
                                       </span>
                                     )}
-                                    {!isOverdue(t) && isToday(t) && (
+                                    {!isOverdue(task) && isToday(task) && (
                                       <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 flex items-center gap-1">
                                         <Clock className="h-3 w-3" />
-                                        اليوم
+                                        {t('projects:filters.today')}
                                       </span>
                                     )}
                                   </div>
                                   <div className="text-sm text-muted-foreground flex items-center gap-1">
                                     <Calendar className="h-3 w-3" />
-                                    {t.due_date || '—'}
+                                    {task.due_date || '—'}
                                   </div>
                                   <div className="flex gap-2 flex-wrap">
                                     {col !== 'todo' && (
                                       <button 
                                         className="px-3 py-1 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-                                        onClick={() => moveToStatus(t, 'todo')}
+                                        onClick={() => moveToStatus(task, 'todo')}
                                       >
-                                        ↤ To-Do
+                                        ↤ {t('projects:columns.todo')}
                                       </button>
                                     )}
                                     {col !== 'doing' && (
                                       <button 
                                         className="px-3 py-1 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-                                        onClick={() => moveToStatus(t, 'doing')}
+                                        onClick={() => moveToStatus(task, 'doing')}
                                       >
-                                        ↔ Doing
+                                        ↔ {t('projects:columns.doing')}
                                       </button>
                                     )}
                                     {col !== 'done' && (
                                       <button 
                                         className="px-3 py-1 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-                                        onClick={() => moveToStatus(t, 'done')}
+                                        onClick={() => moveToStatus(task, 'done')}
                                       >
-                                        ↦ Done
+                                        ↦ {t('projects:columns.done')}
                                       </button>
                                     )}
                                     {idx > 0 && (
                                       <button 
                                         className="px-3 py-1 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-                                        onClick={() => moveUpDown(t, 'up')}
+                                        onClick={() => moveUpDown(task, 'up')}
                                       >
-                                        ↑
+                                        {t('projects:actions.moveUp')}
                                       </button>
                                     )}
                                     {idx < arr.length - 1 && (
                                       <button 
                                         className="px-3 py-1 rounded-lg text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-                                        onClick={() => moveUpDown(t, 'down')}
+                                        onClick={() => moveUpDown(task, 'down')}
                                       >
-                                        ↓
+                                        {t('projects:actions.moveDown')}
                                       </button>
                                      )}
                                       </div>
