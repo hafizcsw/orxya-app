@@ -3,9 +3,12 @@ import { Mic, MicOff, Volume2, Loader2, Trash2, MessageSquarePlus } from 'lucide
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { askAgentHub } from '@/lib/agent-hub';
+import { Capacitor } from '@capacitor/core';
+import { wakeWordManager } from '@/lib/wake-word-manager';
 import {
   getOrCreateConversation,
   getConversationHistory,
@@ -21,6 +24,8 @@ export function VoiceAssistant() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<VoiceMessage[]>([]);
+  const [isWakeWordActive, setIsWakeWordActive] = useState(false);
+  const [isWaitingForCommand, setIsWaitingForCommand] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -69,6 +74,85 @@ export function VoiceAssistant() {
   const clearConversation = () => {
     setMessages([]);
     startNewConversation();
+  };
+
+  const handleWakeWordToggle = async (enabled: boolean) => {
+    if (!Capacitor.isNativePlatform()) {
+      toast({
+        title: "⚠️ غير متاح",
+        description: "Wake Word متاح فقط على التطبيق الأصلي (Android/iOS)",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (enabled) {
+      const success = await wakeWordManager.start({
+        accessKey: 'YOUR_PICOVOICE_KEY', // سيتم استبداله من الإعدادات
+        keyword: 'BUMBLEBEE', // للاختبار الأولي
+        onDetected: async () => {
+          setIsWaitingForCommand(true);
+          
+          // Play beep sound
+          const beep = new Audio('/beep.mp3');
+          try {
+            await beep.play();
+          } catch (e) {
+            console.log('Beep play failed:', e);
+          }
+          
+          // Say "نعم؟" via ElevenLabs
+          await playGreeting();
+          
+          // Start recording automatically
+          await startRecording();
+          
+          // Reset after 10 seconds if no input
+          setTimeout(() => {
+            if (isWaitingForCommand) {
+              setIsWaitingForCommand(false);
+            }
+          }, 10000);
+        }
+      });
+      
+      setIsWakeWordActive(success);
+      
+      if (success) {
+        toast({
+          title: "✅ Wake Word مفعّل",
+          description: "قل 'BUMBLEBEE' للتفعيل",
+        });
+      } else {
+        toast({
+          title: "❌ فشل التفعيل",
+          description: "تأكد من صلاحيات الميكروفون",
+          variant: "destructive",
+        });
+      }
+    } else {
+      await wakeWordManager.stop();
+      setIsWakeWordActive(false);
+      toast({
+        title: "🔴 Wake Word متوقف",
+        description: "تم إيقاف الاستماع",
+      });
+    }
+  };
+
+  const playGreeting = async () => {
+    try {
+      const { data } = await supabase.functions.invoke('text-to-voice', {
+        body: { text: 'نعم؟', voice: 'XB0fDUnXU5powFXDhCwa' } // Charlotte voice
+      });
+      
+      if (data?.audioContent) {
+        const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
+        await audio.play();
+      }
+    } catch (error) {
+      console.error('Greeting error:', error);
+    }
   };
 
   const startRecording = async () => {
@@ -237,7 +321,7 @@ export function VoiceAssistant() {
   };
 
   return (
-    <Card className="border-primary/20 h-[600px] flex flex-col">
+    <Card className="border-primary/20 h-[700px] flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle className="flex items-center gap-2">
           <Volume2 className="w-5 h-5 text-primary" />
@@ -263,6 +347,29 @@ export function VoiceAssistant() {
         </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
+        {/* Wake Word Toggle - Only on native */}
+        {Capacitor.isNativePlatform() && (
+          <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+            <div className="flex-1">
+              <h3 className="font-semibold text-sm">تفعيل "يا أوريكسا"</h3>
+              <p className="text-xs text-muted-foreground">استماع مستمر للأوامر الصوتية</p>
+            </div>
+            <Switch
+              checked={isWakeWordActive}
+              onCheckedChange={handleWakeWordToggle}
+            />
+          </div>
+        )}
+        
+        {/* Status Indicator */}
+        {isWakeWordActive && (
+          <div className="flex items-center gap-2 p-3 bg-green-100 dark:bg-green-900/30 rounded-lg animate-pulse">
+            <div className="w-3 h-3 bg-green-500 rounded-full" />
+            <span className="text-sm font-medium">
+              {isWaitingForCommand ? '🔵 في انتظار أمرك...' : '🟢 في انتظار "BUMBLEBEE"'}
+            </span>
+          </div>
+        )}
         {/* Messages Area */}
         <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}>
           <div className="space-y-3">
