@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useAI } from "@/contexts/AIContext";
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { motion } from "framer-motion";
 
 export function BottomNav() {
   const location = useLocation();
@@ -138,41 +139,58 @@ export function BottomNav() {
         "safe-bottom"
       )}>
         <div className="flex items-center justify-around px-2 py-2 max-w-7xl mx-auto h-full">
-          {navItems.map((item) => {
+          {navItems.map((item, index) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
             
             return (
-              <Link
+              <motion.div
                 key={item.path}
-                to={item.path}
-                className={cn(
-                  "flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-all min-w-[60px]",
-                  "md:scale-110",
-                  isActive 
-                    ? "text-primary" 
-                    : "text-foreground/80 hover:text-foreground"
-                )}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ 
+                  duration: 0.3,
+                  delay: index * 0.1,
+                  ease: "easeOut"
+                }}
               >
-                <Icon className={cn(
-                  "transition-all",
-                  "w-5 h-5 md:w-6 md:h-6",
-                  isActive && "scale-110"
-                )} />
-                <span className={cn(
-                  "text-[10px] transition-all",
-                  "md:text-sm",
-                  isActive && "font-semibold"
-                )}>
-                  {item.label}
-                </span>
-              </Link>
+                <Link
+                  to={item.path}
+                  className={cn(
+                    "flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-all min-w-[60px]",
+                    "md:scale-110",
+                    isActive 
+                      ? "text-primary" 
+                      : "text-foreground/80 hover:text-foreground"
+                  )}
+                >
+                  <Icon className={cn(
+                    "transition-all",
+                    "w-5 h-5 md:w-6 md:h-6",
+                    isActive && "scale-110"
+                  )} />
+                  <span className={cn(
+                    "text-[10px] transition-all",
+                    "md:text-sm",
+                    isActive && "font-semibold"
+                  )}>
+                    {item.label}
+                  </span>
+                </Link>
+              </motion.div>
             );
           })}
 
           {/* AI Button - Center with Responsive Size */}
-          <button
+          <motion.button
             onClick={toggleAI}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ 
+              duration: 0.4,
+              delay: navItems.length * 0.1,
+              ease: "backOut"
+            }}
             className={cn(
               "flex flex-col items-center justify-center",
               "relative mt-0 md:mt-0",
@@ -209,11 +227,18 @@ export function BottomNav() {
             <span className="text-[10px] md:text-sm mt-1 font-semibold text-primary transition-all duration-300 group-hover:scale-105">
               AI
             </span>
-          </button>
+          </motion.button>
 
           {/* More Button */}
-          <button
+          <motion.button
             onClick={() => setMenuOpen(true)}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ 
+              duration: 0.3,
+              delay: (navItems.length + 1) * 0.1,
+              ease: "easeOut"
+            }}
             className={cn(
               "flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-all min-w-[60px]",
               "md:scale-110",
@@ -222,7 +247,7 @@ export function BottomNav() {
           >
             <Menu className="w-5 h-5 md:w-6 md:h-6" />
             <span className="text-[10px] md:text-sm font-medium">{t('bottomNav.more')}</span>
-          </button>
+          </motion.button>
         </div>
       </nav>
     </>
