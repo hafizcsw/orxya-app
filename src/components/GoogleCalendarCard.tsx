@@ -9,12 +9,36 @@ export default function GoogleCalendarCard() {
   const { status, lastSyncAt, loading, connect, syncNow } = useGoogleAccount();
   const { toast } = useToast();
 
-  async function handleSync() {
-    const result = await syncNow();
-    if (result) {
+  async function handleConnect() {
+    try {
+      await connect();
       toast({
-        title: 'تمت المزامنة',
-        description: `تم إضافة ${result.added ?? 0} أحداث، تحديث ${result.updated ?? 0}، تجاهل ${result.skipped ?? 0}`,
+        title: '✅ تم بدء عملية الربط',
+        description: 'يرجى إكمال التفويض في النافذة المنبثقة',
+      });
+    } catch (e: any) {
+      toast({
+        title: '❌ فشل الربط',
+        description: e.message || 'حدث خطأ أثناء محاولة الربط',
+        variant: 'destructive',
+      });
+    }
+  }
+
+  async function handleSync() {
+    try {
+      const result = await syncNow();
+      if (result) {
+        toast({
+          title: '✅ تمت المزامنة',
+          description: `تم إضافة ${result.added ?? 0} أحداث، تحديث ${result.updated ?? 0}، تجاهل ${result.skipped ?? 0}`,
+        });
+      }
+    } catch (e: any) {
+      toast({
+        title: '❌ فشلت المزامنة',
+        description: e.message || 'حدث خطأ أثناء المزامنة',
+        variant: 'destructive',
       });
     }
   }
@@ -55,7 +79,7 @@ export default function GoogleCalendarCard() {
             <p className="text-sm text-muted-foreground">
               اربط حساب Google Calendar لاستيراد أحداثك ومزامنتها تلقائياً. سيتم فحص التعارضات مع أوقات الصلاة بعد كل مزامنة.
             </p>
-            <Button onClick={connect} disabled={loading} className="w-full">
+            <Button onClick={handleConnect} disabled={loading} className="w-full">
               {loading ? 'جارٍ الربط...' : 'ربط التقويم'}
             </Button>
           </>
@@ -81,7 +105,7 @@ export default function GoogleCalendarCard() {
                 {loading ? 'جارٍ المزامنة...' : 'مزامنة الآن'}
               </Button>
               <Button 
-                onClick={connect} 
+                onClick={handleConnect} 
                 disabled={loading}
                 variant="outline"
               >

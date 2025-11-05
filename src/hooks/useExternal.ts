@@ -30,16 +30,33 @@ export function useGoogleAccount() {
     try {
       track('gcal_connect_clicked');
       const r = await supabase.functions.invoke('oauth-gcal-start', { body: {} });
-      const url = r.data?.url as string | undefined;
-      if (url) {
-        const wnd = window.open(url, '_blank', 'width=520,height=650');
-        const poll = setInterval(async () => {
-          if (!wnd || wnd.closed) {
-            clearInterval(poll);
-            await refresh();
-          }
-        }, 1000);
+      
+      if (r.error) {
+        console.error('Google connect error:', r.error);
+        track('gcal_connect_error', { error: r.error.message });
+        throw new Error(r.error.message || 'فشل الربط');
       }
+      
+      const url = r.data?.url as string | undefined;
+      if (!url) {
+        throw new Error('لم يتم الحصول على رابط التفويض');
+      }
+      
+      const wnd = window.open(url, '_blank', 'width=600,height=700,noopener,noreferrer');
+      
+      if (!wnd) {
+        throw new Error('تم حظر النافذة المنبثقة. يرجى السماح بالنوافذ المنبثقة للموقع.');
+      }
+      
+      const poll = setInterval(async () => {
+        if (!wnd || wnd.closed) {
+          clearInterval(poll);
+          await refresh();
+        }
+      }, 1000);
+    } catch (e: any) {
+      console.error('Google connect failed:', e);
+      throw e;
     } finally {
       setLoading(false);
     }
