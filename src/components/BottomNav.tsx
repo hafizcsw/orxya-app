@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 export function BottomNav() {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isDraggingToClose, setIsDraggingToClose] = useState(false);
   const { toggleAI } = useAI();
   const { t } = useTranslation('navigation');
   
@@ -118,10 +119,17 @@ export function BottomNav() {
               drag="y"
               dragConstraints={{ top: 0, bottom: 0 }}
               dragElastic={{ top: 0, bottom: 0.5 }}
+              onDrag={(_, info) => {
+                // تحديث حالة المؤشر بناءً على مسافة السحب
+                setIsDraggingToClose(info.offset.y > 100);
+              }}
               onDragEnd={(_, info) => {
                 // إغلاق القائمة إذا تم السحب لأسفل بسرعة أو لمسافة كافية
                 if (info.offset.y > 100 || info.velocity.y > 500) {
                   setMenuOpen(false);
+                  setIsDraggingToClose(false);
+                } else {
+                  setIsDraggingToClose(false);
                 }
               }}
               className="fixed inset-x-0 bottom-0 z-[101] bg-background/98 backdrop-blur-xl rounded-t-3xl shadow-2xl"
@@ -130,7 +138,16 @@ export function BottomNav() {
             <div className="flex flex-col h-full">
               {/* Header with drag indicator */}
               <div className="flex flex-col items-center pt-3 pb-2 border-b border-border/50 bg-card/50 rounded-t-3xl">
-                <div className="w-12 h-1.5 bg-border rounded-full mb-3" />
+                <motion.div 
+                  className="w-12 h-1.5 rounded-full mb-3 transition-all duration-200"
+                  animate={{
+                    backgroundColor: isDraggingToClose 
+                      ? "hsl(var(--destructive))" 
+                      : "hsl(var(--border))",
+                    width: isDraggingToClose ? "48px" : "48px",
+                    height: isDraggingToClose ? "8px" : "6px"
+                  }}
+                />
                 <div className="flex items-center justify-between w-full px-4 pb-2">
                   <h2 className="text-xl font-bold">{t('menu.title')}</h2>
                   <button
