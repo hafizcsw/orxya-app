@@ -1,5 +1,3 @@
-import i18n from '@/i18n';
-
 /**
  * Format a number according to the current language
  */
@@ -100,10 +98,11 @@ export function formatRelativeTime(date: Date | string): string {
 }
 
 /**
- * Get the current locale from i18n
+ * Get the current locale from document
  */
 function getLocale(): string {
-  const lang = i18n.language;
+  // Get language from document attribute (set by i18n)
+  const lang = document.documentElement.lang || 'ar';
   
   // Map our language codes to proper locales
   const localeMap: Record<string, string> = {
