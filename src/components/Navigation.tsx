@@ -144,7 +144,7 @@ const Navigation = () => {
         <div className="max-w-4xl mx-auto flex h-12 items-center justify-between px-4">
           {/* Left: Avatar */}
           {user && <div className="relative flex-shrink-0">
-              <button onClick={() => navigate('/profile')} className="group relative">
+              <button onClick={() => navigate('/profile')} className="group relative" aria-label="الملف الشخصي">
                 <Avatar className="w-9 h-9 ring-2 ring-primary/20 transition-all duration-300 hover:ring-primary/40 hover:scale-110">
                   <AvatarImage src={avatarUrl || user?.user_metadata?.avatar_url || undefined} alt="Avatar" />
                   <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-white text-sm font-semibold">

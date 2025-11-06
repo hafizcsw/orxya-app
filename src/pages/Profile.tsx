@@ -12,15 +12,17 @@ import { useGoogleAccount } from '@/hooks/useExternal';
 import CalendarList from '@/components/CalendarList';
 import GoogleCalendarCard from '@/components/GoogleCalendarCard';
 import { AvatarUpload } from '@/components/AvatarUpload';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Bell, Calendar as CalendarIcon, Clock, ExternalLink, Loader2, LogOut, Moon, Sun } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 const tzGuess = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Dubai';
 
 export default function Profile() {
   const { user } = useUser();
+  const navigate = useNavigate();
   const { t } = useTranslation(['profile']);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -203,6 +205,17 @@ export default function Profile() {
     }
   }
 
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success('تم تسجيل الخروج بنجاح');
+      navigate('/auth', { replace: true });
+    } catch (error: any) {
+      console.error('Sign out error:', error);
+      toast.error('فشل تسجيل الخروج');
+    }
+  };
+
   if (!user) {
     return (
       <div className="container mx-auto p-4">
@@ -217,6 +230,14 @@ export default function Profile() {
     <div className="max-w-4xl mx-auto p-4 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">{t('profile:title')}</h1>
+        <Button 
+          variant="destructive" 
+          onClick={handleSignOut}
+          className="flex items-center gap-2"
+        >
+          <LogOut className="w-4 h-4" />
+          تسجيل الخروج
+        </Button>
       </div>
 
       {/* الصورة الشخصية */}
