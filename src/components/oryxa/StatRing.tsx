@@ -158,7 +158,7 @@ export function StatRing({
   return (
     <motion.div 
       className={cn(
-        'group flex flex-col items-center transition-all duration-300',
+        'group flex flex-col items-center',
         size === 'sm' ? 'gap-1' : size === 'md' ? 'gap-2' : 'gap-3',
         onTargetClick && 'cursor-pointer',
         className
@@ -167,11 +167,38 @@ export function StatRing({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onTargetClick}
-      // Shake animation for poor status
-      animate={status === 'poor' ? { x: [-2, 2, -2, 2, 0] } : {}}
-      transition={status === 'poor' ? { repeat: 2, duration: 0.4 } : {}}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={status === 'poor' ? { 
+        x: [-2, 2, -2, 2, 0],
+        opacity: 1,
+        scale: 1
+      } : {
+        opacity: 1,
+        scale: 1
+      }}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.98 }}
+      transition={status === 'poor' ? { 
+        repeat: 2, 
+        duration: 0.4,
+        opacity: { duration: 0.3 },
+        scale: { duration: 0.3 }
+      } : {
+        type: "spring",
+        stiffness: 300,
+        damping: 20
+      }}
     >
-      <div className="relative" style={{ width: scaledWidth, height: scaledWidth }}>
+      <motion.div 
+        className="relative" 
+        style={{ width: scaledWidth, height: scaledWidth }}
+        animate={{
+          filter: isHovered 
+            ? `drop-shadow(0 0 ${glowIntensity} ${shadowColor})`
+            : 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.1))'
+        }}
+        transition={{ duration: 0.3 }}
+      >
         <svg width={scaledWidth} height={scaledWidth} className="transform -rotate-90">
           {/* Define gradient */}
           {dynamicGradient && (
@@ -221,9 +248,6 @@ export function StatRing({
               damping: 15,
               delay: 0.2 
             }}
-            style={{
-              filter: `drop-shadow(0 0 ${isHovered ? glowIntensity : '12px'} ${shadowColor})`,
-            }}
           />
           
           {/* Pulse effect for excellent status */}
@@ -266,6 +290,7 @@ export function StatRing({
             />
           )}
         </svg>
+      </motion.div>
 
         {/* Center content */}
         <div className={cn("absolute inset-0 flex flex-col items-center justify-center", size === 'sm' ? 'gap-0.5' : 'gap-1')}>
@@ -316,10 +341,14 @@ export function StatRing({
             </motion.div>
           )}
         </div>
-      </div>
 
       {/* Labels and trend */}
-      <div className={cn("text-center", size === 'sm' ? 'space-y-0.5' : 'space-y-1.5')}>
+      <motion.div 
+        className={cn("text-center", size === 'sm' ? 'space-y-0.5' : 'space-y-1.5')}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.3 }}
+      >
         <div className={cn(
           "font-medium text-foreground group-hover:text-primary transition-colors",
           labelSize
@@ -355,7 +384,7 @@ export function StatRing({
             {subtitle}
           </div>
         ) : null}
-      </div>
+      </motion.div>
     </motion.div>
   );
 }
