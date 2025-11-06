@@ -4,6 +4,8 @@ import { useUser } from "@/lib/auth";
 import { Bell, Mail, MessageCircle, Check, X } from "lucide-react";
 import { Toast } from "@/components/Toast";
 import { useTranslation } from "react-i18next";
+import PullToRefresh from 'react-simple-pull-to-refresh';
+import { toast as showToast } from 'sonner';
 
 type Notification = {
   id: string;
@@ -33,6 +35,14 @@ const Inbox = () => {
       loadChannelPreferences();
     }
   }, [user]);
+
+  const handleRefresh = async () => {
+    await Promise.all([
+      loadNotifications(),
+      loadChannelPreferences()
+    ]);
+    showToast.success('تم تحديث الإشعارات');
+  };
 
   async function loadNotifications() {
     if (!user) return;
@@ -108,7 +118,8 @@ const Inbox = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
+    <PullToRefresh onRefresh={handleRefresh} pullingContent="">
+      <div className="min-h-screen bg-background p-4 pb-24">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3">
@@ -230,10 +241,11 @@ const Inbox = () => {
             ))
           )}
         </div>
-      </div>
+        </div>
 
-      {toast && <Toast msg={toast} />}
-    </div>
+        {toast && <Toast msg={toast} />}
+      </div>
+    </PullToRefresh>
   );
 };
 

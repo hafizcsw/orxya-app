@@ -22,6 +22,8 @@ import { useNotify } from '@/lib/notify-utils';
 import { copy } from '@/lib/copy';
 import { aiAsk, getAIConsents, setAIConsentsPreset, computeAIStatus, type AIConsents } from '@/lib/ai';
 import { useTranslation } from 'react-i18next';
+import PullToRefresh from 'react-simple-pull-to-refresh';
+import { toast } from 'sonner';
 
 const statusCols: Array<Task['status']> = ['todo', 'doing', 'done'];
 
@@ -171,6 +173,14 @@ export default function Projects() {
     () => throttle(() => selected && loadTasks(selected), 250),
     [selected, q, fStatuses, fOnlyToday, fOnlyOverdue, fFrom, fTo]
   );
+
+  const handleRefresh = async () => {
+    await Promise.all([
+      loadProjects(),
+      selected ? loadTasks(selected) : Promise.resolve()
+    ]);
+    toast.success('تم تحديث المشاريع والمهام');
+  };
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -559,7 +569,8 @@ export default function Projects() {
   }
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
+    <PullToRefresh onRefresh={handleRefresh} pullingContent="">
+      <div className="container mx-auto p-4 pb-24 space-y-6">
       <h1 className="text-3xl font-bold mb-6">{t('projects:title')}</h1>
 
       {!user && (
@@ -1235,6 +1246,7 @@ export default function Projects() {
           onTasksCreated={() => { reloadTasks(); setShowAIPanel(false); }}
         />
       )}
-    </div>
+      </div>
+    </PullToRefresh>
   );
 }
