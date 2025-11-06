@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,13 +21,15 @@ import { useHealthData } from "@/hooks/useHealthData";
 import { useUserGoals, GoalType } from "@/hooks/useUserGoals";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
-import { StatRing } from "@/components/oryxa/StatRing";
-import { DailyReportCard } from "@/components/DailyReportCard";
-import { CurrentTaskCard } from "@/components/today/CurrentTaskCard";
-import { AIInsightsCard } from "@/components/today/AIInsightsCard";
 import { useLiveToday } from "@/hooks/useLiveToday";
 import { useAIInsights } from "@/hooks/useAIInsights";
 import SimplePullToRefresh from 'react-simple-pull-to-refresh';
+
+// Lazy load heavy components
+const StatRing = lazy(() => import("@/components/oryxa/StatRing").then(m => ({ default: m.StatRing })));
+const DailyReportCard = lazy(() => import("@/components/DailyReportCard").then(m => ({ default: m.DailyReportCard })));
+const CurrentTaskCard = lazy(() => import("@/components/today/CurrentTaskCard").then(m => ({ default: m.CurrentTaskCard })));
+const AIInsightsCard = lazy(() => import("@/components/today/AIInsightsCard").then(m => ({ default: m.AIInsightsCard })));
 import { 
   Activity, 
   Heart, 
@@ -197,16 +199,20 @@ export default function Today() {
 
           {/* Current Task Card - Live */}
           {!taskLoading && (
-            <CurrentTaskCard
-              task={currentTask}
-              timeRemaining={timeRemaining}
-              progress={progress}
-              nextTask={nextTask}
-            />
+            <Suspense fallback={<Skeleton className="h-48 w-full rounded-2xl" />}>
+              <CurrentTaskCard
+                task={currentTask}
+                timeRemaining={timeRemaining}
+                progress={progress}
+                nextTask={nextTask}
+              />
+            </Suspense>
           )}
 
           {/* AI Insights Card */}
-          <AIInsightsCard insights={insights} loading={insightsLoading} />
+          <Suspense fallback={<Skeleton className="h-48 w-full rounded-2xl" />}>
+            <AIInsightsCard insights={insights} loading={insightsLoading} />
+          </Suspense>
 
         {/* Health & Recovery Section */}
         <DashboardSection 
@@ -227,46 +233,50 @@ export default function Today() {
           ) : healthData ? (
             <DashboardGrid columns={healthColumns} gap="md">
               {/* Recovery */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-              >
-                <StatRing
-                  value={healthData.recovery}
-                  label={t('health.recovery')}
-                  color="hsl(142, 76%, 36%)"
-                  gradientColors={["hsl(142, 76%, 36%)", "hsl(142, 76%, 50%)"]}
-                  icon={<Heart className="w-6 h-6" />}
-                  trend={healthData.recoveryTrend.direction}
-                  trendValue={healthData.recoveryTrend.percentage}
-                  status={getRecoveryStatus(healthData.recovery)}
-                  size={device === 'mobile' ? "sm" : "lg"}
-                  targetValue={100}
-                  currentValue={healthData.recovery}
-                />
-              </motion.div>
+              <Suspense fallback={<Skeleton className="h-48 w-full rounded-2xl" />}>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  <StatRing
+                    value={healthData.recovery}
+                    label={t('health.recovery')}
+                    color="hsl(142, 76%, 36%)"
+                    gradientColors={["hsl(142, 76%, 36%)", "hsl(142, 76%, 50%)"]}
+                    icon={<Heart className="w-6 h-6" />}
+                    trend={healthData.recoveryTrend.direction}
+                    trendValue={healthData.recoveryTrend.percentage}
+                    status={getRecoveryStatus(healthData.recovery)}
+                    size={device === 'mobile' ? "sm" : "lg"}
+                    targetValue={100}
+                    currentValue={healthData.recovery}
+                  />
+                </motion.div>
+              </Suspense>
               {/* Sleep */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                <StatRing
-                  value={healthData.sleep}
-                  label={t('health.sleep')}
-                  color="hsl(217, 91%, 60%)"
-                  gradientColors={["hsl(217, 91%, 60%)", "hsl(217, 91%, 75%)"]}
-                  icon={<Moon className="w-6 h-6" />}
-                  trend={healthData.sleepTrend.direction}
-                  trendValue={healthData.sleepTrend.percentage}
-                  status={getSleepStatus(healthData.sleep)}
-                  customDisplay={formatSleepTime(healthData.sleepMinutes)}
-                  size={device === 'mobile' ? "sm" : "lg"}
-                  targetValue={100}
-                  currentValue={healthData.sleep}
-                />
-              </motion.div>
+              <Suspense fallback={<Skeleton className="h-48 w-full rounded-2xl" />}>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <StatRing
+                    value={healthData.sleep}
+                    label={t('health.sleep')}
+                    color="hsl(217, 91%, 60%)"
+                    gradientColors={["hsl(217, 91%, 60%)", "hsl(217, 91%, 75%)"]}
+                    icon={<Moon className="w-6 h-6" />}
+                    trend={healthData.sleepTrend.direction}
+                    trendValue={healthData.sleepTrend.percentage}
+                    status={getSleepStatus(healthData.sleep)}
+                    customDisplay={formatSleepTime(healthData.sleepMinutes)}
+                    size={device === 'mobile' ? "sm" : "lg"}
+                    targetValue={100}
+                    currentValue={healthData.sleep}
+                  />
+                </motion.div>
+              </Suspense>
               
               {/* Strain */}
               <motion.div
@@ -531,13 +541,15 @@ export default function Today() {
         </DashboardSection>
 
         {/* Daily Report Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <DailyReportCard />
-        </motion.div>
+        <Suspense fallback={<Skeleton className="h-64 w-full rounded-2xl" />}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <DailyReportCard />
+          </motion.div>
+        </Suspense>
 
         {/* Business Plans */}
         <DashboardSection

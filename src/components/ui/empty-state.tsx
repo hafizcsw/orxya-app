@@ -1,5 +1,3 @@
-import React from 'react';
-import { motion } from 'framer-motion';
 import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -49,10 +47,7 @@ export function EmptyState({
   const sizeClasses = sizes[size];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: 'easeOut' }}
+    <div
       className={cn(
         'flex flex-col items-center justify-center text-center',
         'rounded-xl border border-dashed border-border/50',
@@ -62,32 +57,17 @@ export function EmptyState({
       )}
     >
       {Icon && (
-        <motion.div
-          initial={{ scale: 0, rotate: -180 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ 
-            type: 'spring', 
-            stiffness: 200, 
-            damping: 15,
-            delay: 0.1 
-          }}
-          className="mb-4"
-        >
+        <div className="mb-4">
           <div className={cn(
             'rounded-full bg-primary/10 p-4 flex items-center justify-center',
             'ring-8 ring-primary/5'
           )}>
             <Icon className={cn(sizeClasses.icon, 'text-primary/60')} />
           </div>
-        </motion.div>
+        </div>
       )}
 
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2, duration: 0.3 }}
-        className="space-y-2"
-      >
+      <div className="space-y-2">
         <h3 className={cn(
           'font-semibold text-foreground',
           sizeClasses.title
@@ -103,15 +83,10 @@ export function EmptyState({
             {description}
           </p>
         )}
-      </motion.div>
+      </div>
 
       {action && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.3 }}
-          className="mt-6"
-        >
+        <div className="mt-6">
           <Button
             variant={action.variant || 'default'}
             onClick={action.onClick}
@@ -119,8 +94,8 @@ export function EmptyState({
           >
             {action.label}
           </Button>
-        </motion.div>
+        </div>
       )}
-    </motion.div>
+    </div>
   );
 }
