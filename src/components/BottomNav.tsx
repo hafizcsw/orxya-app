@@ -1,14 +1,18 @@
-import { Home, Calendar, BarChart3, Menu, X, Bell, Settings, Zap, Brain, Bot, Activity, MessageSquare, Sparkles, Sun, Moon, Globe } from "lucide-react";
+import { Home, Calendar, BarChart3, Menu, X, Bell, Settings, Zap, Brain, Bot, Activity, MessageSquare, Sparkles, Sun, Moon, Globe, LogOut } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from "react-router-dom";
 import { useAI } from "@/contexts/AIContext";
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
 export function BottomNav() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [isDraggingToClose, setIsDraggingToClose] = useState(false);
   const { toggleAI } = useAI();
@@ -69,6 +73,18 @@ export function BottomNav() {
     setIsDark(newTheme);
     localStorage.setItem('theme', newTheme ? 'dark' : 'light');
     applyTheme(newTheme);
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success(t('menu.signOutSuccess', { defaultValue: 'تم تسجيل الخروج بنجاح' }));
+      setMenuOpen(false);
+      navigate('/auth', { replace: true });
+    } catch (error: any) {
+      console.error('Sign out error:', error);
+      toast.error(t('menu.signOutError', { defaultValue: 'فشل تسجيل الخروج' }));
+    }
   };
 
   const navItems = [
@@ -211,6 +227,18 @@ export function BottomNav() {
                     </motion.div>
                   );
                 })}
+
+                {/* Sign Out Button */}
+                <motion.button
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 + (menuLinks.length * 0.05) }}
+                  onClick={handleSignOut}
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors w-full text-right text-destructive hover:bg-destructive/10 border border-destructive/20 mt-4"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span className="font-medium">{t('menu.signOut', { defaultValue: 'تسجيل الخروج' })}</span>
+                </motion.button>
               </div>
             </div>
           </motion.div>
