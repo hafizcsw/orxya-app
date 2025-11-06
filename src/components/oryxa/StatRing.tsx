@@ -181,13 +181,13 @@ export function StatRing({
     >
       <motion.div 
         className="relative" 
-        style={{ width: scaledWidth, height: scaledWidth }}
-        animate={{
+        style={{ 
+          width: scaledWidth, 
+          height: scaledWidth,
           filter: isHovered 
             ? `drop-shadow(0 0 ${glowIntensity} ${shadowColor})`
             : 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.1))'
         }}
-        transition={{ duration: 0.3 }}
       >
         <svg width={scaledWidth} height={scaledWidth} className="transform -rotate-90">
           {/* Define gradient */}
@@ -263,71 +263,52 @@ export function StatRing({
           
           {/* Pulse effect on hover - simplified */}
           {isHovered && status !== 'excellent' && (
-            <motion.circle
+            <circle
               cx={scaledWidth / 2}
               cy={scaledWidth / 2}
               r={radius + 3}
               fill="none"
               stroke={dynamicGradient ? dynamicGradient[1] : ringColor}
               strokeWidth={1}
-              initial={{ opacity: 0.4 }}
-              animate={{ opacity: 0 }}
-              transition={{ 
-                duration: 1,
-                ease: "easeOut"
-              }}
+              opacity={0.3}
             />
           )}
         </svg>
-      </motion.div>
 
         {/* Center content */}
         <div className={cn("absolute inset-0 flex flex-col items-center justify-center", size === 'sm' ? 'gap-0.5' : 'gap-1')}>
           {/* Icon */}
           {icon && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.7 }}
-              transition={{ delay: 0.2, duration: 0.3 }}
+            <div
               className="text-muted-foreground"
-              style={{ width: iconSize, height: iconSize }}
+              style={{ width: iconSize, height: iconSize, opacity: 0.7 }}
             >
               {React.cloneElement(icon as React.ReactElement, { 
                 className: cn((icon as React.ReactElement).props.className),
                 style: { width: iconSize, height: iconSize }
               })}
-            </motion.div>
+            </div>
           )}
           
           {/* Main value */}
-          <motion.div
-            className={cn("font-bold leading-none", valueSize)}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ 
-              duration: 0.3,
-              delay: 0.4
-            }}
-          >
+          <div className={cn("font-bold leading-none", valueSize)}>
             {customDisplay || Math.round(value)}
-          </motion.div>
+          </div>
           
           {/* Status text */}
           {status && (
-            <motion.div
+            <div
               className={cn(
                 "font-medium",
                 size === 'sm' ? 'text-[9px]' : size === 'md' ? 'text-[10px]' : 'text-xs',
                 statusColors[status]
               )}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.7 }}
             >
               {statusText[status]}
-            </motion.div>
+            </div>
           )}
         </div>
+      </motion.div>
 
       {/* Labels and trend */}
       <motion.div 
