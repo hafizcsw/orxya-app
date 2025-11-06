@@ -66,4 +66,5 @@ export type SettingsSection =
   | 'prayer'
   | 'integrations'
   | 'privacy'
-  | 'calendar-parity';
+  | 'calendar-parity'
+  | 'advanced';

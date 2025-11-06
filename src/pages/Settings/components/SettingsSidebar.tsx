@@ -1,4 +1,4 @@
-import { Globe, Eye, Bell, Calendar, CheckSquare, MapPin, Moon, Zap, Lock, Sparkles } from 'lucide-react';
+import { Globe, Eye, Bell, Calendar, CheckSquare, MapPin, Moon, Zap, Lock, Sparkles, Settings } from 'lucide-react';
 import { SettingsSection } from '@/types/settings';
 import { cn } from '@/lib/utils';
 
@@ -17,6 +17,7 @@ const sections = [
   { id: 'prayer' as SettingsSection, label: 'الصلاة', icon: Moon },
   { id: 'integrations' as SettingsSection, label: 'التكاملات', icon: Zap },
   { id: 'privacy' as SettingsSection, label: 'الخصوصية', icon: Lock },
+  { id: 'advanced' as SettingsSection, label: 'متقدم', icon: Settings },
   { id: 'calendar-parity' as SettingsSection, label: 'Calendar Parity', icon: Sparkles },
 ];
 
