@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { CheckCircle2, ListTodo, TrendingUp, CalendarIcon, User, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import PullToRefresh from 'react-simple-pull-to-refresh';
 
 export default function Profile() {
   const { user } = useUser();
@@ -22,48 +23,55 @@ export default function Profile() {
     upcomingEvents: 0,
   });
 
+  const fetchStats = async () => {
+    if (!user) return;
+    
+    // Fetch profile data
+    const { data } = await supabase
+      .from('profiles')
+      .select('full_name, avatar_url, created_at')
+      .eq('id', user.id)
+      .maybeSingle();
+    
+    if (data) {
+      setFullName(data.full_name ?? '');
+      setAvatarUrl(data.avatar_url ?? null);
+      setAccountCreated(data.created_at ?? '');
+    }
+
+    // Fetch statistics
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const nextWeek = new Date(today);
+    nextWeek.setDate(nextWeek.getDate() + 7);
+
+    const { data: tasks } = await supabase
+      .from('tasks')
+      .select('id, status')
+      .eq('owner_id', user.id);
+    
+    const { data: events } = await supabase
+      .from('events')
+      .select('id')
+      .eq('owner_id', user.id)
+      .gte('start_time', today.toISOString())
+      .lte('start_time', nextWeek.toISOString());
+
+    setStats({
+      totalTasks: tasks?.length || 0,
+      completedTasks: tasks?.filter(t => t.status === 'done').length || 0,
+      upcomingEvents: events?.length || 0,
+    });
+  };
+
   useEffect(() => {
-    (async () => {
-      if (!user) return;
-      
-      // Fetch profile data
-      const { data } = await supabase
-        .from('profiles')
-        .select('full_name, avatar_url, created_at')
-        .eq('id', user.id)
-        .maybeSingle();
-      
-      if (data) {
-        setFullName(data.full_name ?? '');
-        setAvatarUrl(data.avatar_url ?? null);
-        setAccountCreated(data.created_at ?? '');
-      }
-
-      // Fetch statistics
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const nextWeek = new Date(today);
-      nextWeek.setDate(nextWeek.getDate() + 7);
-
-      const { data: tasks } = await supabase
-        .from('tasks')
-        .select('id, status')
-        .eq('owner_id', user.id);
-      
-      const { data: events } = await supabase
-        .from('events')
-        .select('id')
-        .eq('owner_id', user.id)
-        .gte('start_time', today.toISOString())
-        .lte('start_time', nextWeek.toISOString());
-
-      setStats({
-        totalTasks: tasks?.length || 0,
-        completedTasks: tasks?.filter(t => t.status === 'done').length || 0,
-        upcomingEvents: events?.length || 0,
-      });
-    })();
+    fetchStats();
   }, [user?.id]);
+
+  const handleRefresh = async () => {
+    await fetchStats();
+    toast.success('تم تحديث الإحصائيات');
+  };
 
   async function saveProfile() {
     if (!user) return;
@@ -104,7 +112,8 @@ export default function Profile() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4 pb-24 space-y-6">
+    <PullToRefresh onRefresh={handleRefresh} pullingContent="">
+      <div className="max-w-4xl mx-auto p-4 pb-24 space-y-6">
       {/* Header with Avatar */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -236,6 +245,7 @@ export default function Profile() {
           </Card>
         </motion.div>
       )}
-    </div>
+      </div>
+    </PullToRefresh>
   );
 }
