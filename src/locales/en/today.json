@@ -68,7 +68,12 @@
     "fair": "Fair",
     "poor": "Needs Work",
     "vs_yesterday": "vs Yesterday",
-    "viewDetails": "View WHOOP Data"
+    "viewDetails": "View WHOOP Data",
+    "empty": {
+      "title": "No health data",
+      "description": "Connect your smart device or manually enter health data for comprehensive analysis.",
+      "action": "Connect Device"
+    }
   },
   "status": {
     "excellent": "Excellent",
@@ -129,6 +134,11 @@
       "low": "Low",
       "medium": "Medium",
       "high": "High"
+    },
+    "empty": {
+      "title": "No insights yet",
+      "description": "We'll analyze your day and provide smart insights soon. This may take a few minutes.",
+      "action": "Refresh"
     }
   },
   "sections": {

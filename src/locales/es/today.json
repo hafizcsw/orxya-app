@@ -68,7 +68,12 @@
     "fair": "Regular",
     "poor": "Necesita Mejorar",
     "vs_yesterday": "vs Ayer",
-    "viewDetails": "Ver Datos WHOOP"
+    "viewDetails": "Ver Datos WHOOP",
+    "empty": {
+      "title": "Sin datos de salud",
+      "description": "Conecta tu dispositivo inteligente o ingresa datos de salud manualmente para un análisis completo.",
+      "action": "Conectar Dispositivo"
+    }
   },
   "status": {
     "excellent": "Excelente",
@@ -129,6 +134,11 @@
       "low": "Baja",
       "medium": "Media",
       "high": "Alta"
+    },
+    "empty": {
+      "title": "Sin perspectivas aún",
+      "description": "Analizaremos tu día y proporcionaremos perspectivas inteligentes pronto. Esto puede tardar unos minutos.",
+      "action": "Actualizar"
     }
   },
   "sections": {

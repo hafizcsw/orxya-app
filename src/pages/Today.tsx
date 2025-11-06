@@ -39,7 +39,8 @@ import {
   Dumbbell,
   DollarSign,
   TrendingDown,
-  Wallet
+  Wallet,
+  Watch
 } from "lucide-react";
 import { useDeviceType } from "@/hooks/useDeviceType";
 import { cn } from "@/lib/utils";
@@ -61,6 +62,7 @@ import {
   getBalanceStatus
 } from '@/lib/activity-calculations';
 import { GoalSettingsDialog } from "@/components/goals/GoalSettingsDialog";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export default function Today() {
   const { t } = useTranslation("today");
@@ -333,7 +335,19 @@ export default function Today() {
                 />
               </motion.div>
             </DashboardGrid>
-          ) : null}
+          ) : (
+            <EmptyState
+              icon={Watch}
+              title={t('health.empty.title')}
+              description={t('health.empty.description')}
+              action={{
+                label: t('health.empty.action'),
+                onClick: () => navigate('/settings'),
+                variant: 'default'
+              }}
+              size="md"
+            />
+          )}
         </DashboardSection>
 
 

@@ -1,9 +1,11 @@
 import { motion } from 'framer-motion';
-import { Sparkles, TrendingUp, AlertTriangle, Zap } from 'lucide-react';
+import { Sparkles, TrendingUp, AlertTriangle, Zap, Brain, Lightbulb } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Button } from '@/components/ui/button';
 
 interface AIInsightsCardProps {
   insights: {
@@ -39,7 +41,21 @@ export function AIInsightsCard({ insights, loading }: AIInsightsCardProps) {
     );
   }
 
-  if (!insights) return null;
+  if (!insights) {
+    return (
+      <EmptyState
+        icon={Brain}
+        title={t('today.aiInsights.empty.title')}
+        description={t('today.aiInsights.empty.description')}
+        action={{
+          label: t('today.aiInsights.empty.action'),
+          onClick: () => window.location.reload(),
+          variant: 'outline'
+        }}
+        size="md"
+      />
+    );
+  }
 
   const energy = energyConfig[insights.energyLevel];
   const hasSuggestions = insights.suggestions?.length > 0;
