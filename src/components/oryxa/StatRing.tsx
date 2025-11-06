@@ -156,31 +156,20 @@ export function StatRing({
   const shadowColor = hslToRgba(ringColor, 0.6);
 
   return (
-    <motion.div 
+    <div 
       className={cn(
         'group flex flex-col items-center',
         size === 'sm' ? 'gap-1' : size === 'md' ? 'gap-2' : 'gap-3',
-        onTargetClick && 'cursor-pointer',
+        onTargetClick && 'cursor-pointer hover:scale-105 transition-transform duration-200',
         className
       )}
       title={`${label}: ${customDisplay || `${percentage}%`}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onTargetClick}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ 
-        opacity: 1,
-        y: 0
-      }}
-      whileHover={{ scale: 1.03 }}
-      whileTap={{ scale: 0.99 }}
-      transition={{
-        duration: 0.3,
-        ease: "easeOut"
-      }}
     >
-      <motion.div 
-        className="relative" 
+      <div 
+        className="relative transition-all duration-300" 
         style={{ 
           width: scaledWidth, 
           height: scaledWidth,
@@ -240,24 +229,17 @@ export function StatRing({
             }}
           />
           
-          {/* Pulse effect for excellent status - optimized */}
+          {/* Static pulse effect for excellent status */}
           {status === 'excellent' && (
-            <motion.circle
+            <circle
               cx={scaledWidth / 2}
               cy={scaledWidth / 2}
               r={radius + 2}
               fill="none"
               stroke={dynamicGradient ? dynamicGradient[1] : ringColor}
               strokeWidth={1}
-              animate={{ 
-                opacity: [0.3, 0.6, 0.3]
-              }}
-              transition={{ 
-                repeat: Infinity, 
-                duration: 3,
-                ease: "easeInOut",
-                repeatType: "loop"
-              }}
+              opacity={0.4}
+              className="animate-pulse"
             />
           )}
           
@@ -308,14 +290,11 @@ export function StatRing({
             </div>
           )}
         </div>
-      </motion.div>
+      </div>
 
       {/* Labels and trend */}
-      <motion.div 
+      <div 
         className={cn("text-center", size === 'sm' ? 'space-y-0.5' : 'space-y-1.5')}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.3 }}
       >
         <div className={cn(
           "font-medium text-foreground group-hover:text-primary transition-colors",
@@ -326,21 +305,18 @@ export function StatRing({
         
         {/* Trend indicator */}
         {trend && trendValue !== undefined && trendValue > 0 && (
-          <motion.div
+          <div
             className={cn(
               "flex items-center justify-center gap-0.5 font-medium",
               isMobile ? 'text-[8px]' : (size === 'sm' ? 'text-[9px]' : size === 'md' ? 'text-[10px]' : 'text-xs'),
               trend === 'up' ? 'text-green-500' : trend === 'down' ? 'text-red-500' : 'text-muted-foreground'
             )}
-            initial={{ opacity: 0, y: -5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.9 }}
           >
             {trend === 'up' && <ArrowUp className={isMobile ? 'w-2 h-2' : (size === 'sm' ? 'w-2 h-2' : 'w-3 h-3')} />}
             {trend === 'down' && <ArrowDown className={isMobile ? 'w-2 h-2' : (size === 'sm' ? 'w-2 h-2' : 'w-3 h-3')} />}
             {trend === 'neutral' && <Minus className={isMobile ? 'w-2 h-2' : (size === 'sm' ? 'w-2 h-2' : 'w-3 h-3')} />}
             <span>{trendValue}%</span>
-          </motion.div>
+          </div>
         )}
         
         {showTarget && targetValue && currentValue !== undefined ? (
@@ -352,7 +328,7 @@ export function StatRing({
             {subtitle}
           </div>
         ) : null}
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }

@@ -234,116 +234,86 @@ export default function Today() {
             <DashboardGrid columns={healthColumns} gap="md">
               {/* Recovery */}
               <Suspense fallback={<Skeleton className="h-48 w-full rounded-2xl" />}>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  <StatRing
-                    value={healthData.recovery}
-                    label={t('health.recovery')}
-                    color="hsl(142, 76%, 36%)"
-                    gradientColors={["hsl(142, 76%, 36%)", "hsl(142, 76%, 50%)"]}
-                    icon={<Heart className="w-6 h-6" />}
-                    trend={healthData.recoveryTrend.direction}
-                    trendValue={healthData.recoveryTrend.percentage}
-                    status={getRecoveryStatus(healthData.recovery)}
-                    size={device === 'mobile' ? "sm" : "lg"}
-                    targetValue={100}
-                    currentValue={healthData.recovery}
-                  />
-                </motion.div>
+                <StatRing
+                  value={healthData.recovery}
+                  label={t('health.recovery')}
+                  color="hsl(142, 76%, 36%)"
+                  gradientColors={["hsl(142, 76%, 36%)", "hsl(142, 76%, 50%)"]}
+                  icon={<Heart className="w-6 h-6" />}
+                  trend={healthData.recoveryTrend.direction}
+                  trendValue={healthData.recoveryTrend.percentage}
+                  status={getRecoveryStatus(healthData.recovery)}
+                  size={device === 'mobile' ? "sm" : "lg"}
+                  targetValue={100}
+                  currentValue={healthData.recovery}
+                />
               </Suspense>
               {/* Sleep */}
               <Suspense fallback={<Skeleton className="h-48 w-full rounded-2xl" />}>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <StatRing
-                    value={healthData.sleep}
-                    label={t('health.sleep')}
-                    color="hsl(217, 91%, 60%)"
-                    gradientColors={["hsl(217, 91%, 60%)", "hsl(217, 91%, 75%)"]}
-                    icon={<Moon className="w-6 h-6" />}
-                    trend={healthData.sleepTrend.direction}
-                    trendValue={healthData.sleepTrend.percentage}
-                    status={getSleepStatus(healthData.sleep)}
-                    customDisplay={formatSleepTime(healthData.sleepMinutes)}
-                    size={device === 'mobile' ? "sm" : "lg"}
-                    targetValue={100}
-                    currentValue={healthData.sleep}
-                  />
-                </motion.div>
+                <StatRing
+                  value={healthData.sleep}
+                  label={t('health.sleep')}
+                  color="hsl(217, 91%, 60%)"
+                  gradientColors={["hsl(217, 91%, 60%)", "hsl(217, 91%, 75%)"]}
+                  icon={<Moon className="w-6 h-6" />}
+                  trend={healthData.sleepTrend.direction}
+                  trendValue={healthData.sleepTrend.percentage}
+                  status={getSleepStatus(healthData.sleep)}
+                  customDisplay={formatSleepTime(healthData.sleepMinutes)}
+                  size={device === 'mobile' ? "sm" : "lg"}
+                  targetValue={100}
+                  currentValue={healthData.sleep}
+                />
               </Suspense>
               
               {/* Strain */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                <StatRing
-                  value={(healthData.strain / 21) * 100}
-                  label={t('health.strain')}
-                  color="hsl(38, 92%, 50%)"
-                  gradientColors={["hsl(38, 92%, 50%)", "hsl(38, 92%, 70%)"]}
-                  icon={<Zap className="w-6 h-6" />}
-                  trend={healthData.strainTrend.direction}
-                  trendValue={healthData.strainTrend.percentage}
-                  status={getStrainStatus(healthData.strain)}
-                  customDisplay={`${healthData.strain.toFixed(1)}`}
-                  size={device === 'mobile' ? "sm" : "lg"}
-                  targetValue={21}
-                  currentValue={healthData.strain}
-                />
-              </motion.div>
+              <StatRing
+                value={(healthData.strain / 21) * 100}
+                label={t('health.strain')}
+                color="hsl(38, 92%, 50%)"
+                gradientColors={["hsl(38, 92%, 50%)", "hsl(38, 92%, 70%)"]}
+                icon={<Zap className="w-6 h-6" />}
+                trend={healthData.strainTrend.direction}
+                trendValue={healthData.strainTrend.percentage}
+                status={getStrainStatus(healthData.strain)}
+                customDisplay={`${healthData.strain.toFixed(1)}`}
+                size={device === 'mobile' ? "sm" : "lg"}
+                targetValue={21}
+                currentValue={healthData.strain}
+              />
               {/* Activity */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-              >
-                <StatRing
-                  value={healthData.activity}
-                  label={t('health.activity')}
-                  color="hsl(262, 83%, 58%)"
-                  gradientColors={["hsl(262, 83%, 58%)", "hsl(262, 83%, 75%)"]}
-                  icon={<Activity className="w-6 h-6" />}
-                  trend={healthData.activityTrend.direction}
-                  trendValue={healthData.activityTrend.percentage}
-                  status={getActivityStatus(healthData.activity)}
-                  size={device === 'mobile' ? "sm" : "lg"}
-                  targetValue={100}
-                  currentValue={healthData.activity}
-                />
-              </motion.div>
+              <StatRing
+                value={healthData.activity}
+                label={t('health.activity')}
+                color="hsl(262, 83%, 58%)"
+                gradientColors={["hsl(262, 83%, 58%)", "hsl(262, 83%, 75%)"]}
+                icon={<Activity className="w-6 h-6" />}
+                trend={healthData.activityTrend.direction}
+                trendValue={healthData.activityTrend.percentage}
+                status={getActivityStatus(healthData.activity)}
+                size={device === 'mobile' ? "sm" : "lg"}
+                targetValue={100}
+                currentValue={healthData.activity}
+              />
               
               {/* Walk */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                <StatRing
-                  value={(healthData?.meters || 0) / 1000}
-                  targetValue={getGoal('walk_km')}
-                  currentValue={(healthData?.meters || 0) / 1000}
-                  label={t('activities.walk')}
-                  unit="km"
-                  showTarget={true}
-                  color="hsl(142, 76%, 36%)"
-                  gradientColors={["hsl(142, 76%, 36%)", "hsl(142, 76%, 50%)"]}
-                  icon={<Footprints className="w-5 h-5" />}
-                  trend={healthData?.activityTrend?.direction}
-                  trendValue={healthData?.activityTrend?.percentage}
-                  status={getWalkStatus((healthData?.meters || 0) / 1000, getGoal('walk_km'))}
-                  customDisplay={healthData?.meters ? formatDistance(healthData.meters) : '0 km'}
-                  size={device === 'mobile' ? "sm" : "lg"}
-                  onTargetClick={() => openGoalDialog('walk_km')}
-                />
-              </motion.div>
+              <StatRing
+                value={(healthData?.meters || 0) / 1000}
+                targetValue={getGoal('walk_km')}
+                currentValue={(healthData?.meters || 0) / 1000}
+                label={t('activities.walk')}
+                unit="km"
+                showTarget={true}
+                color="hsl(142, 76%, 36%)"
+                gradientColors={["hsl(142, 76%, 36%)", "hsl(142, 76%, 50%)"]}
+                icon={<Footprints className="w-5 h-5" />}
+                trend={healthData?.activityTrend?.direction}
+                trendValue={healthData?.activityTrend?.percentage}
+                status={getWalkStatus((healthData?.meters || 0) / 1000, getGoal('walk_km'))}
+                customDisplay={healthData?.meters ? formatDistance(healthData.meters) : '0 km'}
+                size={device === 'mobile' ? "sm" : "lg"}
+                onTargetClick={() => openGoalDialog('walk_km')}
+              />
             </DashboardGrid>
           ) : (
             <EmptyState
