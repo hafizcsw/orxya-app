@@ -134,7 +134,10 @@
   "sections": {
     "health": "Health & Recovery",
     "activities": "Daily Activities",
-    "financial": "Financial Status"
+    "financial": "Financial Status",
+    "plans": "Business Plans",
+    "glances": "Glances",
+    "report": "Daily Report"
   },
   "shortcuts": {
     "recovery": "Recov.",

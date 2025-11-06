@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { TodayDataManager } from '@/lib/today-data-manager';
 
 interface CurrentTask {
   id: string;
@@ -27,14 +27,10 @@ export function useLiveToday(date?: Date) {
 
   const dateStr = date ? date.toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
 
-  // Fetch current and next tasks
+  // Fetch current and next tasks using TodayDataManager
   const fetchTasks = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('today-realtime-data', {
-        body: { date: dateStr }
-      });
-
-      if (error) throw error;
+      const data = await TodayDataManager.fetchTodayData(date);
 
       setCurrentTask(data?.currentTask || null);
       setNextTask(data?.nextTask || null);
@@ -45,34 +41,21 @@ export function useLiveToday(date?: Date) {
       }
     } catch (error) {
       console.error('Error fetching tasks:', error);
+      // Set defaults on error
+      setCurrentTask(null);
+      setNextTask(null);
     } finally {
       setLoading(false);
     }
   };
 
-  // Subscribe to events table changes
+  // Fetch on mount and when date changes
   useEffect(() => {
     fetchTasks();
-
-    const channel = supabase
-      .channel('today-events')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'events',
-          filter: `starts_at=gte.${dateStr}T00:00:00Z,starts_at=lt.${dateStr}T23:59:59Z`
-        },
-        () => {
-          // Re-fetch when events change
-          fetchTasks();
-        }
-      )
-      .subscribe();
-
+    
+    // Clear cache when date changes
     return () => {
-      channel.unsubscribe();
+      TodayDataManager.clearCache(`today-data-${dateStr}`);
     };
   }, [dateStr]);
 

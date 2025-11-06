@@ -1,12 +1,7 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { TodayDataManager, AIInsights } from '@/lib/today-data-manager';
 
-interface AIInsights {
-  focusScore: number;
-  energyLevel: 'low' | 'medium' | 'high';
-  suggestions: string[];
-  warnings: string[];
-}
+// AIInsights type is now imported from today-data-manager
 
 export function useAIInsights(
   currentTask: any,
@@ -22,16 +17,12 @@ export function useAIInsights(
     
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('today-ai-insights', {
-        body: {
-          currentTask,
-          health,
-          activities,
-          upcomingEvents: upcomingEvents?.slice(0, 5) || []
-        }
-      });
-
-      if (error) throw error;
+      const data = await TodayDataManager.fetchAIInsights(
+        currentTask,
+        health,
+        activities,
+        upcomingEvents || []
+      );
       setInsights(data);
     } catch (error) {
       console.error('Error fetching AI insights:', error);

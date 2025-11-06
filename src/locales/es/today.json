@@ -134,7 +134,10 @@
   "sections": {
     "health": "Salud y Recuperación",
     "activities": "Actividades Diarias",
-    "financial": "Estado Financiero"
+    "financial": "Estado Financiero",
+    "plans": "Planes de Negocio",
+    "glances": "Vistazo",
+    "report": "Informe Diario"
   },
   "shortcuts": {
     "recovery": "Recup.",

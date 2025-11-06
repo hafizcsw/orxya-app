@@ -134,7 +134,10 @@
   "sections": {
     "health": "الصحة والتعافي",
     "activities": "الأنشطة اليومية",
-    "financial": "الوضع المالي"
+    "financial": "الوضع المالي",
+    "plans": "الخطط التجارية",
+    "glances": "لمحات",
+    "report": "التقرير اليومي"
   },
   "shortcuts": {
     "recovery": "تعافي",

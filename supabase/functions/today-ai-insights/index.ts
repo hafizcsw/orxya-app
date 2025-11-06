@@ -35,12 +35,29 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY not configured");
     }
 
-    const { currentTask, health, activities, upcomingEvents } = await req.json();
+    const { 
+      currentTask, 
+      health, 
+      activities, 
+      upcomingEvents,
+      timeOfDay,
+      dayOfWeek,
+      userGoals,
+      recentTrends
+    } = await req.json();
 
-    // Prepare context for AI
-    const currentTime = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+    // Prepare enhanced context for AI
+    const now = new Date();
+    const currentTime = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+    const dayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    const timeOfDayAr = {
+      morning: 'الصباح',
+      afternoon: 'بعد الظهر',
+      evening: 'المساء',
+      night: 'الليل'
+    };
     
-    // Call Lovable AI (GPT-5-mini for speed and cost efficiency)
+    // Call Lovable AI with enhanced context
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -52,35 +69,68 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `أنت مساعد إنتاجية ذكي. قم بتحليل جدول المستخدم اليومي وبيانات صحته وقدم:
-1. تقييم الحالة الحالية (تركيز، طاقة) من 0-100
-2. اقتراحات عملية قصيرة (جملة واحدة لكل اقتراح، max 3)
-3. تحذيرات مهمة (إن وجدت)
-4. توقع مستوى الطاقة: high, medium, low
+            content: `أنت مساعد إنتاجية ذكي متخصص في تحليل الأنماط اليومية للمستخدمين.
 
-استخدم اللغة العربية. كن مختصراً جداً وعملياً. لا تكرر المعلومات.`
+قم بتحليل:
+1. **الأنماط**: هل المستخدم منتج في هذا الوقت عادةً بناءً على البيانات التاريخية؟
+2. **الطاقة**: بناءً على البيانات الصحية (Recovery, Strain, HRV)
+3. **الأولويات**: ما المهم اليوم؟ هل هناك مهام عاجلة؟
+4. **التوازن**: هل هناك توازن بين العمل والراحة؟
+5. **الأهداف**: هل المستخدم على المسار الصحيح لتحقيق أهدافه؟
+
+قدم:
+- **focusScore**: درجة التركيز من 0-100
+- **energyLevel**: مستوى الطاقة (low/medium/high)
+- **suggestions**: 2-3 اقتراحات عملية محددة وقصيرة
+- **warnings**: تحذيرات مهمة فقط (إن وجدت)
+
+استخدم اللغة العربية. كن مختصراً وعملياً.`
           },
           {
             role: "user",
-            content: `الوقت الحالي: ${currentTime}
-المهمة الحالية: ${currentTask?.title || 'لا توجد مهمة'}
+            content: `📅 **السياق**
+الوقت: ${currentTime}
+اليوم: ${dayOfWeek !== undefined ? dayNames[dayOfWeek] : 'غير محدد'}
+فترة اليوم: ${timeOfDay ? timeOfDayAr[timeOfDay as keyof typeof timeOfDayAr] : 'غير محدد'}
+
+📋 **المهمة الحالية**
+${currentTask ? `${currentTask.title} (متبقي ${currentTask.remainingMinutes || 0} دقيقة)` : 'لا توجد مهمة حالياً'}
+
+💪 **الحالة الصحية**
 Recovery: ${health?.recovery || 0}%
 Strain: ${health?.strain || 0}
-ساعات العمل اليوم: ${activities?.work?.actual || 0}
-ساعات الدراسة: ${activities?.study?.actual || 0}
-المهام القادمة: ${upcomingEvents?.slice(0, 3).map((e: any) => e.title).join(', ') || 'لا توجد'}
+Sleep Score: ${health?.sleep || 0}%
+HRV: ${health?.hrv || 0}
+
+📊 **النشاطات اليوم**
+العمل: ${activities?.work?.actual || 0} من ${activities?.work?.goal || 8} ساعات
+الدراسة: ${activities?.study?.actual || 0} من ${activities?.study?.goal || 2} ساعات
+الرياضة: ${activities?.mma?.actual || 0} من ${activities?.mma?.goal || 1} ساعات
+النوم: ${activities?.sleep?.actual || 0} من ${activities?.sleep?.goal || 8} ساعات
+
+🎯 **الأهداف**
+${userGoals && userGoals.length > 0 ? userGoals.map((g: any) => `${g.goal_type}: ${g.target_value}`).join('\n') : 'لا توجد أهداف محددة'}
+
+📈 **الاتجاهات (آخر ${recentTrends?.totalDays || 0} أيام)**
+${recentTrends ? `
+متوسط العمل: ${recentTrends.avgWorkHours} ساعة
+متوسط الدراسة: ${recentTrends.avgStudyHours} ساعة
+متوسط الرياضة: ${recentTrends.avgSportsHours} ساعة
+` : 'لا توجد بيانات كافية'}
+
+⏭️ **المهام القادمة**
+${upcomingEvents?.slice(0, 3).map((e: any) => e.title).join('\n') || 'لا توجد مهام قادمة'}
 
 قدم تحليلك الآن في JSON بهذا الشكل:
 {
   "focusScore": 85,
   "energyLevel": "high",
-  "suggestions": ["اقتراح 1", "اقتراح 2"],
-  "warnings": []
+  "suggestions": ["اقتراح محدد وعملي 1", "اقتراح محدد وعملي 2"],
+  "warnings": ["تحذير إن وجد"]
 }`
           }
         ],
-        temperature: 0.7,
-        max_tokens: 400
+        max_completion_tokens: 500
       })
     });
 
