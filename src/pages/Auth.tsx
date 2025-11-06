@@ -25,6 +25,15 @@ export default function Auth() {
   const [showEmailDialog, setShowEmailDialog] = useState(false)
 
   useEffect(() => {
+    // Debug info
+    console.group('🔍 Auth Debug Info')
+    console.log('Current URL:', window.location.href)
+    console.log('Origin:', window.location.origin)
+    console.log('Site URL:', siteUrl)
+    console.log('Redirect To:', redirectTo)
+    console.log('User:', user ? '✅ Logged in' : '❌ Not logged in')
+    console.groupEnd()
+
     // Only redirect if user is logged in and we haven't navigated yet
     if (user && !hasNavigated && !loading) {
       setHasNavigated(true)
@@ -60,21 +69,35 @@ export default function Auth() {
 
   async function handleGoogleSignIn() {
     setLoading(true)
+    console.log('[Auth] Starting Google Sign-In')
+    console.log('[Auth] Redirect URL:', redirectTo)
+    
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: redirectTo,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
-          }
+          },
+          skipBrowserRedirect: false, // Explicitly set
         }
       })
-      if (error) throw error
+      
+      console.log('[Auth] OAuth Response:', { data, error })
+      
+      if (error) {
+        console.error('[Auth] OAuth Error:', error)
+        throw error
+      }
+      
+      console.log('[Auth] Redirecting to Google...')
+      // Don't set loading to false here - page will redirect
     } catch (e: any) {
+      console.error('[Auth] Exception:', e)
       toast({ title: t('errors.loginFailed'), description: e?.message ?? t('errors.loginFailed'), variant: "destructive" })
-      setLoading(false)
+      setLoading(false) // Only on error
     }
   }
 

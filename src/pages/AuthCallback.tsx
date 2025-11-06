@@ -7,24 +7,30 @@ export default function AuthCallback() {
   const [error, setError] = useState<string | null>(null)
   
   useEffect(() => {
-    console.log('[AuthCallback] Starting OAuth callback handling...')
+    console.log('[AuthCallback] Component mounted')
+    console.log('[AuthCallback] Current URL:', window.location.href)
     
+    let hasNavigated = false // Flag to prevent duplicate navigation
     let timeout: NodeJS.Timeout
     
-    // استمع لتغييرات حالة المصادقة
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('[AuthCallback] Auth state changed:', event, session?.user ? 'User found' : 'No user')
-      
-      if (event === 'SIGNED_IN' && session) {
-        console.log('[AuthCallback] Sign in successful, redirecting to /today')
-        navigate('/today', { replace: true })
-      } else if (event === 'USER_UPDATED' && session) {
-        console.log('[AuthCallback] User updated, redirecting to /today')
-        navigate('/today', { replace: true })
+    const handleSuccessfulAuth = async (session: any) => {
+      if (hasNavigated) {
+        console.log('[AuthCallback] Already navigated, skipping')
+        return
       }
-    })
+      
+      hasNavigated = true
+      console.log('[AuthCallback] ✅ Authentication successful')
+      console.log('[AuthCallback] User:', session.user.email)
+      
+      // Small delay to ensure everything is complete
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
+      console.log('[AuthCallback] Navigating to /today')
+      navigate('/today', { replace: true })
+    }
     
-    // تحقق من الجلسة الحالية
+    // 1. Check current session first
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
         console.error('[AuthCallback] Session error:', error)
@@ -34,18 +40,34 @@ export default function AuthCallback() {
       }
       
       if (session) {
-        console.log('[AuthCallback] Session found, redirecting to /today')
-        navigate('/today', { replace: true })
+        console.log('[AuthCallback] Session found immediately')
+        handleSuccessfulAuth(session)
       } else {
-        console.log('[AuthCallback] No session yet, waiting for auth state change...')
+        console.log('[AuthCallback] No session yet, waiting...')
       }
     })
     
-    // Timeout للتعامل مع الحالات البطيئة
+    // 2. Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('[AuthCallback] Event:', event, session ? '✅' : '❌')
+      
+      if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && session) {
+        handleSuccessfulAuth(session)
+      }
+      
+      if (event === 'SIGNED_OUT') {
+        console.log('[AuthCallback] Signed out, redirecting to /auth')
+        navigate('/auth', { replace: true })
+      }
+    })
+    
+    // 3. Timeout protection
     timeout = setTimeout(() => {
-      console.warn('[AuthCallback] Timeout reached, redirecting to /auth')
-      setError('انتهت المهلة')
-      navigate('/auth', { replace: true })
+      if (!hasNavigated) {
+        console.warn('[AuthCallback] ⏱️ Timeout - no session after 10s')
+        setError('انتهت المهلة - جاري إعادة المحاولة')
+        navigate('/auth', { replace: true })
+      }
     }, 10000)
     
     return () => {
