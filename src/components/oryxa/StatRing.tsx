@@ -167,26 +167,16 @@ export function StatRing({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onTargetClick}
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={status === 'poor' ? { 
-        x: [-2, 2, -2, 2, 0],
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ 
         opacity: 1,
-        scale: 1
-      } : {
-        opacity: 1,
-        scale: 1
+        y: 0
       }}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.98 }}
-      transition={status === 'poor' ? { 
-        repeat: 2, 
-        duration: 0.4,
-        opacity: { duration: 0.3 },
-        scale: { duration: 0.3 }
-      } : {
-        type: "spring",
-        stiffness: 300,
-        damping: 20
+      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.99 }}
+      transition={{
+        duration: 0.3,
+        ease: "easeOut"
       }}
     >
       <motion.div 
@@ -250,41 +240,40 @@ export function StatRing({
             }}
           />
           
-          {/* Pulse effect for excellent status */}
+          {/* Pulse effect for excellent status - optimized */}
           {status === 'excellent' && (
             <motion.circle
               cx={scaledWidth / 2}
               cy={scaledWidth / 2}
-              r={radius}
+              r={radius + 2}
               fill="none"
               stroke={dynamicGradient ? dynamicGradient[1] : ringColor}
-              strokeWidth={2}
+              strokeWidth={1}
               animate={{ 
-                scale: [1, 1.05, 1],
-                opacity: [0.5, 0.8, 0.5]
+                opacity: [0.3, 0.6, 0.3]
               }}
               transition={{ 
                 repeat: Infinity, 
-                duration: 2,
-                ease: "easeInOut"
+                duration: 3,
+                ease: "easeInOut",
+                repeatType: "loop"
               }}
             />
           )}
           
-          {/* Pulse effect on hover */}
+          {/* Pulse effect on hover - simplified */}
           {isHovered && status !== 'excellent' && (
             <motion.circle
               cx={scaledWidth / 2}
               cy={scaledWidth / 2}
-              r={radius}
+              r={radius + 3}
               fill="none"
               stroke={dynamicGradient ? dynamicGradient[1] : ringColor}
               strokeWidth={1}
-              initial={{ opacity: 0.8, scale: 1 }}
-              animate={{ opacity: 0, scale: 1.1 }}
+              initial={{ opacity: 0.4 }}
+              animate={{ opacity: 0 }}
               transition={{ 
-                duration: 1.5,
-                repeat: Infinity,
+                duration: 1,
                 ease: "easeOut"
               }}
             />
@@ -297,9 +286,9 @@ export function StatRing({
           {/* Icon */}
           {icon && (
             <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 0.7, scale: 1 }}
-              transition={{ delay: 0.3, type: "spring" }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.7 }}
+              transition={{ delay: 0.2, duration: 0.3 }}
               className="text-muted-foreground"
               style={{ width: iconSize, height: iconSize }}
             >
@@ -313,13 +302,11 @@ export function StatRing({
           {/* Main value */}
           <motion.div
             className={cn("font-bold leading-none", valueSize)}
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ 
-              type: "spring",
-              stiffness: 200,
-              damping: 10,
-              delay: 0.5 
+              duration: 0.3,
+              delay: 0.4
             }}
           >
             {customDisplay || Math.round(value)}
