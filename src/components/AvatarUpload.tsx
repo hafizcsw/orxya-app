@@ -143,10 +143,10 @@ export function AvatarUpload({
     <div className="flex flex-col items-center gap-3">
       <div className="relative group">
         <Avatar className={`${sizeClasses[size]} ring-2 ring-primary/20 transition-all duration-300 group-hover:ring-primary/40`}>
-          <AvatarImage src={avatarUrl || user?.user_metadata?.avatar_url || undefined} alt="Avatar" />
+          <AvatarImage src={avatarUrl || user?.user_metadata?.avatar_url || undefined} alt="Avatar" loading="lazy" />
           <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-white">
             {user?.user_metadata?.avatar_url ? (
-              <img src={user.user_metadata.avatar_url} alt="Google Avatar" className="w-full h-full object-cover" />
+              <img src={user.user_metadata.avatar_url} alt="Google Avatar" className="w-full h-full object-cover" loading="lazy" />
             ) : (
               <User className={iconSizes[size]} />
             )}
