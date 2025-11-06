@@ -10,6 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import PullToRefresh from 'react-simple-pull-to-refresh'
+import { toast } from 'sonner'
 
 type DayReport = {
   date: string;
@@ -144,6 +146,18 @@ export default function Reports() {
     }
   }
 
+  const handleRefresh = async () => {
+    if (rows && rows.length > 0) {
+      // Reload the same range that was last loaded
+      if (rows.length === 1) {
+        await loadSingle();
+      } else {
+        await loadRange(rows.length);
+      }
+    }
+    toast.success('تم تحديث التقارير');
+  };
+
   const totals = rows?.reduce((acc, r) => {
     acc.income += r.income_usd || 0;
     acc.spend += r.spend_usd || 0;
@@ -161,7 +175,8 @@ export default function Reports() {
 
   return (
     <Protected>
-      <div className="max-w-4xl mx-auto p-4 space-y-6">
+      <PullToRefresh onRefresh={handleRefresh} pullingContent="">
+        <div className="max-w-4xl mx-auto p-4 pb-24 space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">{t('title')}</h1>
         </div>
@@ -471,7 +486,8 @@ export default function Reports() {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
+        </div>
+      </PullToRefresh>
     </Protected>
   );
 }

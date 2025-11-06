@@ -12,9 +12,19 @@ import { PrivacySettings } from './components/PrivacySettings';
 import { CalendarParitySettings } from '@/components/calendar/CalendarParitySettings';
 import { AdvancedSettings } from './components/AdvancedSettings';
 import { SettingsSection } from '@/types/settings';
+import PullToRefresh from 'react-simple-pull-to-refresh';
+import { toast } from 'sonner';
 
 export default function Settings() {
   const [activeSection, setActiveSection] = useState<SettingsSection>('general');
+
+  const handleRefresh = async () => {
+    // Force a re-render by updating the active section
+    const current = activeSection;
+    setActiveSection('general');
+    setTimeout(() => setActiveSection(current), 0);
+    toast.success('تم تحديث الإعدادات');
+  };
 
   const renderSection = () => {
     switch (activeSection) {
@@ -51,11 +61,13 @@ export default function Settings() {
         activeSection={activeSection} 
         onSectionChange={setActiveSection} 
       />
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto p-8">
-          {renderSection()}
+      <PullToRefresh onRefresh={handleRefresh} pullingContent="">
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-4xl mx-auto p-8 pb-24">
+            {renderSection()}
+          </div>
         </div>
-      </div>
+      </PullToRefresh>
     </div>
   );
 }
