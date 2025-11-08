@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Sparkles, TrendingUp, AlertTriangle, Zap, Brain, Lightbulb } from 'lucide-react';
+import { Sparkles, TrendingUp, AlertTriangle, Zap, Brain, Lightbulb, WifiOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,7 @@ interface AIInsightsCardProps {
     energyLevel: 'low' | 'medium' | 'high';
     suggestions: string[];
     warnings: string[];
+    isOffline?: boolean;
   } | null;
   loading?: boolean;
 }
@@ -88,10 +89,20 @@ export function AIInsightsCard({ insights, loading }: AIInsightsCardProps) {
               <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-violet-500" />
               <h3 className="text-base md:text-lg font-bold">{t('today.aiInsights.title')}</h3>
             </div>
-            <Badge variant="secondary" className="gap-0.5 md:gap-1 px-1.5 md:px-2">
-              <Zap className="w-2.5 h-2.5 md:w-3 md:h-3" />
-              <span className="text-[10px] md:text-xs">{t('today.currentTask.liveBadge')}</span>
-            </Badge>
+            <div className="flex items-center gap-1 md:gap-2">
+              {insights.isOffline && (
+                <Badge variant="outline" className="gap-0.5 md:gap-1 px-1.5 md:px-2 border-amber-500/50 bg-amber-500/10">
+                  <WifiOff className="w-2.5 h-2.5 md:w-3 md:h-3 text-amber-500" />
+                  <span className="text-[10px] md:text-xs text-amber-500">Offline</span>
+                </Badge>
+              )}
+              {!insights.isOffline && (
+                <Badge variant="secondary" className="gap-0.5 md:gap-1 px-1.5 md:px-2">
+                  <Zap className="w-2.5 h-2.5 md:w-3 md:h-3" />
+                  <span className="text-[10px] md:text-xs">{t('today.currentTask.liveBadge')}</span>
+                </Badge>
+              )}
+            </div>
           </div>
 
           {/* Focus Score */}

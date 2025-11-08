@@ -45,6 +45,7 @@ export interface AIInsights {
   energyLevel: 'low' | 'medium' | 'high';
   suggestions: string[];
   warnings: string[];
+  isOffline?: boolean;
 }
 
 type CacheEntry = {
@@ -55,6 +56,52 @@ type CacheEntry = {
 class TodayDataManagerClass {
   private cache = new Map<string, CacheEntry>();
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+  private readonly OFFLINE_CACHE_KEY = 'oryxa_offline_cache';
+
+  /**
+   * Save data to localStorage for offline access
+   */
+  private saveToOfflineCache(key: string, data: any) {
+    try {
+      const offlineCache = this.getOfflineCache();
+      offlineCache[key] = {
+        data,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(this.OFFLINE_CACHE_KEY, JSON.stringify(offlineCache));
+    } catch (e) {
+      console.error('Failed to save offline cache:', e);
+    }
+  }
+
+  /**
+   * Get data from localStorage
+   */
+  private getFromOfflineCache(key: string): any | null {
+    try {
+      const offlineCache = this.getOfflineCache();
+      const cached = offlineCache[key];
+      if (!cached) return null;
+      
+      // Return cached data even if old (for offline mode)
+      return cached.data;
+    } catch (e) {
+      console.error('Failed to get offline cache:', e);
+      return null;
+    }
+  }
+
+  /**
+   * Get all offline cache
+   */
+  private getOfflineCache(): Record<string, CacheEntry> {
+    try {
+      const cached = localStorage.getItem(this.OFFLINE_CACHE_KEY);
+      return cached ? JSON.parse(cached) : {};
+    } catch (e) {
+      return {};
+    }
+  }
 
   /**
    * Get cached data or fetch new data
@@ -71,6 +118,10 @@ class TodayDataManagerClass {
 
     const data = await fetchFn();
     this.cache.set(key, { data, timestamp: Date.now() });
+    
+    // Also save to offline cache
+    this.saveToOfflineCache(key, data);
+    
     return data;
   }
 
@@ -109,81 +160,102 @@ class TodayDataManagerClass {
   }
 
   /**
-   * Fetch AI insights with enhanced context
+   * Fetch AI insights with enhanced context (with offline support)
    */
   async fetchAIInsights(
     currentTask: any,
     health: any,
     activities: any,
     upcomingEvents: any[]
-  ): Promise<AIInsights> {
+  ): Promise<AIInsights & { isOffline?: boolean }> {
     const now = new Date();
     const hour = now.getHours();
     const cacheKey = `ai-insights-${now.toISOString().split('T')[0]}-${hour}`;
 
-    const fetchInsights = async (): Promise<AIInsights> => {
+    const fetchInsights = async (): Promise<AIInsights & { isOffline?: boolean }> => {
       // Check if user is authenticated
       const { data: { session } } = await supabase.auth.getSession();
+      
+      // If not authenticated, try offline cache first
       if (!session) {
-        console.warn('User not authenticated, returning default insights');
+        console.warn('User not authenticated, trying offline cache');
+        const offlineData = this.getFromOfflineCache(cacheKey);
+        if (offlineData) {
+          return { ...offlineData, isOffline: true };
+        }
+        
         return {
           focusScore: 50,
           energyLevel: 'medium',
           suggestions: ['قم بتسجيل الدخول للحصول على رؤى مخصصة'],
-          warnings: []
+          warnings: [],
+          isOffline: true
         };
       }
 
-      // Get user goals for context
-      let goals: any[] = [];
       try {
-        // @ts-ignore - Supabase type inference issue
-        const { data } = await supabase.from('user_goals').select('*').eq('active', true);
-        goals = data || [];
-      } catch (e) {
-        console.error('Error fetching goals:', e);
-      }
+        // Get user goals for context
+        let goals: any[] = [];
+        try {
+          // @ts-ignore - Supabase type inference issue
+          const { data } = await supabase.from('user_goals').select('*').eq('active', true);
+          goals = data || [];
+        } catch (e) {
+          console.error('Error fetching goals:', e);
+        }
 
-      // Get recent trends (last 7 days)
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        // Get recent trends (last 7 days)
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-      let recentActivities: any[] = [];
-      try {
-        // @ts-ignore - Supabase type inference issue
-        const { data } = await supabase.from('vw_today_activities').select('*').gte('day', sevenDaysAgo.toISOString().split('T')[0]).order('day', { ascending: false }).limit(7);
-        recentActivities = data || [];
-      } catch (e) {
-        console.error('Error fetching activities:', e);
-      }
+        let recentActivities: any[] = [];
+        try {
+          // @ts-ignore - Supabase type inference issue
+          const { data } = await supabase.from('vw_today_activities').select('*').gte('day', sevenDaysAgo.toISOString().split('T')[0]).order('day', { ascending: false }).limit(7);
+          recentActivities = data || [];
+        } catch (e) {
+          console.error('Error fetching activities:', e);
+        }
 
-      // Enhanced context
-      const enhancedContext = {
-        currentTask,
-        health,
-        activities,
-        upcomingEvents: upcomingEvents?.slice(0, 5) || [],
-        timeOfDay: this.getTimeOfDay(hour),
-        dayOfWeek: now.getDay(),
-        userGoals: goals || [],
-        recentTrends: this.calculateRecentTrends(recentActivities || [])
-      };
+        // Enhanced context
+        const enhancedContext = {
+          currentTask,
+          health,
+          activities,
+          upcomingEvents: upcomingEvents?.slice(0, 5) || [],
+          timeOfDay: this.getTimeOfDay(hour),
+          dayOfWeek: now.getDay(),
+          userGoals: goals || [],
+          recentTrends: this.calculateRecentTrends(recentActivities || [])
+        };
 
-      const { data, error } = await supabase.functions.invoke('today-ai-insights', {
-        body: enhancedContext
-      });
+        const { data, error } = await supabase.functions.invoke('today-ai-insights', {
+          body: enhancedContext
+        });
 
-      if (error) {
-        console.error('Error fetching AI insights:', error);
+        if (error) {
+          throw error;
+        }
+
+        return { ...data, isOffline: false };
+      } catch (error) {
+        console.error('Error fetching AI insights, trying offline cache:', error);
+        
+        // Try offline cache on network error
+        const offlineData = this.getFromOfflineCache(cacheKey);
+        if (offlineData) {
+          return { ...offlineData, isOffline: true };
+        }
+        
+        // Final fallback
         return {
           focusScore: 50,
           energyLevel: 'medium',
-          suggestions: [],
-          warnings: []
+          suggestions: ['لا يوجد اتصال - البيانات غير متوفرة'],
+          warnings: [],
+          isOffline: true
         };
       }
-
-      return data as AIInsights;
     };
 
     return this.getCached(cacheKey, fetchInsights, 60 * 60 * 1000);
