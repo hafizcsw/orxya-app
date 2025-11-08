@@ -79,13 +79,13 @@ export const StatRing = React.memo(function StatRing({
       padding: 'p-3'
     },
     lg: { 
-      width: isMobile ? 150 : 180, 
-      strokeWidth: isMobile ? 7 : 9, 
-      fontSize: isMobile ? '1.5rem' : '2rem', 
-      iconSize: isMobile ? 20 : 24,
-      labelSize: isMobile ? 'text-xs' : 'text-sm',
-      subtitleSize: isMobile ? 'text-[10px]' : 'text-xs',
-      valueSize: isMobile ? 'text-lg' : 'text-xl',
+      width: isMobile ? 100 : 180, 
+      strokeWidth: isMobile ? 5 : 9, 
+      fontSize: isMobile ? '1rem' : '2rem', 
+      iconSize: isMobile ? 14 : 24,
+      labelSize: isMobile ? 'text-[10px]' : 'text-sm',
+      subtitleSize: isMobile ? 'text-[8px]' : 'text-xs',
+      valueSize: isMobile ? 'text-sm' : 'text-xl',
       padding: 'p-4'
     },
   }
