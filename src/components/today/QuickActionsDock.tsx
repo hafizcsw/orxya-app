@@ -1,14 +1,25 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Calendar, DollarSign, CheckSquare, X, Activity } from "lucide-react";
+import { Plus, Calendar, DollarSign, CheckSquare, X, Activity, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { useAI } from "@/contexts/AIContext";
 
 export function QuickActionsDock() {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const { setIsAIOpen, setChatType } = useAI();
 
   const actions = [
+    { 
+      icon: Sparkles, 
+      label: "AI Insights", 
+      color: "bg-violet-500/10 text-violet-500 hover:bg-violet-500/20",
+      onClick: () => {
+        setChatType('insights');
+        setIsAIOpen(true);
+      }
+    },
     { 
       icon: Calendar, 
       label: "إضافة حدث", 

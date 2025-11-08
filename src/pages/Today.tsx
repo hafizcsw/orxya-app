@@ -23,12 +23,9 @@ import { useHealthData } from "@/hooks/useHealthData";
 import { useUserGoals, GoalType } from "@/hooks/useUserGoals";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLiveToday } from "@/hooks/useLiveToday";
-import { useAIInsights } from "@/hooks/useAIInsights";
 import SimplePullToRefresh from 'react-simple-pull-to-refresh';
 
-// Lazy load heavy components (not CurrentTaskCard to avoid context issues)
 import { CurrentTaskCard } from "@/components/today/CurrentTaskCard";
-const AIInsightsCard = lazy(() => import("@/components/today/AIInsightsCard").then(m => ({ default: m.AIInsightsCard })));
 import { 
   Activity, 
   Heart, 
@@ -92,12 +89,6 @@ export default function Today() {
   
   // Live data hooks
   const { currentTask, nextTask, timeRemaining, progress, loading: taskLoading } = useLiveToday(selectedDate);
-  const { insights, loading: insightsLoading } = useAIInsights(
-    currentTask, 
-    healthData, 
-    { work: { actual: report?.work_hours || 0 }, study: { actual: report?.study_hours || 0 } },
-    []
-  );
 
   const { data: plans, isLoading: plansLoading, refetch: refetchPlans } = useQuery({
     queryKey: ["business-plans"],
@@ -293,11 +284,6 @@ export default function Today() {
               nextTask={nextTask}
             />
           )}
-
-          {/* AI Insights Card */}
-          <Suspense fallback={<Skeleton className="h-48 w-full rounded-2xl" />}>
-            <AIInsightsCard insights={insights} loading={insightsLoading} />
-          </Suspense>
 
         {/* Health & Recovery Section */}
         <SectionErrorBoundary sectionName={t('sections.health')}>

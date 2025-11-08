@@ -144,3 +144,7 @@ verify_jwt = true
 [functions.today-ai-insights]
 verify_jwt = true
 
+[functions.ai-chat-insights]
+verify_jwt = true
+
+
