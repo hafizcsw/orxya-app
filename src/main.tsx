@@ -27,23 +27,33 @@ startLocationTracking(15); // Capture location every 15 minutes on native
 (function bootstrapEnvAwarePingers() {
   const Cap = (window as any).Capacitor;
   if (!Cap?.isNativePlatform?.()) {
+    let debounceTimer: NodeJS.Timeout | null = null;
+    
     document.addEventListener("visibilitychange", async () => {
       if (document.visibilityState === "visible") {
-        // Check if auto-check is enabled (enabled by default)
-        const autoCheck = localStorage.getItem("conflict_auto_check");
-        if (autoCheck === "disabled") return;
+        // Debounce visibility changes
+        if (debounceTimer) clearTimeout(debounceTimer);
         
-        setTimeout(async () => {
+        debounceTimer = setTimeout(async () => {
+          // Check if auto-check is enabled (enabled by default)
+          const autoCheck = localStorage.getItem("conflict_auto_check");
+          if (autoCheck === "disabled") return;
+          
           try {
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.user) {
-              await captureAndSendLocation();
-              await conflictCheckToday();
+              // Run location and conflicts sequentially, not in parallel
+              await captureAndSendLocation().catch(e => 
+                console.warn('[Visibility] Location failed:', e)
+              );
+              await conflictCheckToday().catch(e => 
+                console.warn('[Visibility] Conflicts failed:', e)
+              );
             }
           } catch (e) {
-            console.error('[Visibility] Location/Conflicts failed:', e);
+            console.error('[Visibility] Bootstrap failed:', e);
           }
-        }, 500);
+        }, 2000); // Increased debounce to 2 seconds
       }
     });
   }

@@ -4,11 +4,31 @@ import { track } from "./telemetry";
 /**
  * Triggers a conflict check for today and tomorrow
  */
+const COOLDOWN_KEY = 'conflict_check_last_run';
+const COOLDOWN_PERIOD = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Check if enough time has passed since last check
+ */
+function canRunCheck(): boolean {
+  const lastRun = localStorage.getItem(COOLDOWN_KEY);
+  if (!lastRun) return true;
+  
+  const elapsed = Date.now() - parseInt(lastRun);
+  return elapsed > COOLDOWN_PERIOD;
+}
+
 export async function conflictCheckToday(): Promise<void> {
+  // Check cooldown
+  if (!canRunCheck()) {
+    console.log('[Conflicts] Skipping check - cooldown period active');
+    return;
+  }
+
   try {
-    // Add timeout and better error handling
+    // Shorter timeout - 5 seconds
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
     const { data, error } = await supabase.functions.invoke('conflict-check', {
       body: {},
@@ -20,13 +40,16 @@ export async function conflictCheckToday(): Promise<void> {
     clearTimeout(timeoutId);
 
     if (error) {
-      // Silently fail if it's a network/timeout error - don't break the app
+      // Silently fail on network errors
       if (error.message?.includes('Failed to send') || error.message?.includes('timeout')) {
         console.warn('[Conflicts] Check temporarily unavailable:', error.message);
         return;
       }
       throw error;
     }
+
+    // Update last run timestamp
+    localStorage.setItem(COOLDOWN_KEY, Date.now().toString());
 
     track('conflict_check_run', {
       created: data?.created ?? 0,
@@ -35,7 +58,6 @@ export async function conflictCheckToday(): Promise<void> {
 
     console.log('[Conflicts] Check completed:', data);
   } catch (e: any) {
-    // Don't spam console with network errors
     if (e.name === 'AbortError') {
       console.warn('[Conflicts] Check timed out');
     } else {
