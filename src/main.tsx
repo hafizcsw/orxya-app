@@ -11,7 +11,6 @@ import { startCalendarDailyScheduler } from "./lib/gcal-scheduler";
 import { startLocationTracking, captureAndSendLocation } from "./native/location";
 import { conflictCheckToday } from "./lib/conflicts";
 import { supabase } from "@/integrations/supabase/client";
-import { Toaster } from "@/components/ui/sonner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 initOnlineSync();
@@ -88,7 +87,6 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ErrorBoundary>
       <App />
-      <Toaster />
     </ErrorBoundary>
   </StrictMode>
 );
