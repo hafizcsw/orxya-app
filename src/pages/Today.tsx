@@ -26,8 +26,8 @@ import { useLiveToday } from "@/hooks/useLiveToday";
 import { useAIInsights } from "@/hooks/useAIInsights";
 import SimplePullToRefresh from 'react-simple-pull-to-refresh';
 
-// Lazy load heavy components
-const CurrentTaskCard = lazy(() => import("@/components/today/CurrentTaskCard").then(m => ({ default: m.CurrentTaskCard })));
+// Lazy load heavy components (not CurrentTaskCard to avoid context issues)
+import { CurrentTaskCard } from "@/components/today/CurrentTaskCard";
 const AIInsightsCard = lazy(() => import("@/components/today/AIInsightsCard").then(m => ({ default: m.AIInsightsCard })));
 import { 
   Activity, 
@@ -76,6 +76,7 @@ export default function Today() {
   const [goalDialogOpen, setGoalDialogOpen] = useState(false);
   const [editingGoalType, setEditingGoalType] = useState<GoalType | null>(null);
   const [focusMode, setFocusMode] = useState(false);
+  const [dataError, setDataError] = useState<string | null>(null);
   
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: false, 
@@ -174,6 +175,7 @@ export default function Today() {
   }, [emblaApi, onPlanSelect]);
 
   const handleRefresh = async () => {
+    setDataError(null);
     await Promise.all([
       refetchReport(),
       refetchHealth(),
@@ -270,16 +272,26 @@ export default function Today() {
             onToggleFocus={toggleFocus}
           />
 
+          {/* Error State */}
+          {dataError && (
+            <div className="p-6 bg-destructive/10 border border-destructive/30 rounded-2xl">
+              <div className="text-center">
+                <p className="text-destructive mb-4">{dataError}</p>
+                <Button onClick={handleRefresh} variant="outline">
+                  {t('common.retry')}
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Current Task Card - Live */}
-          {!taskLoading && (
-            <Suspense fallback={<Skeleton className="h-48 w-full rounded-2xl" />}>
-              <CurrentTaskCard
-                task={currentTask}
-                timeRemaining={timeRemaining}
-                progress={progress}
-                nextTask={nextTask}
-              />
-            </Suspense>
+          {!taskLoading && !dataError && (
+            <CurrentTaskCard
+              task={currentTask}
+              timeRemaining={timeRemaining}
+              progress={progress}
+              nextTask={nextTask}
+            />
           )}
 
           {/* AI Insights Card */}

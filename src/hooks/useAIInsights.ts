@@ -76,8 +76,8 @@ export function useAIInsights(
   }, [currentTask?.id, health?.recovery, activities, upcomingEvents]);
 
   // Debounce dependencies to prevent rapid refetches
-  const debouncedCurrentTaskId = useDebounceValue(currentTask?.id, 1000);
-  const debouncedRecovery = useDebounceValue(health?.recovery, 1000);
+  const debouncedCurrentTaskId = useDebounceValue(currentTask?.id, 2000);
+  const debouncedRecovery = useDebounceValue(health?.recovery, 2000);
 
   useEffect(() => {
     // Clear any pending timeout

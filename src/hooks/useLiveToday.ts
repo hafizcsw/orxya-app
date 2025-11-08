@@ -30,6 +30,7 @@ export function useLiveToday(date?: Date) {
   // Fetch current and next tasks using TodayDataManager
   const fetchTasks = async () => {
     try {
+      setLoading(true);
       const data = await TodayDataManager.fetchTodayData(date);
 
       setCurrentTask(data?.currentTask || null);
@@ -38,12 +39,17 @@ export function useLiveToday(date?: Date) {
       if (data?.currentTask) {
         setTimeRemaining(data.currentTask.remainingMinutes);
         setProgress(data.currentTask.progressPercent);
+      } else {
+        setTimeRemaining(0);
+        setProgress(0);
       }
     } catch (error) {
       console.error('Error fetching tasks:', error);
-      // Set defaults on error
+      // Don't throw - just set empty state
       setCurrentTask(null);
       setNextTask(null);
+      setTimeRemaining(0);
+      setProgress(0);
     } finally {
       setLoading(false);
     }
