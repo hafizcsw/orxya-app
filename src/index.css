@@ -1,5 +1,10 @@
+/* Import Google Fonts first */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap');
+
+/* Import theme files */
 @import './styles/theme.css';
 @import './styles/google-calendar-theme.css';
+@import './styles/whoop.css';
 
 @tailwind base;
 @tailwind components;
@@ -23,9 +28,6 @@
 [dir="rtl"] .lucide-arrow-right {
   transform: scaleX(-1);
 }
-
-/* Import WHOOP theme */
-@import './styles/whoop.css';
 
 @layer utilities {
   .shimmer-slide {
@@ -110,8 +112,6 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.8; }
 }
-
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap');
 
 :root {
   --font-sans: 'Cairo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
