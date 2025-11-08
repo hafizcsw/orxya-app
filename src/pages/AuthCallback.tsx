@@ -10,7 +10,7 @@ export default function AuthCallback() {
     console.log('[AuthCallback] Component mounted')
     console.log('[AuthCallback] Current URL:', window.location.href)
     
-    let hasNavigated = false // Flag to prevent duplicate navigation
+    let hasNavigated = false
     let timeout: NodeJS.Timeout
     
     const handleSuccessfulAuth = async (session: any) => {
@@ -23,31 +23,69 @@ export default function AuthCallback() {
       console.log('[AuthCallback] ✅ Authentication successful')
       console.log('[AuthCallback] User:', session.user.email)
       
-      // Small delay to ensure everything is complete
-      await new Promise(resolve => setTimeout(resolve, 300))
+      // Clean URL and redirect
+      const cleanUrl = window.location.origin + '/today'
+      window.history.replaceState({}, '', cleanUrl)
       
-      console.log('[AuthCallback] Navigating to /today')
+      await new Promise(resolve => setTimeout(resolve, 300))
       navigate('/today', { replace: true })
     }
     
-    // 1. Check current session first
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
+    const handleAuthError = (error: any) => {
+      console.error('[AuthCallback] Auth error:', error)
+      setError('فشل تسجيل الدخول')
+      setTimeout(() => {
+        window.location.assign('/auth?error=callback')
+      }, 2000)
+    }
+    
+    // 1. Try to exchange code for session if present in URL
+    const handleCodeExchange = async () => {
+      const urlParams = new URLSearchParams(window.location.search)
+      const code = urlParams.get('code')
+      
+      if (code) {
+        try {
+          console.log('[AuthCallback] Exchanging code for session')
+          const { data, error } = await supabase.auth.exchangeCodeForSession(window.location.href)
+          
+          if (error) throw error
+          if (data.session) {
+            await handleSuccessfulAuth(data.session)
+            return true
+          }
+        } catch (e) {
+          console.error('[AuthCallback] Code exchange failed:', e)
+          handleAuthError(e)
+          return true
+        }
+      }
+      return false
+    }
+    
+    // 2. Check current session
+    const checkSession = async () => {
+      const codeExchanged = await handleCodeExchange()
+      if (codeExchanged) return
+      
+      const { data: { session }, error } = await supabase.auth.getSession()
+      
       if (error) {
-        console.error('[AuthCallback] Session error:', error)
-        setError('فشل تسجيل الدخول')
-        setTimeout(() => navigate('/auth', { replace: true }), 2000)
+        handleAuthError(error)
         return
       }
       
       if (session) {
-        console.log('[AuthCallback] Session found immediately')
-        handleSuccessfulAuth(session)
+        console.log('[AuthCallback] Session found')
+        await handleSuccessfulAuth(session)
       } else {
         console.log('[AuthCallback] No session yet, waiting...')
       }
-    })
+    }
     
-    // 2. Listen for auth state changes
+    checkSession()
+    
+    // 3. Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('[AuthCallback] Event:', event, session ? '✅' : '❌')
       
@@ -61,12 +99,11 @@ export default function AuthCallback() {
       }
     })
     
-    // 3. Timeout protection
+    // 4. Timeout protection
     timeout = setTimeout(() => {
       if (!hasNavigated) {
         console.warn('[AuthCallback] ⏱️ Timeout - no session after 10s')
-        setError('انتهت المهلة - جاري إعادة المحاولة')
-        navigate('/auth', { replace: true })
+        handleAuthError(new Error('Timeout'))
       }
     }, 10000)
     

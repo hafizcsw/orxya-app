@@ -8,8 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { toast } from '@/hooks/use-toast'
 import { useTranslation } from 'react-i18next'
 
-const siteUrl = import.meta.env.VITE_SITE_URL ?? window.location.origin
-const redirectTo = `${siteUrl}/auth/callback`
+const SITE_URL = import.meta.env.VITE_SITE_URL ?? 'https://can-you-build-me.lovable.app'
+const redirectTo = `${SITE_URL}/auth/callback`
 
 export default function Auth() {
   const { user } = useUser()
@@ -29,7 +29,7 @@ export default function Auth() {
     console.group('🔍 Auth Debug Info')
     console.log('Current URL:', window.location.href)
     console.log('Origin:', window.location.origin)
-    console.log('Site URL:', siteUrl)
+    console.log('Site URL:', SITE_URL)
     console.log('Redirect To:', redirectTo)
     console.log('User:', user ? '✅ Logged in' : '❌ Not logged in')
     console.groupEnd()

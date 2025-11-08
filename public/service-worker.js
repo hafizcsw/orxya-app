@@ -1,5 +1,5 @@
-const CACHE_NAME = 'oryxa-v1';
-const RUNTIME_CACHE = 'oryxa-runtime';
+const CACHE_NAME = 'oryxa-v3';
+const RUNTIME_CACHE = 'oryxa-runtime-v3';
 
 // Assets to cache on install
 const PRECACHE_URLS = [
