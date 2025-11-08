@@ -22,15 +22,28 @@ serve(async (req) => {
       }
     );
 
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) {
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    
+    if (userError || !user) {
+      console.error('[today-realtime-data] Auth error:', userError);
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const { date } = await req.json();
+    console.log('[today-realtime-data] User authenticated:', user.id);
+
+    // Parse request body - handle empty body
+    let date: string | undefined;
+    try {
+      const body = await req.json();
+      date = body?.date;
+    } catch {
+      // Body is empty or invalid, use default date
+      date = undefined;
+    }
+    
     const dateStr = date || new Date().toISOString().split('T')[0];
 
     // Get current time
