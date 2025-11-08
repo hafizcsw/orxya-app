@@ -144,8 +144,18 @@ class TodayDataManagerClass {
     const cacheKey = `today-data-${dateStr}`;
 
     const fetchData = async (): Promise<TodayData> => {
+      // Get current session to send auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('No active session');
+      }
+
       const { data, error } = await supabase.functions.invoke('today-realtime-data', {
-        body: { date: dateStr }
+        body: { date: dateStr },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
       });
 
       if (error) {
