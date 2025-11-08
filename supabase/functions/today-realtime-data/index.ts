@@ -21,17 +21,19 @@ serve(async (req) => {
       });
     }
 
-    // Create client with service role for auth verification
-    const supabaseAdmin = createClient(
+    // Create Supabase client with user's auth token
+    const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       {
         global: { headers: { Authorization: authHeader } },
       }
     );
 
-    // Verify user
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser();
+    // Verify user using JWT from Authorization header
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
     
     if (userError || !user) {
       console.error('[today-realtime-data] Auth error:', userError);
@@ -42,15 +44,6 @@ serve(async (req) => {
     }
 
     console.log('[today-realtime-data] User authenticated:', user.id);
-
-    // Create user-scoped client for data queries
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      {
-        global: { headers: { Authorization: authHeader } },
-      }
-    );
 
     // Parse request body - handle empty body
     let date: string | undefined;
