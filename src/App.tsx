@@ -131,11 +131,9 @@ function AppContent() {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <TooltipProvider>
           <SettingsProvider>
             <DateProvider>
               <AIProvider>
@@ -147,12 +145,14 @@ const App = () => (
                   </div>
                   <div id="portals" className="fixed inset-0 z-50 pointer-events-none" />
                 </div>
+                <Toaster />
+                <Sonner />
               </AIProvider>
             </DateProvider>
           </SettingsProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </ThemeProvider>
+        </TooltipProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 
