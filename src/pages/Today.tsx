@@ -10,14 +10,14 @@ import { BusinessPlan, BusinessPlanFormData } from "@/types/business-plan";
 import { PlanCard } from "@/components/plans/PlanCard";
 import { PlanFormDialog } from "@/components/plans/PlanFormDialog";
 import { toast } from "sonner";
-import { GlancesBar } from "@/components/glances/GlancesBar";
 import { DashboardSection } from "@/components/dashboard/DataDashboard";
 import { TodayHeader } from "@/components/today/TodayHeader";
-import { QuickSummaryCard } from "@/components/today/QuickSummaryCard";
 import { QuickActionsDock } from "@/components/today/QuickActionsDock";
 import { PeriodSelector } from "@/components/today/PeriodSelector";
 import { StatRingSection } from "@/components/today/StatRingSection";
 import { SectionErrorBoundary } from "@/components/today/SectionErrorBoundary";
+import { QuickSummaryBanner } from "@/components/today/QuickSummaryBanner";
+import { CollapsibleSection } from "@/components/today/CollapsibleSection";
 import { useTodayReport, type Period } from "@/hooks/useTodayReport";
 import { useHealthData } from "@/hooks/useHealthData";
 import { useUserGoals, GoalType } from "@/hooks/useUserGoals";
@@ -27,7 +27,6 @@ import { useAIInsights } from "@/hooks/useAIInsights";
 import SimplePullToRefresh from 'react-simple-pull-to-refresh';
 
 // Lazy load heavy components
-const DailyReportCard = lazy(() => import("@/components/DailyReportCard").then(m => ({ default: m.DailyReportCard })));
 const CurrentTaskCard = lazy(() => import("@/components/today/CurrentTaskCard").then(m => ({ default: m.CurrentTaskCard })));
 const AIInsightsCard = lazy(() => import("@/components/today/AIInsightsCard").then(m => ({ default: m.AIInsightsCard })));
 import { 
@@ -76,8 +75,9 @@ export default function Today() {
   const [editingPlan, setEditingPlan] = useState<BusinessPlan | null>(null);
   const [goalDialogOpen, setGoalDialogOpen] = useState(false);
   const [editingGoalType, setEditingGoalType] = useState<GoalType | null>(null);
+  const [focusMode, setFocusMode] = useState(false);
   
-  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+  const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: false, 
     align: 'start',
     dragFree: true,
@@ -181,6 +181,70 @@ export default function Today() {
     ]);
   };
 
+  // Load focus mode state
+  useEffect(() => {
+    const loadFocusState = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: fs } = await supabase
+            .from("user_focus_state")
+            .select("active")
+            .eq("user_id", user.id)
+            .maybeSingle();
+          setFocusMode(!!fs?.active);
+        }
+      } catch (e) {
+        console.error('[Today] Error loading focus state:', e);
+      }
+    };
+    loadFocusState();
+  }, []);
+
+  // Toggle focus mode
+  const toggleFocus = async (active: boolean) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      await supabase.from("user_focus_state").upsert({
+        user_id: user.id,
+        active,
+        updated_at: new Date().toISOString()
+      });
+
+      setFocusMode(active);
+    } catch (e) {
+      console.error('[Today] Error toggling focus:', e);
+    }
+  };
+
+  // Calculate daily progress
+  const calculateDailyProgress = () => {
+    if (!report || !healthData) return 0;
+    
+    const goals = {
+      work: getGoal('work_hours'),
+      study: getGoal('study_hours'),
+      mma: getGoal('mma_hours'),
+      walk: getGoal('walk_km'),
+      recovery: 100,
+      sleep: 100
+    };
+
+    const achievements = {
+      work: Math.min(100, ((report.work_hours || 0) / goals.work) * 100),
+      study: Math.min(100, ((report.study_hours || 0) / goals.study) * 100),
+      mma: Math.min(100, ((report.sports_hours || 0) / goals.mma) * 100),
+      walk: Math.min(100, (((healthData.meters || 0) / 1000) / goals.walk) * 100),
+      recovery: healthData.recovery || 0,
+      sleep: healthData.sleep || 0
+    };
+
+    const totalProgress = Object.values(achievements).reduce((sum, val) => sum + val, 0);
+    return Math.round(totalProgress / Object.keys(achievements).length);
+  };
+
   // Determine responsive columns
   const healthColumns = device === 'mobile' ? 2 : device === 'tablet' ? 3 : 4;
   const activityColumns = device === 'mobile' ? 2 : 3;
@@ -196,6 +260,15 @@ export default function Today() {
 
           {/* Period Selector */}
           <PeriodSelector value={period} onChange={setPeriod} className="mb-2" />
+
+          {/* Quick Summary Banner - NEW */}
+          <QuickSummaryBanner
+            dailyProgress={calculateDailyProgress()}
+            nextPrayer={undefined} // TODO: Integrate with prayer times
+            conflictsCount={0} // TODO: Integrate with conflicts data
+            focusMode={focusMode}
+            onToggleFocus={toggleFocus}
+          />
 
           {/* Current Task Card - Live */}
           {!taskLoading && (
@@ -425,18 +498,8 @@ export default function Today() {
           />
         </SectionErrorBoundary>
 
-        {/* Glances Bar */}
-        <DashboardSection title={t('sections.glances')}>
-          <GlancesBar />
-        </DashboardSection>
-
-        {/* Daily Report Card */}
-        <Suspense fallback={<Skeleton className="h-64 w-full rounded-2xl animate-pulse" />}>
-          <DailyReportCard />
-        </Suspense>
-
-        {/* Business Plans */}
-        <DashboardSection
+        {/* Business Plans - Now Collapsible */}
+        <CollapsibleSection
           title={t("sections.plans")}
           action={
             <Button onClick={() => setDialogOpen(true)} size="sm">
@@ -444,6 +507,7 @@ export default function Today() {
               {t("plans.add")}
             </Button>
           }
+          defaultOpen={false}
         >
           {plansLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -521,7 +585,7 @@ export default function Today() {
               </Button>
             </div>
           )}
-        </DashboardSection>
+        </CollapsibleSection>
       </div>
 
       {/* Quick Actions Dock */}
