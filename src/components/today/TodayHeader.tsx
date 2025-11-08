@@ -23,13 +23,24 @@ export function TodayHeader({
   const formattedDate = format(selectedDate, "EEEE، d MMMM yyyy", {
     locale
   });
-  return <div className="mb-6 space-y-2">
+  return <div className="mb-6 space-y-3">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 animate-fade-in">
+          <Calendar className="w-5 h-5 text-primary" />
+          <p className="text-sm md:text-base font-medium text-foreground">{formattedDate}</p>
+        </div>
+      </div>
       
-      <div className="flex items-center gap-2 text-muted-foreground animate-fade-in" style={{
-      animationDelay: "0.1s"
-    }}>
-        <Calendar className="w-4 h-4" />
-        <p className="text-sm md:text-base">{formattedDate}</p>
+      <div className="flex items-start gap-2 px-2 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+        <div className="w-1 h-8 bg-gradient-to-b from-primary to-primary/40 rounded-full" />
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            {getGreeting()}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {t("today.welcome", { defaultValue: "مرحباً بك في يومك الجديد" })}
+          </p>
+        </div>
       </div>
     </div>;
 }

@@ -1,4 +1,4 @@
-import { Home, Calendar, BarChart3, Menu, X, Bell, Settings, Zap, Brain, Bot, Activity, MessageSquare, Sparkles, Sun, Moon, Globe, LogOut } from "lucide-react";
+import { Home, Calendar, BarChart3, Menu, X, Bell, Settings, Zap, Brain, Bot, Activity, MessageSquare, Sparkles, Sun, Moon, Globe, LogOut, Download, TrendingUp, FolderKanban, Users, Workflow, LayoutDashboard } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
@@ -90,22 +90,22 @@ export function BottomNav() {
   };
 
   const navItems = [
-    { icon: Home, label: t('bottomNav.today'), path: "/" },
+    { icon: LayoutDashboard, label: t('bottomNav.today'), path: "/" },
     { icon: Calendar, label: t('bottomNav.calendar'), path: "/calendar" },
-    { icon: BarChart3, label: t('bottomNav.reports'), path: "/reports" },
+    { icon: TrendingUp, label: t('bottomNav.reports'), path: "/reports" },
   ];
 
   const menuLinks = [
     { to: "/settings", label: t('menu.settings'), icon: Settings },
-    { to: "/projects", label: t('menu.projects'), icon: BarChart3 },
-    { to: "/reports", label: t('menu.reports'), icon: BarChart3 },
-    { to: "/planner", label: t('menu.planner'), icon: MessageSquare },
+    { to: "/projects", label: t('menu.projects'), icon: FolderKanban },
+    { to: "/reports", label: t('menu.reports'), icon: TrendingUp },
+    { to: "/planner", label: t('menu.planner'), icon: Brain },
     { to: "/assistant", label: t('menu.assistant'), icon: Bot },
     { to: "/conflicts", label: t('menu.conflicts'), icon: Zap },
     { to: "/inbox", label: t('menu.notifications'), icon: Bell },
-    { to: "/automation", label: t('menu.automation'), icon: Zap },
+    { to: "/automation", label: t('menu.automation'), icon: Workflow },
     { to: "/diagnostics", label: t('menu.diagnostics'), icon: Activity },
-    { to: "/profile", label: t('menu.profile'), icon: Settings },
+    { to: "/profile", label: t('menu.profile'), icon: Users },
   ];
 
   return (
@@ -235,13 +235,38 @@ export function BottomNav() {
                   );
                 })}
 
-                {/* Sign Out Button */}
+                {/* Download App Button */}
                 <motion.button
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2 + (menuLinks.length * 0.05) }}
+                  onClick={() => {
+                    // Detect if user is on iOS or Android
+                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                    const isAndroid = /Android/.test(navigator.userAgent);
+                    
+                    if (isIOS) {
+                      toast.info('قريباً على App Store');
+                    } else if (isAndroid) {
+                      toast.info('قريباً على Google Play');
+                    } else {
+                      toast.info('التطبيق متاح على الأجهزة المحمولة');
+                    }
+                    setMenuOpen(false);
+                  }}
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors w-full text-right bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 mt-2"
+                >
+                  <Download className="w-5 h-5" />
+                  <span className="font-medium">{t('menu.downloadApp', { defaultValue: 'تنزيل التطبيق' })}</span>
+                </motion.button>
+
+                {/* Sign Out Button */}
+                <motion.button
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.25 + (menuLinks.length * 0.05) }}
                   onClick={handleSignOut}
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors w-full text-right text-destructive hover:bg-destructive/10 border border-destructive/20 mt-4"
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors w-full text-right text-destructive hover:bg-destructive/10 border border-destructive/20 mt-2"
                 >
                   <LogOut className="w-5 h-5" />
                   <span className="font-medium">{t('menu.signOut', { defaultValue: 'تسجيل الخروج' })}</span>

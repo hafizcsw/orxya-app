@@ -172,9 +172,9 @@ const Navigation = () => {
               </button>
             </div>}
 
-          {/* Right: Logo only */}
+          {/* Right: Logo with gradient */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            <Link to="/" className="text-lg font-bold text-foreground hover:text-primary transition-colors">
+            <Link to="/" className="text-lg font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent hover:from-primary/80 hover:to-primary/40 transition-all duration-300">
               Oryxa
             </Link>
           </div>
