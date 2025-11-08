@@ -1,31 +1,33 @@
 {
   "bottomNav": {
-    "today": "Hoy",
-    "calendar": "Calendario",
-    "reports": "Informes",
+    "today": "Panel",
+    "calendar": "Agenda",
+    "reports": "Analítica",
     "settings": "Configuración",
     "more": "Más",
-    "ai": "IA"
+    "ai": "Asistente IA"
   },
   "menu": {
-    "title": "Menú",
+    "title": "Menú Principal",
     "settings": "Configuración",
-    "projects": "Proyectos",
-    "reports": "Informes",
+    "projects": "Gestión de Proyectos",
+    "reports": "Informes y Análisis",
     "planner": "Planificador Inteligente",
-    "assistant": "Asistente",
-    "conflicts": "Conflictos",
-    "notifications": "Notificaciones",
-    "automation": "Automatización",
-    "diagnostics": "Diagnóstico",
-    "profile": "Mi Cuenta",
-    "darkMode": "Modo Oscuro",
-    "lightMode": "Modo Claro",
-    "expenses": "Gastos",
+    "assistant": "Asistente Personal",
+    "conflicts": "Gestor de Conflictos",
+    "notifications": "Centro de Notificaciones",
+    "automation": "Automatización Inteligente",
+    "diagnostics": "Diagnóstico y Rendimiento",
+    "profile": "Mi Perfil",
+    "darkMode": "Tema Oscuro",
+    "lightMode": "Tema Claro",
+    "expenses": "Gastos y Presupuesto",
     "inbox": "Bandeja de entrada",
-    "glances": "Vistazos",
+    "glances": "Vista Rápida",
     "calendarSimple": "Calendario Simple",
-    "integrations": "Integraciones",
-    "ai": "Inteligencia Artificial"
+    "integrations": "Aplicaciones Conectadas",
+    "ai": "Inteligencia Artificial",
+    "downloadApp": "Descargar App",
+    "dataDashboard": "Panel de Datos"
   }
 }

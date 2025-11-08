@@ -1,31 +1,33 @@
 {
   "bottomNav": {
-    "today": "Today",
-    "calendar": "Calendar",
-    "reports": "Reports",
+    "today": "Dashboard",
+    "calendar": "Schedule",
+    "reports": "Analytics",
     "settings": "Settings",
     "more": "More",
-    "ai": "AI"
+    "ai": "AI Assistant"
   },
   "menu": {
-    "title": "Menu",
+    "title": "Main Menu",
     "settings": "Settings",
-    "projects": "Projects",
-    "reports": "Reports",
+    "projects": "Project Management",
+    "reports": "Reports & Analytics",
     "planner": "Smart Planner",
-    "assistant": "Assistant",
-    "conflicts": "Conflicts",
-    "notifications": "Notifications",
-    "automation": "Automation",
-    "diagnostics": "Diagnostics",
-    "profile": "My Account",
-    "darkMode": "Dark Mode",
-    "lightMode": "Light Mode",
-    "expenses": "Expenses",
+    "assistant": "Personal Assistant",
+    "conflicts": "Conflict Manager",
+    "notifications": "Notification Center",
+    "automation": "Smart Automation",
+    "diagnostics": "Diagnostics & Performance",
+    "profile": "My Profile",
+    "darkMode": "Dark Theme",
+    "lightMode": "Light Theme",
+    "expenses": "Expenses & Budget",
     "inbox": "Inbox",
-    "glances": "Glances",
+    "glances": "Quick View",
     "calendarSimple": "Simple Calendar",
-    "integrations": "Integrations",
-    "ai": "Artificial Intelligence"
+    "integrations": "Connected Apps",
+    "ai": "Artificial Intelligence",
+    "downloadApp": "Download App",
+    "dataDashboard": "Data Dashboard"
   }
 }

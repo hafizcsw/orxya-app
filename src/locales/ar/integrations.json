@@ -1,6 +1,16 @@
 {
-  "title": "التكاملات",
-  "description": "ربط التقويم مع خدمات خارجية",
+  "title": "التطبيقات المتصلة",
+  "description": "إدارة التكاملات مع التطبيقات الخارجية ومزامنة بياناتك",
+  "hub": {
+    "title": "مركز التكاملات",
+    "subtitle": "قم بربط تطبيقاتك المفضلة لتجربة موحدة وسلسة",
+    "connectedApps": "التطبيقات المتصلة",
+    "availableApps": "التطبيقات المتاحة",
+    "syncAll": "مزامنة الكل",
+    "syncingAll": "جاري المزامنة...",
+    "lastSync": "آخر مزامنة",
+    "itemsSynced": "العناصر المزامنة"
+  },
   "googleCalendar": {
     "title": "Google Calendar",
     "description": "مزامنة الأحداث تلقائياً",
@@ -25,5 +35,49 @@
     "syncError": "❌ فشلت المزامنة",
     "connectError": "❌ فشل الربط",
     "description2": "اربط حساب Google Calendar لاستيراد أحداثك ومزامنتها تلقائياً. سيتم فحص التعارضات مع أوقات الصلاة بعد كل مزامنة."
+  },
+  "todoist": {
+    "title": "Todoist",
+    "description": "مزامنة المهام والمشاريع من Todoist",
+    "benefits": "استيراد جميع مهامك ومشاريعك تلقائياً"
+  },
+  "notion": {
+    "title": "Notion",
+    "description": "مزامنة الصفحات والقواعد من Notion",
+    "benefits": "دمج ملاحظاتك وقواعد بياناتك"
+  },
+  "trello": {
+    "title": "Trello",
+    "description": "مزامنة اللوحات والبطاقات من Trello",
+    "benefits": "استيراد جميع لوحاتك وبطاقاتك"
+  },
+  "outlook": {
+    "title": "Outlook Calendar",
+    "description": "مزامنة الأحداث من تقويم Outlook",
+    "benefits": "دمج تقويم Outlook الخاص بك"
+  },
+  "appleHealth": {
+    "title": "Apple Health",
+    "description": "مزامنة البيانات الصحية من iPhone",
+    "benefits": "تتبع نشاطك الصحي وخطواتك"
+  },
+  "whoop": {
+    "title": "WHOOP",
+    "description": "مزامنة بيانات اللياقة البدنية من WHOOP",
+    "benefits": "تحليل متقدم للنوم والتعافي"
+  },
+  "common": {
+    "connect": "ربط",
+    "disconnect": "قطع الاتصال",
+    "sync": "مزامنة",
+    "manage": "إدارة",
+    "connected": "متصل",
+    "disconnected": "غير متصل",
+    "error": "خطأ",
+    "syncing": "جاري المزامنة...",
+    "lastSyncAt": "آخر مزامنة: {time}",
+    "neverSynced": "لم تتم المزامنة بعد",
+    "autoSyncEnabled": "المزامنة التلقائية مفعلة",
+    "autoSyncDisabled": "المزامنة التلقائية معطلة"
   }
 }

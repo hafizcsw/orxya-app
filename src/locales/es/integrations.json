@@ -1,6 +1,16 @@
 {
-  "title": "Integraciones",
-  "description": "Conecta tu calendario con servicios externos",
+  "title": "Aplicaciones Conectadas",
+  "description": "Gestiona integraciones con apps externas y sincroniza tus datos",
+  "hub": {
+    "title": "Centro de Integraciones",
+    "subtitle": "Conecta tus apps favoritas para una experiencia unificada",
+    "connectedApps": "Apps Conectadas",
+    "availableApps": "Apps Disponibles",
+    "syncAll": "Sincronizar Todo",
+    "syncingAll": "Sincronizando...",
+    "lastSync": "Última sincronización",
+    "itemsSynced": "Elementos sincronizados"
+  },
   "googleCalendar": {
     "title": "Google Calendar",
     "description": "Sincroniza eventos automáticamente",
@@ -25,5 +35,49 @@
     "syncError": "❌ Falló la sincronización",
     "connectError": "❌ Falló la conexión",
     "description2": "Conecta tu cuenta de Google Calendar para importar y sincronizar automáticamente tus eventos. Se verificarán conflictos con horarios de oración después de cada sincronización."
+  },
+  "todoist": {
+    "title": "Todoist",
+    "description": "Sincroniza tareas y proyectos desde Todoist",
+    "benefits": "Importa todas tus tareas y proyectos automáticamente"
+  },
+  "notion": {
+    "title": "Notion",
+    "description": "Sincroniza páginas y bases de datos desde Notion",
+    "benefits": "Integra tus notas y bases de datos"
+  },
+  "trello": {
+    "title": "Trello",
+    "description": "Sincroniza tableros y tarjetas desde Trello",
+    "benefits": "Importa todos tus tableros y tarjetas"
+  },
+  "outlook": {
+    "title": "Outlook Calendar",
+    "description": "Sincroniza eventos desde Outlook Calendar",
+    "benefits": "Integra tu calendario de Outlook"
+  },
+  "appleHealth": {
+    "title": "Apple Health",
+    "description": "Sincroniza datos de salud desde iPhone",
+    "benefits": "Rastrea tu actividad de salud y pasos"
+  },
+  "whoop": {
+    "title": "WHOOP",
+    "description": "Sincroniza datos de fitness desde WHOOP",
+    "benefits": "Análisis avanzado de sueño y recuperación"
+  },
+  "common": {
+    "connect": "Conectar",
+    "disconnect": "Desconectar",
+    "sync": "Sincronizar",
+    "manage": "Gestionar",
+    "connected": "Conectado",
+    "disconnected": "Desconectado",
+    "error": "Error",
+    "syncing": "Sincronizando...",
+    "lastSyncAt": "Última sincronización: {time}",
+    "neverSynced": "Nunca sincronizado",
+    "autoSyncEnabled": "Sincronización automática activada",
+    "autoSyncDisabled": "Sincronización automática desactivada"
   }
 }

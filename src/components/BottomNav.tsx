@@ -96,16 +96,16 @@ export function BottomNav() {
   ];
 
   const menuLinks = [
-    { to: "/settings", label: t('menu.settings'), icon: Settings },
     { to: "/projects", label: t('menu.projects'), icon: FolderKanban },
-    { to: "/reports", label: t('menu.reports'), icon: TrendingUp },
     { to: "/planner", label: t('menu.planner'), icon: Brain },
-    { to: "/assistant", label: t('menu.assistant'), icon: Bot },
-    { to: "/conflicts", label: t('menu.conflicts'), icon: Zap },
-    { to: "/inbox", label: t('menu.notifications'), icon: Bell },
-    { to: "/automation", label: t('menu.automation'), icon: Workflow },
-    { to: "/diagnostics", label: t('menu.diagnostics'), icon: Activity },
+    { to: "/assistant", label: t('menu.assistant'), icon: Sparkles },
+    { to: "/reports", label: t('menu.reports'), icon: TrendingUp },
+    { to: "/expenses", label: t('menu.expenses'), icon: Activity },
+    { to: "/inbox", label: t('menu.inbox'), icon: Bell },
+    { to: "/integrations", label: t('menu.integrations'), icon: Workflow },
+    { to: "/settings", label: t('menu.settings'), icon: Settings },
     { to: "/profile", label: t('menu.profile'), icon: Users },
+    { to: "/automation", label: t('menu.automation'), icon: Zap },
   ];
 
   return (
@@ -241,23 +241,24 @@ export function BottomNav() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2 + (menuLinks.length * 0.05) }}
                   onClick={() => {
-                    // Detect if user is on iOS or Android
-                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-                    const isAndroid = /Android/.test(navigator.userAgent);
+                    triggerHaptic();
+                    const userAgent = navigator.userAgent || navigator.vendor;
+                    const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+                    const isAndroid = /android/i.test(userAgent);
                     
                     if (isIOS) {
-                      toast.info('قريباً على App Store');
+                      toast.info(t('common:common.downloadOnAppStore'));
                     } else if (isAndroid) {
-                      toast.info('قريباً على Google Play');
+                      toast.info(t('common:common.downloadOnGooglePlay'));
                     } else {
-                      toast.info('التطبيق متاح على الأجهزة المحمولة');
+                      toast.info(t('common:common.visitOnMobile'));
                     }
                     setMenuOpen(false);
                   }}
                   className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors w-full text-right bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 mt-2"
                 >
                   <Download className="w-5 h-5" />
-                  <span className="font-medium">{t('menu.downloadApp', { defaultValue: 'تنزيل التطبيق' })}</span>
+                  <span className="font-medium">{t('menu.downloadApp')}</span>
                 </motion.button>
 
                 {/* Sign Out Button */}

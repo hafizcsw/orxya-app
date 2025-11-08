@@ -54,6 +54,9 @@ const SettingsNotifications = lazy(() => import("./pages/SettingsNotifications")
 const SettingsPrayer = lazy(() => import("./pages/SettingsPrayer"));
 const GlancesSettings = lazy(() => import("./pages/GlancesSettings"));
 
+// Integration pages
+const IntegrationsHub = lazy(() => import("./pages/IntegrationsHub"));
+
 // Other pages
 const PlannerChat = lazy(() => import("./pages/PlannerChat"));
 const Conflicts = lazy(() => import("./pages/Conflicts"));
@@ -123,6 +126,7 @@ function AppContent() {
                 <Route path="/settings/notifications" element={<Protected><SettingsNotifications /></Protected>} />
                 <Route path="/settings/prayer" element={<Protected><SettingsPrayer /></Protected>} />
                 <Route path="/settings/glances" element={<Protected><GlancesSettings /></Protected>} />
+                <Route path="/integrations" element={<Protected><IntegrationsHub /></Protected>} />
                 <Route path="/planner" element={<Protected><PlannerChat /></Protected>} />
                 <Route path="/conflicts" element={<Protected><Conflicts /></Protected>} />
                 <Route path="/test-conflicts" element={<Protected><TestConflicts /></Protected>} />

@@ -1,6 +1,16 @@
 {
-  "title": "Integrations",
-  "description": "Connect your calendar with external services",
+  "title": "Connected Apps",
+  "description": "Manage integrations with external apps and sync your data",
+  "hub": {
+    "title": "Integrations Hub",
+    "subtitle": "Connect your favorite apps for a unified and seamless experience",
+    "connectedApps": "Connected Apps",
+    "availableApps": "Available Apps",
+    "syncAll": "Sync All",
+    "syncingAll": "Syncing...",
+    "lastSync": "Last sync",
+    "itemsSynced": "Items synced"
+  },
   "googleCalendar": {
     "title": "Google Calendar",
     "description": "Automatically sync events",
@@ -25,5 +35,49 @@
     "syncError": "❌ Sync failed",
     "connectError": "❌ Connection failed",
     "description2": "Connect your Google Calendar account to import and automatically sync your events. Conflicts with prayer times will be checked after each sync."
+  },
+  "todoist": {
+    "title": "Todoist",
+    "description": "Sync tasks and projects from Todoist",
+    "benefits": "Import all your tasks and projects automatically"
+  },
+  "notion": {
+    "title": "Notion",
+    "description": "Sync pages and databases from Notion",
+    "benefits": "Integrate your notes and databases"
+  },
+  "trello": {
+    "title": "Trello",
+    "description": "Sync boards and cards from Trello",
+    "benefits": "Import all your boards and cards"
+  },
+  "outlook": {
+    "title": "Outlook Calendar",
+    "description": "Sync events from Outlook Calendar",
+    "benefits": "Integrate your Outlook calendar"
+  },
+  "appleHealth": {
+    "title": "Apple Health",
+    "description": "Sync health data from iPhone",
+    "benefits": "Track your health activity and steps"
+  },
+  "whoop": {
+    "title": "WHOOP",
+    "description": "Sync fitness data from WHOOP",
+    "benefits": "Advanced sleep and recovery analysis"
+  },
+  "common": {
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "sync": "Sync",
+    "manage": "Manage",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "error": "Error",
+    "syncing": "Syncing...",
+    "lastSyncAt": "Last sync: {time}",
+    "neverSynced": "Never synced",
+    "autoSyncEnabled": "Auto-sync enabled",
+    "autoSyncDisabled": "Auto-sync disabled"
   }
 }

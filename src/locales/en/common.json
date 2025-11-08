@@ -53,6 +53,10 @@
     "signup": "Sign Up",
     "quickOverview": "Quick Overview",
     "healthData": "Health Data",
-    "viewWhoopData": "View WHOOP Data"
+    "viewWhoopData": "View WHOOP Data",
+    "downloadApp": "Download App",
+    "downloadOnAppStore": "Available on App Store",
+    "downloadOnGooglePlay": "Available on Google Play",
+    "visitOnMobile": "Visit from your mobile to download the app"
   }
 }
