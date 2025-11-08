@@ -43,7 +43,9 @@
     "viewAnalytics": "View Analytics",
     "hideAnalytics": "Hide Analytics",
     "loading": "Loading plans...",
-    "noPlans": "No active plans"
+    "noPlans": "No active plans",
+    "empty": "No plans yet",
+    "addFirst": "Add your first plan"
   },
   "insights": {
     "title": "Smart Insights"

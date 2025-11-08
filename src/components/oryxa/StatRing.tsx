@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { ArrowUp, ArrowDown, Minus } from 'lucide-react';
@@ -25,7 +25,7 @@ interface StatRingProps {
   onTargetClick?: () => void; // عند الضغط لتعديل الهدف
 }
 
-export function StatRing({
+export const StatRing = React.memo(function StatRing({
   value,
   label,
   color = 'hsl(var(--primary))',
@@ -90,51 +90,76 @@ export function StatRing({
     },
   }
 
-  const actualScale = scale || 1
-  const { width, strokeWidth, fontSize, iconSize, labelSize, subtitleSize, valueSize, padding } = sizes[size]
-  const scaledWidth = width * actualScale
-  const radius = (scaledWidth - strokeWidth) / 2
-  const innerRadius = radius - strokeWidth / 2
-  const circumference = 2 * Math.PI * radius
-  
-  // Calculate progress based on target if provided
-  const progressValue = targetValue && currentValue !== undefined 
-    ? Math.min((currentValue / targetValue) * 100, 100)
-    : Math.min(value, 100);
-  
-  const offset = circumference - (progressValue / 100) * circumference
-  const percentage = Math.round(progressValue)
-  
-  // Dynamic color and gradient based on progress
-  const getDynamicColor = () => {
-    if (!targetValue || !gradientColors) return color;
-    const progress = (currentValue || 0) / targetValue;
-    if (progress >= 0.9) return 'hsl(142, 76%, 36%)'; // Excellent - Green
-    if (progress >= 0.7) return 'hsl(180, 70%, 40%)'; // Good - Blue-green
-    if (progress >= 0.5) return 'hsl(45, 93%, 47%)'; // Fair - Yellow
-    return 'hsl(0, 84%, 60%)'; // Poor - Red
-  };
-  
-  const getDynamicGradient = (): [string, string] => {
-    if (!targetValue) return gradientColors || [color, color];
-    const progress = (currentValue || 0) / targetValue;
+  const ringCalculations = useMemo(() => {
+    const actualScale = scale || 1;
+    const { width, strokeWidth, fontSize, iconSize, labelSize, subtitleSize, valueSize, padding } = sizes[size];
+    const scaledWidth = width * actualScale;
+    const radius = (scaledWidth - strokeWidth) / 2;
+    const innerRadius = radius - strokeWidth / 2;
+    const circumference = 2 * Math.PI * radius;
     
-    if (progress >= 0.9) {
-      return ['hsl(142, 76%, 36%)', 'hsl(142, 76%, 60%)']; // Excellent gradient
-    } else if (progress >= 0.7) {
-      return ['hsl(180, 70%, 40%)', 'hsl(180, 70%, 60%)']; // Good gradient
-    } else if (progress >= 0.5) {
-      return ['hsl(45, 93%, 47%)', 'hsl(45, 93%, 65%)']; // Fair gradient
-    } else {
-      return ['hsl(0, 84%, 50%)', 'hsl(0, 84%, 70%)']; // Poor gradient
-    }
-  };
-  
-  const ringColor = getDynamicColor();
-  const dynamicGradient = targetValue ? getDynamicGradient() : gradientColors;
+    // Calculate progress based on target if provided
+    const progressValue = targetValue && currentValue !== undefined 
+      ? Math.min((currentValue / targetValue) * 100, 100)
+      : Math.min(value, 100);
+    
+    const offset = circumference - (progressValue / 100) * circumference;
+    const percentage = Math.round(progressValue);
+    
+    return { 
+      actualScale, 
+      width, 
+      strokeWidth, 
+      fontSize, 
+      iconSize, 
+      labelSize, 
+      subtitleSize, 
+      valueSize, 
+      padding,
+      scaledWidth, 
+      radius, 
+      innerRadius, 
+      circumference, 
+      progressValue, 
+      offset, 
+      percentage 
+    };
+  }, [scale, size, targetValue, currentValue, value]);
 
-  // Gradient ID for unique gradients per ring
-  const gradientId = `gradient-${label.replace(/\s/g, '-')}`
+  const { ringColor, dynamicGradient, gradientId } = useMemo(() => {
+    // Dynamic color and gradient based on progress
+    const getDynamicColor = () => {
+      if (!targetValue || !gradientColors) return color;
+      const progress = (currentValue || 0) / targetValue;
+      if (progress >= 0.9) return 'hsl(142, 76%, 36%)'; // Excellent - Green
+      if (progress >= 0.7) return 'hsl(180, 70%, 40%)'; // Good - Blue-green
+      if (progress >= 0.5) return 'hsl(45, 93%, 47%)'; // Fair - Yellow
+      return 'hsl(0, 84%, 60%)'; // Poor - Red
+    };
+    
+    const getDynamicGradient = (): [string, string] => {
+      if (!targetValue) return gradientColors || [color, color];
+      const progress = (currentValue || 0) / targetValue;
+      
+      if (progress >= 0.9) {
+        return ['hsl(142, 76%, 36%)', 'hsl(142, 76%, 60%)']; // Excellent gradient
+      } else if (progress >= 0.7) {
+        return ['hsl(180, 70%, 40%)', 'hsl(180, 70%, 60%)']; // Good gradient
+      } else if (progress >= 0.5) {
+        return ['hsl(45, 93%, 47%)', 'hsl(45, 93%, 65%)']; // Fair gradient
+      } else {
+        return ['hsl(0, 84%, 50%)', 'hsl(0, 84%, 70%)']; // Poor gradient
+      }
+    };
+    
+    const ringColor = getDynamicColor();
+    const dynamicGradient = targetValue ? getDynamicGradient() : gradientColors;
+    const gradientId = `gradient-${label.replace(/\s/g, '-')}`;
+
+    return { ringColor, dynamicGradient, gradientId };
+  }, [targetValue, currentValue, gradientColors, color, label]);
+
+  const { scaledWidth, radius, innerRadius, strokeWidth, circumference, offset, percentage, iconSize, labelSize, subtitleSize, valueSize } = ringCalculations;
   
   // Status colors
   const statusColors = {
@@ -331,4 +356,4 @@ export function StatRing({
       </div>
     </div>
   );
-}
+});

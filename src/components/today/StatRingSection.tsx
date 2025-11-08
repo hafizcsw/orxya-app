@@ -1,3 +1,4 @@
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { DashboardGrid, DashboardSection } from '@/components/dashboard/DataDashboard';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -32,24 +33,26 @@ interface StatRingSectionProps {
   columns?: 2 | 3 | 4;
 }
 
-export function StatRingSection({ 
+export const StatRingSection = React.memo(function StatRingSection({ 
   title, 
   rings, 
   loading, 
   action,
   columns = 4 
 }: StatRingSectionProps) {
+  const memoizedRings = useMemo(() => rings, [rings]);
+
   return (
     <DashboardSection title={title} action={action}>
       {loading ? (
         <DashboardGrid columns={columns} gap="md">
-          {rings.map((_, i) => (
-            <Skeleton key={i} className="h-48 w-full rounded-2xl" />
+          {memoizedRings.map((_, i) => (
+            <Skeleton key={i} className="h-48 w-full rounded-2xl animate-pulse" />
           ))}
         </DashboardGrid>
       ) : (
         <DashboardGrid columns={columns} gap="md">
-          {rings.map((ring, i) => {
+          {memoizedRings.map((ring, i) => {
             const anim = ringAnimations.stagger(i);
             return (
               <motion.div
@@ -66,4 +69,4 @@ export function StatRingSection({
       )}
     </DashboardSection>
   );
-}
+});

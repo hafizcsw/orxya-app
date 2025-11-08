@@ -43,7 +43,9 @@
     "viewAnalytics": "Ver Análisis",
     "hideAnalytics": "Ocultar Análisis",
     "loading": "Cargando planes...",
-    "noPlans": "No hay planes activos"
+    "noPlans": "No hay planes activos",
+    "empty": "No hay planes aún",
+    "addFirst": "Agrega tu primer plan"
   },
   "insights": {
     "title": "Perspectivas Inteligentes"
