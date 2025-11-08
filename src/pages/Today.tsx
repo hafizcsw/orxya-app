@@ -251,8 +251,8 @@ export default function Today() {
 
   // Determine responsive columns
   const healthColumns = device === 'mobile' ? 2 : device === 'tablet' ? 3 : 4;
-  const activityColumns = device === 'mobile' ? 2 : 3;
-  const financialColumns = device === 'mobile' ? 2 : 3;
+  const activityColumns = 3; // Always 3 columns in a row
+  const financialColumns = 3; // Always 3 columns in a row
 
   return (
     <SimplePullToRefresh onRefresh={handleRefresh}>
