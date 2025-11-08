@@ -24,8 +24,16 @@ serve(async (req) => {
 
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
+      // Return default insights instead of 401 to prevent blank screen
+      console.warn('Unauthorized user, returning default insights');
+      return new Response(JSON.stringify({
+        focusScore: 50,
+        energyLevel: "medium",
+        suggestions: ["قم بتسجيل الدخول للحصول على رؤى مخصصة"],
+        warnings: [],
+        isOffline: true
+      }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
