@@ -55,7 +55,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.notify-cron]
-verify_jwt = false
+verify_jwt = true
 
 [functions.conflicts]
 verify_jwt = true
