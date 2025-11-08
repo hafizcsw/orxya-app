@@ -33,5 +33,16 @@ export function PeriodSelector({
     icon: Award,
     label: t("today.periods.yearly")
   }];
-  return;
+  return (
+    <Tabs value={value} onValueChange={(v) => onChange(v as Period)} className={cn("w-full", className)}>
+      <TabsList className="grid w-full grid-cols-4 h-12">
+        {periods.map(({ value: periodValue, icon: Icon, label }) => (
+          <TabsTrigger key={periodValue} value={periodValue} className="flex items-center gap-2">
+            <Icon className="h-4 w-4" />
+            <span className="hidden sm:inline">{label}</span>
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
+  );
 }
