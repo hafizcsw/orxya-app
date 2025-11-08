@@ -21,10 +21,6 @@ export function PeriodSelector({
     icon: CalendarIcon,
     label: t("today.periods.daily")
   }, {
-    value: "weekly" as Period,
-    icon: TrendingUp,
-    label: t("today.periods.weekly")
-  }, {
     value: "monthly" as Period,
     icon: BarChart3,
     label: t("today.periods.monthly")
@@ -35,7 +31,7 @@ export function PeriodSelector({
   }];
   return (
     <Tabs value={value} onValueChange={(v) => onChange(v as Period)} className={cn("w-full", className)}>
-      <TabsList className="grid w-full grid-cols-4 h-12">
+      <TabsList className="grid w-full grid-cols-3 h-12">
         {periods.map(({ value: periodValue, icon: Icon, label }) => (
           <TabsTrigger key={periodValue} value={periodValue} className="flex items-center gap-2">
             <Icon className="h-4 w-4" />
