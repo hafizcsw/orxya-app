@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { callFunction } from '@/lib/callFunction';
 
 export interface TodayData {
   currentTask: any | null;
@@ -157,26 +158,7 @@ class TodayDataManagerClass {
       }
 
       try {
-        const { data, error } = await supabase.functions.invoke('today-realtime-data', {
-          body: { date: dateStr },
-          headers: {
-            Authorization: `Bearer ${session.access_token}`
-          }
-        });
-
-        if (error) {
-          console.error('Error fetching today data:', error);
-          
-          // Try offline cache on error
-          const offlineData = this.getFromOfflineCache(cacheKey);
-          if (offlineData) {
-            console.log('Using offline cache after error');
-            return offlineData;
-          }
-          
-          throw error;
-        }
-
+        const data = await callFunction<TodayData>('today-realtime-data', { date: dateStr });
         return data as TodayData;
       } catch (error) {
         console.error('Error in fetchTodayData:', error);
@@ -265,14 +247,7 @@ class TodayDataManagerClass {
           recentTrends: this.calculateRecentTrends(recentActivities || [])
         };
 
-        const { data, error } = await supabase.functions.invoke('today-ai-insights', {
-          body: enhancedContext
-        });
-
-        if (error) {
-          throw error;
-        }
-
+        const data = await callFunction('today-ai-insights', enhancedContext);
         return { ...data, isOffline: false };
       } catch (error) {
         console.error('Error fetching AI insights, trying offline cache:', error);
