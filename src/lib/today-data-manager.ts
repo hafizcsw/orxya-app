@@ -122,6 +122,18 @@ class TodayDataManagerClass {
     const cacheKey = `ai-insights-${now.toISOString().split('T')[0]}-${hour}`;
 
     const fetchInsights = async (): Promise<AIInsights> => {
+      // Check if user is authenticated
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.warn('User not authenticated, returning default insights');
+        return {
+          focusScore: 50,
+          energyLevel: 'medium',
+          suggestions: ['قم بتسجيل الدخول للحصول على رؤى مخصصة'],
+          warnings: []
+        };
+      }
+
       // Get user goals for context
       let goals: any[] = [];
       try {
