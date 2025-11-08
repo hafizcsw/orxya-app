@@ -65,21 +65,46 @@ if ('serviceWorker' in navigator) {
       .then(registration => {
         console.log('✅ Service Worker registered:', registration.scope);
         
-        // Check for updates
+        // Check for updates every hour
+        setInterval(() => {
+          registration.update();
+        }, 60 * 60 * 1000);
+        
+        // Check for updates on registration
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                // New content available, reload
-                console.log('🔄 New version available, updating...');
-                window.location.reload();
+                // New content available
+                console.log('🔄 New version available');
+                // Show notification to user (optional)
+                if (confirm('تحديث جديد متوفر. هل تريد تحديث التطبيق؟')) {
+                  window.location.reload();
+                }
               }
             });
           }
         });
       })
       .catch(err => console.error('❌ Service Worker registration failed:', err));
+  });
+
+  // Listen for installation prompt
+  let deferredPrompt: any;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    console.log('💡 Install prompt ready');
+    e.preventDefault();
+    deferredPrompt = e;
+    
+    // You can show your custom install button here
+    // and trigger the prompt when user clicks it with:
+    // deferredPrompt.prompt();
+  });
+
+  window.addEventListener('appinstalled', () => {
+    console.log('✅ App installed successfully');
+    deferredPrompt = null;
   });
 }
 
