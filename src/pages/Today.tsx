@@ -543,12 +543,12 @@ export default function Today() {
 
               {/* Mobile Carousel View */}
               <div className="md:hidden">
-                <div className="overflow-hidden" ref={emblaRef}>
-                  <div className="flex gap-4 touch-pan-y">
+                <div className="overflow-hidden -mx-3 px-3" ref={emblaRef}>
+                  <div className="flex gap-3 touch-pan-y">
                     {plans.map((plan: BusinessPlan) => (
                       <div 
                         key={plan.plan_id} 
-                        className="flex-[0_0_90%] min-w-0"
+                        className="flex-[0_0_85%] min-w-0"
                       >
                         <PlanCard
                           plan={plan}
@@ -565,16 +565,16 @@ export default function Today() {
 
                 {/* Carousel Indicators */}
                 {planScrollSnaps.length > 1 && (
-                  <div className="flex justify-center gap-2 mt-4">
+                  <div className="flex justify-center gap-1.5 mt-3">
                     {planScrollSnaps.map((_, index) => (
                       <button
                         key={index}
                         onClick={() => emblaApi?.scrollTo(index)}
                         className={cn(
-                          'w-2 h-2 rounded-full transition-all',
+                          'h-1.5 rounded-full transition-all',
                           index === selectedPlanIndex 
                             ? 'bg-primary w-6' 
-                            : 'bg-muted-foreground/30'
+                            : 'bg-muted-foreground/30 w-1.5'
                         )}
                         aria-label={`Go to slide ${index + 1}`}
                       />
