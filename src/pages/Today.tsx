@@ -74,6 +74,17 @@ export default function Today() {
   const [editingGoalType, setEditingGoalType] = useState<GoalType | null>(null);
   const [focusMode, setFocusMode] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
+
+  // Check authentication
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/auth');
+      }
+    };
+    checkAuth();
+  }, [navigate]);
   
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: false, 
