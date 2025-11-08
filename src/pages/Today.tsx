@@ -262,8 +262,6 @@ export default function Today() {
           {/* Header with Greeting */}
           <TodayHeader selectedDate={selectedDate} />
 
-          {/* Period Selector */}
-          <PeriodSelector value={period} onChange={setPeriod} className="mb-2" />
 
           {/* Quick Summary Banner - NEW */}
           <QuickSummaryBanner
