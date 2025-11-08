@@ -26,15 +26,15 @@ export default function IntegrationsHub() {
     setSyncingAll(true);
     toast.info(t('integrations:hub.syncingAll'));
     
-    // Sync Google Calendar if connected
-    if (googleStatus === 'connected') {
-      await googleSync();
+    try {
+      // Use the auto-sync manager for all integrations
+      const { autoSyncManager } = await import('@/lib/auto-sync');
+      await autoSyncManager.manualSync();
+    } catch (error) {
+      console.error('Sync error:', error);
+    } finally {
+      setSyncingAll(false);
     }
-    
-    // Add other integrations sync here when implemented
-    
-    setSyncingAll(false);
-    toast.success(t('integrations:googleCalendar.syncSuccess'));
   };
 
   const integrations = [

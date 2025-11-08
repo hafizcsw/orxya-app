@@ -2077,6 +2077,53 @@ export type Database = {
           },
         ]
       }
+      sync_logs: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          id: string
+          items_added: number | null
+          items_skipped: number | null
+          items_updated: number | null
+          provider: string
+          status: string
+          sync_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          items_added?: number | null
+          items_skipped?: number | null
+          items_updated?: number | null
+          provider: string
+          status: string
+          sync_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          items_added?: number | null
+          items_skipped?: number | null
+          items_updated?: number | null
+          provider?: string
+          status?: string
+          sync_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sync_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       task_lists: {
         Row: {
           color: string | null
