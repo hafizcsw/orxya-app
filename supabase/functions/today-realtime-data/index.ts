@@ -12,17 +12,26 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
+    // Get auth header
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Missing authorization header" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Create client with service role for auth verification
+    const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       {
-        global: {
-          headers: { Authorization: req.headers.get("Authorization")! },
-        },
+        global: { headers: { Authorization: authHeader } },
       }
     );
 
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    // Verify user
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser();
     
     if (userError || !user) {
       console.error('[today-realtime-data] Auth error:', userError);
@@ -33,6 +42,15 @@ serve(async (req) => {
     }
 
     console.log('[today-realtime-data] User authenticated:', user.id);
+
+    // Create user-scoped client for data queries
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      {
+        global: { headers: { Authorization: authHeader } },
+      }
+    );
 
     // Parse request body - handle empty body
     let date: string | undefined;
