@@ -114,4 +114,46 @@ export default defineConfig(({ mode }) => ({
   optimizeDeps: {
     include: ["react", "react-dom"],
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Core React libraries
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          
+          // UI libraries
+          'ui-vendor': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-popover',
+            '@radix-ui/react-select',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-toast',
+            '@radix-ui/react-tooltip',
+          ],
+          
+          // Charts and visualization
+          'charts': ['recharts'],
+          
+          // Date utilities
+          'date-utils': ['date-fns'],
+          
+          // Large dependencies
+          'supabase': ['@supabase/supabase-js'],
+          'tanstack': ['@tanstack/react-query'],
+          
+          // i18n
+          'i18n': ['i18next', 'react-i18next', 'i18next-browser-languagedetector'],
+          
+          // Capacitor (if used)
+          'capacitor': ['@capacitor/core', '@capacitor/geolocation', '@capacitor/local-notifications'],
+          
+          // Animation
+          'animations': ['framer-motion'],
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000,
+    sourcemap: false,
+  }
 }));
