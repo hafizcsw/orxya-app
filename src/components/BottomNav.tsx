@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { preloadPage } from "@/hooks/usePreloadPages";
 
 export function BottomNav() {
   const location = useLocation();
@@ -214,6 +215,11 @@ export function BottomNav() {
                       <Link
                         to={link.to}
                         onClick={() => setMenuOpen(false)}
+                        onMouseEnter={() => {
+                          // Preload page on hover
+                          const pageName = link.to.slice(1).replace(/\//g, '-');
+                          preloadPage(pageName);
+                        }}
                         className={cn(
                           "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
                           location.pathname === link.to
@@ -272,6 +278,11 @@ export function BottomNav() {
                 <Link
                   to={item.path}
                   onClick={triggerHaptic}
+                  onMouseEnter={() => {
+                    // Preload page on hover for faster navigation
+                    const pageName = item.path === '/' ? 'today' : item.path.slice(1);
+                    preloadPage(pageName);
+                  }}
                   className={cn(
                     "flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-all min-w-[60px] relative",
                     "md:scale-110",

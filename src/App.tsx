@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { LoadingFallback } from "./components/ui/loading-fallback";
 import { useAutopilotNotifications } from "./hooks/useAutopilotNotifications";
 import { useWidgetTokenSync } from "./hooks/useWidgetToken";
+import { usePreloadPages } from "./hooks/usePreloadPages";
 
 // Eagerly load critical components
 import Navigation from "./components/Navigation";
@@ -74,6 +75,7 @@ const queryClient = new QueryClient();
 function AppContent() {
   useAutopilotNotifications();
   useWidgetTokenSync(); // Auto-sync JWT token for widgets
+  usePreloadPages(); // Preload commonly used pages in background
   const location = useLocation();
   const { i18n } = useTranslation();
   
