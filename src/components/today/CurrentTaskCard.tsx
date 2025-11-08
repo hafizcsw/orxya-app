@@ -5,7 +5,6 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-
 interface CurrentTaskCardProps {
   task: {
     id: string;
@@ -21,19 +20,23 @@ interface CurrentTaskCardProps {
     starts_at: string;
   } | null;
 }
-
 const categoryColors = {
   work: 'from-blue-500/20 to-blue-600/20 border-blue-500/30',
   study: 'from-amber-500/20 to-amber-600/20 border-amber-500/30',
   sport: 'from-purple-500/20 to-purple-600/20 border-purple-500/30',
   mma: 'from-purple-500/20 to-purple-600/20 border-purple-500/30',
   meeting: 'from-green-500/20 to-green-600/20 border-green-500/30',
-  other: 'from-slate-500/20 to-slate-600/20 border-slate-500/30',
+  other: 'from-slate-500/20 to-slate-600/20 border-slate-500/30'
 };
-
-export function CurrentTaskCard({ task, timeRemaining, progress, nextTask }: CurrentTaskCardProps) {
-  const { t } = useTranslation();
-
+export function CurrentTaskCard({
+  task,
+  timeRemaining,
+  progress,
+  nextTask
+}: CurrentTaskCardProps) {
+  const {
+    t
+  } = useTranslation();
   const getCategoryIcon = (category?: string) => {
     const icons = {
       work: Briefcase,
@@ -41,69 +44,41 @@ export function CurrentTaskCard({ task, timeRemaining, progress, nextTask }: Cur
       sport: Activity,
       mma: Activity,
       meeting: Users,
-      break: Coffee,
+      break: Coffee
     };
     return icons[category?.toLowerCase() || 'work'] || Clock;
   };
-
   if (!task) {
-    return (
-      <Card className="p-4 md:p-6 bg-muted/30 border-muted">
-        <div className="text-center text-muted-foreground">
-          <Clock className="w-6 h-6 md:w-8 md:h-8 mx-auto mb-2 opacity-50" />
-          <p className="text-xs md:text-sm">{t('today.currentTask.noTask')}</p>
-          {nextTask && (
-            <div className="mt-3 md:mt-4 text-xs">
-              <p className="font-medium text-foreground mb-1">{t('today.currentTask.nextTask')}:</p>
-              <p className="text-xs md:text-sm">{nextTask.title}</p>
-              <p className="text-muted-foreground mt-1">
-                {new Date(nextTask.starts_at).toLocaleTimeString('ar-EG', { 
-                  hour: '2-digit', 
-                  minute: '2-digit' 
-                })}
-              </p>
-            </div>
-          )}
-        </div>
-      </Card>
-    );
+    return;
   }
-
   const category = task.category as keyof typeof categoryColors;
   const gradientClass = categoryColors[category] || categoryColors.other;
   const TaskIcon = getCategoryIcon(task.category);
-
   const formatTime = (minutes: number) => {
     const hrs = Math.floor(minutes / 60);
     const mins = Math.round(minutes % 60);
     if (hrs > 0) return `${hrs}س ${mins}د`;
     return `${mins}د`;
   };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <Card className={cn(
-        "relative overflow-hidden border-2",
-        "bg-gradient-to-br",
-        gradientClass
-      )}>
+  return <motion.div initial={{
+    opacity: 0,
+    y: 20
+  }} animate={{
+    opacity: 1,
+    y: 0
+  }} transition={{
+    duration: 0.3
+  }}>
+      <Card className={cn("relative overflow-hidden border-2", "bg-gradient-to-br", gradientClass)}>
         {/* Pulsating border animation */}
-        <motion.div
-          className="absolute inset-0 border-2 border-primary/50 rounded-lg"
-          animate={{
-            opacity: [0.5, 1, 0.5],
-            scale: [1, 1.02, 1],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
+        <motion.div className="absolute inset-0 border-2 border-primary/50 rounded-lg" animate={{
+        opacity: [0.5, 1, 0.5],
+        scale: [1, 1.02, 1]
+      }} transition={{
+        duration: 2,
+        repeat: Infinity,
+        ease: "easeInOut"
+      }} />
 
         <div className="relative p-4 md:p-6 space-y-3 md:space-y-4">
           {/* Header */}
@@ -113,7 +88,13 @@ export function CurrentTaskCard({ task, timeRemaining, progress, nextTask }: Cur
               <div className="min-w-0 flex-1">
                 <h3 className="font-semibold text-sm md:text-lg leading-tight truncate">{task.title}</h3>
                 <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-                  {new Date(task.starts_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })} - {new Date(task.ends_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(task.starts_at).toLocaleTimeString('ar-EG', {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })} - {new Date(task.ends_at).toLocaleTimeString('ar-EG', {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
                 </p>
               </div>
             </div>
@@ -144,13 +125,13 @@ export function CurrentTaskCard({ task, timeRemaining, progress, nextTask }: Cur
           </div>
 
           {/* Next Task Preview */}
-          {nextTask && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="flex items-center gap-2 p-2 md:p-3 rounded-lg bg-background/50 backdrop-blur-sm"
-            >
+          {nextTask && <motion.div initial={{
+          opacity: 0
+        }} animate={{
+          opacity: 1
+        }} transition={{
+          delay: 0.2
+        }} className="flex items-center gap-2 p-2 md:p-3 rounded-lg bg-background/50 backdrop-blur-sm">
               <ChevronRight className="w-3 h-3 md:w-4 md:h-4 text-muted-foreground shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] md:text-xs text-muted-foreground">{t('today.currentTask.next')}</p>
@@ -158,14 +139,12 @@ export function CurrentTaskCard({ task, timeRemaining, progress, nextTask }: Cur
               </div>
               <p className="text-[10px] md:text-xs text-muted-foreground shrink-0">
                 {new Date(nextTask.starts_at).toLocaleTimeString('ar-EG', {
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
               </p>
-            </motion.div>
-          )}
+            </motion.div>}
         </div>
       </Card>
-    </motion.div>
-  );
+    </motion.div>;
 }
