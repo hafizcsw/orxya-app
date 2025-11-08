@@ -49,13 +49,19 @@ export function useUser() {
         clearTimeout(debounceTimer);
       }
       
-      // Debounce auth state changes to prevent race conditions
+      // Simplified debounce - immediate state update for critical auth events
+      const isImportantEvent = event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED';
+      const delay = isImportantEvent ? 50 : 100;
+      
       debounceTimer = setTimeout(() => {
         if (!mounted) return;
         
         const u = session?.user ?? null;
         setUser(u);
+        setLoading(false);
         identifyUser(u?.id ?? null, u ? { email: u.email } : undefined);
+        
+        console.log('[useUser] State updated:', { event, hasUser: !!u });
         
         // Apply profile flags (non-blocking)
         applyProfileFlags(u?.id ?? null).catch(e => {
@@ -63,62 +69,58 @@ export function useUser() {
         });
         
         // Post-login tasks (non-blocking) - only run once per session
-        // Don't run if we're on the auth page
         if (u && event === 'SIGNED_IN' && !tasksRun) {
-          const currentPath = window.location.pathname;
-          if (!currentPath.includes('/auth')) {
-            tasksRun = true;
+          tasksRun = true;
+          
+          setTimeout(() => {
+            console.log('[useUser] Running post-login tasks...');
             
-            setTimeout(() => {
-              console.log('[useUser] Running post-login tasks...');
-              
-              // Location capture + conflict check (non-blocking)
-              Promise.race([
-                (async () => {
-                  await captureAndSendLocation();
-                  await conflictCheckToday();
-                })(),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Location timeout')), 15000))
-              ]).catch(e => {
-                console.error('Location/Conflicts failed:', e);
-              });
-              
-              // Run other tasks without awaiting
-              Promise.all([
-                flushQueueOnce().catch(e => console.error('Flush failed:', e)),
-                rescheduleAllFromDB().catch(e => console.error('Reschedule failed:', e))
-              ]);
-              
-              // Prayer sync (with timeout)
-              const today = new Date().toISOString().slice(0, 10);
-              Promise.race([
-                (async () => {
-                  await syncPrayers(today);
-                  await schedulePrayersFor(today);
-                })(),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Prayer timeout')), 10000))
-              ]).then(() => {
-                console.log('[useUser] Prayer sync done');
-              }).catch(e => {
-                console.error('Prayer sync failed:', e);
-              });
+            // Location capture + conflict check (non-blocking)
+            Promise.race([
+              (async () => {
+                await captureAndSendLocation();
+                await conflictCheckToday();
+              })(),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('Location timeout')), 15000))
+            ]).catch(e => {
+              console.error('Location/Conflicts failed:', e);
+            });
+            
+            // Run other tasks without awaiting
+            Promise.all([
+              flushQueueOnce().catch(e => console.error('Flush failed:', e)),
+              rescheduleAllFromDB().catch(e => console.error('Reschedule failed:', e))
+            ]);
+            
+            // Prayer sync (with timeout)
+            const today = new Date().toISOString().slice(0, 10);
+            Promise.race([
+              (async () => {
+                await syncPrayers(today);
+                await schedulePrayersFor(today);
+              })(),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('Prayer timeout')), 10000))
+            ]).then(() => {
+              console.log('[useUser] Prayer sync done');
+            }).catch(e => {
+              console.error('Prayer sync failed:', e);
+            });
 
-              // Calendar sync (with timeout)
-              Promise.race([
-                startCalendarAutoSync(30),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Calendar timeout')), 2000))
-              ]).catch(e => {
-                console.error('Calendar sync failed:', e);
-              });
-            }, 100);
-          }
+            // Calendar sync (with timeout)
+            Promise.race([
+              startCalendarAutoSync(30),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('Calendar timeout')), 2000))
+            ]).catch(e => {
+              console.error('Calendar sync failed:', e);
+            });
+          }, 100);
         }
         
         // Reset flag when user signs out
         if (!u && event === 'SIGNED_OUT') {
           tasksRun = false;
         }
-      }, 100); // 100ms debounce
+      }, delay);
     });
     
     // THEN check for existing session

@@ -21,13 +21,14 @@ export default function AuthCallback() {
       
       hasNavigated = true
       console.log('[AuthCallback] ✅ Authentication successful')
-      console.log('[AuthCallback] User:', session.user.email)
+      console.log('[AuthCallback] User:', session.user?.email ?? 'Unknown')
       
       // Clean URL and redirect
       const cleanUrl = window.location.origin + '/today'
       window.history.replaceState({}, '', cleanUrl)
       
-      await new Promise(resolve => setTimeout(resolve, 300))
+      // Wait a bit longer to ensure session is saved
+      await new Promise(resolve => setTimeout(resolve, 500))
       navigate('/today', { replace: true })
     }
     
@@ -45,19 +46,29 @@ export default function AuthCallback() {
       const code = urlParams.get('code')
       
       if (code) {
-        try {
-          console.log('[AuthCallback] Exchanging code for session')
-          const { data, error } = await supabase.auth.exchangeCodeForSession(window.location.href)
-          
-          if (error) throw error
-          if (data.session) {
-            await handleSuccessfulAuth(data.session)
-            return true
+        console.log('[AuthCallback] Found code, attempting exchange...')
+        
+        // Try up to 2 times with retry
+        for (let attempt = 1; attempt <= 2; attempt++) {
+          try {
+            console.log(`[AuthCallback] Exchange attempt ${attempt}/2`)
+            const { data, error } = await supabase.auth.exchangeCodeForSession(window.location.href)
+            
+            if (error) throw error
+            if (data.session) {
+              console.log('[AuthCallback] ✅ Code exchange successful')
+              await handleSuccessfulAuth(data.session)
+              return true
+            }
+          } catch (e) {
+            console.error(`[AuthCallback] Code exchange attempt ${attempt} failed:`, e)
+            if (attempt === 2) {
+              handleAuthError(e)
+              return true
+            }
+            // Wait before retry
+            await new Promise(resolve => setTimeout(resolve, 1000))
           }
-        } catch (e) {
-          console.error('[AuthCallback] Code exchange failed:', e)
-          handleAuthError(e)
-          return true
         }
       }
       return false
@@ -99,13 +110,13 @@ export default function AuthCallback() {
       }
     })
     
-    // 4. Timeout protection
+    // 4. Timeout protection - increased to 15s
     timeout = setTimeout(() => {
       if (!hasNavigated) {
-        console.warn('[AuthCallback] ⏱️ Timeout - no session after 10s')
-        handleAuthError(new Error('Timeout'))
+        console.warn('[AuthCallback] ⏱️ Timeout - no session after 15s')
+        handleAuthError(new Error('Timeout waiting for session'))
       }
-    }, 10000)
+    }, 15000)
     
     return () => {
       clearTimeout(timeout)

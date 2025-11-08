@@ -8,27 +8,28 @@ const Index = () => {
   const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
+    console.log('[Index] State:', { user: !!user, loading, isNavigating, currentPath: window.location.pathname })
+    
     if (!loading && !isNavigating) {
-      // Longer timeout to prevent race conditions
+      // Timeout to prevent race conditions
       const timeout = setTimeout(() => {
         const currentPath = window.location.pathname;
         
-        if (user) {
-          // Don't navigate if already on the target page
-          if (currentPath !== '/today') {
-            console.log('[Index] User found, redirecting to /today')
+        // Don't redirect if already on index
+        if (currentPath === '/') {
+          if (user) {
+            console.log('[Index] ✅ User found, redirecting to /today')
             setIsNavigating(true);
             navigate('/today', { replace: true });
-          }
-        } else {
-          // Don't navigate if already on auth page
-          if (currentPath !== '/auth') {
-            console.log('[Index] No user, redirecting to /auth')
+          } else {
+            console.log('[Index] ❌ No user, redirecting to /auth')
             setIsNavigating(true);
             navigate('/auth', { replace: true });
           }
+        } else {
+          console.log('[Index] Already navigated away from index, skipping redirect')
         }
-      }, 200);
+      }, 300);
       
       return () => clearTimeout(timeout);
     }

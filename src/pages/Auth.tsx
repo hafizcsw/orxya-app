@@ -32,39 +32,60 @@ export default function Auth() {
     console.log('Site URL:', SITE_URL)
     console.log('Redirect To:', redirectTo)
     console.log('User:', user ? '✅ Logged in' : '❌ Not logged in')
+    console.log('Has Navigated:', hasNavigated)
+    console.log('Loading:', loading)
     console.groupEnd()
 
     // Only redirect if user is logged in and we haven't navigated yet
     if (user && !hasNavigated && !loading) {
+      console.log('[Auth] ✅ Redirecting to /today...')
       setHasNavigated(true)
       setTimeout(() => {
         navigate('/today', { replace: true })
-      }, 100)
+      }, 500)
     }
   }, [user, navigate, hasNavigated, loading])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true); setErr(null); setMsg(null)
+    
+    console.log('[Auth] Submitting form:', { mode, email })
+    
     try {
       if (mode === 'signin') {
+        console.log('[Auth] Signing in with password...')
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
+        
+        console.log('[Auth] ✅ Sign in successful')
         toast({ title: t('login.submit') + ' ✅' })
+        
+        // Wait for toast to show before closing dialog
+        await new Promise(resolve => setTimeout(resolve, 300))
         setShowEmailDialog(false)
       } else {
+        console.log('[Auth] Signing up...')
         const { error } = await supabase.auth.signUp({ 
           email, 
           password,
           options: { emailRedirectTo: redirectTo }
         })
         if (error) throw error
+        
+        console.log('[Auth] ✅ Sign up successful')
         toast({ title: t('signup.submit') + ' ✅' })
+        
+        // Wait for toast to show before closing dialog
+        await new Promise(resolve => setTimeout(resolve, 300))
         setShowEmailDialog(false)
       }
     } catch (e: any) {
+      console.error('[Auth] ❌ Error:', e)
       toast({ title: t('errors.loginFailed'), description: e?.message ?? t('errors.loginFailed'), variant: "destructive" })
-    } finally { setLoading(false) }
+    } finally { 
+      setLoading(false) 
+    }
   }
 
   async function handleGoogleSignIn() {
