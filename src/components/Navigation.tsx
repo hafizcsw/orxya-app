@@ -158,7 +158,7 @@ const Navigation = () => {
           {/* Center: Calendar Navigation - Hidden on Calendar Page */}
           {location.pathname !== '/calendar' && <div className="flex items-center gap-1.5 flex-shrink-0">
               <button onClick={goToPreviousDay} className="w-7 h-7 rounded-lg bg-secondary/60 hover:bg-secondary/80 flex items-center justify-center transition-all">
-                <ChevronRight className="w-3.5 h-3.5" />
+                <ChevronLeft className="w-3.5 h-3.5" />
               </button>
               
               <CalendarPopover selectedDate={selectedDate} onDateChange={date => setSelectedDate(date)}>
@@ -168,7 +168,7 @@ const Navigation = () => {
               </CalendarPopover>
               
               <button onClick={goToNextDay} className="w-7 h-7 rounded-lg bg-secondary/60 hover:bg-secondary/80 flex items-center justify-center transition-all">
-                <ChevronLeft className="w-3.5 h-3.5" />
+                <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>}
 
