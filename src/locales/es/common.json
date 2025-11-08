@@ -57,6 +57,11 @@
     "downloadApp": "Descargar App",
     "downloadOnAppStore": "Disponible en App Store",
     "downloadOnGooglePlay": "Disponible en Google Play",
-    "visitOnMobile": "Visita desde tu móvil para descargar la app"
+    "visitOnMobile": "Visita desde tu móvil para descargar la app",
+    "bannerTitle": "Obtén la App Oryxa",
+    "bannerSubtitleIOS": "Ahora disponible en App Store",
+    "bannerSubtitleAndroid": "Ahora disponible en Google Play",
+    "bannerSubtitleOther": "Mejor experiencia en móvil",
+    "download": "Descargar"
   }
 }

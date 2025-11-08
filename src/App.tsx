@@ -23,6 +23,7 @@ import Navigation from "./components/Navigation";
 import { BottomNav } from "./components/BottomNav";
 import { AIDock } from "./components/oryxa/AIDock";
 import { Protected } from "./components/Protected";
+import { MobileDownloadBanner } from "./components/MobileDownloadBanner";
 
 // Lazy load pages for better code splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -97,6 +98,7 @@ function AppContent() {
   
   return (
     <>
+      {!isAuthPage && <MobileDownloadBanner />}
       {!isAuthPage && <Navigation />}
       <div className={isAuthPage ? '' : 'pb-20'}>
         <AnimatePresence mode="wait">
