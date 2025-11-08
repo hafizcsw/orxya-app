@@ -15,6 +15,7 @@ import { LoadingFallback } from "./components/ui/loading-fallback";
 import { useAutopilotNotifications } from "./hooks/useAutopilotNotifications";
 import { useWidgetTokenSync } from "./hooks/useWidgetToken";
 import { usePreloadPages } from "./hooks/usePreloadPages";
+import { usePrefetchData } from "./hooks/usePrefetchData";
 
 // Eagerly load critical components
 import Navigation from "./components/Navigation";
@@ -76,6 +77,7 @@ function AppContent() {
   useAutopilotNotifications();
   useWidgetTokenSync(); // Auto-sync JWT token for widgets
   usePreloadPages(); // Preload commonly used pages in background
+  usePrefetchData(); // Prefetch API data for Today & Calendar
   const location = useLocation();
   const { i18n } = useTranslation();
   

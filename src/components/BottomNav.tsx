@@ -10,6 +10,7 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { preloadPage } from "@/hooks/usePreloadPages";
+import { prefetchPageData } from "@/hooks/usePrefetchData";
 
 export function BottomNav() {
   const location = useLocation();
@@ -279,9 +280,14 @@ export function BottomNav() {
                   to={item.path}
                   onClick={triggerHaptic}
                   onMouseEnter={() => {
-                    // Preload page on hover for faster navigation
+                    // Preload page code
                     const pageName = item.path === '/' ? 'today' : item.path.slice(1);
                     preloadPage(pageName);
+                    
+                    // Prefetch API data
+                    if (pageName === 'today' || pageName === 'calendar') {
+                      prefetchPageData(pageName as 'today' | 'calendar');
+                    }
                   }}
                   className={cn(
                     "flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-all min-w-[60px] relative",
