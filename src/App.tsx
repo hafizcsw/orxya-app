@@ -31,6 +31,7 @@ import CalendarFull from "./pages/CalendarFull";
 import CalendarSimple from "./pages/CalendarSimple";
 import CalendarSettings from "./pages/CalendarSettings";
 import PublicBookingPage from "./pages/PublicBookingPage";
+import Install from "./pages/Install";
 
 import Inbox from "./pages/Inbox";
 import SettingsExternal from "./pages/SettingsExternal";
@@ -118,6 +119,7 @@ function AppContent() {
         <Route path="/golive" element={<Protected><GoLiveDashboard /></Protected>} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/install" element={<Install />} />
         <Route path="*" element={<NotFound />} />
         </Routes>
           </motion.div>
