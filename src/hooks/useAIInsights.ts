@@ -1,7 +1,23 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { TodayDataManager, AIInsights } from '@/lib/today-data-manager';
-import { useDebounce } from './useDebounce';
 import { NetworkResilience } from '@/lib/network-resilience';
+
+// Simple debounce implementation to avoid dependency issues
+function useDebounceValue<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 export function useAIInsights(
   currentTask: any,
@@ -59,26 +75,29 @@ export function useAIInsights(
     }
   }, [currentTask?.id, health?.recovery, activities, upcomingEvents]);
 
-  // Debounced version
-  const debouncedFetch = useDebounce(fetchInsights, 2000);
+  // Debounce dependencies to prevent rapid refetches
+  const debouncedCurrentTaskId = useDebounceValue(currentTask?.id, 1000);
+  const debouncedRecovery = useDebounceValue(health?.recovery, 1000);
 
-  // Fetch on mount and periodically
   useEffect(() => {
-    // Initial fetch with delay
-    fetchTimeoutRef.current = setTimeout(fetchInsights, 1000);
-    
-    // Refresh every 30 minutes instead of every hour
-    const interval = setInterval(fetchInsights, 30 * 60 * 1000);
-    
-    return () => {
-      if (fetchTimeoutRef.current) clearTimeout(fetchTimeoutRef.current);
-      clearInterval(interval);
-    };
-  }, []);
+    // Clear any pending timeout
+    if (fetchTimeoutRef.current) {
+      clearTimeout(fetchTimeoutRef.current);
+    }
 
-  return {
-    insights,
-    loading,
-    refetch: debouncedFetch
-  };
+    // Schedule fetch with delay
+    fetchTimeoutRef.current = setTimeout(() => {
+      if (debouncedCurrentTaskId || debouncedRecovery !== undefined) {
+        fetchInsights();
+      }
+    }, 500);
+
+    return () => {
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+      }
+    };
+  }, [debouncedCurrentTaskId, debouncedRecovery, fetchInsights]);
+
+  return { insights, loading };
 }
