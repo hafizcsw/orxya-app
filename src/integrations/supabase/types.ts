@@ -1746,6 +1746,62 @@ export type Database = {
           },
         ]
       }
+      meals_log: {
+        Row: {
+          carbs_g: number | null
+          confidence: number | null
+          created_at: string | null
+          fat_g: number | null
+          id: number
+          input_text: string
+          kcal: number | null
+          meta: Json | null
+          occurred_at: string
+          protein_g: number | null
+          quantity: string | null
+          source_db: string | null
+          user_id: string
+        }
+        Insert: {
+          carbs_g?: number | null
+          confidence?: number | null
+          created_at?: string | null
+          fat_g?: number | null
+          id?: number
+          input_text: string
+          kcal?: number | null
+          meta?: Json | null
+          occurred_at?: string
+          protein_g?: number | null
+          quantity?: string | null
+          source_db?: string | null
+          user_id: string
+        }
+        Update: {
+          carbs_g?: number | null
+          confidence?: number | null
+          created_at?: string | null
+          fat_g?: number | null
+          id?: number
+          input_text?: string
+          kcal?: number | null
+          meta?: Json | null
+          occurred_at?: string
+          protein_g?: number | null
+          quantity?: string | null
+          source_db?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meals_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_patterns: {
         Row: {
           action_taken: string | null
