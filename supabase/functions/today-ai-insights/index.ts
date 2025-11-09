@@ -45,90 +45,166 @@ serve(async (req) => {
     const [healthRes, activitiesRes, eventsRes] = await Promise.all([
       supabaseClient
         .from('signals_daily')
-        .select('hrv_z, sleep_score, steps, calories_active')
+        .select('hrv_z, sleep_score, recovery_percent, strain_score, steps')
         .eq('user_id', user.id)
         .eq('date', targetDate)
         .maybeSingle(),
       supabaseClient
         .from('vw_today_activities')
-        .select('work_hours, study_hours, sports_hours, walk_minutes')
+        .select('work_hours, study_hours, sports_hours, sleep_hours, walk_minutes')
         .eq('day', targetDate)
         .maybeSingle(),
       supabaseClient
         .from('events')
-        .select('id, title, starts_at, ends_at')
+        .select('title, starts_at, ends_at')
         .eq('owner_id', user.id)
         .gte('starts_at', `${targetDate}T00:00:00Z`)
         .lte('starts_at', `${targetDate}T23:59:59Z`)
         .order('starts_at', { ascending: true })
-        .limit(10)
+        .limit(15)
     ]);
 
     const health = healthRes.data || {};
     const activities = activitiesRes.data || {};
     const upcomingEvents = eventsRes.data || [];
 
-    // Simple AI-like scoring based on available data
-    const hrv_z = (health as any).hrv_z ?? 0;
-    const sleep_score = (health as any).sleep_score ?? 0;
-    const work_hours = (activities as any).work_hours ?? 0;
-    const study_hours = (activities as any).study_hours ?? 0;
-    const sports_hours = (activities as any).sports_hours ?? 0;
-
-    // Calculate focus score (0-100)
-    let focusScore = 50; // baseline
-    if (sleep_score > 80) focusScore += 20;
-    else if (sleep_score > 60) focusScore += 10;
-    else if (sleep_score < 40) focusScore -= 20;
-
-    if (hrv_z > 0.5) focusScore += 15;
-    else if (hrv_z < -0.5) focusScore -= 15;
-
-    if (work_hours > 6) focusScore -= 10;
-    if (work_hours > 10) focusScore -= 20;
-
-    focusScore = Math.max(0, Math.min(100, focusScore));
-
-    // Determine energy level
-    let energyLevel: 'low' | 'medium' | 'high' = 'medium';
-    if (sleep_score > 75 && hrv_z > 0) energyLevel = 'high';
-    else if (sleep_score < 50 || hrv_z < -0.5) energyLevel = 'low';
-
-    // Generate suggestions
-    const suggestions: string[] = [];
-    const warnings: string[] = [];
-
-    if (sleep_score < 60) {
-      warnings.push('جودة النوم منخفضة - حاول النوم مبكرًا الليلة');
-    }
-
-    if (work_hours > 8) {
-      warnings.push('ساعات العمل طويلة - خذ استراحات منتظمة');
-    }
-
-    if (sports_hours === 0) {
-      suggestions.push('أضف نشاطًا رياضيًا اليوم لتحسين الطاقة');
-    }
-
-    if (study_hours < 2 && work_hours < 4) {
-      suggestions.push('لديك وقت متاح - استثمره في التعلم أو العمل');
-    }
-
-    if (hrv_z > 0.5 && sleep_score > 80) {
-      suggestions.push('استفد من الطاقة العالية لإنجاز المهام الصعبة');
-    }
-
-    if (upcomingEvents.length > 5) {
-      suggestions.push('يوم مزدحم - راجع الأولويات');
-    }
-
-    const insights: AIInsights = {
-      focusScore: Math.round(focusScore),
-      energyLevel,
-      suggestions: suggestions.slice(0, 3),
-      warnings: warnings.slice(0, 2),
-      model_version: 'v1.0-simple'
+    // Build context for AI
+    const contextData = {
+      health: {
+        hrv_z: health.hrv_z ?? null,
+        sleep_score: health.sleep_score ?? null,
+        recovery_percent: health.recovery_percent ?? null,
+        strain_score: health.strain_score ?? null,
+        steps: health.steps ?? null,
+      },
+      activities: {
+        work_hours: activities.work_hours ?? 0,
+        study_hours: activities.study_hours ?? 0,
+        sports_hours: activities.sports_hours ?? 0,
+        sleep_hours: activities.sleep_hours ?? 0,
+        walk_minutes: activities.walk_minutes ?? 0,
+      },
+      events: upcomingEvents.map(e => ({
+        title: e.title,
+        time: new Date(e.starts_at).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' })
+      })),
+      date: targetDate
     };
+
+    // Call Lovable AI
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY not configured');
+    }
+
+    const systemPrompt = `أنت مساعد ذكي يُحلّل بيانات المستخدم اليومية ويقدّم رؤى شخصية.
+مهمتك: تقييم التركيز والطاقة وتقديم 2-3 اقتراحات قابلة للتنفيذ و0-2 تحذيرات إن لزم.
+
+قواعد:
+- focusScore: 0-100 (اعتمد على النوم، HRV، ساعات العمل/الدراسة)
+- energyLevel: low/medium/high (اعتمد على Recovery، Sleep Score، HRV)
+- suggestions: نصائح قصيرة وواضحة بالعربية
+- warnings: تحذيرات فقط عند الحاجة (نوم سيء، إرهاق، ضغط مرتفع)
+- لا تُختلق بيانات: إن كان الحقل null، تجاهله في التحليل`;
+
+    const userPrompt = `البيانات اليومية (${targetDate}):
+صحة: نوم=${contextData.health.sleep_score ?? 'غير متوفر'}/100، HRV_z=${contextData.health.hrv_z ?? 'غير متوفر'}، استشفاء=${contextData.health.recovery_percent ?? 'غير متوفر'}%، إجهاد=${contextData.health.strain_score ?? 'غير متوفر'}/21، خطوات=${contextData.health.steps ?? 'غير متوفر'}
+أنشطة: عمل=${contextData.activities.work_hours}h، دراسة=${contextData.activities.study_hours}h، رياضة=${contextData.activities.sports_hours}h، نوم=${contextData.activities.sleep_hours}h، مشي=${contextData.activities.walk_minutes}min
+أحداث اليوم (${contextData.events.length}): ${contextData.events.map(e => `${e.title} (${e.time})`).join(', ') || 'لا توجد'}
+
+حلّل وأعطِ رؤى ذكية.`;
+
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        tools: [{
+          type: 'function',
+          function: {
+            name: 'generate_insights',
+            description: 'إنشاء رؤى ذكية من البيانات اليومية',
+            parameters: {
+              type: 'object',
+              properties: {
+                focusScore: {
+                  type: 'number',
+                  description: 'درجة التركيز من 0-100',
+                  minimum: 0,
+                  maximum: 100
+                },
+                energyLevel: {
+                  type: 'string',
+                  enum: ['low', 'medium', 'high'],
+                  description: 'مستوى الطاقة'
+                },
+                suggestions: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  description: 'اقتراحات قابلة للتنفيذ (2-3)',
+                  minItems: 0,
+                  maxItems: 3
+                },
+                warnings: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  description: 'تحذيرات إن لزم (0-2)',
+                  minItems: 0,
+                  maxItems: 2
+                }
+              },
+              required: ['focusScore', 'energyLevel', 'suggestions', 'warnings'],
+              additionalProperties: false
+            }
+          }
+        }],
+        tool_choice: { type: 'function', function: { name: 'generate_insights' } }
+      }),
+    });
+
+    if (!aiResponse.ok) {
+      if (aiResponse.status === 429) {
+        return new Response(JSON.stringify({ error: 'تم تجاوز الحد - حاول لاحقًا' }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      if (aiResponse.status === 402) {
+        return new Response(JSON.stringify({ error: 'الرجاء إضافة رصيد لـ Lovable AI' }), {
+          status: 402,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const errorText = await aiResponse.text();
+      console.error('AI gateway error:', aiResponse.status, errorText);
+      throw new Error('AI gateway error');
+    }
+
+    const aiData = await aiResponse.json();
+    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+    
+    if (!toolCall?.function?.arguments) {
+      throw new Error('No tool call in AI response');
+    }
+
+    const parsedArgs = JSON.parse(toolCall.function.arguments);
+    
+    const insights: AIInsights = {
+      focusScore: Math.round(parsedArgs.focusScore),
+      energyLevel: parsedArgs.energyLevel,
+      suggestions: parsedArgs.suggestions || [],
+      warnings: parsedArgs.warnings || [],
+      model_version: 'gemini-2.5-flash'
+    };
+
+    console.log('AI Insights generated:', { date: targetDate, focusScore: insights.focusScore });
 
     return new Response(JSON.stringify(insights), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
