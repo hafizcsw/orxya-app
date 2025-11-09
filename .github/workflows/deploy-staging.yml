@@ -1,0 +1,186 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches:
+      - staging
+      - develop
+  workflow_dispatch: # Manual trigger
+
+env:
+  SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+  STAGING_PROJECT_ID: ${{ secrets.STAGING_PROJECT_ID }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: 🔗 Link to Staging project
+        run: |
+          supabase link --project-ref ${{ secrets.STAGING_PROJECT_ID }}
+
+      - name: 🗄️ Push database migrations
+        run: |
+          supabase db push --include-seed
+        continue-on-error: true # Don't fail if no new migrations
+
+      - name: 🔑 Set secrets from environment
+        run: |
+          echo "Setting Supabase secrets for staging..."
+          # Secrets will be loaded from GitHub Secrets
+          cat > .env.staging <<EOF
+          SUPABASE_URL=${{ secrets.STAGING_SUPABASE_URL }}
+          SUPABASE_ANON_KEY=${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY=${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REDIRECT_URI=${{ secrets.STAGING_GOOGLE_REDIRECT_URI }}
+          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          LOVABLE_API_KEY=${{ secrets.LOVABLE_API_KEY }}
+          TOKEN_ENC_KEY=${{ secrets.TOKEN_ENC_KEY }}
+          ELEVENLABS_API_KEY=${{ secrets.ELEVENLABS_API_KEY }}
+          EOF
+          
+          supabase secrets set --env-file .env.staging
+
+      - name: 🚀 Deploy Core Functions
+        run: |
+          echo "Deploying Core Functions..."
+          supabase functions deploy health
+          supabase functions deploy ops-alert
+
+      - name: 🤖 Deploy AI Functions
+        run: |
+          echo "Deploying AI Functions..."
+          supabase functions deploy ai-router
+          supabase functions deploy ai-orchestrator
+          supabase functions deploy ai-orchestrator-v2
+          supabase functions deploy ai-assist
+          supabase functions deploy ai-conflicts
+          supabase functions deploy ai-chat-insights
+          supabase functions deploy today-ai-insights
+
+      - name: 📅 Deploy Calendar Functions
+        run: |
+          echo "Deploying Calendar Functions..."
+          supabase functions deploy calendar-oauth-start
+          supabase functions deploy calendar-oauth-callback
+          supabase functions deploy calendar-watch-setup
+          supabase functions deploy calendar-sync
+          supabase functions deploy calendar-sync-google
+          supabase functions deploy calendar-notify
+          supabase functions deploy calendar-renew
+          supabase functions deploy calendar-apply
+          supabase functions deploy calendar-ai-insights
+          supabase functions deploy calendar-instances
+
+      - name: 📊 Deploy Planning Functions
+        run: |
+          echo "Deploying Planning & Scheduling Functions..."
+          supabase functions deploy scheduler-solver
+          supabase functions deploy budget-simulator
+          supabase functions deploy planner-agent
+          supabase functions deploy plan-now
+          supabase functions deploy plan-focus-now
+          supabase functions deploy plans-manage
+          supabase functions deploy prayer-aware-plan
+
+      - name: 💪 Deploy Health Functions
+        run: |
+          echo "Deploying Health & Nutrition Functions..."
+          supabase functions deploy ingest-signals-raw
+          supabase functions deploy ingest-health
+          supabase functions deploy etl-health-daily
+          supabase functions deploy nutrition-estimator
+
+      - name: 💰 Deploy Financial Functions
+        run: |
+          echo "Deploying Financial Functions..."
+          supabase functions deploy ingest-financial-events
+          supabase functions deploy ingest-finance
+          supabase functions deploy categorize-expense
+
+      - name: 📈 Deploy Data & Reports Functions
+        run: |
+          echo "Deploying Data & Reports Functions..."
+          supabase functions deploy today-realtime-data
+          supabase functions deploy report-daily
+          supabase functions deploy summarize-period
+          supabase functions deploy glances-feed
+
+      - name: 👤 Deploy Account Functions
+        run: |
+          echo "Deploying Account Management Functions..."
+          supabase functions deploy account-delete
+          supabase functions deploy account-export
+          supabase functions deploy privacy-export
+          supabase functions deploy privacy-delete-request
+
+      - name: 🔔 Deploy Notification & Conflict Functions
+        run: |
+          echo "Deploying Notifications & Conflicts Functions..."
+          supabase functions deploy notify-dispatch
+          supabase functions deploy notify-cron
+          supabase functions deploy smart-notifications
+          supabase functions deploy conflict-check
+          supabase functions deploy conflicts
+          supabase functions deploy conflict-autopilot
+          supabase functions deploy conflict-autopilot-v2
+          supabase functions deploy conflict-resolve
+
+      - name: 🛠️ Deploy Utility Functions
+        run: |
+          echo "Deploying Utility Functions..."
+          supabase functions deploy location-update
+          supabase functions deploy focus-toggle
+          supabase functions deploy analytics-batch
+          supabase functions deploy nlp-quickadd
+          supabase functions deploy templates
+          supabase functions deploy commands
+          supabase functions deploy voice-to-text
+          supabase functions deploy text-to-voice
+
+      - name: ✅ Health Check
+        run: |
+          echo "Running health check..."
+          sleep 10 # Wait for functions to be ready
+          
+          HEALTH_URL="https://${{ secrets.STAGING_PROJECT_ID }}.supabase.co/functions/v1/health"
+          
+          response=$(curl -s -o /dev/null -w "%{http_code}" $HEALTH_URL)
+          
+          if [ $response -eq 200 ]; then
+            echo "✅ Health check passed!"
+            curl -s $HEALTH_URL | jq .
+          else
+            echo "❌ Health check failed with status: $response"
+            exit 1
+          fi
+
+      - name: 📝 Deployment Summary
+        if: always()
+        run: |
+          echo "## 🚀 Staging Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Project:** ${{ secrets.STAGING_PROJECT_ID }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Health Check URL:** https://${{ secrets.STAGING_PROJECT_ID }}.supabase.co/functions/v1/health" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🔔 Notify on Failure
+        if: failure()
+        run: |
+          echo "❌ Deployment to staging failed!"
+          echo "Check the logs for details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

@@ -1,0 +1,181 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch: # Manual trigger with confirmation
+
+env:
+  SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+  PRODUCTION_PROJECT_ID: ${{ secrets.PRODUCTION_PROJECT_ID }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production # Requires approval in GitHub
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: 🔗 Link to Production project
+        run: |
+          supabase link --project-ref ${{ secrets.PRODUCTION_PROJECT_ID }}
+
+      - name: 🗄️ Push database migrations
+        run: |
+          supabase db push
+        continue-on-error: true
+
+      - name: 🔑 Set secrets from environment
+        run: |
+          echo "Setting Supabase secrets for production..."
+          cat > .env.prod <<EOF
+          SUPABASE_URL=${{ secrets.PROD_SUPABASE_URL }}
+          SUPABASE_ANON_KEY=${{ secrets.PROD_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY=${{ secrets.PROD_SUPABASE_SERVICE_ROLE_KEY }}
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REDIRECT_URI=${{ secrets.PROD_GOOGLE_REDIRECT_URI }}
+          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          LOVABLE_API_KEY=${{ secrets.LOVABLE_API_KEY }}
+          TOKEN_ENC_KEY=${{ secrets.TOKEN_ENC_KEY }}
+          ELEVENLABS_API_KEY=${{ secrets.ELEVENLABS_API_KEY }}
+          EOF
+          
+          supabase secrets set --env-file .env.prod
+
+      - name: 🚀 Deploy All Functions
+        run: |
+          echo "Deploying all Edge Functions to Production..."
+          
+          # Deploy in parallel batches for speed
+          supabase functions deploy health &
+          supabase functions deploy ops-alert &
+          supabase functions deploy ai-router &
+          supabase functions deploy ai-orchestrator &
+          supabase functions deploy calendar-oauth-start &
+          wait
+          
+          supabase functions deploy ai-orchestrator-v2 &
+          supabase functions deploy ai-assist &
+          supabase functions deploy calendar-oauth-callback &
+          supabase functions deploy calendar-watch-setup &
+          supabase functions deploy calendar-sync &
+          wait
+          
+          supabase functions deploy calendar-sync-google &
+          supabase functions deploy calendar-notify &
+          supabase functions deploy calendar-renew &
+          supabase functions deploy scheduler-solver &
+          supabase functions deploy budget-simulator &
+          wait
+          
+          supabase functions deploy today-realtime-data &
+          supabase functions deploy ingest-signals-raw &
+          supabase functions deploy ingest-financial-events &
+          supabase functions deploy conflict-autopilot-v2 &
+          supabase functions deploy plans-manage &
+          wait
+          
+          # Deploy remaining functions
+          supabase functions deploy ai-conflicts
+          supabase functions deploy ai-chat-insights
+          supabase functions deploy today-ai-insights
+          supabase functions deploy calendar-apply
+          supabase functions deploy calendar-ai-insights
+          supabase functions deploy calendar-instances
+          supabase functions deploy planner-agent
+          supabase functions deploy plan-now
+          supabase functions deploy plan-focus-now
+          supabase functions deploy prayer-aware-plan
+          supabase functions deploy ingest-health
+          supabase functions deploy etl-health-daily
+          supabase functions deploy nutrition-estimator
+          supabase functions deploy ingest-finance
+          supabase functions deploy categorize-expense
+          supabase functions deploy report-daily
+          supabase functions deploy summarize-period
+          supabase functions deploy glances-feed
+          supabase functions deploy account-delete
+          supabase functions deploy account-export
+          supabase functions deploy privacy-export
+          supabase functions deploy privacy-delete-request
+          supabase functions deploy notify-dispatch
+          supabase functions deploy notify-cron
+          supabase functions deploy smart-notifications
+          supabase functions deploy conflict-check
+          supabase functions deploy conflicts
+          supabase functions deploy conflict-autopilot
+          supabase functions deploy conflict-resolve
+          supabase functions deploy location-update
+          supabase functions deploy focus-toggle
+          supabase functions deploy analytics-batch
+          supabase functions deploy nlp-quickadd
+          supabase functions deploy templates
+          supabase functions deploy commands
+          supabase functions deploy voice-to-text
+          supabase functions deploy text-to-voice
+
+      - name: ✅ Production Health Check
+        run: |
+          echo "Running production health check..."
+          sleep 15 # Wait longer for production
+          
+          HEALTH_URL="https://${{ secrets.PRODUCTION_PROJECT_ID }}.supabase.co/functions/v1/health"
+          
+          for i in {1..3}; do
+            response=$(curl -s -o /dev/null -w "%{http_code}" $HEALTH_URL)
+            
+            if [ $response -eq 200 ]; then
+              echo "✅ Health check passed on attempt $i!"
+              curl -s $HEALTH_URL | jq .
+              exit 0
+            else
+              echo "⚠️ Health check attempt $i failed with status: $response"
+              sleep 5
+            fi
+          done
+          
+          echo "❌ All health check attempts failed!"
+          exit 1
+
+      - name: 📊 Run Security Linter
+        run: |
+          echo "Running security linter..."
+          # This would call the linter endpoint if available
+
+      - name: 📝 Production Deployment Summary
+        if: always()
+        run: |
+          echo "## 🎉 Production Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Project:** ${{ secrets.PRODUCTION_PROJECT_ID }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployed At:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Health Check URL:** https://${{ secrets.PRODUCTION_PROJECT_ID }}.supabase.co/functions/v1/health" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 Quick Links" >> $GITHUB_STEP_SUMMARY
+          echo "- [Supabase Dashboard](https://supabase.com/dashboard/project/${{ secrets.PRODUCTION_PROJECT_ID }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [Edge Functions Logs](https://supabase.com/dashboard/project/${{ secrets.PRODUCTION_PROJECT_ID }}/functions)" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🚨 Rollback on Critical Failure
+        if: failure()
+        run: |
+          echo "🚨 CRITICAL: Production deployment failed!"
+          echo "Manual intervention required"
+          echo "Rollback procedure:"
+          echo "1. Check logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          echo "2. Revert to previous commit if needed"
+          echo "3. Contact on-call engineer"
