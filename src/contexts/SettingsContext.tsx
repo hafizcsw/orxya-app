@@ -78,14 +78,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error;
 
-      // If language changed, update i18n
-      if (updates.language) {
-        // Dynamic import to avoid circular dependency
-        const { default: i18n } = await import('@/i18n');
-        await i18n.changeLanguage(updates.language);
-      }
-
       setSettings(prev => prev ? { ...prev, ...updates } : null);
+
+      // Note: Language change is handled by LanguageSwitcher/GeneralSettings
+      // to avoid duplicate calls and ensure proper reload
     } catch (error) {
       console.error('Error updating settings:', error);
       throw error;

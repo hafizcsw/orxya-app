@@ -93,10 +93,38 @@ export function GeneralSettings() {
   };
 
   const handleLanguageChange = async (value: string) => {
-    // Dynamic import to avoid circular dependency
-    const { default: i18n } = await import('@/i18n');
-    await updateSettings({ language: value });
-    await i18n.changeLanguage(value);
+    try {
+      // Save to localStorage first for immediate persistence
+      localStorage.setItem('i18nextLng', value);
+      
+      // Dynamic import to avoid circular dependency
+      const { default: i18n } = await import('@/i18n');
+      
+      // Update settings in database first
+      await updateSettings({ language: value });
+      
+      // Then change i18n language
+      await i18n.changeLanguage(value);
+      
+      // Show success message
+      toast({
+        title: "✅ تم تغيير اللغة",
+        description: "Language changed successfully",
+      });
+      
+      // Force page reload to ensure all components update
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+      
+    } catch (error) {
+      console.error('Failed to change language:', error);
+      toast({
+        title: "❌ فشل",
+        description: "فشل تغيير اللغة / Failed to change language",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

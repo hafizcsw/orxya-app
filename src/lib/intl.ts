@@ -101,8 +101,13 @@ export function formatRelativeTime(date: Date | string): string {
  * Get the current locale from document
  */
 function getLocale(): string {
-  // Get language from document attribute (set by i18n)
-  const lang = document.documentElement.lang || 'ar';
+  // Try to get from document first
+  let lang = document.documentElement.lang;
+  
+  // Fallback to localStorage
+  if (!lang) {
+    lang = localStorage.getItem('i18nextLng') || 'ar';
+  }
   
   // Map our language codes to proper locales
   const localeMap: Record<string, string> = {

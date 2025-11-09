@@ -88,10 +88,22 @@ function AppContent() {
   const location = useLocation();
   const { i18n } = useTranslation();
   
-  // Apply language attribute only (RTL is fixed for all languages)
+  // Apply language attribute and listen for language changes
   useEffect(() => {
     const currentLang = i18n.language || 'ar';
     document.documentElement.setAttribute('lang', currentLang);
+    
+    // Listen for language change events to force re-render if needed
+    const handleLanguageChange = (e: CustomEvent) => {
+      const newLang = e.detail.language;
+      document.documentElement.setAttribute('lang', newLang);
+    };
+    
+    window.addEventListener('languageChanged', handleLanguageChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange as EventListener);
+    };
   }, [i18n.language]);
   
   // Hide navigation on auth pages

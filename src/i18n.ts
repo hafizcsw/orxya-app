@@ -128,9 +128,15 @@ i18n
     },
   });
 
-// Apply language attribute only (RTL is fixed for all languages)
+// Apply language and direction attributes on language change
 i18n.on('languageChanged', (lng) => {
   document.documentElement.setAttribute('lang', lng);
+  
+  // Persist to localStorage as backup
+  localStorage.setItem('i18nextLng', lng);
+  
+  // Emit custom event for components that need to know about language change
+  window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: lng } }));
 });
 
 export default i18n;
