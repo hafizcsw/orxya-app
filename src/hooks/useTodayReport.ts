@@ -57,21 +57,33 @@ export function useTodayReport(period: Period, selectedDate: Date) {
         .eq('day', prevDateStr)
         .maybeSingle();
 
-      // Use real data or defaults
+      // Fetch financial data from v_finance_today
+      const { data: finData } = await supabase
+        .from('v_finance_today')
+        .select('income, expenses, balance, income_trend_pct, expenses_trend_pct, balance_trend_pct')
+        .eq('day', dateStr)
+        .maybeSingle();
+
       const currentData = {
-        balance: 5000, // TODO: Fetch from financial_events
-        income: 1200,
-        expenses: 450,
+        balance: Number(finData?.balance || 0),
+        income: Number(finData?.income || 0),
+        expenses: Number(finData?.expenses || 0),
         study_hours: currentActivity?.study_hours || 0,
         sports_hours: currentActivity?.sports_hours || 0,
         work_hours: currentActivity?.work_hours || 0,
         walk_minutes: currentActivity?.walk_minutes || 0,
       };
 
+      const { data: prevFinData } = await supabase
+        .from('v_finance_today')
+        .select('income, expenses, balance')
+        .eq('day', prevDateStr)
+        .maybeSingle();
+
       const previousData = {
-        balance: 4500,
-        income: 1000,
-        expenses: 500,
+        balance: Number(prevFinData?.balance || 0),
+        income: Number(prevFinData?.income || 0),
+        expenses: Number(prevFinData?.expenses || 0),
         study_hours: prevActivity?.study_hours || 0,
         sports_hours: prevActivity?.sports_hours || 0,
         work_hours: prevActivity?.work_hours || 0,

@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { FinancialEvent, DailyFinancialSummary } from '@/types/financial';
 import { FinancialCorrectionSheet } from './FinancialCorrectionSheet';
-import { getTopPlacesToday } from '@/lib/financial-mock';
 import { formatCurrency, formatNumber, formatPercent } from '@/lib/intl';
 
 interface MoneyPulseCardProps {
@@ -21,7 +20,20 @@ export function MoneyPulseCard({ summary, onConfirm, onCorrect, className }: Mon
   
   const isPositive = summary.netToday >= 0;
   const unconfirmedCount = summary.events.filter(e => !e.confirmed).length;
-  const topPlaces = getTopPlacesToday(summary.events);
+  
+  // Get top places from events
+  const placeMap = new Map<string, number>();
+  summary.events
+    .filter(e => e.direction === -1 && e.placeName) // expenses with location
+    .forEach(e => {
+      const count = placeMap.get(e.placeName!) || 0;
+      placeMap.set(e.placeName!, count + 1);
+    });
+  
+  const topPlaces = Array.from(placeMap.entries())
+    .map(([placeName, count]) => ({ placeName, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 3);
 
   return (
     <>

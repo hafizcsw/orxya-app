@@ -312,58 +312,50 @@ class TodayDataManagerClass {
   }
 
   /**
-   * Get financial data from financial_events table
+   * Get financial data from v_finance_today view
    */
   async fetchFinancialData(date: Date) {
     const dateStr = date.toISOString().split('T')[0];
     const cacheKey = `financial-${dateStr}`;
 
     const fetchData = async () => {
-      // Get today's financial events
-      const { data: events } = await supabase
-        .from('financial_events')
-        .select('*')
-        .gte('when_at', dateStr + 'T00:00:00Z')
-        .lt('when_at', dateStr + 'T23:59:59Z')
-        .order('when_at', { ascending: false });
+      // Use v_finance_today view for real-time data with trends
+      const { data: row } = await supabase
+        .from('v_finance_today')
+        .select('income, expenses, balance, income_trend_pct, expenses_trend_pct, balance_trend_pct')
+        .eq('day', dateStr)
+        .maybeSingle();
 
-      const income = events?.reduce((sum, e) => e.direction === 1 ? sum + Number(e.amount) : sum, 0) || 0;
-      const expenses = events?.reduce((sum, e) => e.direction === -1 ? sum + Number(e.amount) : sum, 0) || 0;
-
-      // Get previous day for trends
-      const prevDate = new Date(date);
-      prevDate.setDate(prevDate.getDate() - 1);
-      const prevDateStr = prevDate.toISOString().split('T')[0];
-
-      const { data: prevEvents } = await supabase
-        .from('financial_events')
-        .select('*')
-        .gte('when_at', prevDateStr + 'T00:00:00Z')
-        .lt('when_at', prevDateStr + 'T23:59:59Z');
-
-      const prevIncome = prevEvents?.reduce((sum, e) => e.direction === 1 ? sum + Number(e.amount) : sum, 0) || 0;
-      const prevExpenses = prevEvents?.reduce((sum, e) => e.direction === -1 ? sum + Number(e.amount) : sum, 0) || 0;
-
-      const balance = income - expenses;
-      const prevBalance = prevIncome - prevExpenses;
-
-      const calculateTrend = (current: number, previous: number): TrendData => {
-        if (!previous || previous === 0) return { direction: 'neutral', percentage: 0 };
-        const change = ((current - previous) / previous) * 100;
+      if (!row) {
         return {
-          direction: change > 5 ? 'up' : change < -5 ? 'down' : 'neutral',
-          percentage: Math.abs(Math.round(change))
+          income: 0,
+          expenses: 0,
+          balance: 0,
+          trends: {
+            income: { direction: 'neutral' as const, percentage: 0 },
+            expenses: { direction: 'neutral' as const, percentage: 0 },
+            balance: { direction: 'neutral' as const, percentage: 0 }
+          }
+        };
+      }
+
+      const calculateTrend = (pct: number | null): TrendData => {
+        if (!pct) return { direction: 'neutral', percentage: 0 };
+        const absChange = Math.abs(pct);
+        return {
+          direction: pct > 5 ? 'up' : pct < -5 ? 'down' : 'neutral',
+          percentage: Math.round(absChange)
         };
       };
 
       return {
-        income,
-        expenses,
-        balance,
+        income: Number(row.income),
+        expenses: Number(row.expenses),
+        balance: Number(row.balance),
         trends: {
-          income: calculateTrend(income, prevIncome),
-          expenses: calculateTrend(expenses, prevExpenses),
-          balance: calculateTrend(balance, prevBalance)
+          income: calculateTrend(row.income_trend_pct),
+          expenses: calculateTrend(row.expenses_trend_pct),
+          balance: calculateTrend(row.balance_trend_pct)
         }
       };
     };
