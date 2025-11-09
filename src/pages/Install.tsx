@@ -51,23 +51,44 @@ export default function Install() {
   }, []);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) {
-      toast.error('التثبيت غير متاح حالياً');
-      return;
-    }
-
-    try {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      
-      if (outcome === 'accepted') {
-        setDeferredPrompt(null);
-        setIsInstalled(true);
-        toast.success('تم تثبيت التطبيق بنجاح! 🎉');
+    // For Android Chrome - trigger install directly
+    if (platform === 'android') {
+      if (deferredPrompt) {
+        try {
+          await deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          
+          if (outcome === 'accepted') {
+            setDeferredPrompt(null);
+            setIsInstalled(true);
+            toast.success('تم تثبيت التطبيق بنجاح! 🎉');
+          }
+        } catch (error) {
+          console.error('Error installing:', error);
+          toast.error('حدث خطأ أثناء التثبيت');
+        }
+      } else {
+        // Fallback: Guide user to browser menu
+        toast.info('افتح قائمة المتصفح (⋮) واختر "إضافة إلى الشاشة الرئيسية"', {
+          duration: 5000,
+        });
       }
-    } catch (error) {
-      console.error('Error installing:', error);
-      toast.error('حدث خطأ أثناء التثبيت');
+    } else if (deferredPrompt) {
+      try {
+        await deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        
+        if (outcome === 'accepted') {
+          setDeferredPrompt(null);
+          setIsInstalled(true);
+          toast.success('تم تثبيت التطبيق بنجاح! 🎉');
+        }
+      } catch (error) {
+        console.error('Error installing:', error);
+        toast.error('حدث خطأ أثناء التثبيت');
+      }
+    } else {
+      toast.error('التثبيت غير متاح حالياً');
     }
   };
 
@@ -85,6 +106,28 @@ export default function Install() {
             {t('install.subtitle')}
           </p>
         </motion.div>
+
+        {/* Install Button - Always show on Android */}
+        {platform === 'android' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4"
+          >
+            <Button
+              onClick={handleInstallClick}
+              size="lg"
+              className="w-full h-16 text-lg font-bold bg-primary hover:bg-primary/90"
+            >
+              <Download className="w-6 h-6 mr-2" />
+              تثبيت التطبيق الآن
+            </Button>
+            
+            <p className="text-center text-sm text-muted-foreground">
+              اضغط الزر أعلاه لتثبيت التطبيق على جهازك
+            </p>
+          </motion.div>
+        )}
 
         {/* Status Card */}
         {isInstalled ? (
