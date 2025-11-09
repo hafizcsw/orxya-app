@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -89,16 +89,6 @@ export default function Today() {
   // Realtime cache invalidation
   useRealtimeInvalidation();
 
-  // Check authentication
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate('/auth');
-      }
-    };
-    checkAuth();
-  }, [navigate]);
   
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: false, 
@@ -114,6 +104,11 @@ export default function Today() {
   
   // Live data hooks
   const { currentTask, nextTask, timeRemaining, progress, loading: taskLoading } = useLiveToday(selectedDate);
+
+  // Extract goal values once for stable references
+  const walkGoal = getGoal('walk_km');
+  const incomeGoal = getGoal('income_monthly');
+  const expensesGoal = getGoal('expenses_daily');
 
   const { data: plans, isLoading: plansLoading, refetch: refetchPlans } = useQuery({
     queryKey: ["business-plans"],
@@ -247,14 +242,14 @@ export default function Today() {
   };
 
   // Calculate daily progress
-  const calculateDailyProgress = () => {
+  const calculateDailyProgress = useCallback(() => {
     if (!report || !healthData) return 0;
     
     const goals = {
       work: getGoal('work_hours'),
       study: getGoal('study_hours'),
       mma: getGoal('mma_hours'),
-      walk: getGoal('walk_km'),
+      walk: walkGoal,
       recovery: 100,
       sleep: 100
     };
@@ -270,7 +265,7 @@ export default function Today() {
 
     const totalProgress = Object.values(achievements).reduce((sum, val) => sum + val, 0);
     return Math.round(totalProgress / Object.keys(achievements).length);
-  };
+  }, [report, healthData, walkGoal, getGoal]);
 
   // Determine responsive columns
   const healthColumns = device === 'mobile' ? 2 : device === 'tablet' ? 3 : 4;
@@ -344,7 +339,7 @@ export default function Today() {
         <SectionErrorBoundary sectionName={t('sections.health')}>
           <StatRingSection
             title={t('sections.health')}
-            rings={useMemo(() => healthData ? [
+            rings={healthData ? [
               {
                 id: 'recovery',
                 value: healthData.recovery,
@@ -392,7 +387,7 @@ export default function Today() {
               {
                 id: 'walk',
                 value: (healthData?.meters || 0) / 1000,
-                targetValue: getGoal('walk_km'),
+                targetValue: walkGoal,
                 currentValue: (healthData?.meters || 0) / 1000,
                 label: t('activities.walk'),
                 unit: "km",
@@ -402,12 +397,12 @@ export default function Today() {
                 icon: <Footprints className="w-5 h-5" />,
                 trend: healthData?.activityTrend?.direction,
                 trendValue: healthData?.activityTrend?.percentage,
-                status: getWalkStatus((healthData?.meters || 0) / 1000, getGoal('walk_km')),
+                status: getWalkStatus((healthData?.meters || 0) / 1000, walkGoal),
                 customDisplay: healthData?.meters ? formatDistance(healthData.meters) : '0 km',
                 size: device === 'mobile' ? "sm" as const : "lg" as const,
                 onTargetClick: () => openGoalDialog('walk_km'),
               },
-            ] : [], [healthData, device, t, getGoal])}
+            ] : []}
             loading={healthLoading}
             columns={healthColumns}
             action={
@@ -424,11 +419,11 @@ export default function Today() {
         <SectionErrorBoundary sectionName={t('sections.financial')}>
           <StatRingSection
             title={t('sections.financial')}
-            rings={useMemo(() => [
+            rings={[
               {
                 id: 'income',
                 value: report?.income || 0,
-                targetValue: getGoal('income_monthly'),
+                targetValue: incomeGoal,
                 currentValue: report?.income || 0,
                 label: t("financial.income"),
                 unit: "USD",
@@ -438,7 +433,7 @@ export default function Today() {
                 icon: <DollarSign className="w-6 h-6" />,
                 trend: report?.incomeTrend?.direction,
                 trendValue: report?.incomeTrend?.percentage,
-                status: getIncomeStatus(report?.income || 0, getGoal('income_monthly')),
+                status: getIncomeStatus(report?.income || 0, incomeGoal),
                 size: device === 'mobile' ? "sm" as const : "lg" as const,
                 customDisplay: `$${report?.income || 0}`,
                 onTargetClick: () => openGoalDialog('income_monthly'),
@@ -446,7 +441,7 @@ export default function Today() {
               {
                 id: 'expenses',
                 value: report?.expenses || 0,
-                targetValue: getGoal('expenses_daily'),
+                targetValue: expensesGoal,
                 currentValue: report?.expenses || 0,
                 label: t("financial.expenses"),
                 unit: "USD",
@@ -456,7 +451,7 @@ export default function Today() {
                 icon: <TrendingDown className="w-6 h-6" />,
                 trend: report?.expensesTrend?.direction,
                 trendValue: report?.expensesTrend?.percentage,
-                status: getExpensesStatus(report?.expenses || 0, getGoal('expenses_daily')),
+                status: getExpensesStatus(report?.expenses || 0, expensesGoal),
                 size: device === 'mobile' ? "sm" as const : "lg" as const,
                 customDisplay: `$${report?.expenses || 0}`,
                 onTargetClick: () => openGoalDialog('expenses_daily'),
@@ -475,7 +470,7 @@ export default function Today() {
                 size: device === 'mobile' ? "sm" as const : "lg" as const,
                 customDisplay: `$${report?.balance || 0}`,
               },
-            ], [report, t, getGoal])}
+            ]}
             loading={reportLoading}
             columns={financialColumns}
             action={

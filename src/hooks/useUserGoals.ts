@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export type GoalType = 
@@ -57,10 +57,10 @@ export function useUserGoals() {
     }
   };
 
-  const getGoal = (goalType: GoalType): number => {
+  const getGoal = useCallback((goalType: GoalType): number => {
     const goal = goals.find(g => g.goal_type === goalType);
     return goal?.target_value || DEFAULT_GOALS[goalType];
-  };
+  }, [goals]);
 
   const updateGoal = async (goalType: GoalType, targetValue: number) => {
     try {

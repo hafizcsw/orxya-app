@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { ArrowUp, ArrowDown, Minus } from 'lucide-react';
 import { hslToRgba, getGlowIntensity } from '@/lib/animations';
+import { useDeviceType } from '@/hooks/useDeviceType';
 
 interface StatRingProps {
   value: number; // 0-100
@@ -45,17 +46,8 @@ export const StatRing = React.memo(function StatRing({
   showTarget,
   onTargetClick,
 }: StatRingProps) {
-  const [isMobile, setIsMobile] = React.useState(false);
-
-  React.useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  const deviceType = useDeviceType();
+  const isMobile = deviceType === 'mobile';
 
   const sizes = {
     sm: { 
