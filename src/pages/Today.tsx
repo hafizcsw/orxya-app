@@ -24,9 +24,10 @@ import { useUserGoals, GoalType } from "@/hooks/useUserGoals";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLiveToday } from "@/hooks/useLiveToday";
 import SimplePullToRefresh from 'react-simple-pull-to-refresh';
-import { AIInsightsCard } from '@/components/today/AIInsightsCard'; // NEW
-import BaselineBanner from '@/components/today/BaselineBanner'; // NEW
-import { useFeatureFlag } from '@/lib/feature-flags'; // NEW
+import { AIInsightsCard } from '@/components/today/AIInsightsCard';
+import BaselineBanner from '@/components/today/BaselineBanner';
+import { useFeatureFlag } from '@/lib/feature-flags';
+import { ActivitiesRings } from '@/components/today/ActivitiesRings';
 
 import { CurrentTaskCard } from "@/components/today/CurrentTaskCard";
 import { 
@@ -464,68 +465,11 @@ export default function Today() {
           />
         </SectionErrorBoundary>
 
-        {/* Activities - Work, Study, MMA only */}
+        {/* Activities - Work, Study, MMA from unified view */}
         <SectionErrorBoundary sectionName={t('sections.activities')}>
-          <StatRingSection
-            title={t("sections.activities")}
-            rings={useMemo(() => [
-              {
-                id: 'work',
-                value: report?.work_hours || 0,
-                targetValue: getGoal('work_hours'),
-                currentValue: report?.work_hours || 0,
-                label: t('activities.work'),
-                unit: "hrs",
-                showTarget: true,
-                color: "hsl(217, 91%, 60%)",
-                gradientColors: ["hsl(217, 91%, 60%)", "hsl(217, 91%, 75%)"] as [string, string],
-                icon: <Briefcase className="w-5 h-5" />,
-                trend: report?.workTrend?.direction,
-                trendValue: report?.workTrend?.percentage,
-                status: getWorkStatus(report?.work_hours || 0, getGoal('work_hours')),
-                customDisplay: `${report?.work_hours || 0}h`,
-                size: device === 'mobile' ? "sm" as const : "md" as const,
-                onTargetClick: () => openGoalDialog('work_hours'),
-              },
-              {
-                id: 'study',
-                value: report?.study_hours || 0,
-                targetValue: getGoal('study_hours'),
-                currentValue: report?.study_hours || 0,
-                label: t('activities.study'),
-                unit: "hrs",
-                showTarget: true,
-                color: "hsl(38, 92%, 50%)",
-                gradientColors: ["hsl(38, 92%, 50%)", "hsl(38, 92%, 70%)"] as [string, string],
-                icon: <GraduationCap className="w-5 h-5" />,
-                trend: report?.studyTrend?.direction,
-                trendValue: report?.studyTrend?.percentage,
-                status: getStudyStatus(report?.study_hours || 0, getGoal('study_hours')),
-                customDisplay: `${report?.study_hours || 0}h`,
-                size: device === 'mobile' ? "sm" as const : "md" as const,
-                onTargetClick: () => openGoalDialog('study_hours'),
-              },
-              {
-                id: 'mma',
-                value: report?.sports_hours || 0,
-                targetValue: getGoal('mma_hours'),
-                currentValue: report?.sports_hours || 0,
-                label: t('activities.mma'),
-                unit: "hrs",
-                showTarget: true,
-                color: "hsl(142, 76%, 36%)",
-                gradientColors: ["hsl(142, 76%, 36%)", "hsl(142, 76%, 50%)"] as [string, string],
-                icon: <Dumbbell className="w-5 h-5" />,
-                trend: report?.sportsTrend?.direction,
-                trendValue: report?.sportsTrend?.percentage,
-                status: getSportsStatus(report?.sports_hours || 0, getGoal('mma_hours')),
-                customDisplay: `${report?.sports_hours || 0}h`,
-                size: device === 'mobile' ? "sm" as const : "md" as const,
-                onTargetClick: () => openGoalDialog('mma_hours'),
-              },
-            ], [report, device, t, getGoal])}
-            loading={reportLoading || healthLoading}
-            columns={activityColumns}
+          <ActivitiesRings 
+            date={selectedDate.toISOString().split('T')[0]}
+            onGoalClick={openGoalDialog}
           />
         </SectionErrorBoundary>
 

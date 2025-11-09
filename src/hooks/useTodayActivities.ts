@@ -21,7 +21,7 @@ export function useTodayActivities(date?: string) {
       try {
         const { data: rows, error } = await supabase
           .from('vw_today_activities')
-          .select('work_hours, study_hours, sports_hours, walk_minutes, day')
+          .select('work_hours, study_hours, sports_hours, walk_minutes')
           .eq('day', day)
           .limit(1);
 
