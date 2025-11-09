@@ -12,6 +12,15 @@ export function MobileDownloadBanner() {
   const [deviceType, setDeviceType] = useState<'ios' | 'android' | 'other'>('other');
 
   useEffect(() => {
+    // Check if app is already installed as PWA
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    const isIOSStandalone = (window.navigator as any).standalone === true;
+    
+    if (isStandalone || isIOSStandalone) {
+      // App is installed, don't show banner
+      return;
+    }
+
     // Check if banner was dismissed
     const dismissed = localStorage.getItem('download_banner_dismissed');
     if (dismissed === 'true') {
