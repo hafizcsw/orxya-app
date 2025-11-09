@@ -116,7 +116,7 @@ function AppContent() {
       <div className={isAuthPage ? '' : 'pb-20'}>
         <AnimatePresence mode="wait">
           <motion.div
-            key={`${location.pathname}-${i18n.language}`}
+            key={location.pathname}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
