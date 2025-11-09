@@ -75,6 +75,7 @@ const FlagsConsole = lazy(() => import("./pages/FlagsConsole"));
 const EngagementDashboard = lazy(() => import("./pages/EngagementDashboard"));
 const GoLiveDashboard = lazy(() => import("./pages/GoLiveDashboard"));
 const AdminAutopilot = lazy(() => import("./pages/AdminAutopilot"));
+const GenerateAssets = lazy(() => import("./pages/GenerateAssets"));
 
 const queryClient = new QueryClient();
 
@@ -136,6 +137,7 @@ function AppContent() {
                 <Route path="/test-conflicts" element={<Protected><TestConflicts /></Protected>} />
                 <Route path="/oauth/google" element={<OAuthGoogle />} />
                 <Route path="/admin/autopilot" element={<Protected><AdminAutopilot /></Protected>} />
+                <Route path="/generate-assets" element={<GenerateAssets />} />
                 <Route path="/diagnostics" element={<Protected><Diagnostics /></Protected>} />
                 <Route path="/seed" element={<Seed />} />
                 <Route path="/profile" element={<Protected><Profile /></Protected>} />
