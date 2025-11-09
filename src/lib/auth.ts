@@ -13,143 +13,55 @@ export function useUser() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
-  async function applyProfileFlags(uid: string | null) {
-    if (!uid) { 
-      setTelemetryOn(false); 
-      return; 
-    }
-    try {
-      const { data } = await supabase
-        .from('profiles')
-        .select('telemetry_enabled')
-        .eq('id', uid)
-        .maybeSingle();
-      setTelemetryOn(data?.telemetry_enabled ?? false);
-    } catch (e) {
-      console.error('Error loading profile flags:', e);
-    }
-  }
-
   useEffect(() => {
     let mounted = true;
-    let tasksRun = false;
-    let debounceTimer: NodeJS.Timeout | null = null;
-    let isProcessing = false;
-    
-    console.log('[useUser] Initializing auth...')
-    
-    // Listen for auth changes FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!mounted || isProcessing) return;
-      
-      console.log('[useUser] Auth state changed:', event, session?.user ? 'User present' : 'No user')
-      
-      // Clear any pending debounce
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
-      
-      // Simplified debounce - immediate state update for critical auth events
-      const isImportantEvent = event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED';
-      const delay = isImportantEvent ? 50 : 100;
-      
-      debounceTimer = setTimeout(() => {
-        if (!mounted) return;
-        
-        const u = session?.user ?? null;
-        setUser(u);
-        setLoading(false);
-        identifyUser(u?.id ?? null, u ? { email: u.email } : undefined);
-        
-        console.log('[useUser] State updated:', { event, hasUser: !!u });
-        
-        // Apply profile flags (non-blocking)
-        applyProfileFlags(u?.id ?? null).catch(e => {
-          console.error('[useUser] Profile flags error:', e);
-        });
-        
-        // Post-login tasks (non-blocking) - only run once per session
-        if (u && event === 'SIGNED_IN' && !tasksRun) {
-          tasksRun = true;
-          
-          setTimeout(() => {
-            console.log('[useUser] Running post-login tasks...');
-            
-            // Location capture + conflict check (non-blocking)
-            Promise.race([
-              (async () => {
-                await captureAndSendLocation();
-                await conflictCheckToday();
-              })(),
-              new Promise((_, reject) => setTimeout(() => reject(new Error('Location timeout')), 15000))
-            ]).catch(e => {
-              console.error('Location/Conflicts failed:', e);
-            });
-            
-            // Run other tasks without awaiting
-            Promise.all([
-              flushQueueOnce().catch(e => console.error('Flush failed:', e)),
-              rescheduleAllFromDB().catch(e => console.error('Reschedule failed:', e))
-            ]);
-            
-            // Prayer sync (with timeout)
-            const today = new Date().toISOString().slice(0, 10);
-            Promise.race([
-              (async () => {
-                await syncPrayers(today);
-                await schedulePrayersFor(today);
-              })(),
-              new Promise((_, reject) => setTimeout(() => reject(new Error('Prayer timeout')), 10000))
-            ]).then(() => {
-              console.log('[useUser] Prayer sync done');
-            }).catch(e => {
-              console.error('Prayer sync failed:', e);
-            });
 
-            // Calendar sync (with timeout)
-            Promise.race([
-              startCalendarAutoSync(30),
-              new Promise((_, reject) => setTimeout(() => reject(new Error('Calendar timeout')), 2000))
-            ]).catch(e => {
-              console.error('Calendar sync failed:', e);
-            });
-          }, 100);
-        }
-        
-        // Reset flag when user signs out
-        if (!u && event === 'SIGNED_OUT') {
-          tasksRun = false;
-        }
-      }, delay);
-    });
-    
-    // THEN check for existing session
-    isProcessing = true;
+    // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!mounted) return;
       const u = session?.user ?? null;
-      console.log('[useUser] Initial session:', u ? 'User found' : 'No user');
       setUser(u);
       setLoading(false);
       identifyUser(u?.id ?? null, u ? { email: u.email } : undefined);
-      applyProfileFlags(u?.id ?? null).catch(e => {
-        console.error('[useUser] Profile flags error:', e);
-      });
-      isProcessing = false;
     }).catch((err) => {
       console.error('[useUser] Session error:', err);
       if (mounted) {
         setUser(null);
         setLoading(false);
-        isProcessing = false;
       }
     });
-    
+
+    // Subscribe to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+      const u = session?.user ?? null;
+      setUser(u);
+      setLoading(false);
+      identifyUser(u?.id ?? null, u ? { email: u.email } : undefined);
+      
+      console.log('[useUser] Auth state changed:', event, u ? 'User present' : 'No user');
+      
+      // Post-login tasks (non-blocking) - only on SIGNED_IN
+      if (u && event === 'SIGNED_IN') {
+        setTimeout(() => {
+          Promise.all([
+            flushQueueOnce().catch(e => console.error('Flush failed:', e)),
+            rescheduleAllFromDB().catch(e => console.error('Reschedule failed:', e)),
+            captureAndSendLocation().then(() => conflictCheckToday()).catch(e => console.error('Location/Conflicts failed:', e)),
+          ]);
+          
+          // Prayer sync
+          const today = new Date().toISOString().slice(0, 10);
+          syncPrayers(today).then(() => schedulePrayersFor(today)).catch(e => console.error('Prayer sync failed:', e));
+          
+          // Calendar sync - returns Promise
+          Promise.resolve(startCalendarAutoSync(30)).catch(e => console.error('Calendar sync failed:', e));
+        }, 100);
+      }
+    });
+
     return () => {
       mounted = false;
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
       subscription.unsubscribe();
     };
   }, []);

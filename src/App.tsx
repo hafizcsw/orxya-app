@@ -10,6 +10,7 @@ import { ThemeProvider } from "next-themes";
 import { DateProvider } from "./contexts/DateContext";
 import { AIProvider } from "./contexts/AIContext";
 import { SettingsProvider } from "./contexts/SettingsContext";
+import { DeviceTypeProvider } from "./contexts/DeviceContext";
 import { LoadingFallback } from "./components/ui/loading-fallback";
 import { useAutopilotNotifications } from "./hooks/useAutopilotNotifications";
 import { useWidgetTokenSync } from "./hooks/useWidgetToken";
@@ -89,13 +90,16 @@ function AppContent() {
   
   // Apply language attribute and listen for language changes
   useEffect(() => {
-    const currentLang = i18n.language || 'ar';
-    document.documentElement.setAttribute('lang', currentLang);
+    // Set initial language
+    if (i18n?.language) {
+      document.documentElement.setAttribute('lang', i18n.language);
+    }
     
-    // Listen for language change events to force re-render if needed
-    const handleLanguageChange = (e: CustomEvent) => {
-      const newLang = e.detail.language;
-      document.documentElement.setAttribute('lang', newLang);
+    // Listen for language change events
+    const handleLanguageChange = (e: Event) => {
+      const custom = e as CustomEvent<{ language: string }>;
+      const lng = custom?.detail?.language;
+      if (lng) document.documentElement.setAttribute('lang', lng);
     };
     
     window.addEventListener('languageChanged', handleLanguageChange as EventListener);
@@ -103,7 +107,7 @@ function AppContent() {
     return () => {
       window.removeEventListener('languageChanged', handleLanguageChange as EventListener);
     };
-  }, [i18n.language]);
+  }, []); // Empty dependency array - register once
   
   // Hide navigation on auth pages
   const isAuthPage = location.pathname === '/auth' || location.pathname === '/auth/callback';
@@ -165,26 +169,28 @@ function AppContent() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <TooltipProvider>
-          <SettingsProvider>
-            <DateProvider>
-              <AIProvider>
-                <div id="app-root" className="relative min-h-dvh isolate">
-                  <div id="page" className="relative z-0">
-                    <ErrorBoundary>
-                      <AppContent />
-                    </ErrorBoundary>
+      <DeviceTypeProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <TooltipProvider>
+            <SettingsProvider>
+              <DateProvider>
+                <AIProvider>
+                  <div id="app-root" className="relative min-h-dvh isolate">
+                    <div id="page" className="relative z-0">
+                      <ErrorBoundary>
+                        <AppContent />
+                      </ErrorBoundary>
+                    </div>
+                    <div id="portals" className="fixed inset-0 z-50 pointer-events-none" />
                   </div>
-                  <div id="portals" className="fixed inset-0 z-50 pointer-events-none" />
-                </div>
-                <Toaster />
-                <Sonner />
-              </AIProvider>
-            </DateProvider>
-          </SettingsProvider>
-        </TooltipProvider>
-      </ThemeProvider>
+                  <Toaster />
+                  <Sonner />
+                </AIProvider>
+              </DateProvider>
+            </SettingsProvider>
+          </TooltipProvider>
+        </ThemeProvider>
+      </DeviceTypeProvider>
     </BrowserRouter>
   </QueryClientProvider>
 );

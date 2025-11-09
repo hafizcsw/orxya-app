@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -105,10 +105,15 @@ export default function Today() {
   // Live data hooks
   const { currentTask, nextTask, timeRemaining, progress, loading: taskLoading } = useLiveToday(selectedDate);
 
-  // Extract goal values once for stable references
-  const walkGoal = getGoal('walk_km');
-  const incomeGoal = getGoal('income_monthly');
-  const expensesGoal = getGoal('expenses_daily');
+  // Stable goal values using useMemo
+  const goalValues = useMemo(() => ({
+    walk: getGoal('walk_km'),
+    income: getGoal('income_monthly'),
+    expenses: getGoal('expenses_daily'),
+    work: getGoal('work_hours'),
+    study: getGoal('study_hours'),
+    sports: getGoal('mma_hours'),
+  }), [getGoal]);
 
   const { data: plans, isLoading: plansLoading, refetch: refetchPlans } = useQuery({
     queryKey: ["business-plans"],
@@ -241,15 +246,15 @@ export default function Today() {
     }
   };
 
-  // Calculate daily progress
+  // Calculate daily progress with stable dependencies
   const calculateDailyProgress = useCallback(() => {
     if (!report || !healthData) return 0;
     
     const goals = {
-      work: getGoal('work_hours'),
-      study: getGoal('study_hours'),
-      mma: getGoal('mma_hours'),
-      walk: walkGoal,
+      work: goalValues.work,
+      study: goalValues.study,
+      mma: goalValues.sports,
+      walk: goalValues.walk,
       recovery: 100,
       sleep: 100
     };
@@ -265,7 +270,7 @@ export default function Today() {
 
     const totalProgress = Object.values(achievements).reduce((sum, val) => sum + val, 0);
     return Math.round(totalProgress / Object.keys(achievements).length);
-  }, [report, healthData, walkGoal, getGoal]);
+  }, [report, healthData, goalValues]);
 
   // Determine responsive columns
   const healthColumns = device === 'mobile' ? 2 : device === 'tablet' ? 3 : 4;
@@ -387,7 +392,7 @@ export default function Today() {
               {
                 id: 'walk',
                 value: (healthData?.meters || 0) / 1000,
-                targetValue: walkGoal,
+                targetValue: goalValues.walk,
                 currentValue: (healthData?.meters || 0) / 1000,
                 label: t('activities.walk'),
                 unit: "km",
@@ -397,7 +402,7 @@ export default function Today() {
                 icon: <Footprints className="w-5 h-5" />,
                 trend: healthData?.activityTrend?.direction,
                 trendValue: healthData?.activityTrend?.percentage,
-                status: getWalkStatus((healthData?.meters || 0) / 1000, walkGoal),
+                status: getWalkStatus((healthData?.meters || 0) / 1000, goalValues.walk),
                 customDisplay: healthData?.meters ? formatDistance(healthData.meters) : '0 km',
                 size: device === 'mobile' ? "sm" as const : "lg" as const,
                 onTargetClick: () => openGoalDialog('walk_km'),
@@ -423,7 +428,7 @@ export default function Today() {
               {
                 id: 'income',
                 value: report?.income || 0,
-                targetValue: incomeGoal,
+                targetValue: goalValues.income,
                 currentValue: report?.income || 0,
                 label: t("financial.income"),
                 unit: "USD",
@@ -433,7 +438,7 @@ export default function Today() {
                 icon: <DollarSign className="w-6 h-6" />,
                 trend: report?.incomeTrend?.direction,
                 trendValue: report?.incomeTrend?.percentage,
-                status: getIncomeStatus(report?.income || 0, incomeGoal),
+                status: getIncomeStatus(report?.income || 0, goalValues.income),
                 size: device === 'mobile' ? "sm" as const : "lg" as const,
                 customDisplay: `$${report?.income || 0}`,
                 onTargetClick: () => openGoalDialog('income_monthly'),
@@ -441,7 +446,7 @@ export default function Today() {
               {
                 id: 'expenses',
                 value: report?.expenses || 0,
-                targetValue: expensesGoal,
+                targetValue: goalValues.expenses,
                 currentValue: report?.expenses || 0,
                 label: t("financial.expenses"),
                 unit: "USD",
@@ -451,7 +456,7 @@ export default function Today() {
                 icon: <TrendingDown className="w-6 h-6" />,
                 trend: report?.expensesTrend?.direction,
                 trendValue: report?.expensesTrend?.percentage,
-                status: getExpensesStatus(report?.expenses || 0, expensesGoal),
+                status: getExpensesStatus(report?.expenses || 0, goalValues.expenses),
                 size: device === 'mobile' ? "sm" as const : "lg" as const,
                 customDisplay: `$${report?.expenses || 0}`,
                 onTargetClick: () => openGoalDialog('expenses_daily'),
