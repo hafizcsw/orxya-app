@@ -100,22 +100,17 @@ export function GeneralSettings() {
       // Dynamic import to avoid circular dependency
       const { default: i18n } = await import('@/i18n');
       
-      // Update settings in database first
-      await updateSettings({ language: value });
-      
-      // Then change i18n language
+      // Change i18n language first
       await i18n.changeLanguage(value);
+      
+      // Then update settings in database
+      await updateSettings({ language: value });
       
       // Show success message
       toast({
         title: "✅ تم تغيير اللغة",
         description: "Language changed successfully",
       });
-      
-      // Force page reload to ensure all components update
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
       
     } catch (error) {
       console.error('Failed to change language:', error);

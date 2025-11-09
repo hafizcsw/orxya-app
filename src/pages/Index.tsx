@@ -11,8 +11,6 @@ const Index = () => {
   useEffect(() => {
     if (hasError) return; // Don't navigate if there's an error
     
-    console.log('[Index] State:', { user: !!user, loading, isNavigating, currentPath: window.location.pathname })
-    
     if (!loading && !isNavigating) {
       try {
         // Timeout to prevent race conditions
@@ -22,25 +20,19 @@ const Index = () => {
           // Don't redirect if already on index
           if (currentPath === '/') {
             if (user) {
-              console.log('[Index] ✅ User found, redirecting to /today')
               setIsNavigating(true);
               navigate('/today', { replace: true });
             } else {
-              console.log('[Index] ❌ No user, redirecting to /auth')
               setIsNavigating(true);
               navigate('/auth', { replace: true });
             }
-          } else {
-            console.log('[Index] Already navigated away from index, skipping redirect')
           }
-        }, 300);
+        }, 100);
         
         return () => clearTimeout(timeout);
       } catch (error) {
         console.error('[Index] Navigation error:', error);
         setHasError(true);
-        // Fallback: try to navigate to auth
-        navigate('/auth', { replace: true });
       }
     }
   }, [user, loading, navigate, isNavigating, hasError]);

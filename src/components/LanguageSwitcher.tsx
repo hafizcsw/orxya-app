@@ -33,18 +33,18 @@ export function LanguageSwitcher() {
       // Save to localStorage first for immediate persistence
       localStorage.setItem('i18nextLng', langCode);
       
-      // Update settings in database first
-      await updateSettings({ language: langCode });
-      
-      // Then change i18n language (this will trigger re-render)
+      // Change i18n language first
       await i18n.changeLanguage(langCode);
       
-      // Force page reload to ensure all components update
-      window.location.reload();
+      // Then update settings in database
+      await updateSettings({ language: langCode });
+      
+      toast.success('تم تغيير اللغة بنجاح / Language changed successfully');
       
     } catch (error) {
       console.error('Failed to change language:', error);
       toast.error('فشل تغيير اللغة / Failed to change language');
+    } finally {
       setIsChanging(false);
     }
   };
