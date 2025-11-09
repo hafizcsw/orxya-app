@@ -28,6 +28,9 @@
     "integrations": "التطبيقات المتصلة",
     "ai": "الذكاء الاصطناعي",
     "downloadApp": "تنزيل التطبيق",
-    "dataDashboard": "لوحة البيانات"
+    "dataDashboard": "لوحة البيانات",
+    "signOut": "تسجيل الخروج",
+    "signOutSuccess": "تم تسجيل الخروج بنجاح",
+    "signOutError": "فشل تسجيل الخروج"
   }
 }

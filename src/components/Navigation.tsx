@@ -19,7 +19,7 @@ const Navigation = () => {
   const {
     user
   } = useUser();
-  const { t } = useTranslation('navigation');
+  const { t, i18n } = useTranslation(['navigation', 'common']);
   const [authOpen, setAuthOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -86,9 +86,10 @@ const Navigation = () => {
     const compareDate = new Date(date);
     compareDate.setHours(0, 0, 0, 0);
     if (compareDate.getTime() === today.getTime()) {
-      return "TODAY";
+      return t('common:common.today').toUpperCase();
     }
-    return date.toLocaleDateString('ar-EG', {
+    const locale = i18n.language === 'ar' ? 'ar-EG' : i18n.language === 'es' ? 'es-ES' : 'en-US';
+    return date.toLocaleDateString(locale, {
       month: 'short',
       day: 'numeric'
     });

@@ -28,6 +28,9 @@
     "integrations": "Aplicaciones Conectadas",
     "ai": "Inteligencia Artificial",
     "downloadApp": "Descargar App",
-    "dataDashboard": "Panel de Datos"
+    "dataDashboard": "Panel de Datos",
+    "signOut": "Cerrar sesión",
+    "signOutSuccess": "Sesión cerrada exitosamente",
+    "signOutError": "Error al cerrar sesión"
   }
 }

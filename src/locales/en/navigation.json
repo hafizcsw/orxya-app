@@ -28,6 +28,9 @@
     "integrations": "Connected Apps",
     "ai": "Artificial Intelligence",
     "downloadApp": "Download App",
-    "dataDashboard": "Data Dashboard"
+    "dataDashboard": "Data Dashboard",
+    "signOut": "Sign Out",
+    "signOutSuccess": "Signed out successfully",
+    "signOutError": "Failed to sign out"
   }
 }

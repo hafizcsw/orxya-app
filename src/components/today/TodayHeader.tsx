@@ -38,7 +38,7 @@ export function TodayHeader({
             {getGreeting()}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {t("today.welcome", { defaultValue: "مرحباً بك في يومك الجديد" })}
+            {t("today.welcome")}
           </p>
         </div>
       </div>

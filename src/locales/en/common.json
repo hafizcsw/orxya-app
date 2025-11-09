@@ -62,6 +62,8 @@
     "bannerSubtitleIOS": "Now available on App Store",
     "bannerSubtitleAndroid": "Now available on Google Play",
     "bannerSubtitleOther": "Better experience on mobile",
-    "download": "Download"
+    "download": "Download",
+    "today": "Today",
+    "retry": "Retry"
   }
 }

@@ -80,12 +80,12 @@ export function BottomNav() {
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
-      toast.success(t('menu.signOutSuccess', { defaultValue: 'تم تسجيل الخروج بنجاح' }));
+      toast.success(t('menu.signOutSuccess'));
       setMenuOpen(false);
       navigate('/auth', { replace: true });
     } catch (error: any) {
       console.error('Sign out error:', error);
-      toast.error(t('menu.signOutError', { defaultValue: 'فشل تسجيل الخروج' }));
+      toast.error(t('menu.signOutError'));
     }
   };
 
@@ -270,7 +270,7 @@ export function BottomNav() {
                   className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors w-full text-right text-destructive hover:bg-destructive/10 border border-destructive/20 mt-2"
                 >
                   <LogOut className="w-5 h-5" />
-                  <span className="font-medium">{t('menu.signOut', { defaultValue: 'تسجيل الخروج' })}</span>
+                  <span className="font-medium">{t('menu.signOut')}</span>
                 </motion.button>
               </div>
             </div>
@@ -283,10 +283,10 @@ export function BottomNav() {
       <nav className={cn(
         "fixed bottom-0 left-0 right-0 z-40",
         "bg-card/95 backdrop-blur-xl border-t border-border",
-        "h-16 md:h-20", // Taller on tablets
-        "safe-bottom"
+        "h-18 md:h-20",
+        "px-2 py-3 gap-2"
       )}>
-        <div className="flex items-center justify-around px-2 py-2 max-w-7xl mx-auto h-full">
+        <div className="flex items-center justify-around max-w-7xl mx-auto h-full">
           {navItems.map((item, index) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -316,20 +316,21 @@ export function BottomNav() {
                     }
                   }}
                   className={cn(
-                    "flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-all min-w-[60px] relative",
+                    "flex flex-col items-center justify-center gap-1 px-2 py-2 rounded-lg transition-all min-w-[70px] relative",
+                    "active:scale-95",
                     "md:scale-110",
                     isActive 
-                      ? "text-primary" 
-                      : "text-foreground/80 hover:text-foreground"
+                      ? "text-primary bg-primary/10" 
+                      : "text-foreground/80 hover:text-foreground hover:bg-accent/50"
                   )}
                 >
                   <Icon className={cn(
                     "transition-all",
-                    "w-5 h-5 md:w-6 md:h-6",
+                    "w-6 h-6 md:w-7 md:h-7",
                     isActive && "scale-110"
                   )} />
                   <span className={cn(
-                    "text-[10px] transition-all",
+                    "text-xs transition-all",
                     "md:text-sm",
                     isActive && "font-semibold"
                   )}>
@@ -340,9 +341,9 @@ export function BottomNav() {
                   {isActive && (
                     <motion.div
                       layoutId="bottomNavIndicator"
-                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 bg-primary rounded-full"
-                      initial={{ width: "40%" }}
-                      animate={{ width: "60%" }}
+                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 bg-primary rounded-full shadow-lg"
+                      initial={{ width: "50%" }}
+                      animate={{ width: "70%" }}
                       transition={{
                         type: "spring",
                         stiffness: 380,
@@ -390,18 +391,18 @@ export function BottomNav() {
               "bg-gradient-to-br from-primary to-primary/80",
               "shadow-lg hover:shadow-xl",
               "transition-all duration-300",
-              "w-7 h-7 md:w-8 md:h-8",
+              "w-12 h-12 md:w-14 md:h-14",
               "relative z-10",
               "group-active:animate-[scale-in_0.15s_ease-out]"
             )}
               style={{
-                boxShadow: "0 0 20px hsl(var(--primary) / 0.5), 0 4px 12px hsl(var(--primary) / 0.3)",
+                boxShadow: "0 0 30px hsl(var(--primary) / 0.6), 0 6px 16px hsl(var(--primary) / 0.4)",
               }}
             >
-              <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary-foreground transition-transform duration-300 group-hover:rotate-12 group-active:scale-110" />
+              <Sparkles className="w-6 h-6 md:w-7 md:h-7 text-primary-foreground transition-transform duration-300 group-hover:rotate-12 group-active:scale-110" />
             </div>
             
-            <span className="text-[10px] md:text-sm mt-1 font-semibold text-primary transition-all duration-300 group-hover:scale-105">
+            <span className="text-xs md:text-sm mt-1 font-semibold text-primary transition-all duration-300 group-hover:scale-105">
               AI
             </span>
           </motion.button>
@@ -420,13 +421,14 @@ export function BottomNav() {
               ease: "easeOut"
             }}
             className={cn(
-              "flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-all min-w-[60px]",
+              "flex flex-col items-center justify-center gap-1 px-2 py-2 rounded-lg transition-all min-w-[70px]",
+              "active:scale-95",
               "md:scale-110",
-              "text-foreground/80 hover:text-foreground"
+              "text-foreground/80 hover:text-foreground hover:bg-accent/50"
             )}
           >
-            <Menu className="w-5 h-5 md:w-6 md:h-6" />
-            <span className="text-[10px] md:text-sm font-medium">{t('bottomNav.more')}</span>
+            <Menu className="w-6 h-6 md:w-7 md:h-7" />
+            <span className="text-xs md:text-sm font-medium">{t('bottomNav.more')}</span>
           </motion.button>
         </div>
       </nav>
