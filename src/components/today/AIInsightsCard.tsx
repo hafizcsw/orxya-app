@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useAIInsights } from '@/hooks/useAIInsights';
+import { useEffect, useRef } from 'react';
+import { track } from '@/lib/telemetry';
 
 interface AIInsightsCardProps {
   date?: string;
@@ -20,6 +22,20 @@ const energyConfig = {
 export function AIInsightsCard({ date }: AIInsightsCardProps) {
   const { t } = useTranslation();
   const { insights, loading } = useAIInsights(date);
+  const viewTracked = useRef(false);
+
+  useEffect(() => {
+    if (!loading && insights && !viewTracked.current) {
+      track('today_ai_view', {
+        focus_score: insights.focusScore,
+        energy_level: insights.energyLevel,
+        suggestions_count: insights.suggestions?.length ?? 0,
+        warnings_count: insights.warnings?.length ?? 0,
+        model_version: insights.model_version
+      });
+      viewTracked.current = true;
+    }
+  }, [loading, insights]);
 
   if (loading) {
     return (
@@ -118,7 +134,8 @@ export function AIInsightsCard({ date }: AIInsightsCardProps) {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.1 }}
-                    className="flex items-start gap-1.5 md:gap-2 p-1.5 md:p-2 rounded-lg bg-background/50 backdrop-blur-sm"
+                    className="flex items-start gap-1.5 md:gap-2 p-1.5 md:p-2 rounded-lg bg-background/50 backdrop-blur-sm cursor-pointer hover:bg-background/70 transition-colors"
+                    onClick={() => track('today_ai_suggestion_click', { idx: i, text: suggestion })}
                   >
                     <span className="text-green-500 mt-0.5 text-xs md:text-sm">•</span>
                     <p className="text-[11px] md:text-sm text-foreground flex-1 leading-relaxed">{suggestion}</p>

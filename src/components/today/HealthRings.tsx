@@ -2,10 +2,25 @@ import { StatRingSection } from './StatRingSection';
 import { useHealthData } from '@/hooks/useHealthData';
 import { Activity, Moon, Zap, Footprints } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useEffect, useRef } from 'react';
+import { track } from '@/lib/telemetry';
 
 export default function HealthRings() {
   const { t } = useTranslation('today');
   const { healthData, loading } = useHealthData('daily', new Date());
+  const viewTracked = useRef(false);
+
+  useEffect(() => {
+    if (!loading && healthData && !viewTracked.current) {
+      track('today_health_view', {
+        has_recovery: healthData.recovery !== null && healthData.recovery !== undefined,
+        has_sleep: healthData.sleep !== null && healthData.sleep !== undefined,
+        has_strain: healthData.strain !== null && healthData.strain !== undefined,
+        has_walk: (healthData.meters ?? 0) > 0
+      });
+      viewTracked.current = true;
+    }
+  }, [loading, healthData]);
 
   const rings = [
     {

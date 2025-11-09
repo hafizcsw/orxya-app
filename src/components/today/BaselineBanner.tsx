@@ -2,6 +2,8 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useHealthData } from "@/hooks/useHealthData";
 import dayjs from 'dayjs';
+import { useEffect, useRef } from 'react';
+import { track } from '@/lib/telemetry';
 
 interface BaselineBannerProps {
   date?: string;
@@ -10,6 +12,7 @@ interface BaselineBannerProps {
 export default function BaselineBanner({ date }: BaselineBannerProps) {
   const selectedDate = date ? dayjs(date).toDate() : new Date();
   const { healthData, loading } = useHealthData('daily', selectedDate);
+  const viewTracked = useRef(false);
 
   if (loading) return null;
 
@@ -19,6 +22,17 @@ export default function BaselineBanner({ date }: BaselineBannerProps) {
   if (days >= 14) return null;
 
   const remaining = 14 - days;
+
+  useEffect(() => {
+    if (!viewTracked.current) {
+      track('baseline_banner_view', {
+        days_collected: days,
+        days_remaining: remaining,
+        progress_pct: pct
+      });
+      viewTracked.current = true;
+    }
+  }, [days, remaining, pct]);
 
   return (
     <Card className="p-4 space-y-3 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20 border-yellow-200 dark:border-yellow-800">

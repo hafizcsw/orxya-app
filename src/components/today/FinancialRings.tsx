@@ -2,10 +2,33 @@ import { StatRingSection } from './StatRingSection';
 import { useFinancialData } from '@/hooks/useFinancialData';
 import { DollarSign, TrendingUp, TrendingDown, Wallet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useEffect, useRef } from 'react';
+import { track } from '@/lib/telemetry';
 
 export default function FinancialRings() {
   const { t } = useTranslation('today');
   const { data, loading } = useFinancialData();
+  const viewTracked = useRef(false);
+
+  useEffect(() => {
+    if (!loading && !viewTracked.current) {
+      track('today_finance_view', {
+        has_income: data.income > 0,
+        has_expenses: data.expenses > 0,
+        balance: data.balance,
+        has_trends: data.trends !== undefined
+      });
+
+      if (data.trends) {
+        track('today_finance_trend_seen', {
+          income_trend_pct: data.trends.income_pct,
+          expenses_trend_pct: data.trends.expenses_pct,
+          balance_trend_pct: data.trends.balance_pct
+        });
+      }
+      viewTracked.current = true;
+    }
+  }, [loading, data]);
 
   const getTrendIcon = (pct: number | null) => {
     if (pct === null) return null;
