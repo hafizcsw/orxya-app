@@ -158,11 +158,23 @@ serve(async (req) => {
 
     const healthSample = healthSamples?.[0];
 
+    // Calculate baseline days collected (last 14 days of HRV data)
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+
+    const { count: baselineDays } = await supabaseClient
+      .from('signals_daily')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('metric', 'hrv_rmssd')
+      .gte('day', fourteenDaysAgo.toISOString().split('T')[0]);
+
     const health = {
       recovery: healthSample?.recovery || 0,
       strain: healthSample?.strain || 0,
       sleep: healthSample?.sleep_score || 0,
-      hrv: healthSample?.hrv || 0
+      hrv: healthSample?.hrv || 0,
+      baseline_days_collected: baselineDays || 0
     };
 
     // 4. Get financial data (mock for now - can be replaced with real data)

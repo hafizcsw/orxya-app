@@ -1,6 +1,7 @@
 package com.oryxa.app.health
 
 import android.content.Context
+import com.oryxa.app.security.SecureStorage
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.changes.DeletionChange
 import androidx.health.connect.client.changes.UpsertionChange
@@ -148,15 +149,17 @@ class HealthSyncWorker(
     }
 
     private fun getJwtToken(): String? {
-        // Retrieve JWT from shared preferences or secure storage
-        // This should be set when user logs in
-        return applicationContext.getSharedPreferences("auth", Context.MODE_PRIVATE)
-            .getString("jwt_token", null)
+        // Use SecureStorage for JWT token retrieval
+        return SecureStorage(applicationContext).getString(SecureStorage.KEY_SESSION)
     }
 
     private fun getSupabaseUrl(): String {
-        // Return your Supabase URL
-        return "https://gcjggazmatipzqnxixhp.supabase.co"
+        // Use resource string instead of hardcoded URL
+        return applicationContext.getString(
+            applicationContext.resources.getIdentifier(
+                "supabase_url", "string", applicationContext.packageName
+            )
+        )
     }
 }
 

@@ -147,4 +147,46 @@ verify_jwt = true
 [functions.ai-chat-insights]
 verify_jwt = true
 
+[functions.account-delete]
+verify_jwt = true
+
+[functions.health]
+verify_jwt = false
+
+[functions.ops-alert]
+verify_jwt = true
+
+[functions.budget-simulator]
+verify_jwt = true
+
+[functions.scheduler-solver]
+verify_jwt = true
+
+[functions.nutrition-estimator]
+verify_jwt = true
+
+[functions.ai-router]
+verify_jwt = true
+
+[functions.calendar-oauth-start]
+verify_jwt = true
+
+[functions.calendar-watch-setup]
+verify_jwt = true
+
+[functions.calendar-notify]
+verify_jwt = false
+
+[functions.calendar-renew]
+verify_jwt = true
+
+[functions.ingest-signals-raw]
+verify_jwt = true
+
+[functions.ingest-financial-events]
+verify_jwt = true
+
+[functions.etl-health-daily]
+verify_jwt = true
+
 
