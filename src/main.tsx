@@ -57,53 +57,27 @@ startLocationTracking(15); // Capture location every 15 minutes on native
   }
 })();
 
-// Register Service Worker for PWA
+// PWA Installation - VitePWA handles service worker automatically
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js')
-      .then(registration => {
-        console.log('✅ Service Worker registered:', registration.scope);
-        
-        // Check for updates every hour
-        setInterval(() => {
-          registration.update();
-        }, 60 * 60 * 1000);
-        
-        // Check for updates on registration
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          if (newWorker) {
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                // New content available
-                console.log('🔄 New version available');
-                // Show notification to user (optional)
-                if (confirm('تحديث جديد متوفر. هل تريد تحديث التطبيق؟')) {
-                  window.location.reload();
-                }
-              }
-            });
-          }
-        });
-      })
-      .catch(err => console.error('❌ Service Worker registration failed:', err));
-  });
-
   // Listen for installation prompt
-  let deferredPrompt: any;
-  window.addEventListener('beforeinstallprompt', (e) => {
-    console.log('💡 Install prompt ready');
+  window.addEventListener('beforeinstallprompt', (e: any) => {
+    console.log('🎯 [PWA] Install prompt detected - app is installable!');
     e.preventDefault();
-    deferredPrompt = e;
-    
-    // You can show your custom install button here
-    // and trigger the prompt when user clicks it with:
-    // deferredPrompt.prompt();
+    // Store for usePWAInstall hook to access
+    (window as any).deferredPrompt = e;
+    // Dispatch custom event for React to catch
+    window.dispatchEvent(new Event('pwa-installable'));
   });
 
   window.addEventListener('appinstalled', () => {
-    console.log('✅ App installed successfully');
-    deferredPrompt = null;
+    console.log('✅ [PWA] App installed successfully');
+    (window as any).deferredPrompt = null;
+    window.dispatchEvent(new Event('pwa-installed'));
+  });
+
+  // Log service worker status for debugging
+  navigator.serviceWorker.ready.then(registration => {
+    console.log('✅ [PWA] Service Worker ready:', registration.scope);
   });
 }
 

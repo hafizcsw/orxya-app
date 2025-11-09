@@ -101,8 +101,10 @@ export default defineConfig(({ mode }) => ({
         ]
       },
       devOptions: {
-        enabled: false
-      }
+        enabled: true, // Enable in dev to test PWA
+        type: 'module'
+      },
+      injectRegister: 'auto'
     })
   ].filter(Boolean),
   resolve: {
