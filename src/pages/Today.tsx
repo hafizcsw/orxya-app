@@ -28,6 +28,7 @@ import { AIInsightsCard } from '@/components/today/AIInsightsCard';
 import BaselineBanner from '@/components/today/BaselineBanner';
 import { useFeatureFlag } from '@/lib/feature-flags';
 import { ActivitiesRings } from '@/components/today/ActivitiesRings';
+import { useRealtimeInvalidation } from '@/hooks/useRealtimeInvalidation';
 
 import { CurrentTaskCard } from "@/components/today/CurrentTaskCard";
 import { 
@@ -79,8 +80,11 @@ export default function Today() {
   const [focusMode, setFocusMode] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
   
-  // Feature Flags (NEW)
+  // Feature Flags
   const ffAI = useFeatureFlag('FF_AI_INSIGHTS');
+  
+  // Realtime cache invalidation
+  useRealtimeInvalidation();
 
   // Check authentication
   useEffect(() => {
@@ -281,20 +285,12 @@ export default function Today() {
 
           {/* NEW: Baseline Banner - shows only if < 14 days */}
           {healthData?.baseline_days_collected !== undefined && healthData.baseline_days_collected < 14 && (
-            <BaselineBanner />
+            <BaselineBanner date={selectedDate.toISOString().split('T')[0]} />
           )}
 
           {/* NEW: AI Insights Card - conditional on feature flag */}
           {ffAI && (
-            <AIInsightsCard 
-              insights={{
-                focusScore: 75,
-                energyLevel: 'high',
-                suggestions: ['استمر بالوتيرة الحالية'],
-                warnings: [],
-              }}
-              loading={false}
-            />
+            <AIInsightsCard date={selectedDate.toISOString().split('T')[0]} />
           )}
 
           {/* Error State */}

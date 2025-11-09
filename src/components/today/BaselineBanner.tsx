@@ -1,27 +1,21 @@
-import { useEffect, useState } from "react";
-import { useEdgeFunction } from "@/hooks/useEdgeFunction";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { useHealthData } from "@/hooks/useHealthData";
+import dayjs from 'dayjs';
 
-export default function BaselineBanner() {
-  const [days, setDays] = useState(0);
-  const { execute } = useEdgeFunction("today-realtime-data");
+interface BaselineBannerProps {
+  date?: string;
+}
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const result = await execute({ date: new Date().toISOString().slice(0, 10) });
-        if (result?.health?.baseline_days_collected) {
-          setDays(result.health.baseline_days_collected);
-        }
-      } catch (error) {
-        console.error("Error fetching baseline:", error);
-      }
-    })();
-  }, []);
+export default function BaselineBanner({ date }: BaselineBannerProps) {
+  const selectedDate = date ? dayjs(date).toDate() : new Date();
+  const { healthData, loading } = useHealthData('daily', selectedDate);
+
+  if (loading) return null;
+
+  const days = healthData?.baseline_days_collected ?? 0;
 
   const pct = Math.min(100, (days / 14) * 100);
-
   if (days >= 14) return null;
 
   const remaining = 14 - days;
