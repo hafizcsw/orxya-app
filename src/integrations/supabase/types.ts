@@ -158,6 +158,85 @@ export type Database = {
           },
         ]
       }
+      ai_cache: {
+        Row: {
+          cache_key: string
+          created_at: string | null
+          expires_at: string
+          payload: Json
+          user_id: string
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string | null
+          expires_at: string
+          payload: Json
+          user_id: string
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string | null
+          expires_at?: string
+          payload?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_cache_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_calls_log: {
+        Row: {
+          cached: boolean | null
+          cost_usd: number | null
+          created_at: string | null
+          id: number
+          latency_ms: number | null
+          model: string | null
+          route: string
+          tokens_in: number | null
+          tokens_out: number | null
+          user_id: string | null
+        }
+        Insert: {
+          cached?: boolean | null
+          cost_usd?: number | null
+          created_at?: string | null
+          id?: number
+          latency_ms?: number | null
+          model?: string | null
+          route: string
+          tokens_in?: number | null
+          tokens_out?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          cached?: boolean | null
+          cost_usd?: number | null
+          created_at?: string | null
+          id?: number
+          latency_ms?: number | null
+          model?: string | null
+          route?: string
+          tokens_in?: number | null
+          tokens_out?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_calls_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_consent: {
         Row: {
           expires_at: string | null
@@ -258,6 +337,53 @@ export type Database = {
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "ai_sessions_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_policy_embeddings: {
+        Row: {
+          embedding: string | null
+          policy_id: number
+          updated_at: string | null
+        }
+        Insert: {
+          embedding?: string | null
+          policy_id: number
+          updated_at?: string | null
+        }
+        Update: {
+          embedding?: string | null
+          policy_id?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      ai_quota: {
+        Row: {
+          daily_calls_limit: number
+          daily_calls_used: number
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          daily_calls_limit?: number
+          daily_calls_used?: number
+          user_id: string
+          window_start?: string
+        }
+        Update: {
+          daily_calls_limit?: number
+          daily_calls_used?: number
+          user_id?: string
+          window_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_quota_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -670,6 +796,50 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      calendar_events_mirror: {
+        Row: {
+          end_at: string
+          external_id: string
+          id: number
+          meta: Json | null
+          provider: string
+          start_at: string
+          summary: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          end_at: string
+          external_id: string
+          id?: number
+          meta?: Json | null
+          provider: string
+          start_at: string
+          summary?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          end_at?: string
+          external_id?: string
+          id?: number
+          meta?: Json | null
+          provider?: string
+          start_at?: string
+          summary?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_mirror_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       calendar_mapping: {
         Row: {
@@ -2118,6 +2288,88 @@ export type Database = {
           },
         ]
       }
+      signals_daily: {
+        Row: {
+          created_at: string | null
+          date: string
+          extra: Json | null
+          id: number
+          metric: string
+          source: string | null
+          user_id: string
+          value: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          extra?: Json | null
+          id?: number
+          metric: string
+          source?: string | null
+          user_id: string
+          value?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          extra?: Json | null
+          id?: number
+          metric?: string
+          source?: string | null
+          user_id?: string
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signals_daily_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      signals_raw: {
+        Row: {
+          end_at: string
+          id: number
+          inserted_at: string | null
+          metric: string
+          source: string
+          start_at: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          end_at: string
+          id?: number
+          inserted_at?: string | null
+          metric: string
+          source: string
+          start_at: string
+          user_id: string
+          value: number
+        }
+        Update: {
+          end_at?: string
+          id?: number
+          inserted_at?: string | null
+          metric?: string
+          source?: string
+          start_at?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signals_raw_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sync_audit: {
         Row: {
           action: string
@@ -2410,6 +2662,47 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vw_daily_metrics"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      user_metrics_baseline: {
+        Row: {
+          avg: number | null
+          id: number
+          metric: string
+          n_days: number | null
+          source: string | null
+          stddev: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          avg?: number | null
+          id?: number
+          metric: string
+          n_days?: number | null
+          source?: string | null
+          stddev?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          avg?: number | null
+          id?: number
+          metric?: string
+          n_days?: number | null
+          source?: string | null
+          stddev?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_metrics_baseline_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3046,6 +3339,7 @@ export type Database = {
             }
             Returns: boolean
           }
+      increment_ai_quota: { Args: { p_user_id: string }; Returns: undefined }
       ingest_financial_event: {
         Args: {
           p_amount: number
