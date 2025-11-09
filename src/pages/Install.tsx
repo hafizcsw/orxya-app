@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, CheckCircle2, Smartphone, Monitor, Share2, MoreVertical } from 'lucide-react';
+import { Download, CheckCircle2, Smartphone, Monitor, Share2, MoreVertical, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 
 export default function Install() {
   const navigate = useNavigate();
@@ -50,14 +51,23 @@ export default function Install() {
   }, []);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
+    if (!deferredPrompt) {
+      toast.error('التثبيت غير متاح حالياً');
+      return;
+    }
 
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    
-    if (outcome === 'accepted') {
-      setDeferredPrompt(null);
-      setIsInstalled(true);
+    try {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+        setIsInstalled(true);
+        toast.success('تم تثبيت التطبيق بنجاح! 🎉');
+      }
+    } catch (error) {
+      console.error('Error installing:', error);
+      toast.error('حدث خطأ أثناء التثبيت');
     }
   };
 
@@ -104,31 +114,33 @@ export default function Install() {
           </motion.div>
         ) : (
           <>
-            {/* Android/Desktop Install Button */}
-            {platform !== 'ios' && isInstallable && (
+            {/* Direct Install Button for Android/Desktop */}
+            {isInstallable && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <Card className="p-6 bg-primary/10 border-primary/20">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <Download className="w-8 h-8 text-primary" />
-                      <div>
-                        <h3 className="text-lg font-semibold text-foreground">
+                <Card className="p-8 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30">
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-4">
+                      <div className="p-4 bg-primary/20 rounded-2xl">
+                        <Sparkles className="w-10 h-10 text-primary animate-pulse" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-2xl font-bold text-foreground mb-1">
                           {t('install.readyToInstall')}
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          {t('install.readyToInstallDescription')}
+                          اضغط الزر أدناه للتثبيت المباشر بنقرة واحدة
                         </p>
                       </div>
                     </div>
                     <Button 
                       onClick={handleInstallClick} 
-                      className="w-full"
+                      className="w-full h-14 text-lg bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg"
                       size="lg"
                     >
-                      <Download className="w-5 h-5 ml-2" />
+                      <Download className="w-6 h-6 ml-3" />
                       {t('install.installNow')}
                     </Button>
                   </div>
