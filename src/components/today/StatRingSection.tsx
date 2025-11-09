@@ -40,19 +40,19 @@ export const StatRingSection = React.memo(function StatRingSection({
   action,
   columns = 4 
 }: StatRingSectionProps) {
-  const memoizedRings = useMemo(() => rings, [rings]);
+  // rings is now stable from parent useMemo, no need to memoize again
 
   return (
     <DashboardSection title={title} action={action}>
       {loading ? (
         <DashboardGrid columns={columns} gap="md">
-          {memoizedRings.map((_, i) => (
+          {rings.map((_, i) => (
             <Skeleton key={i} className="h-48 w-full rounded-2xl animate-pulse" />
           ))}
         </DashboardGrid>
       ) : (
         <DashboardGrid columns={columns} gap="md">
-          {memoizedRings.map((ring, i) => {
+          {rings.map((ring, i) => {
             const anim = ringAnimations.stagger(i);
             return (
               <motion.div

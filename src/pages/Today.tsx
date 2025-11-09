@@ -115,6 +115,135 @@ export default function Today() {
     sports: getGoal('mma_hours'),
   }), [getGoal]);
 
+  const openGoalDialog = useCallback((goalType: GoalType) => {
+    setEditingGoalType(goalType);
+    setGoalDialogOpen(true);
+  }, []);
+
+  // Stable health rings array with useMemo
+  const healthRings = useMemo(() => {
+    if (!healthData) return [];
+    
+    return [
+      {
+        id: 'recovery',
+        value: healthData.recovery,
+        label: t('health.recovery'),
+        color: "hsl(142, 76%, 36%)",
+        gradientColors: ["hsl(142, 76%, 36%)", "hsl(142, 76%, 50%)"] as [string, string],
+        icon: <Heart className="w-6 h-6" />,
+        trend: healthData.recoveryTrend.direction,
+        trendValue: healthData.recoveryTrend.percentage,
+        status: getRecoveryStatus(healthData.recovery),
+        size: device === 'mobile' ? "sm" as const : "lg" as const,
+        targetValue: 100,
+        currentValue: healthData.recovery,
+      },
+      {
+        id: 'sleep',
+        value: healthData.sleep,
+        label: t('health.sleep'),
+        color: "hsl(217, 91%, 60%)",
+        gradientColors: ["hsl(217, 91%, 60%)", "hsl(217, 91%, 75%)"] as [string, string],
+        icon: <Moon className="w-6 h-6" />,
+        trend: healthData.sleepTrend.direction,
+        trendValue: healthData.sleepTrend.percentage,
+        status: getSleepStatus(healthData.sleep),
+        customDisplay: formatSleepTime(healthData.sleepMinutes),
+        size: device === 'mobile' ? "sm" as const : "lg" as const,
+        targetValue: 100,
+        currentValue: healthData.sleep,
+      },
+      {
+        id: 'strain',
+        value: (healthData.strain / 21) * 100,
+        label: t('health.strain'),
+        color: "hsl(38, 92%, 50%)",
+        gradientColors: ["hsl(38, 92%, 50%)", "hsl(38, 92%, 70%)"] as [string, string],
+        icon: <Zap className="w-6 h-6" />,
+        trend: healthData.strainTrend.direction,
+        trendValue: healthData.strainTrend.percentage,
+        status: getStrainStatus(healthData.strain),
+        customDisplay: `${healthData.strain.toFixed(1)}`,
+        size: device === 'mobile' ? "sm" as const : "lg" as const,
+        targetValue: 21,
+        currentValue: healthData.strain,
+      },
+      {
+        id: 'walk',
+        value: (healthData?.meters || 0) / 1000,
+        targetValue: goalValues.walk,
+        currentValue: (healthData?.meters || 0) / 1000,
+        label: t('activities.walk'),
+        unit: "km",
+        showTarget: true,
+        color: "hsl(142, 76%, 36%)",
+        gradientColors: ["hsl(142, 76%, 36%)", "hsl(142, 76%, 50%)"] as [string, string],
+        icon: <Footprints className="w-5 h-5" />,
+        trend: healthData?.activityTrend?.direction,
+        trendValue: healthData?.activityTrend?.percentage,
+        status: getWalkStatus((healthData?.meters || 0) / 1000, goalValues.walk),
+        customDisplay: healthData?.meters ? formatDistance(healthData.meters) : '0 km',
+        size: device === 'mobile' ? "sm" as const : "lg" as const,
+        onTargetClick: () => openGoalDialog('walk_km'),
+      },
+    ];
+  }, [healthData, goalValues.walk, device, t, openGoalDialog]);
+
+  // Stable financial rings array with useMemo
+  const financialRings = useMemo(() => [
+    {
+      id: 'income',
+      value: report?.income || 0,
+      targetValue: goalValues.income,
+      currentValue: report?.income || 0,
+      label: t("financial.income"),
+      unit: "USD",
+      showTarget: true,
+      color: "hsl(142, 76%, 36%)",
+      gradientColors: ["hsl(142, 76%, 36%)", "hsl(142, 76%, 50%)"] as [string, string],
+      icon: <DollarSign className="w-6 h-6" />,
+      trend: report?.incomeTrend?.direction,
+      trendValue: report?.incomeTrend?.percentage,
+      status: getIncomeStatus(report?.income || 0, goalValues.income),
+      size: device === 'mobile' ? "sm" as const : "lg" as const,
+      customDisplay: `$${report?.income || 0}`,
+      onTargetClick: () => openGoalDialog('income_monthly'),
+    },
+    {
+      id: 'expenses',
+      value: report?.expenses || 0,
+      targetValue: goalValues.expenses,
+      currentValue: report?.expenses || 0,
+      label: t("financial.expenses"),
+      unit: "USD",
+      showTarget: true,
+      color: "hsl(0, 84%, 60%)",
+      gradientColors: ["hsl(0, 84%, 60%)", "hsl(0, 84%, 75%)"] as [string, string],
+      icon: <TrendingDown className="w-6 h-6" />,
+      trend: report?.expensesTrend?.direction,
+      trendValue: report?.expensesTrend?.percentage,
+      status: getExpensesStatus(report?.expenses || 0, goalValues.expenses),
+      size: device === 'mobile' ? "sm" as const : "lg" as const,
+      customDisplay: `$${report?.expenses || 0}`,
+      onTargetClick: () => openGoalDialog('expenses_daily'),
+    },
+    {
+      id: 'balance',
+      value: Math.abs(report?.balance || 0),
+      label: t("financial.balance"),
+      unit: "USD",
+      color: "hsl(217, 91%, 60%)",
+      gradientColors: ["hsl(217, 91%, 60%)", "hsl(217, 91%, 75%)"] as [string, string],
+      icon: <Wallet className="w-6 h-6" />,
+      trend: report?.balanceTrend?.direction,
+      trendValue: report?.balanceTrend?.percentage,
+      status: getBalanceStatus(report?.balance || 0),
+      size: device === 'mobile' ? "sm" as const : "lg" as const,
+      customDisplay: `$${report?.balance || 0}`,
+    },
+  ], [report, goalValues.income, goalValues.expenses, device, t, openGoalDialog]);
+
   const { data: plans, isLoading: plansLoading, refetch: refetchPlans } = useQuery({
     queryKey: ["business-plans"],
     queryFn: async () => {
@@ -125,11 +254,6 @@ export default function Today() {
       return data?.plans || [];
     },
   });
-
-  const openGoalDialog = (goalType: GoalType) => {
-    setEditingGoalType(goalType);
-    setGoalDialogOpen(true);
-  };
 
   const handleSaveGoal = async (value: number) => {
     if (editingGoalType) {
@@ -344,70 +468,7 @@ export default function Today() {
         <SectionErrorBoundary sectionName={t('sections.health')}>
           <StatRingSection
             title={t('sections.health')}
-            rings={healthData ? [
-              {
-                id: 'recovery',
-                value: healthData.recovery,
-                label: t('health.recovery'),
-                color: "hsl(142, 76%, 36%)",
-                gradientColors: ["hsl(142, 76%, 36%)", "hsl(142, 76%, 50%)"] as [string, string],
-                icon: <Heart className="w-6 h-6" />,
-                trend: healthData.recoveryTrend.direction,
-                trendValue: healthData.recoveryTrend.percentage,
-                status: getRecoveryStatus(healthData.recovery),
-                size: device === 'mobile' ? "sm" as const : "lg" as const,
-                targetValue: 100,
-                currentValue: healthData.recovery,
-              },
-              {
-                id: 'sleep',
-                value: healthData.sleep,
-                label: t('health.sleep'),
-                color: "hsl(217, 91%, 60%)",
-                gradientColors: ["hsl(217, 91%, 60%)", "hsl(217, 91%, 75%)"] as [string, string],
-                icon: <Moon className="w-6 h-6" />,
-                trend: healthData.sleepTrend.direction,
-                trendValue: healthData.sleepTrend.percentage,
-                status: getSleepStatus(healthData.sleep),
-                customDisplay: formatSleepTime(healthData.sleepMinutes),
-                size: device === 'mobile' ? "sm" as const : "lg" as const,
-                targetValue: 100,
-                currentValue: healthData.sleep,
-              },
-              {
-                id: 'strain',
-                value: (healthData.strain / 21) * 100,
-                label: t('health.strain'),
-                color: "hsl(38, 92%, 50%)",
-                gradientColors: ["hsl(38, 92%, 50%)", "hsl(38, 92%, 70%)"] as [string, string],
-                icon: <Zap className="w-6 h-6" />,
-                trend: healthData.strainTrend.direction,
-                trendValue: healthData.strainTrend.percentage,
-                status: getStrainStatus(healthData.strain),
-                customDisplay: `${healthData.strain.toFixed(1)}`,
-                size: device === 'mobile' ? "sm" as const : "lg" as const,
-                targetValue: 21,
-                currentValue: healthData.strain,
-              },
-              {
-                id: 'walk',
-                value: (healthData?.meters || 0) / 1000,
-                targetValue: goalValues.walk,
-                currentValue: (healthData?.meters || 0) / 1000,
-                label: t('activities.walk'),
-                unit: "km",
-                showTarget: true,
-                color: "hsl(142, 76%, 36%)",
-                gradientColors: ["hsl(142, 76%, 36%)", "hsl(142, 76%, 50%)"] as [string, string],
-                icon: <Footprints className="w-5 h-5" />,
-                trend: healthData?.activityTrend?.direction,
-                trendValue: healthData?.activityTrend?.percentage,
-                status: getWalkStatus((healthData?.meters || 0) / 1000, goalValues.walk),
-                customDisplay: healthData?.meters ? formatDistance(healthData.meters) : '0 km',
-                size: device === 'mobile' ? "sm" as const : "lg" as const,
-                onTargetClick: () => openGoalDialog('walk_km'),
-              },
-            ] : []}
+            rings={healthRings}
             loading={healthLoading}
             columns={healthColumns}
             action={
@@ -424,58 +485,7 @@ export default function Today() {
         <SectionErrorBoundary sectionName={t('sections.financial')}>
           <StatRingSection
             title={t('sections.financial')}
-            rings={[
-              {
-                id: 'income',
-                value: report?.income || 0,
-                targetValue: goalValues.income,
-                currentValue: report?.income || 0,
-                label: t("financial.income"),
-                unit: "USD",
-                showTarget: true,
-                color: "hsl(142, 76%, 36%)",
-                gradientColors: ["hsl(142, 76%, 36%)", "hsl(142, 76%, 50%)"] as [string, string],
-                icon: <DollarSign className="w-6 h-6" />,
-                trend: report?.incomeTrend?.direction,
-                trendValue: report?.incomeTrend?.percentage,
-                status: getIncomeStatus(report?.income || 0, goalValues.income),
-                size: device === 'mobile' ? "sm" as const : "lg" as const,
-                customDisplay: `$${report?.income || 0}`,
-                onTargetClick: () => openGoalDialog('income_monthly'),
-              },
-              {
-                id: 'expenses',
-                value: report?.expenses || 0,
-                targetValue: goalValues.expenses,
-                currentValue: report?.expenses || 0,
-                label: t("financial.expenses"),
-                unit: "USD",
-                showTarget: true,
-                color: "hsl(0, 84%, 60%)",
-                gradientColors: ["hsl(0, 84%, 60%)", "hsl(0, 84%, 75%)"] as [string, string],
-                icon: <TrendingDown className="w-6 h-6" />,
-                trend: report?.expensesTrend?.direction,
-                trendValue: report?.expensesTrend?.percentage,
-                status: getExpensesStatus(report?.expenses || 0, goalValues.expenses),
-                size: device === 'mobile' ? "sm" as const : "lg" as const,
-                customDisplay: `$${report?.expenses || 0}`,
-                onTargetClick: () => openGoalDialog('expenses_daily'),
-              },
-              {
-                id: 'balance',
-                value: Math.abs(report?.balance || 0),
-                label: t("financial.balance"),
-                unit: "USD",
-                color: "hsl(217, 91%, 60%)",
-                gradientColors: ["hsl(217, 91%, 60%)", "hsl(217, 91%, 75%)"] as [string, string],
-                icon: <Wallet className="w-6 h-6" />,
-                trend: report?.balanceTrend?.direction,
-                trendValue: report?.balanceTrend?.percentage,
-                status: getBalanceStatus(report?.balance || 0),
-                size: device === 'mobile' ? "sm" as const : "lg" as const,
-                customDisplay: `$${report?.balance || 0}`,
-              },
-            ]}
+            rings={financialRings}
             loading={reportLoading}
             columns={financialColumns}
             action={
