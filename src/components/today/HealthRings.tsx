@@ -4,10 +4,13 @@ import { Activity, Moon, Zap, Footprints } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useRef } from 'react';
 import { track } from '@/lib/telemetry';
+import { useDeviceTypeCtx } from '@/contexts/DeviceContext';
 
 export default function HealthRings() {
   const { t } = useTranslation('today');
   const { healthData, loading } = useHealthData('daily', new Date());
+  const deviceType = useDeviceTypeCtx();
+  const columns = deviceType === 'mobile' ? 1 : 4;
   const viewTracked = useRef(false);
 
   useEffect(() => {
@@ -80,7 +83,7 @@ export default function HealthRings() {
       title={t('healthMetrics.title')}
       rings={rings}
       loading={loading}
-      columns={4}
+      columns={columns}
     />
   );
 }

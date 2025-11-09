@@ -30,7 +30,7 @@ interface StatRingSectionProps {
   rings: StatRingData[];
   loading?: boolean;
   action?: ReactNode;
-  columns?: 2 | 3 | 4;
+  columns?: 1 | 2 | 3 | 4;
 }
 
 export const StatRingSection = React.memo(function StatRingSection({ 

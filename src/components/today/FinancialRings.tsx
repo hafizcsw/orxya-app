@@ -4,10 +4,13 @@ import { DollarSign, TrendingUp, TrendingDown, Wallet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useRef } from 'react';
 import { track } from '@/lib/telemetry';
+import { useDeviceTypeCtx } from '@/contexts/DeviceContext';
 
 export default function FinancialRings() {
   const { t } = useTranslation('today');
   const { data, loading } = useFinancialData();
+  const deviceType = useDeviceTypeCtx();
+  const columns = deviceType === 'mobile' ? 1 : 3;
   const viewTracked = useRef(false);
 
   useEffect(() => {
@@ -78,7 +81,7 @@ export default function FinancialRings() {
       title={t('financial.title')}
       rings={rings}
       loading={loading}
-      columns={3}
+      columns={columns}
     />
   );
 }

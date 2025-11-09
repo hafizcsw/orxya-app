@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { StatRingSection } from '@/components/today/StatRingSection';
 import { useTodayActivities } from '@/hooks/useTodayActivities';
 import { useUserGoals } from '@/hooks/useUserGoals';
-import { useDeviceType } from '@/hooks/useDeviceType';
+import { useDeviceTypeCtx } from '@/contexts/DeviceContext';
 import {
   Briefcase,
   GraduationCap,
@@ -25,7 +25,8 @@ interface ActivitiesRingsProps {
 export function ActivitiesRings({ date, onGoalClick }: ActivitiesRingsProps) {
   const { t } = useTranslation('today');
   const navigate = useNavigate();
-  const device = useDeviceType();
+  const deviceType = useDeviceTypeCtx();
+  const columns = deviceType === 'mobile' ? 1 : 3;
   const { data: activities, loading } = useTodayActivities(date);
   const { goals, loading: goalsLoading } = useUserGoals();
 
@@ -55,7 +56,7 @@ export function ActivitiesRings({ date, onGoalClick }: ActivitiesRingsProps) {
         icon: <Briefcase className="w-5 h-5" />,
         status: getWorkStatus(work, getGoal('work_hours')),
         customDisplay: `${work}h`,
-        size: device === 'mobile' ? 'sm' as const : 'md' as const,
+        size: deviceType === 'mobile' ? 'sm' as const : 'md' as const,
         onTargetClick: () => onGoalClick?.('work_hours'),
       },
       {
@@ -71,7 +72,7 @@ export function ActivitiesRings({ date, onGoalClick }: ActivitiesRingsProps) {
         icon: <GraduationCap className="w-5 h-5" />,
         status: getStudyStatus(study, getGoal('study_hours')),
         customDisplay: `${study}h`,
-        size: device === 'mobile' ? 'sm' as const : 'md' as const,
+        size: deviceType === 'mobile' ? 'sm' as const : 'md' as const,
         onTargetClick: () => onGoalClick?.('study_hours'),
       },
       {
@@ -87,18 +88,18 @@ export function ActivitiesRings({ date, onGoalClick }: ActivitiesRingsProps) {
         icon: <Dumbbell className="w-5 h-5" />,
         status: getSportsStatus(sports, getGoal('mma_hours')),
         customDisplay: `${sports}h`,
-        size: device === 'mobile' ? 'sm' as const : 'md' as const,
+        size: deviceType === 'mobile' ? 'sm' as const : 'md' as const,
         onTargetClick: () => onGoalClick?.('mma_hours'),
       },
     ];
-  }, [activities, goals, device, t, onGoalClick]);
+  }, [activities, goals, deviceType, t, onGoalClick]);
 
   return (
     <StatRingSection
       title={t('sections.activities')}
       rings={rings}
       loading={loading || goalsLoading}
-      columns={3}
+      columns={columns}
       action={
         <Button variant="outline" size="sm" onClick={() => navigate('/calendar')}>
           {t('common.viewDetails')}

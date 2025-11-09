@@ -51,33 +51,33 @@ export const StatRing = React.memo(function StatRing({
 
   const sizes = {
     sm: { 
-      width: isMobile ? 100 : 100, 
-      strokeWidth: isMobile ? 5 : 5, 
-      fontSize: isMobile ? '0.875rem' : '1.125rem', 
-      iconSize: isMobile ? 14 : 16,
-      labelSize: isMobile ? 'text-[10px]' : 'text-[10px]',
-      subtitleSize: isMobile ? 'text-[8px]' : 'text-[9px]',
-      valueSize: isMobile ? 'text-sm' : 'text-base',
+      width: isMobile ? 85 : 100, 
+      strokeWidth: isMobile ? 4 : 5, 
+      fontSize: isMobile ? '0.75rem' : '1.125rem', 
+      iconSize: isMobile ? 12 : 16,
+      labelSize: isMobile ? 'text-[9px]' : 'text-[10px]',
+      subtitleSize: isMobile ? 'text-[7px]' : 'text-[9px]',
+      valueSize: isMobile ? 'text-xs' : 'text-base',
       padding: 'p-2'
     },
     md: { 
-      width: isMobile ? 100 : 140, 
+      width: isMobile ? 90 : 140, 
       strokeWidth: isMobile ? 5 : 7, 
-      fontSize: isMobile ? '0.875rem' : '1.5rem', 
-      iconSize: isMobile ? 14 : 20,
-      labelSize: isMobile ? 'text-[10px]' : 'text-xs',
-      subtitleSize: isMobile ? 'text-[8px]' : 'text-[10px]',
-      valueSize: isMobile ? 'text-sm' : 'text-lg',
+      fontSize: isMobile ? '0.75rem' : '1.5rem', 
+      iconSize: isMobile ? 13 : 20,
+      labelSize: isMobile ? 'text-[9px]' : 'text-xs',
+      subtitleSize: isMobile ? 'text-[7px]' : 'text-[10px]',
+      valueSize: isMobile ? 'text-xs' : 'text-lg',
       padding: 'p-3'
     },
     lg: { 
-      width: isMobile ? 100 : 180, 
+      width: isMobile ? 95 : 180, 
       strokeWidth: isMobile ? 5 : 9, 
-      fontSize: isMobile ? '0.875rem' : '2rem', 
-      iconSize: isMobile ? 14 : 24,
-      labelSize: isMobile ? 'text-[10px]' : 'text-sm',
-      subtitleSize: isMobile ? 'text-[8px]' : 'text-xs',
-      valueSize: isMobile ? 'text-sm' : 'text-xl',
+      fontSize: isMobile ? '0.75rem' : '2rem', 
+      iconSize: isMobile ? 13 : 24,
+      labelSize: isMobile ? 'text-[9px]' : 'text-sm',
+      subtitleSize: isMobile ? 'text-[7px]' : 'text-xs',
+      valueSize: isMobile ? 'text-xs' : 'text-xl',
       padding: 'p-4'
     },
   }

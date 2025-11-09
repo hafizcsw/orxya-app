@@ -404,7 +404,7 @@ export default function Today() {
   return (
     <SimplePullToRefresh onRefresh={handleRefresh}>
       <div className="min-h-screen bg-background pb-20">
-        <div className="container mx-auto p-3 md:p-6 max-w-7xl space-y-4 md:space-y-6">
+        <div className="container mx-auto p-2 md:p-6 max-w-7xl space-y-2 md:space-y-6">
           
           {/* Header with Greeting */}
           <TodayHeader selectedDate={selectedDate} />

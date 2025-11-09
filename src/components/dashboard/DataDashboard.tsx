@@ -16,16 +16,16 @@ export function DashboardGrid({
 }: DashboardGridProps) {
   const columnStyles = {
     1: 'grid-cols-1',
-    2: 'grid-cols-2 lg:grid-cols-2',
-    3: 'grid-cols-3',
-    4: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4',
-    5: 'grid-cols-3 md:grid-cols-4 lg:grid-cols-5'
+    2: 'grid-cols-1 sm:grid-cols-2',
+    3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
+    4: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4',
+    5: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'
   };
   
   const gapStyles = {
-    sm: 'gap-4',
-    md: 'gap-6',
-    lg: 'gap-8'
+    sm: 'gap-2 sm:gap-4',
+    md: 'gap-3 sm:gap-6',
+    lg: 'gap-4 sm:gap-8'
   };
   
   return (
