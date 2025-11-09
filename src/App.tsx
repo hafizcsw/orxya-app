@@ -10,7 +10,6 @@ import { ThemeProvider } from "next-themes";
 import { DateProvider } from "./contexts/DateContext";
 import { AIProvider } from "./contexts/AIContext";
 import { SettingsProvider } from "./contexts/SettingsContext";
-import { DeviceTypeProvider } from "./contexts/DeviceContext";
 import { LoadingFallback } from "./components/ui/loading-fallback";
 import { useAutopilotNotifications } from "./hooks/useAutopilotNotifications";
 import { useWidgetTokenSync } from "./hooks/useWidgetToken";
@@ -169,28 +168,26 @@ function AppContent() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <DeviceTypeProvider>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <TooltipProvider>
-            <SettingsProvider>
-              <DateProvider>
-                <AIProvider>
-                  <div id="app-root" className="relative min-h-dvh isolate">
-                    <div id="page" className="relative z-0">
-                      <ErrorBoundary>
-                        <AppContent />
-                      </ErrorBoundary>
-                    </div>
-                    <div id="portals" className="fixed inset-0 z-50 pointer-events-none" />
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <TooltipProvider>
+          <SettingsProvider>
+            <DateProvider>
+              <AIProvider>
+                <div id="app-root" className="relative min-h-dvh isolate">
+                  <div id="page" className="relative z-0">
+                    <ErrorBoundary>
+                      <AppContent />
+                    </ErrorBoundary>
                   </div>
-                  <Toaster />
-                  <Sonner />
-                </AIProvider>
-              </DateProvider>
-            </SettingsProvider>
-          </TooltipProvider>
-        </ThemeProvider>
-      </DeviceTypeProvider>
+                  <div id="portals" className="fixed inset-0 z-50 pointer-events-none" />
+                </div>
+                <Toaster />
+                <Sonner />
+              </AIProvider>
+            </DateProvider>
+          </SettingsProvider>
+        </TooltipProvider>
+      </ThemeProvider>
     </BrowserRouter>
   </QueryClientProvider>
 );

@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { DeviceTypeProvider } from "./contexts/DeviceContext";
 import { initOnlineSync } from "./lib/sync";
 import { initTelemetry } from "./lib/telemetry";
 import { startDailyRescheduler } from "./lib/notify";
@@ -83,6 +84,8 @@ if ('serviceWorker' in navigator) {
 
 createRoot(document.getElementById("root")!).render(
   <ErrorBoundary>
-    <App />
+    <DeviceTypeProvider>
+      <App />
+    </DeviceTypeProvider>
   </ErrorBoundary>
 );
