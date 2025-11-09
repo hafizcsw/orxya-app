@@ -10,7 +10,6 @@ import { ThemeProvider } from "next-themes";
 import { DateProvider } from "./contexts/DateContext";
 import { AIProvider } from "./contexts/AIContext";
 import { SettingsProvider } from "./contexts/SettingsContext";
-import { motion, AnimatePresence } from "framer-motion";
 import { LoadingFallback } from "./components/ui/loading-fallback";
 import { useAutopilotNotifications } from "./hooks/useAutopilotNotifications";
 import { useWidgetTokenSync } from "./hooks/useWidgetToken";
@@ -114,58 +113,48 @@ function AppContent() {
       {!isAuthPage && <MobileDownloadBanner />}
       {!isAuthPage && <Navigation />}
       <div className={isAuthPage ? '' : 'pb-20'}>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={location.pathname}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-          >
-            <Suspense fallback={<LoadingFallback />}>
-              <Routes location={location}>
-                <Route path="/" element={<Index />} />
-                <Route path="/today" element={<Protected><Today /></Protected>} />
-                <Route path="/today-whoop" element={<Protected><TodayWHOOP /></Protected>} />
-                <Route path="/projects" element={<Projects />} />
-                <Route path="/reports" element={<Protected><Reports /></Protected>} />
-                <Route path="/automation" element={<Protected><Automation /></Protected>} />
-                <Route path="/ai" element={<AI />} />
-                <Route path="/assistant" element={<Protected><Assistant /></Protected>} />
-                <Route path="/calendar" element={<Protected><ErrorBoundary><Calendar /></ErrorBoundary></Protected>} />
-                <Route path="/calendar/settings" element={<Protected><CalendarSettings /></Protected>} />
-                <Route path="/book/:slug" element={<PublicBookingPage />} />
-                <Route path="/inbox" element={<Protected><Inbox /></Protected>} />
-                <Route path="/calendar-full" element={<Protected><CalendarFull /></Protected>} />
-                <Route path="/calendar-simple" element={<Protected><CalendarSimple /></Protected>} />
-                <Route path="/settings" element={<Protected><Settings /></Protected>} />
-                <Route path="/settings/external" element={<Protected><SettingsExternal /></Protected>} />
-                <Route path="/settings/notifications" element={<Protected><SettingsNotifications /></Protected>} />
-                <Route path="/settings/prayer" element={<Protected><SettingsPrayer /></Protected>} />
-                <Route path="/settings/glances" element={<Protected><GlancesSettings /></Protected>} />
-                <Route path="/integrations" element={<Protected><IntegrationsHub /></Protected>} />
-                <Route path="/planner" element={<Protected><PlannerChat /></Protected>} />
-                <Route path="/conflicts" element={<Protected><Conflicts /></Protected>} />
-                <Route path="/test-conflicts" element={<Protected><TestConflicts /></Protected>} />
-                <Route path="/oauth/google" element={<OAuthGoogle />} />
-                <Route path="/admin/autopilot" element={<Protected><AdminAutopilot /></Protected>} />
-                <Route path="/generate-assets" element={<GenerateAssets />} />
-                <Route path="/diagnostics" element={<Protected><Diagnostics /></Protected>} />
-                <Route path="/seed" element={<Seed />} />
-                <Route path="/profile" element={<Protected><Profile /></Protected>} />
-                <Route path="/expenses" element={<Protected><Expenses /></Protected>} />
-                <Route path="/privacy" element={<Protected><PrivacyCenter /></Protected>} />
-                <Route path="/flags" element={<Protected><FlagsConsole /></Protected>} />
-                <Route path="/engagement" element={<Protected><EngagementDashboard /></Protected>} />
-                <Route path="/golive" element={<Protected><GoLiveDashboard /></Protected>} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/auth/callback" element={<AuthCallback />} />
-                <Route path="/install" element={<Install />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </motion.div>
-        </AnimatePresence>
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes location={location}>
+            <Route path="/" element={<Index />} />
+            <Route path="/today" element={<Protected><Today /></Protected>} />
+            <Route path="/today-whoop" element={<Protected><TodayWHOOP /></Protected>} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/reports" element={<Protected><Reports /></Protected>} />
+            <Route path="/automation" element={<Protected><Automation /></Protected>} />
+            <Route path="/ai" element={<AI />} />
+            <Route path="/assistant" element={<Protected><Assistant /></Protected>} />
+            <Route path="/calendar" element={<Protected><ErrorBoundary><Calendar /></ErrorBoundary></Protected>} />
+            <Route path="/calendar/settings" element={<Protected><CalendarSettings /></Protected>} />
+            <Route path="/book/:slug" element={<PublicBookingPage />} />
+            <Route path="/inbox" element={<Protected><Inbox /></Protected>} />
+            <Route path="/calendar-full" element={<Protected><CalendarFull /></Protected>} />
+            <Route path="/calendar-simple" element={<Protected><CalendarSimple /></Protected>} />
+            <Route path="/settings" element={<Protected><Settings /></Protected>} />
+            <Route path="/settings/external" element={<Protected><SettingsExternal /></Protected>} />
+            <Route path="/settings/notifications" element={<Protected><SettingsNotifications /></Protected>} />
+            <Route path="/settings/prayer" element={<Protected><SettingsPrayer /></Protected>} />
+            <Route path="/settings/glances" element={<Protected><GlancesSettings /></Protected>} />
+            <Route path="/integrations" element={<Protected><IntegrationsHub /></Protected>} />
+            <Route path="/planner" element={<Protected><PlannerChat /></Protected>} />
+            <Route path="/conflicts" element={<Protected><Conflicts /></Protected>} />
+            <Route path="/test-conflicts" element={<Protected><TestConflicts /></Protected>} />
+            <Route path="/oauth/google" element={<OAuthGoogle />} />
+            <Route path="/admin/autopilot" element={<Protected><AdminAutopilot /></Protected>} />
+            <Route path="/generate-assets" element={<GenerateAssets />} />
+            <Route path="/diagnostics" element={<Protected><Diagnostics /></Protected>} />
+            <Route path="/seed" element={<Seed />} />
+            <Route path="/profile" element={<Protected><Profile /></Protected>} />
+            <Route path="/expenses" element={<Protected><Expenses /></Protected>} />
+            <Route path="/privacy" element={<Protected><PrivacyCenter /></Protected>} />
+            <Route path="/flags" element={<Protected><FlagsConsole /></Protected>} />
+            <Route path="/engagement" element={<Protected><EngagementDashboard /></Protected>} />
+            <Route path="/golive" element={<Protected><GoLiveDashboard /></Protected>} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/install" element={<Install />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </div>
       {!isAuthPage && <BottomNav />}
       {!isAuthPage && <AIDock />}
