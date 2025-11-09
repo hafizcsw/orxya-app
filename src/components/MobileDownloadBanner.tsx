@@ -3,9 +3,11 @@ import { X, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 export function MobileDownloadBanner() {
   const { t } = useTranslation('common');
+  const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
   const [deviceType, setDeviceType] = useState<'ios' | 'android' | 'other'>('other');
 
@@ -38,16 +40,7 @@ export function MobileDownloadBanner() {
   };
 
   const handleDownload = () => {
-    if (deviceType === 'ios') {
-      // Replace with your actual App Store URL
-      window.open('https://apps.apple.com/app/your-app-id', '_blank');
-    } else if (deviceType === 'android') {
-      // Replace with your actual Google Play URL
-      window.open('https://play.google.com/store/apps/details?id=com.yourapp', '_blank');
-    } else {
-      // For desktop or other devices, show message
-      alert(t('downloadApp.visitFromMobile'));
-    }
+    navigate('/install');
   };
 
   return (

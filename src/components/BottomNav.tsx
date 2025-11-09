@@ -242,17 +242,7 @@ export function BottomNav() {
                   transition={{ delay: 0.2 + (menuLinks.length * 0.05) }}
                   onClick={() => {
                     triggerHaptic();
-                    const userAgent = navigator.userAgent || navigator.vendor;
-                    const isIOS = /iPad|iPhone|iPod/.test(userAgent);
-                    const isAndroid = /android/i.test(userAgent);
-                    
-                    if (isIOS) {
-                      toast.info(t('common:common.downloadOnAppStore'));
-                    } else if (isAndroid) {
-                      toast.info(t('common:common.downloadOnGooglePlay'));
-                    } else {
-                      toast.info(t('common:common.visitOnMobile'));
-                    }
+                    navigate('/install');
                     setMenuOpen(false);
                   }}
                   className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors w-full text-right bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 mt-2"
