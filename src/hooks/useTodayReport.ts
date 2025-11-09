@@ -40,10 +40,10 @@ export function useTodayReport(period: Period, selectedDate: Date) {
       // Fetch current period data from vw_today_activities
       const { data: currentActivity } = await supabase
         .from('vw_today_activities')
-        .select('*')
-        .eq('owner_id', user.id)
+        .select('study_hours, sports_hours, work_hours, walk_minutes, day, user_id')
+        .eq('user_id', user.id)
         .eq('day', dateStr)
-        .single();
+        .maybeSingle();
 
       // Fetch previous period for trends
       const prevDate = new Date(selectedDate);
@@ -52,10 +52,10 @@ export function useTodayReport(period: Period, selectedDate: Date) {
 
       const { data: prevActivity } = await supabase
         .from('vw_today_activities')
-        .select('*')
-        .eq('owner_id', user.id)
+        .select('study_hours, sports_hours, work_hours, walk_minutes, day, user_id')
+        .eq('user_id', user.id)
         .eq('day', prevDateStr)
-        .single();
+        .maybeSingle();
 
       // Use real data or defaults
       const currentData = {
