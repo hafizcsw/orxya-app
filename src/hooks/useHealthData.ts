@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import dayjs from 'dayjs';
 import { 
   calculateRecovery, 
   calculateStrain, 
@@ -21,6 +22,7 @@ export interface HealthDataWithTrends extends HealthMetrics {
   sleepMinutes: number;
   hrAvg: number;
   hrMax: number;
+  baseline_days_collected?: number; // NEW: عدد أيام HRV الـ14
 }
 
 export function useHealthData(period: Period, selectedDate: Date) {
@@ -58,14 +60,14 @@ export function useHealthData(period: Period, selectedDate: Date) {
       const startDateStr = startDate.toISOString().split('T')[0];
       const endDateStr = endDate.toISOString().split('T')[0];
 
-      // Fetch current period data
+      // Fetch current period data from signals_daily (NEW)
       const { data: currentData, error: currentError } = await supabase
-        .from('health_samples')
+        .from('signals_daily')
         .select('*')
         .eq('user_id', user.id)
-        .gte('day', startDateStr)
-        .lte('day', endDateStr)
-        .order('day', { ascending: false });
+        .gte('date', startDateStr)
+        .lte('date', endDateStr)
+        .order('date', { ascending: false });
 
       if (currentError) throw currentError;
 
@@ -90,11 +92,11 @@ export function useHealthData(period: Period, selectedDate: Date) {
       }
 
       const { data: prevData } = await supabase
-        .from('health_samples')
+        .from('signals_daily')
         .select('*')
         .eq('user_id', user.id)
-        .gte('day', prevStartDate.toISOString().split('T')[0])
-        .lte('day', prevEndDate.toISOString().split('T')[0]);
+        .gte('date', prevStartDate.toISOString().split('T')[0])
+        .lte('date', prevEndDate.toISOString().split('T')[0]);
 
       // Aggregate current period data
       const current = aggregateHealthData(currentData || []);
@@ -111,6 +113,17 @@ export function useHealthData(period: Period, selectedDate: Date) {
       const prevSleep = calculateSleepScore(previous.sleepMinutes);
       const prevActivity = calculateActivityScore(previous.steps, previous.meters);
 
+      // NEW: Fetch baseline_days_collected from signals_daily
+      const since14 = dayjs(endDateStr).subtract(14, 'day').format('YYYY-MM-DD');
+      const { data: d14 } = await supabase
+        .from('signals_daily')
+        .select('hrv_z, date')
+        .eq('user_id', user.id)
+        .gte('date', since14)
+        .lte('date', endDateStr);
+      
+      const baseline_days_collected = (d14 ?? []).filter(r => r.hrv_z !== null && r.hrv_z !== undefined).length;
+
       setHealthData({
         recovery,
         strain,
@@ -125,6 +138,7 @@ export function useHealthData(period: Period, selectedDate: Date) {
         sleepMinutes: current.sleepMinutes,
         hrAvg: current.hrAvg,
         hrMax: current.hrMax,
+        baseline_days_collected, // NEW
       });
     } catch (err) {
       console.error("Error fetching health data:", err);
@@ -145,6 +159,7 @@ export function useHealthData(period: Period, selectedDate: Date) {
         sleepMinutes: 0,
         hrAvg: 0,
         hrMax: 0,
+        baseline_days_collected: 0, // NEW
       });
     } finally {
       setLoading(false);

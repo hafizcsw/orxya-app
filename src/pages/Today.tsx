@@ -24,6 +24,9 @@ import { useUserGoals, GoalType } from "@/hooks/useUserGoals";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLiveToday } from "@/hooks/useLiveToday";
 import SimplePullToRefresh from 'react-simple-pull-to-refresh';
+import { AIInsightsCard } from '@/components/today/AIInsightsCard'; // NEW
+import BaselineBanner from '@/components/today/BaselineBanner'; // NEW
+import { useFeatureFlag } from '@/lib/feature-flags'; // NEW
 
 import { CurrentTaskCard } from "@/components/today/CurrentTaskCard";
 import { 
@@ -74,6 +77,9 @@ export default function Today() {
   const [editingGoalType, setEditingGoalType] = useState<GoalType | null>(null);
   const [focusMode, setFocusMode] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
+  
+  // Feature Flags (NEW)
+  const ffAI = useFeatureFlag('FF_AI_INSIGHTS');
 
   // Check authentication
   useEffect(() => {
@@ -271,6 +277,24 @@ export default function Today() {
             focusMode={focusMode}
             onToggleFocus={toggleFocus}
           />
+
+          {/* NEW: Baseline Banner - shows only if < 14 days */}
+          {healthData?.baseline_days_collected !== undefined && healthData.baseline_days_collected < 14 && (
+            <BaselineBanner />
+          )}
+
+          {/* NEW: AI Insights Card - conditional on feature flag */}
+          {ffAI && (
+            <AIInsightsCard 
+              insights={{
+                focusScore: 75,
+                energyLevel: 'high',
+                suggestions: ['استمر بالوتيرة الحالية'],
+                warnings: [],
+              }}
+              loading={false}
+            />
+          )}
 
           {/* Error State */}
           {dataError && (
