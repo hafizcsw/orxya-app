@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, CheckCircle2, Smartphone, Monitor } from 'lucide-react';
+import { Download, CheckCircle2, Smartphone, Monitor, Share2, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
 
 export default function Install() {
   const navigate = useNavigate();
+  const { t } = useTranslation('common');
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isInstallable, setIsInstallable] = useState(false);
@@ -62,176 +65,313 @@ export default function Install() {
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold text-foreground">تثبيت Oryxa</h1>
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center space-y-2"
+        >
+          <h1 className="text-4xl font-bold text-foreground">{t('install.title')}</h1>
           <p className="text-muted-foreground text-lg">
-            ثبّت التطبيق على جهازك للوصول السريع والعمل بدون إنترنت
+            {t('install.subtitle')}
           </p>
-        </div>
+        </motion.div>
 
         {/* Status Card */}
         {isInstalled ? (
-          <Card className="p-6 bg-green-500/10 border-green-500/20">
-            <div className="flex items-center gap-3">
-              <CheckCircle2 className="w-8 h-8 text-green-500" />
-              <div>
-                <h3 className="text-lg font-semibold text-foreground">
-                  ✅ التطبيق مثبت بنجاح!
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  يمكنك الآن استخدام Oryxa من الشاشة الرئيسية
-                </p>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
+            <Card className="p-6 bg-green-500/10 border-green-500/20">
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="w-8 h-8 text-green-500" />
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground">
+                    ✅ {t('install.alreadyInstalled')}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {t('install.installedDescription')}
+                  </p>
+                </div>
               </div>
-            </div>
-            <Button 
-              onClick={() => navigate('/today')} 
-              className="w-full mt-4"
-            >
-              الذهاب إلى التطبيق
-            </Button>
-          </Card>
+              <Button 
+                onClick={() => navigate('/today')} 
+                className="w-full mt-4"
+              >
+                {t('install.goToApp')}
+              </Button>
+            </Card>
+          </motion.div>
         ) : (
           <>
             {/* Android/Desktop Install Button */}
             {platform !== 'ios' && isInstallable && (
-              <Card className="p-6 bg-primary/10 border-primary/20">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <Download className="w-8 h-8 text-primary" />
-                    <div>
-                      <h3 className="text-lg font-semibold text-foreground">
-                        جاهز للتثبيت!
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        اضغط الزر أدناه لتثبيت التطبيق
-                      </p>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <Card className="p-6 bg-primary/10 border-primary/20">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <Download className="w-8 h-8 text-primary" />
+                      <div>
+                        <h3 className="text-lg font-semibold text-foreground">
+                          {t('install.readyToInstall')}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {t('install.readyToInstallDescription')}
+                        </p>
+                      </div>
                     </div>
+                    <Button 
+                      onClick={handleInstallClick} 
+                      className="w-full"
+                      size="lg"
+                    >
+                      <Download className="w-5 h-5 ml-2" />
+                      {t('install.installNow')}
+                    </Button>
                   </div>
-                  <Button 
-                    onClick={handleInstallClick} 
-                    className="w-full"
-                    size="lg"
-                  >
-                    <Download className="w-5 h-5 ml-2" />
-                    تثبيت التطبيق الآن
-                  </Button>
-                </div>
-              </Card>
+                </Card>
+              </motion.div>
             )}
 
             {/* iOS Instructions */}
             {platform === 'ios' && (
-              <Card className="p-6">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <Smartphone className="w-8 h-8 text-primary" />
-                    <h3 className="text-lg font-semibold text-foreground">
-                      تثبيت على iOS (آيفون/آيباد)
-                    </h3>
-                  </div>
-                  
-                  <ol className="space-y-3 text-foreground list-decimal list-inside">
-                    <li>اضغط على زر <strong>"المشاركة"</strong> 📤 في Safari</li>
-                    <li>اسحب للأسفل واختر <strong>"إضافة إلى الشاشة الرئيسية"</strong></li>
-                    <li>اضغط <strong>"إضافة"</strong> في الزاوية العلوية اليمنى</li>
-                    <li>سيظهر التطبيق على شاشتك الرئيسية! 🎉</li>
-                  </ol>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <Card className="p-6">
+                  <div className="space-y-5">
+                    <div className="flex items-center gap-3">
+                      <Smartphone className="w-8 h-8 text-primary" />
+                      <h3 className="text-lg font-semibold text-foreground">
+                        {t('install.iosTitle')}
+                      </h3>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="flex gap-4 items-start p-4 bg-accent/30 rounded-lg">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
+                          1
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-foreground font-medium">{t('install.iosStep1')}</p>
+                          <div className="mt-2 flex items-center gap-2 text-muted-foreground">
+                            <Share2 className="w-4 h-4" />
+                            <span className="text-xs">Safari &gt; Share button</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-4 items-start p-4 bg-accent/30 rounded-lg">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
+                          2
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-foreground font-medium">{t('install.iosStep2')}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-4 items-start p-4 bg-accent/30 rounded-lg">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
+                          3
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-foreground font-medium">{t('install.iosStep3')}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-4 items-start p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center font-bold">
+                          ✓
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-foreground font-medium">{t('install.iosStep4')}</p>
+                        </div>
+                      </div>
+                    </div>
 
-                  <div className="bg-muted p-4 rounded-lg">
-                    <p className="text-sm text-muted-foreground">
-                      💡 <strong>ملاحظة:</strong> يجب استخدام متصفح Safari لتثبيت التطبيق على iOS
-                    </p>
+                    <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-lg">
+                      <p className="text-sm text-foreground">
+                        💡 <strong>ملاحظة:</strong> {t('install.iosNote')}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </Card>
+                </Card>
+              </motion.div>
             )}
 
             {/* Android Manual Instructions */}
             {platform === 'android' && !isInstallable && (
-              <Card className="p-6">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <Smartphone className="w-8 h-8 text-primary" />
-                    <h3 className="text-lg font-semibold text-foreground">
-                      تثبيت على أندرويد
-                    </h3>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <Card className="p-6">
+                  <div className="space-y-5">
+                    <div className="flex items-center gap-3">
+                      <Smartphone className="w-8 h-8 text-primary" />
+                      <h3 className="text-lg font-semibold text-foreground">
+                        {t('install.androidTitle')}
+                      </h3>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="flex gap-4 items-start p-4 bg-accent/30 rounded-lg">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
+                          1
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-foreground font-medium">{t('install.androidStep1')}</p>
+                          <div className="mt-2 flex items-center gap-2 text-muted-foreground">
+                            <MoreVertical className="w-4 h-4" />
+                            <span className="text-xs">Chrome Menu</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-4 items-start p-4 bg-accent/30 rounded-lg">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
+                          2
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-foreground font-medium">{t('install.androidStep2')}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-4 items-start p-4 bg-accent/30 rounded-lg">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
+                          3
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-foreground font-medium">{t('install.androidStep3')}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-4 items-start p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center font-bold">
+                          ✓
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-foreground font-medium">{t('install.androidStep4')}</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  
-                  <ol className="space-y-3 text-foreground list-decimal list-inside">
-                    <li>اضغط على قائمة Chrome (⋮) في الأعلى</li>
-                    <li>اختر <strong>"إضافة إلى الشاشة الرئيسية"</strong> أو <strong>"تثبيت التطبيق"</strong></li>
-                    <li>اضغط <strong>"تثبيت"</strong> للتأكيد</li>
-                    <li>سيظهر التطبيق على شاشتك الرئيسية! 🎉</li>
-                  </ol>
-                </div>
-              </Card>
+                </Card>
+              </motion.div>
             )}
 
             {/* Desktop Instructions */}
             {platform === 'desktop' && !isInstallable && (
-              <Card className="p-6">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <Monitor className="w-8 h-8 text-primary" />
-                    <h3 className="text-lg font-semibold text-foreground">
-                      تثبيت على الكمبيوتر
-                    </h3>
-                  </div>
-                  
-                  <ol className="space-y-3 text-foreground list-decimal list-inside">
-                    <li>ابحث عن أيقونة <strong>"تثبيت"</strong> في شريط العنوان</li>
-                    <li>أو اضغط على القائمة (⋮) واختر <strong>"تثبيت Oryxa"</strong></li>
-                    <li>اضغط <strong>"تثبيت"</strong> للتأكيد</li>
-                  </ol>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <Card className="p-6">
+                  <div className="space-y-5">
+                    <div className="flex items-center gap-3">
+                      <Monitor className="w-8 h-8 text-primary" />
+                      <h3 className="text-lg font-semibold text-foreground">
+                        {t('install.desktopTitle')}
+                      </h3>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="flex gap-4 items-start p-4 bg-accent/30 rounded-lg">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
+                          1
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-foreground font-medium">{t('install.desktopStep1')}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-4 items-start p-4 bg-accent/30 rounded-lg">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
+                          2
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-foreground font-medium">{t('install.desktopStep2')}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-4 items-start p-4 bg-accent/30 rounded-lg">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
+                          3
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-foreground font-medium">{t('install.desktopStep3')}</p>
+                        </div>
+                      </div>
+                    </div>
 
-                  <div className="bg-muted p-4 rounded-lg">
-                    <p className="text-sm text-muted-foreground">
-                      💡 يعمل التثبيت على Chrome و Edge و Brave
-                    </p>
+                    <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-lg">
+                      <p className="text-sm text-foreground">
+                        💡 {t('install.desktopNote')}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </Card>
+                </Card>
+              </motion.div>
             )}
           </>
         )}
 
         {/* Features Card */}
-        <Card className="p-6">
-          <h3 className="text-xl font-semibold text-foreground mb-4">
-            🌟 مميزات التطبيق المثبت
-          </h3>
-          <ul className="space-y-3 text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-              <span>وصول سريع من الشاشة الرئيسية مثل التطبيقات الأخرى</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-              <span>يعمل بدون إنترنت - يمكنك استخدامه في أي مكان</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-              <span>فتح أسرع وتجربة أكثر سلاسة</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-              <span>شاشة كاملة بدون شريط المتصفح</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-              <span>استهلاك أقل للبطارية والذاكرة</span>
-            </li>
-          </ul>
-        </Card>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Card className="p-6">
+            <h3 className="text-xl font-semibold text-foreground mb-4">
+              🌟 {t('install.featuresTitle')}
+            </h3>
+            <ul className="space-y-3 text-muted-foreground">
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                <span>{t('install.feature1')}</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                <span>{t('install.feature2')}</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                <span>{t('install.feature3')}</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                <span>{t('install.feature4')}</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                <span>{t('install.feature5')}</span>
+              </li>
+            </ul>
+          </Card>
+        </motion.div>
 
         {/* Back Button */}
-        <Button 
-          variant="outline" 
-          onClick={() => navigate('/')} 
-          className="w-full"
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
         >
-          العودة للصفحة الرئيسية
-        </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/')} 
+            className="w-full"
+          >
+            {t('install.backToHome')}
+          </Button>
+        </motion.div>
       </div>
     </div>
   );
