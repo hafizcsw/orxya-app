@@ -653,6 +653,36 @@ export type Database = {
           },
         ]
       }
+      audit_log: {
+        Row: {
+          action: string
+          at: string
+          details: Json | null
+          id: number
+          row_pk: string | null
+          table_name: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          at?: string
+          details?: Json | null
+          id?: number
+          row_pk?: string | null
+          table_name: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          at?: string
+          details?: Json | null
+          id?: number
+          row_pk?: string | null
+          table_name?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       autopilot_actions: {
         Row: {
           action: string
@@ -2047,6 +2077,41 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vw_daily_metrics"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      privacy_consents: {
+        Row: {
+          at: string
+          consent_type: string
+          granted: boolean
+          id: number
+          meta: Json | null
+          user_id: string
+        }
+        Insert: {
+          at?: string
+          consent_type: string
+          granted: boolean
+          id?: number
+          meta?: Json | null
+          user_id: string
+        }
+        Update: {
+          at?: string
+          consent_type?: string
+          granted?: boolean
+          id?: number
+          meta?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "privacy_consents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
