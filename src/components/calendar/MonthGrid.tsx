@@ -1,5 +1,5 @@
 import { startOfMonth, endOfMonth, startOfWeek, addDays, sameDay, toISODate } from "@/lib/dates";
-import Badge from "@/components/ui/Badge";
+import Badge from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 type Event = {
