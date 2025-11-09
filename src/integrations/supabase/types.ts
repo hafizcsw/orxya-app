@@ -3107,6 +3107,52 @@ export type Database = {
       }
     }
     Views: {
+      v_finance_today: {
+        Row: {
+          balance: number | null
+          balance_trend_pct: number | null
+          day: string | null
+          expenses: number | null
+          expenses_trend_pct: number | null
+          income: number | null
+          income_trend_pct: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_daily_metrics"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      v_health_today: {
+        Row: {
+          date: string | null
+          hr_avg: number | null
+          hr_max: number | null
+          hrv_z: number | null
+          meters: number | null
+          recovery_percent: number | null
+          sleep_minutes: number | null
+          sleep_score: number | null
+          steps: number | null
+          strain_score: number | null
+          user_id: string | null
+          walk_minutes: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signals_daily_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_plan_performance: {
         Row: {
           category: string | null
@@ -3431,6 +3477,32 @@ export type Database = {
           tile_uses: number
           unique_features_used: number
           widget_taps: number
+        }[]
+      }
+      get_finance_today: {
+        Args: { p_day: string }
+        Returns: {
+          balance: number
+          balance_trend_pct: number
+          expenses: number
+          expenses_trend_pct: number
+          income: number
+          income_trend_pct: number
+        }[]
+      }
+      get_health_today: {
+        Args: { p_day: string }
+        Returns: {
+          hr_avg: number
+          hr_max: number
+          hrv_z: number
+          meters: number
+          recovery_percent: number
+          sleep_minutes: number
+          sleep_score: number
+          steps: number
+          strain_score: number
+          walk_minutes: number
         }[]
       }
       get_privacy_prefs: {

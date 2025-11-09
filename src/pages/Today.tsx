@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, lazy, Suspense, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,8 +26,10 @@ import { useLiveToday } from "@/hooks/useLiveToday";
 import SimplePullToRefresh from 'react-simple-pull-to-refresh';
 import { AIInsightsCard } from '@/components/today/AIInsightsCard';
 import BaselineBanner from '@/components/today/BaselineBanner';
-import { useFeatureFlag } from '@/lib/feature-flags';
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { ActivitiesRings } from '@/components/today/ActivitiesRings';
+import HealthRings from '@/components/today/HealthRings';
+import FinancialRings from '@/components/today/FinancialRings';
 import { useRealtimeInvalidation } from '@/hooks/useRealtimeInvalidation';
 
 import { CurrentTaskCard } from "@/components/today/CurrentTaskCard";
@@ -81,7 +83,7 @@ export default function Today() {
   const [dataError, setDataError] = useState<string | null>(null);
   
   // Feature Flags
-  const ffAI = useFeatureFlag('FF_AI_INSIGHTS');
+  const { flags } = useFeatureFlags();
   
   // Realtime cache invalidation
   useRealtimeInvalidation();
@@ -289,7 +291,7 @@ export default function Today() {
           )}
 
           {/* NEW: AI Insights Card - conditional on feature flag */}
-          {ffAI && (
+          {flags?.FF_AI_INSIGHTS && (
             <AIInsightsCard date={selectedDate.toISOString().split('T')[0]} />
           )}
 

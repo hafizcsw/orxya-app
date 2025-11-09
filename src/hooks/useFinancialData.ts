@@ -6,47 +6,64 @@ type FinancialSummary = {
   income: number;
   expenses: number;
   balance: number;
+  trends?: {
+    income_pct: number | null;
+    expenses_pct: number | null;
+    balance_pct: number | null;
+  };
 };
 
 export function useFinancialData(date?: string) {
-  const [data, setData] = useState<FinancialSummary>({ income: 0, expenses: 0, balance: 0 });
+  const [data, setData] = useState<FinancialSummary>({ 
+    income: 0, 
+    expenses: 0, 
+    balance: 0,
+    trends: { income_pct: null, expenses_pct: null, balance_pct: null }
+  });
   const [loading, setLoading] = useState(false);
 
-  const d = dayjs(date ?? undefined);
-  const start = d.startOf('day').toISOString();
-  const end = d.endOf('day').toISOString();
+  const day = dayjs(date ?? undefined).format('YYYY-MM-DD');
 
   useEffect(() => {
     let alive = true;
     (async () => {
       setLoading(true);
       try {
-        const { data: rows, error } = await supabase
-          .from('financial_events')
-          .select('direction, amount')
-          .gte('when_at', start)
-          .lte('when_at', end);
+        // القراءة من v_finance_today مع الاتجاهات
+        const { data: row, error } = await supabase
+          .from('v_finance_today')
+          .select('income, expenses, balance, income_trend_pct, expenses_trend_pct, balance_trend_pct')
+          .eq('day', day)
+          .maybeSingle();
 
         if (error) throw error;
 
-        let income = 0, expenses = 0;
-        (rows ?? []).forEach(r => {
-          const amt = Number(r.amount ?? 0);
-          if (r.direction === 1) income += amt;
-          else if (r.direction === -1) expenses += amt;
-        });
-
-        const summary = { income, expenses, balance: income - expenses };
+        const summary: FinancialSummary = {
+          income: Number(row?.income ?? 0),
+          expenses: Number(row?.expenses ?? 0),
+          balance: Number(row?.balance ?? 0),
+          trends: {
+            income_pct: row?.income_trend_pct ?? null,
+            expenses_pct: row?.expenses_trend_pct ?? null,
+            balance_pct: row?.balance_trend_pct ?? null,
+          }
+        };
+        
         if (alive) setData(summary);
       } catch (err) {
         console.error('[useFinancialData] error', err);
-        if (alive) setData({ income: 0, expenses: 0, balance: 0 });
+        if (alive) setData({ 
+          income: 0, 
+          expenses: 0, 
+          balance: 0,
+          trends: { income_pct: null, expenses_pct: null, balance_pct: null }
+        });
       } finally {
         if (alive) setLoading(false);
       }
     })();
     return () => { alive = false; };
-  }, [start, end]);
+  }, [day]);
 
   return { data, loading };
 }

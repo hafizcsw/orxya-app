@@ -38,113 +38,54 @@ export function useHealthData(period: Period, selectedDate: Date) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user");
 
-      // Calculate date range based on period
-      const endDate = new Date(selectedDate);
-      const startDate = new Date(selectedDate);
-      
-      switch (period) {
-        case 'daily':
-          // Just the selected day
-          break;
-        case 'weekly':
-          startDate.setDate(endDate.getDate() - 6);
-          break;
-        case 'monthly':
-          startDate.setDate(endDate.getDate() - 29);
-          break;
-        case 'yearly':
-          startDate.setDate(endDate.getDate() - 364);
-          break;
-      }
+      const dateStr = selectedDate.toISOString().split('T')[0];
 
-      const startDateStr = startDate.toISOString().split('T')[0];
-      const endDateStr = endDate.toISOString().split('T')[0];
-
-      // Fetch current period data from signals_daily (NEW)
+      // القراءة من v_health_today للبيانات الحالية
       const { data: currentData, error: currentError } = await supabase
-        .from('signals_daily')
-        .select('*')
-        .eq('user_id', user.id)
-        .gte('date', startDateStr)
-        .lte('date', endDateStr)
-        .order('date', { ascending: false });
+        .from('v_health_today')
+        .select('recovery_percent, sleep_score, strain_score, walk_minutes, steps, meters, hr_avg, hr_max, sleep_minutes, hrv_z')
+        .eq('date', dateStr)
+        .maybeSingle();
 
       if (currentError) throw currentError;
 
-      // Fetch previous period data for trends
-      const prevEndDate = new Date(startDate);
-      prevEndDate.setDate(prevEndDate.getDate() - 1);
-      const prevStartDate = new Date(prevEndDate);
-      
-      switch (period) {
-        case 'daily':
-          prevStartDate.setDate(prevEndDate.getDate());
-          break;
-        case 'weekly':
-          prevStartDate.setDate(prevEndDate.getDate() - 6);
-          break;
-        case 'monthly':
-          prevStartDate.setDate(prevEndDate.getDate() - 29);
-          break;
-        case 'yearly':
-          prevStartDate.setDate(prevEndDate.getDate() - 364);
-          break;
-      }
-
-      const { data: prevData } = await supabase
-        .from('signals_daily')
-        .select('*')
-        .eq('user_id', user.id)
-        .gte('date', prevStartDate.toISOString().split('T')[0])
-        .lte('date', prevEndDate.toISOString().split('T')[0]);
-
-      // Aggregate current period data
-      const current = aggregateHealthData(currentData || []);
-      const previous = aggregateHealthData(prevData || []);
-
-      // Calculate metrics
-      const recovery = calculateRecovery(current.sleepMinutes, current.hrAvg);
-      const strain = calculateStrain(current.hrAvg, current.hrMax, current.steps, current.meters);
-      const sleep = calculateSleepScore(current.sleepMinutes);
-      const activity = calculateActivityScore(current.steps, current.meters);
-
-      const prevRecovery = calculateRecovery(previous.sleepMinutes, previous.hrAvg);
-      const prevStrain = calculateStrain(previous.hrAvg, previous.hrMax, previous.steps, previous.meters);
-      const prevSleep = calculateSleepScore(previous.sleepMinutes);
-      const prevActivity = calculateActivityScore(previous.steps, previous.meters);
-
-      // NEW: Fetch baseline_days_collected from signals_daily
-      const since14 = dayjs(endDateStr).subtract(14, 'day').format('YYYY-MM-DD');
+      // حساب baseline_days_collected
+      const since14 = dayjs(dateStr).subtract(14, 'day').format('YYYY-MM-DD');
       const { data: d14 } = await supabase
         .from('signals_daily')
         .select('hrv_z, date')
         .eq('user_id', user.id)
         .gte('date', since14)
-        .lte('date', endDateStr);
+        .lte('date', dateStr);
       
       const baseline_days_collected = (d14 ?? []).filter(r => r.hrv_z !== null && r.hrv_z !== undefined).length;
+
+      // استخدام القيم المباشرة من View
+      const recovery = currentData?.recovery_percent ?? 0;
+      const strain = currentData?.strain_score ?? 0;
+      const sleep = currentData?.sleep_score ?? 0;
+      const activity = calculateActivityScore(currentData?.steps ?? 0, currentData?.meters ?? 0);
 
       setHealthData({
         recovery,
         strain,
         sleep,
         activity,
-        recoveryTrend: calculateTrend(recovery, prevRecovery),
-        strainTrend: calculateTrend(strain, prevStrain),
-        sleepTrend: calculateTrend(sleep, prevSleep),
-        activityTrend: calculateTrend(activity, prevActivity),
-        steps: current.steps,
-        meters: current.meters,
-        sleepMinutes: current.sleepMinutes,
-        hrAvg: current.hrAvg,
-        hrMax: current.hrMax,
-        baseline_days_collected, // NEW
+        recoveryTrend: { direction: 'neutral', percentage: 0 }, // يمكن حسابها لاحقاً
+        strainTrend: { direction: 'neutral', percentage: 0 },
+        sleepTrend: { direction: 'neutral', percentage: 0 },
+        activityTrend: { direction: 'neutral', percentage: 0 },
+        steps: currentData?.steps ?? 0,
+        meters: currentData?.meters ?? 0,
+        sleepMinutes: currentData?.sleep_minutes ?? 0,
+        hrAvg: currentData?.hr_avg ?? 60,
+        hrMax: currentData?.hr_max ?? 100,
+        baseline_days_collected,
       });
     } catch (err) {
       console.error("Error fetching health data:", err);
       setError(err instanceof Error ? err : new Error("Unknown error"));
       
-      // Set default values on error
       setHealthData({
         recovery: 0,
         strain: 0,
@@ -159,7 +100,7 @@ export function useHealthData(period: Period, selectedDate: Date) {
         sleepMinutes: 0,
         hrAvg: 0,
         hrMax: 0,
-        baseline_days_collected: 0, // NEW
+        baseline_days_collected: 0,
       });
     } finally {
       setLoading(false);

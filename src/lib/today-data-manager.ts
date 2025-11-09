@@ -138,6 +138,17 @@ class TodayDataManagerClass {
   }
 
   /**
+   * Clear cache by prefix (e.g., "health", "finance", "activities")
+   */
+  clearPrefix(prefix: string) {
+    for (const key of this.cache.keys()) {
+      if (key.startsWith(prefix)) {
+        this.cache.delete(key);
+      }
+    }
+  }
+
+  /**
    * Fetch all today data from edge function
    */
   async fetchTodayData(date?: Date): Promise<TodayData> {
