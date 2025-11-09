@@ -695,6 +695,82 @@ export type Database = {
         }
         Relationships: []
       }
+      calendar_sync_state: {
+        Row: {
+          calendar_id: string
+          full_sync_done: boolean | null
+          id: number
+          provider: string
+          sync_token: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          calendar_id: string
+          full_sync_done?: boolean | null
+          id?: number
+          provider: string
+          sync_token?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          calendar_id?: string
+          full_sync_done?: boolean | null
+          id?: number
+          provider?: string
+          sync_token?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_sync_state_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calendar_watch_channels: {
+        Row: {
+          calendar_id: string
+          channel_id: string
+          created_at: string | null
+          expires_at: string
+          provider: string
+          resource_id: string
+          user_id: string
+        }
+        Insert: {
+          calendar_id: string
+          channel_id: string
+          created_at?: string | null
+          expires_at: string
+          provider: string
+          resource_id: string
+          user_id: string
+        }
+        Update: {
+          calendar_id?: string
+          channel_id?: string
+          created_at?: string | null
+          expires_at?: string
+          provider?: string
+          resource_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_watch_channels_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendars: {
         Row: {
           color: string | null
@@ -2897,6 +2973,7 @@ export type Database = {
         Args: { p_action: string; p_context: Json; p_owner_id: string }
         Returns: number
       }
+      exec_sql: { Args: { params?: Json; sql: string }; Returns: Json }
       expand_instances: {
         Args: { p_from: string; p_to: string }
         Returns: undefined
