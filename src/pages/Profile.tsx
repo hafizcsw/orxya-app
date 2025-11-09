@@ -26,42 +26,61 @@ export default function Profile() {
   const fetchStats = async () => {
     if (!user) return;
     
-    // Fetch profile data
-    const { data } = await supabase
-      .from('profiles')
-      .select('full_name, avatar_url, created_at')
-      .eq('id', user.id)
-      .maybeSingle();
-    
-    if (data) {
-      setFullName(data.full_name ?? '');
-      setAvatarUrl(data.avatar_url ?? null);
-      setAccountCreated(data.created_at ?? '');
+    try {
+      // Fetch profile data
+      const { data, error: profileError } = await supabase
+        .from('profiles')
+        .select('full_name, avatar_url, created_at')
+        .eq('id', user.id)
+        .maybeSingle();
+      
+      if (profileError) {
+        console.error('[Profile] Error fetching profile:', profileError);
+        toast.error('فشل تحميل بيانات الملف الشخصي');
+        return;
+      }
+      
+      if (data) {
+        setFullName(data.full_name ?? '');
+        setAvatarUrl(data.avatar_url ?? null);
+        setAccountCreated(data.created_at ?? '');
+      }
+
+      // Fetch statistics
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const nextWeek = new Date(today);
+      nextWeek.setDate(nextWeek.getDate() + 7);
+
+      const { data: tasks, error: tasksError } = await supabase
+        .from('tasks')
+        .select('id, status')
+        .eq('owner_id', user.id);
+      
+      if (tasksError) {
+        console.error('[Profile] Error fetching tasks:', tasksError);
+      }
+      
+      const { data: events, error: eventsError } = await supabase
+        .from('events')
+        .select('id')
+        .eq('owner_id', user.id)
+        .gte('start_time', today.toISOString())
+        .lte('start_time', nextWeek.toISOString());
+
+      if (eventsError) {
+        console.error('[Profile] Error fetching events:', eventsError);
+      }
+
+      setStats({
+        totalTasks: tasks?.length || 0,
+        completedTasks: tasks?.filter(t => t.status === 'done').length || 0,
+        upcomingEvents: events?.length || 0,
+      });
+    } catch (error) {
+      console.error('[Profile] Unexpected error:', error);
+      toast.error('حدث خطأ غير متوقع في تحميل البيانات');
     }
-
-    // Fetch statistics
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const nextWeek = new Date(today);
-    nextWeek.setDate(nextWeek.getDate() + 7);
-
-    const { data: tasks } = await supabase
-      .from('tasks')
-      .select('id, status')
-      .eq('owner_id', user.id);
-    
-    const { data: events } = await supabase
-      .from('events')
-      .select('id')
-      .eq('owner_id', user.id)
-      .gte('start_time', today.toISOString())
-      .lte('start_time', nextWeek.toISOString());
-
-    setStats({
-      totalTasks: tasks?.length || 0,
-      completedTasks: tasks?.filter(t => t.status === 'done').length || 0,
-      upcomingEvents: events?.length || 0,
-    });
   };
 
   useEffect(() => {
@@ -83,9 +102,18 @@ export default function Profile() {
         .eq('id', user.id);
       
       if (error) throw error;
-      toast.success(t('profile:messages.saveSuccess'));
+      toast.success('تم حفظ التغييرات بنجاح');
     } catch (e: any) {
-      toast.error(e?.message ?? t('profile:messages.saveError'));
+      console.error('[Profile] Error saving profile:', e);
+      
+      let errorMessage = 'فشل حفظ التغييرات';
+      if (e?.message?.includes('network')) {
+        errorMessage = 'خطأ في الاتصال بالإنترنت';
+      } else if (e?.message?.includes('permission')) {
+        errorMessage = 'ليس لديك صلاحية لهذه العملية';
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

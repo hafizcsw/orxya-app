@@ -81,6 +81,7 @@ export default function Today() {
   const [editingGoalType, setEditingGoalType] = useState<GoalType | null>(null);
   const [focusMode, setFocusMode] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   
   // Feature Flags
   const { flags } = useFeatureFlags();
@@ -155,8 +156,9 @@ export default function Today() {
       setDialogOpen(false);
       setEditingPlan(null);
     } catch (error: any) {
-      console.error("Error saving plan:", error);
-      toast.error(t("messages.error"));
+      console.error("[Today] Error saving plan:", error);
+      const errorMessage = error?.message || t("messages.error");
+      toast.error(`فشل حفظ الخطة: ${errorMessage}`);
     }
   };
 
@@ -169,8 +171,9 @@ export default function Today() {
       await refetchPlans();
       toast.success(t("messages.planDeleted"));
     } catch (error: any) {
-      console.error("Error deleting plan:", error);
-      toast.error(t("messages.error"));
+      console.error("[Today] Error deleting plan:", error);
+      const errorMessage = error?.message || t("messages.error");
+      toast.error(`فشل حذف الخطة: ${errorMessage}`);
     }
   };
 
@@ -191,11 +194,18 @@ export default function Today() {
 
   const handleRefresh = async () => {
     setDataError(null);
-    await Promise.all([
-      refetchReport(),
-      refetchHealth(),
-      refetchPlans()
-    ]);
+    try {
+      await Promise.all([
+        refetchReport(),
+        refetchHealth(),
+        refetchPlans()
+      ]);
+      toast.success('تم تحديث البيانات بنجاح');
+    } catch (error: any) {
+      console.error('[Today] Refresh error:', error);
+      setDataError('فشل تحديث البيانات. حاول مرة أخرى.');
+      toast.error('فشل تحديث البيانات');
+    }
   };
 
   // Load focus mode state
@@ -297,11 +307,24 @@ export default function Today() {
 
           {/* Error State */}
           {dataError && (
-            <div className="p-6 bg-destructive/10 border border-destructive/30 rounded-2xl">
-              <div className="text-center">
-                <p className="text-destructive mb-4">{dataError}</p>
-                <Button onClick={handleRefresh} variant="outline">
-                  {t('common.retry')}
+            <div className="p-6 bg-destructive/10 border border-destructive/30 rounded-2xl space-y-4">
+              <div className="text-center space-y-3">
+                <div className="flex justify-center">
+                  <div className="w-12 h-12 rounded-full bg-destructive/20 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg mb-1">خطأ في تحميل البيانات</h3>
+                  <p className="text-destructive text-sm">{dataError}</p>
+                </div>
+                <Button onClick={handleRefresh} variant="outline" className="mt-2">
+                  <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  إعادة المحاولة
                 </Button>
               </div>
             </div>

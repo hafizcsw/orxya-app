@@ -98,7 +98,7 @@ export default function CalendarPage() {
       const from = startOfMonth(currentDate);
       const to = endOfMonth(currentDate);
       
-      const { data: evs } = await supabase
+      const { data: evs, error } = await supabase
         .from("events")
         .select("*")
         .eq("owner_id", user.id)
@@ -106,24 +106,40 @@ export default function CalendarPage() {
         .gte("starts_at", from.toISOString())
         .lte("ends_at", to.toISOString());
 
+      if (error) {
+        console.error('[Calendar] Error loading month data:', error);
+        toast.error('فشل تحميل أحداث الشهر');
+        return;
+      }
+
       const ebd: Record<string, DbEvent[]> = {};
       (evs ?? []).forEach((e: any) => {
         const key = toISODate(new Date(e.starts_at));
         (ebd[key] ||= []).push({ ...e, conflict_level: 0 });
       });
       setEventsByDate(ebd);
+    } catch (error) {
+      console.error('[Calendar] Unexpected error:', error);
+      toast.error('حدث خطأ غير متوقع في تحميل الأحداث');
     } finally {
       setLoading(false);
     }
   }
 
   const handleRefresh = async () => {
-    if (mode === "month") {
-      await loadMonthData();
+    try {
+      if (mode === "month") {
+        await loadMonthData();
+      }
+      // Trigger re-render for week and day views (they have their own data fetching)
+      setCurrentDate(new Date(currentDate));
+      toast.success('تم تحديث التقويم');
+      return Promise.resolve();
+    } catch (error) {
+      console.error('[Calendar] Refresh error:', error);
+      toast.error('فشل تحديث التقويم');
+      return Promise.reject(error);
     }
-    // Trigger re-render for week and day views (they have their own data fetching)
-    setCurrentDate(new Date(currentDate));
-    return Promise.resolve();
   };
 
   return (
@@ -391,12 +407,21 @@ export default function CalendarPage() {
                   });
 
                   if (error) throw error;
-                  toast.success(editingEvent?.id ? "تم تحديث الحدث" : "تم إنشاء الحدث");
+                  toast.success(editingEvent?.id ? "تم تحديث الحدث بنجاح" : "تم إنشاء الحدث بنجاح");
                   setAdvancedFormOpen(false);
                   setEditingEvent(null);
                   handleRefresh();
-                } catch (err) {
-                  toast.error("فشل حفظ الحدث");
+                } catch (err: any) {
+                  console.error('[Calendar] Error saving event:', err);
+                  
+                  let errorMessage = 'فشل حفظ الحدث';
+                  if (err?.message?.includes('conflict')) {
+                    errorMessage = 'يوجد تعارض في المواعيد';
+                  } else if (err?.message?.includes('permission')) {
+                    errorMessage = 'ليس لديك صلاحية لحفظ الحدث';
+                  }
+                  
+                  toast.error(errorMessage);
                 }
               }}
               onClose={() => {

@@ -81,8 +81,25 @@ export default function Auth() {
         setShowEmailDialog(false)
       }
     } catch (e: any) {
-      console.error('[Auth] ❌ Error:', e)
-      toast({ title: t('errors.loginFailed'), description: e?.message ?? t('errors.loginFailed'), variant: "destructive" })
+      console.error('[Auth] ❌ Error:', e);
+      
+      // User-friendly error messages
+      let errorMessage = t('errors.loginFailed');
+      if (e?.message?.includes('Invalid login credentials')) {
+        errorMessage = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+      } else if (e?.message?.includes('Email not confirmed')) {
+        errorMessage = 'يرجى تأكيد بريدك الإلكتروني أولاً';
+      } else if (e?.message?.includes('User already registered')) {
+        errorMessage = 'البريد الإلكتروني مستخدم بالفعل';
+      } else if (e?.message?.includes('Password should be')) {
+        errorMessage = 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+      }
+      
+      toast({ 
+        title: mode === 'signin' ? 'فشل تسجيل الدخول' : 'فشل إنشاء الحساب', 
+        description: errorMessage, 
+        variant: "destructive" 
+      });
     } finally { 
       setLoading(false) 
     }
@@ -116,8 +133,20 @@ export default function Auth() {
       console.log('[Auth] Redirecting to Google...')
       // Don't set loading to false here - page will redirect
     } catch (e: any) {
-      console.error('[Auth] Exception:', e)
-      toast({ title: t('errors.loginFailed'), description: e?.message ?? t('errors.loginFailed'), variant: "destructive" })
+      console.error('[Auth] Exception:', e);
+      
+      let errorMessage = 'فشل تسجيل الدخول عبر Google';
+      if (e?.message?.includes('popup')) {
+        errorMessage = 'تم إغلاق نافذة تسجيل الدخول. حاول مرة أخرى';
+      } else if (e?.message?.includes('network')) {
+        errorMessage = 'خطأ في الاتصال بالإنترنت';
+      }
+      
+      toast({ 
+        title: 'خطأ في Google', 
+        description: errorMessage, 
+        variant: "destructive" 
+      });
       setLoading(false) // Only on error
     }
   }
