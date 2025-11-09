@@ -116,11 +116,11 @@ function AppContent() {
       <div className={isAuthPage ? '' : 'pb-20'}>
         <AnimatePresence mode="wait">
           <motion.div
-            key={location.pathname}
+            key={`${location.pathname}-${i18n.language}`}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
           >
             <Suspense fallback={<LoadingFallback />}>
               <Routes location={location}>
