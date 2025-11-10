@@ -1,6 +1,7 @@
 // @ts-ignore - virtual module from vite-plugin-pwa
 import { registerSW } from 'virtual:pwa-register';
 import { addUpdateRecord } from './update-history';
+import { showUpdateNotification } from './update-notifications';
 
 let notified = false;
 
@@ -19,6 +20,10 @@ export function initPWAUpdate(callbacks: PWAUpdateCallbacks) {
     onNeedRefresh() {
       if (notified) return;
       notified = true;
+      
+      // Show notification
+      const buildVersion = getBuildVersion();
+      showUpdateNotification(buildVersion, 'pwa');
       
       // Create update function that will skip waiting and reload
       const performUpdate = () => {

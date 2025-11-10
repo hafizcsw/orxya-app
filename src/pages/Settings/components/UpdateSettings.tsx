@@ -7,6 +7,7 @@ import { getBuildVersion, formatBuildVersion } from '@/lib/pwa-update';
 import { checkForUpdates, downloadAndApplyUpdate, getCurrentVersion, isNativePlatform } from '@/lib/live-update';
 import { toast } from 'sonner';
 import { Progress } from '@/components/ui/progress';
+import { UpdateNotificationSettings } from './UpdateNotificationSettings';
 
 export function UpdateSettings() {
   const [buildVersion] = useState(getBuildVersion());
@@ -197,6 +198,14 @@ export function UpdateSettings() {
           </div>
         </div>
       </Card>
+
+      {/* Notification Settings */}
+      {isNativePlatform() && (
+        <div>
+          <h3 className="text-lg font-semibold mb-4">إعدادات الإشعارات</h3>
+          <UpdateNotificationSettings />
+        </div>
+      )}
     </div>
   );
 }

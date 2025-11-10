@@ -6,6 +6,7 @@
 import { Capacitor } from '@capacitor/core';
 import { CapacitorUpdater } from '@capgo/capacitor-updater';
 import { addUpdateRecord } from './update-history';
+import { showUpdateNotification } from './update-notifications';
 
 // Check if running on native platform
 export const isNativePlatform = () => {
@@ -135,6 +136,8 @@ export async function initLiveUpdate(
   if (LIVE_UPDATE_CONFIG.checkOnStartup) {
     const result = await checkForUpdates();
     if (result.available && result.version) {
+      // Show notification
+      await showUpdateNotification(result.version, 'native');
       onUpdateAvailable?.(result.version);
     }
   }
@@ -143,6 +146,8 @@ export async function initLiveUpdate(
   setInterval(async () => {
     const result = await checkForUpdates();
     if (result.available && result.version) {
+      // Show notification
+      await showUpdateNotification(result.version, 'native');
       onUpdateAvailable?.(result.version);
     }
   }, LIVE_UPDATE_CONFIG.checkInterval);

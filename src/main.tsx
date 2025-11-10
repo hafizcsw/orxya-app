@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { initPWAUpdate } from "@/lib/pwa-update";
 import { initLiveUpdate } from "@/lib/live-update";
+import { initUpdateNotifications, setupNotificationHandlers } from "@/lib/update-notifications";
 
 initOnlineSync();
 void initTelemetry();
@@ -59,6 +60,18 @@ startLocationTracking(15); // Capture location every 15 minutes on native
     });
   }
 })();
+
+// Initialize update notifications system
+initUpdateNotifications();
+
+// Setup notification tap handlers - navigate to updates when tapped
+setupNotificationHandlers(() => {
+  window.location.hash = '/settings';
+  setTimeout(() => {
+    const event = new CustomEvent('navigate-to-updates');
+    window.dispatchEvent(event);
+  }, 100);
+});
 
 // PWA Update System - Show toast when update available
 initPWAUpdate({
