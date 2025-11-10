@@ -46,6 +46,60 @@ export const ringAnimations = {
     initial: { opacity: 0, y: 30 },
     animate: { opacity: 1, y: 0 },
     transition: { delay, duration: 0.5, ease: "easeOut" }
+  }),
+  
+  // Ring-specific animations
+  ringProgress: (delay = 0) => ({
+    initial: { pathLength: 0, opacity: 0 },
+    animate: { 
+      pathLength: 1, 
+      opacity: 1,
+      transition: {
+        pathLength: { delay: delay + 0.2, duration: 1.2, ease: "easeOut" },
+        opacity: { delay, duration: 0.3 }
+      }
+    }
+  }),
+  
+  ringIcon: (delay = 0) => ({
+    initial: { scale: 0, opacity: 0, rotate: -180 },
+    animate: { 
+      scale: 1, 
+      opacity: 1, 
+      rotate: 0,
+      transition: {
+        delay: delay + 0.3,
+        type: "spring",
+        stiffness: 200,
+        damping: 15
+      }
+    }
+  }),
+  
+  ringText: (delay = 0) => ({
+    initial: { opacity: 0, y: 10 },
+    animate: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        delay: delay + 0.5,
+        duration: 0.4,
+        ease: "easeOut"
+      }
+    }
+  }),
+  
+  ringLabel: (delay = 0) => ({
+    initial: { opacity: 0, y: 5 },
+    animate: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        delay: delay + 0.6,
+        duration: 0.3,
+        ease: "easeOut"
+      }
+    }
   })
 };
 

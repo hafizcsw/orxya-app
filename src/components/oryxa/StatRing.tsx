@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { ArrowUp, ArrowDown, Minus } from 'lucide-react';
-import { hslToRgba, getGlowIntensity } from '@/lib/animations';
+import { hslToRgba, getGlowIntensity, ringAnimations } from '@/lib/animations';
 import { useDeviceTypeCtx } from '@/contexts/DeviceContext';
 
 interface StatRingProps {
@@ -48,6 +48,9 @@ export const StatRing = React.memo(function StatRing({
 }: StatRingProps) {
   const deviceType = useDeviceTypeCtx();
   const isMobile = deviceType === 'mobile';
+  
+  // Animation delay based on component mount
+  const animDelay = 0;
 
   const sizes = {
     sm: { 
@@ -236,13 +239,19 @@ export const StatRing = React.memo(function StatRing({
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeDasharray={circumference}
-            initial={{ strokeDashoffset: circumference }}
-            animate={{ strokeDashoffset: offset }}
+            initial={{ strokeDashoffset: circumference, opacity: 0 }}
+            animate={{ strokeDashoffset: offset, opacity: 1 }}
             transition={{ 
-              type: "spring",
-              stiffness: 50,
-              damping: 15,
-              delay: 0.2 
+              strokeDashoffset: {
+                type: "spring",
+                stiffness: 50,
+                damping: 15,
+                delay: animDelay + 0.2 
+              },
+              opacity: { 
+                duration: 0.4,
+                delay: animDelay 
+              }
             }}
           />
           
@@ -278,40 +287,71 @@ export const StatRing = React.memo(function StatRing({
         <div className={cn("absolute inset-0 flex flex-col items-center justify-center", size === 'sm' ? 'gap-0.5' : 'gap-1')}>
           {/* Icon */}
           {icon && (
-            <div
+            <motion.div
               className="text-muted-foreground"
               style={{ width: iconSize, height: iconSize, opacity: 0.7 }}
+              initial={{ scale: 0, opacity: 0, rotate: -180 }}
+              animate={{ scale: 1, opacity: 0.7, rotate: 0 }}
+              transition={{
+                delay: animDelay + 0.3,
+                type: "spring",
+                stiffness: 200,
+                damping: 15
+              }}
             >
               {React.cloneElement(icon as React.ReactElement, { 
                 className: cn((icon as React.ReactElement).props.className),
                 style: { width: iconSize, height: iconSize }
               })}
-            </div>
+            </motion.div>
           )}
           
           {/* Main value */}
-          <div className={cn("font-bold leading-none", valueSize)}>
+          <motion.div 
+            className={cn("font-bold leading-none", valueSize)}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              delay: animDelay + 0.5,
+              duration: 0.4,
+              ease: "easeOut"
+            }}
+          >
             {customDisplay || Math.round(value)}
-          </div>
+          </motion.div>
           
           {/* Status text */}
           {status && (
-            <div
+            <motion.div
               className={cn(
                 "font-medium",
                 size === 'sm' ? 'text-[9px]' : size === 'md' ? 'text-[10px]' : 'text-xs',
                 statusColors[status]
               )}
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                delay: animDelay + 0.6,
+                duration: 0.3,
+                ease: "easeOut"
+              }}
             >
               {statusText[status]}
-            </div>
+            </motion.div>
           )}
         </div>
       </div>
 
       {/* Labels and trend */}
-      <div 
+      <motion.div 
         className={cn("text-center", size === 'sm' ? 'space-y-0.5' : 'space-y-1.5')}
+        initial={{ opacity: 0, y: 5 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{
+          delay: animDelay + 0.7,
+          duration: 0.3,
+          ease: "easeOut"
+        }}
       >
         <div className={cn(
           "font-medium text-foreground group-hover:text-primary transition-colors",
@@ -345,7 +385,7 @@ export const StatRing = React.memo(function StatRing({
             {subtitle}
           </div>
         ) : null}
-      </div>
+      </motion.div>
     </div>
   );
 });
