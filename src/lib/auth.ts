@@ -58,20 +58,20 @@ export function useUser() {
     };
   }, []);
 
-  // ✅ دالة منفصلة للـbackground tasks
-  function runPostLoginTasks() {
-    setTimeout(() => {
-      Promise.all([
-        flushQueueOnce().catch(e => console.error('Flush failed:', e)),
-        rescheduleAllFromDB().catch(e => console.error('Reschedule failed:', e)),
-        captureAndSendLocation().then(() => conflictCheckToday()).catch(e => console.error('Location/Conflicts failed:', e)),
-      ]);
-      
-      const today = new Date().toISOString().slice(0, 10);
-      syncPrayers(today).then(() => schedulePrayersFor(today)).catch(e => console.error('Prayer sync failed:', e));
-      Promise.resolve(startCalendarAutoSync(30)).catch(e => console.error('Calendar sync failed:', e));
-    }, 0);
-  }
-
   return { user, loading }
+}
+
+// ✅ دالة منفصلة خارج الـhook للـbackground tasks
+function runPostLoginTasks() {
+  setTimeout(() => {
+    Promise.all([
+      flushQueueOnce().catch(e => console.error('Flush failed:', e)),
+      rescheduleAllFromDB().catch(e => console.error('Reschedule failed:', e)),
+      captureAndSendLocation().then(() => conflictCheckToday()).catch(e => console.error('Location/Conflicts failed:', e)),
+    ]);
+    
+    const today = new Date().toISOString().slice(0, 10);
+    syncPrayers(today).then(() => schedulePrayersFor(today)).catch(e => console.error('Prayer sync failed:', e));
+    Promise.resolve(startCalendarAutoSync(30)).catch(e => console.error('Calendar sync failed:', e));
+  }, 0);
 }
