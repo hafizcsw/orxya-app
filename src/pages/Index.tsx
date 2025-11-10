@@ -10,15 +10,12 @@ const Index = () => {
   const { user, loading } = useAuth();
   const hasNavigated = useRef(false);
 
-  useEffect(() => {
-    if (loading || hasNavigated.current) return;
-
-    // Auto-redirect authenticated users only
-    if (user && pathname === '/') {
-      hasNavigated.current = true;
-      navigate('/today', { replace: true });
-    }
-  }, [user, loading, pathname, navigate]);
+  // ✅ Navigation في render phase (قبل return) - يمنع hook count conflicts
+  if (user && !loading && pathname === '/' && !hasNavigated.current) {
+    hasNavigated.current = true;
+    navigate('/today', { replace: true });
+    return null; // منع render أثناء navigation
+  }
 
   // ✅ Single return with conditional rendering for consistent hook count
   return (
