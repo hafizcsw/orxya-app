@@ -57,6 +57,9 @@ export default function Auth() {
   )
   const [hasNavigated, setHasNavigated] = useState(false)
   const [showEmailDialog, setShowEmailDialog] = useState(false)
+  const [showForgotPasswordDialog, setShowForgotPasswordDialog] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetEmailError, setResetEmailError] = useState('')
 
   useEffect(() => {
     // Debug info
@@ -210,7 +213,7 @@ export default function Auth() {
             access_type: 'offline',
             prompt: 'consent',
           },
-          skipBrowserRedirect: false, // Explicitly set
+          skipBrowserRedirect: false,
         }
       })
       
@@ -222,7 +225,6 @@ export default function Auth() {
       }
       
       console.log('[Auth] Redirecting to Google...')
-      // Don't set loading to false here - page will redirect
     } catch (e: any) {
       console.error('[Auth] Exception:', e);
       
@@ -238,7 +240,57 @@ export default function Auth() {
         description: errorMessage, 
         variant: "destructive" 
       });
-      setLoading(false) // Only on error
+      setLoading(false)
+    }
+  }
+
+  async function handleForgotPassword(e: React.FormEvent) {
+    e.preventDefault()
+    setResetEmailError('')
+    
+    // Validate email
+    try {
+      emailSchema.parse(resetEmail.trim())
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setResetEmailError(error.issues[0].message)
+        return
+      }
+    }
+    
+    setLoading(true)
+    
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim(), {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      })
+      
+      if (error) throw error
+      
+      toast({
+        title: 'تم إرسال رابط إعادة التعيين ✅',
+        description: 'تحقق من بريدك الإلكتروني للحصول على رابط إعادة تعيين كلمة المرور',
+      })
+      
+      setShowForgotPasswordDialog(false)
+      setResetEmail('')
+    } catch (error: any) {
+      console.error('[Auth] Forgot password error:', error)
+      
+      let errorMessage = 'فشل إرسال رابط إعادة التعيين'
+      if (error?.message?.includes('Email not found')) {
+        errorMessage = 'البريد الإلكتروني غير مسجل'
+      } else if (error?.message?.includes('rate limit')) {
+        errorMessage = 'حاول مرة أخرى بعد قليل'
+      }
+      
+      toast({
+        title: 'خطأ',
+        description: errorMessage,
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -525,12 +577,111 @@ export default function Auth() {
             </button>
           </form>
 
+          {/* Forgot Password Link */}
+          {mode === 'signin' && (
+            <div className="text-center pt-2">
+              <button 
+                onClick={() => {
+                  setShowEmailDialog(false)
+                  setShowForgotPasswordDialog(true)
+                }}
+                className="text-sm text-zinc-400 hover:text-white transition-colors underline"
+              >
+                نسيت كلمة المرور؟
+              </button>
+            </div>
+          )}
+
           <div className="text-center pt-2">
             <button 
               onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
               className="text-sm text-zinc-400 hover:text-white transition-colors"
             >
               {mode === 'signin' ? t('login.noAccount') + ' ' + t('signup.signupLink') : t('signup.haveAccount') + ' ' + t('login.loginLink')}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Forgot Password Dialog */}
+      <Dialog open={showForgotPasswordDialog} onOpenChange={setShowForgotPasswordDialog}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-center">
+              إعادة تعيين كلمة المرور
+            </DialogTitle>
+          </DialogHeader>
+          
+          <form onSubmit={handleForgotPassword} className="space-y-5 mt-4">
+            <div className="text-sm text-zinc-400 text-center">
+              أدخل بريدك الإلكتروني وسنرسل لك رابط لإعادة تعيين كلمة المرور
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm text-zinc-400">البريد الإلكتروني</label>
+              <input
+                type="email"
+                value={resetEmail}
+                onChange={(e) => {
+                  setResetEmail(e.target.value)
+                  setResetEmailError('')
+                }}
+                className={cn(
+                  "w-full px-4 py-3 rounded-xl bg-black/50 border text-white transition-all outline-none",
+                  resetEmailError 
+                    ? "border-red-500 focus:border-red-400 focus:ring-2 focus:ring-red-500/20" 
+                    : "border-zinc-700 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20"
+                )}
+                required
+                dir="ltr"
+                autoFocus
+                autoComplete="email"
+                placeholder="you@example.com"
+              />
+              {resetEmailError && (
+                <div className="flex items-center gap-2 text-red-400 text-sm">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>{resetEmailError}</span>
+                </div>
+              )}
+            </div>
+            
+            <button 
+              type="submit" 
+              className={cn(
+                "w-full py-3.5 px-6 rounded-xl font-medium",
+                "bg-white text-black",
+                "hover:bg-zinc-200",
+                "transition-all duration-200",
+                "hover:scale-[1.02]",
+                "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100",
+                "flex items-center justify-center gap-2"
+              )}
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                  <span>جاري الإرسال...</span>
+                </>
+              ) : (
+                <>
+                  <span>إرسال رابط إعادة التعيين</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="text-center pt-2">
+            <button 
+              onClick={() => {
+                setShowForgotPasswordDialog(false)
+                setShowEmailDialog(true)
+              }}
+              className="text-sm text-zinc-400 hover:text-white transition-colors"
+            >
+              العودة لتسجيل الدخول
             </button>
           </div>
         </DialogContent>

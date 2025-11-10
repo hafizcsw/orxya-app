@@ -30,6 +30,7 @@ import { MobileDownloadBanner } from "./components/MobileDownloadBanner";
 const Index = lazy(() => import("./pages/Index"));
 const Today = lazy(() => import("./pages/Today"));
 const Auth = lazy(() => import("./pages/Auth"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const Install = lazy(() => import("./pages/Install"));
 
@@ -157,6 +158,7 @@ function AppContent() {
             <Route path="/engagement" element={<Protected><EngagementDashboard /></Protected>} />
             <Route path="/golive" element={<Protected><GoLiveDashboard /></Protected>} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/reset-password" element={<ResetPassword />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/install" element={<Install />} />
             <Route path="*" element={<NotFound />} />
