@@ -28,7 +28,7 @@ export interface HealthDataWithTrends extends HealthMetrics {
 export function useHealthData(period: Period, selectedDate: Date) {
   const [healthData, setHealthData] = useState<HealthDataWithTrends | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchHealthData = async () => {
     setLoading(true);
@@ -36,7 +36,27 @@ export function useHealthData(period: Period, selectedDate: Date) {
     
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user");
+      if (!user) {
+        console.error('[useHealthData] No user');
+        setError('لا يوجد مستخدم مسجل');
+        setHealthData({
+          recovery: 0,
+          strain: 0,
+          sleep: 0,
+          activity: 0,
+          recoveryTrend: { direction: 'neutral', percentage: 0 },
+          strainTrend: { direction: 'neutral', percentage: 0 },
+          sleepTrend: { direction: 'neutral', percentage: 0 },
+          activityTrend: { direction: 'neutral', percentage: 0 },
+          steps: 0,
+          meters: 0,
+          sleepMinutes: 0,
+          hrAvg: 0,
+          hrMax: 0,
+          baseline_days_collected: 0,
+        });
+        return;
+      }
 
       const dateStr = selectedDate.toISOString().split('T')[0];
 
@@ -47,7 +67,9 @@ export function useHealthData(period: Period, selectedDate: Date) {
         .eq('date', dateStr)
         .maybeSingle();
 
-      if (currentError) throw currentError;
+      if (currentError) {
+        console.error('[useHealthData] Current data error:', currentError);
+      }
 
       // حساب baseline_days_collected
       const since14 = dayjs(dateStr).subtract(14, 'day').format('YYYY-MM-DD');
@@ -83,8 +105,8 @@ export function useHealthData(period: Period, selectedDate: Date) {
         baseline_days_collected,
       });
     } catch (err) {
-      console.error("Error fetching health data:", err);
-      setError(err instanceof Error ? err : new Error("Unknown error"));
+      console.error('[useHealthData] error:', err);
+      setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
       
       setHealthData({
         recovery: 0,

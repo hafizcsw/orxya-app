@@ -25,7 +25,7 @@ export interface TodayReport {
 export function useTodayReport(period: Period, selectedDate: Date) {
   const [report, setReport] = useState<TodayReport | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchReport = async () => {
     setLoading(true);
@@ -33,17 +33,40 @@ export function useTodayReport(period: Period, selectedDate: Date) {
     
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user");
+      if (!user) {
+        console.error('[useTodayReport] No user');
+        setError('لا يوجد مستخدم مسجل');
+        setReport({
+          balance: 0,
+          income: 0,
+          expenses: 0,
+          study_hours: 0,
+          sports_hours: 0,
+          work_hours: 0,
+          walk_minutes: 0,
+          workTrend: { direction: 'neutral', percentage: 0 },
+          studyTrend: { direction: 'neutral', percentage: 0 },
+          sportsTrend: { direction: 'neutral', percentage: 0 },
+          incomeTrend: { direction: 'neutral', percentage: 0 },
+          expensesTrend: { direction: 'neutral', percentage: 0 },
+          balanceTrend: { direction: 'neutral', percentage: 0 },
+        });
+        return;
+      }
 
       const dateStr = selectedDate.toISOString().split('T')[0];
 
       // Fetch current period data from vw_today_activities
-      const { data: currentActivity } = await supabase
+      const { data: currentActivity, error: activityError } = await supabase
         .from('vw_today_activities')
         .select('study_hours, sports_hours, work_hours, walk_minutes, day, user_id')
         .eq('user_id', user.id)
         .eq('day', dateStr)
         .maybeSingle();
+
+      if (activityError) {
+        console.error('[useTodayReport] Activity error:', activityError);
+      }
 
       // Fetch previous period for trends
       const prevDate = new Date(selectedDate);
@@ -58,11 +81,15 @@ export function useTodayReport(period: Period, selectedDate: Date) {
         .maybeSingle();
 
       // Fetch financial data from v_finance_today
-      const { data: finData } = await supabase
+      const { data: finData, error: finError } = await supabase
         .from('v_finance_today')
         .select('income, expenses, balance, income_trend_pct, expenses_trend_pct, balance_trend_pct')
         .eq('day', dateStr)
         .maybeSingle();
+
+      if (finError) {
+        console.error('[useTodayReport] Finance error:', finError);
+      }
 
       const currentData = {
         balance: Number(finData?.balance || 0),
@@ -108,8 +135,23 @@ export function useTodayReport(period: Period, selectedDate: Date) {
         balanceTrend,
       });
     } catch (err) {
-      console.error("Error fetching report:", err);
-      setError(err instanceof Error ? err : new Error("Unknown error"));
+      console.error('[useTodayReport] error:', err);
+      setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
+      setReport({
+        balance: 0,
+        income: 0,
+        expenses: 0,
+        study_hours: 0,
+        sports_hours: 0,
+        work_hours: 0,
+        walk_minutes: 0,
+        workTrend: { direction: 'neutral', percentage: 0 },
+        studyTrend: { direction: 'neutral', percentage: 0 },
+        sportsTrend: { direction: 'neutral', percentage: 0 },
+        incomeTrend: { direction: 'neutral', percentage: 0 },
+        expensesTrend: { direction: 'neutral', percentage: 0 },
+        balanceTrend: { direction: 'neutral', percentage: 0 },
+      });
     } finally {
       setLoading(false);
     }

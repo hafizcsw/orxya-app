@@ -8,10 +8,22 @@ import { useDeviceTypeCtx } from '@/contexts/DeviceContext';
 
 export default function HealthRings() {
   const { t } = useTranslation('today');
-  const { healthData, loading } = useHealthData('daily', new Date());
+  const { healthData, loading, error } = useHealthData('daily', new Date());
   const deviceType = useDeviceTypeCtx();
   const columns = deviceType === 'mobile' ? 1 : 4;
   const viewTracked = useRef(false);
+
+  // Handle empty or error state
+  if (!loading && !healthData) {
+    return (
+      <div className="card p-6 text-center space-y-3">
+        <div className="text-muted-foreground">
+          <Activity className="w-12 h-12 mx-auto mb-2 opacity-50" />
+          <p className="text-sm">{error || t('errors.noHealthData')}</p>
+        </div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (!loading && healthData && !viewTracked.current) {

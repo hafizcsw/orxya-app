@@ -8,10 +8,22 @@ import { useDeviceTypeCtx } from '@/contexts/DeviceContext';
 
 export default function FinancialRings() {
   const { t } = useTranslation('today');
-  const { data, loading } = useFinancialData();
+  const { data, loading, error } = useFinancialData();
   const deviceType = useDeviceTypeCtx();
   const columns = deviceType === 'mobile' ? 1 : 3;
   const viewTracked = useRef(false);
+
+  // Handle empty or error state
+  if (!loading && (!data || (data.income === 0 && data.expenses === 0 && data.balance === 0))) {
+    return (
+      <div className="card p-6 text-center space-y-3">
+        <div className="text-muted-foreground">
+          <DollarSign className="w-12 h-12 mx-auto mb-2 opacity-50" />
+          <p className="text-sm">{error || t('errors.noFinancialData')}</p>
+        </div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (!loading && !viewTracked.current) {

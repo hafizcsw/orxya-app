@@ -21,6 +21,7 @@ export function useFinancialData(date?: string) {
     trends: { income_pct: null, expenses_pct: null, balance_pct: null }
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const day = dayjs(date ?? undefined).format('YYYY-MM-DD');
 
@@ -28,6 +29,7 @@ export function useFinancialData(date?: string) {
     let alive = true;
     (async () => {
       setLoading(true);
+      setError(null);
       try {
         // القراءة من v_finance_today مع الاتجاهات
         const { data: row, error } = await supabase
@@ -36,7 +38,19 @@ export function useFinancialData(date?: string) {
           .eq('day', day)
           .maybeSingle();
 
-        if (error) throw error;
+        if (error) {
+          console.error('[useFinancialData] error', error);
+          if (alive) {
+            setError(error.message);
+            setData({ 
+              income: 0, 
+              expenses: 0, 
+              balance: 0,
+              trends: { income_pct: null, expenses_pct: null, balance_pct: null }
+            });
+          }
+          return;
+        }
 
         const summary: FinancialSummary = {
           income: Number(row?.income ?? 0),
@@ -52,12 +66,15 @@ export function useFinancialData(date?: string) {
         if (alive) setData(summary);
       } catch (err) {
         console.error('[useFinancialData] error', err);
-        if (alive) setData({ 
-          income: 0, 
-          expenses: 0, 
-          balance: 0,
-          trends: { income_pct: null, expenses_pct: null, balance_pct: null }
-        });
+        if (alive) {
+          setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
+          setData({ 
+            income: 0, 
+            expenses: 0, 
+            balance: 0,
+            trends: { income_pct: null, expenses_pct: null, balance_pct: null }
+          });
+        }
       } finally {
         if (alive) setLoading(false);
       }
@@ -65,5 +82,5 @@ export function useFinancialData(date?: string) {
     return () => { alive = false; };
   }, [day]);
 
-  return { data, loading };
+  return { data, loading, error };
 }
