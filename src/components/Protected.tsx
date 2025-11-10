@@ -11,9 +11,11 @@ export function Protected({ children }: PropsWithChildren) {
     if (loading) {
       const timeout = setTimeout(() => {
         setShowError(true)
-      }, 5000) // Show error after 5 seconds
+      }, 10000) // ✅ زيادة من 5 إلى 10 ثوانٍ
       
       return () => clearTimeout(timeout)
+    } else {
+      setShowError(false) // ✅ إعادة تعيين عند انتهاء التحميل
     }
   }, [loading])
   
