@@ -16,6 +16,7 @@ import { useWidgetTokenSync } from "./hooks/useWidgetToken";
 import { usePreloadPages } from "./hooks/usePreloadPages";
 import { usePrefetchData } from "./hooks/usePrefetchData";
 import { useAutoSync } from "./hooks/useAutoSync";
+import { PWAUpdateNotification } from "./components/PWAUpdateNotification";
 
 // Eagerly load critical components
 import Navigation from "./components/Navigation";
@@ -113,6 +114,7 @@ function AppContent() {
   
   return (
     <>
+      <PWAUpdateNotification />
       {!isAuthPage && <MobileDownloadBanner />}
       {!isAuthPage && <Navigation />}
       <div className={isAuthPage ? '' : 'pb-20'}>

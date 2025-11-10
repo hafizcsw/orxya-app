@@ -10,6 +10,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Safe Areas for iOS/Android PWAs */
+:root {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Fix for mobile Safari 100vh issue */
+.min-h-screen {
+  min-height: 100svh;
+}
+
 /* RTL/LTR Support */
 [dir="rtl"] {
   direction: rtl;
