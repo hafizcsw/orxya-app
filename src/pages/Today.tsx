@@ -402,8 +402,9 @@ export default function Today() {
   const getResponsiveColumns = (): 1 | 2 | 3 | 4 | 5 => {
     if (device === 'mobile') {
       // Large phones (S24 Ultra, iPhone Pro Max) can show more columns
-      if (deviceInfo.size === 'xlarge') return 3;
-      if (deviceInfo.size === 'large') return 2;
+      if (deviceInfo.size === 'xlarge') return 3; // S24 Ultra
+      if (deviceInfo.size === 'large') return 3; // iPhone Pro Max
+      if (deviceInfo.size === 'medium') return 2; // iPhone Pro/Standard
       return 2; // Standard/small phones
     }
     if (device === 'tablet') return 4;
@@ -420,8 +421,9 @@ export default function Today() {
       <div className="min-h-screen bg-background pb-20">
         <div className={cn(
           "container mx-auto max-w-7xl space-y-3 sm:space-y-4 md:space-y-6",
-          deviceInfo.size === 'xlarge' ? "px-6" :
-          deviceInfo.size === 'large' ? "px-5" :
+          deviceInfo.size === 'xlarge' ? "px-7" : // S24 Ultra
+          deviceInfo.size === 'large' ? "px-6" : // iPhone Pro Max
+          deviceInfo.size === 'medium' ? "px-5" :
           "px-3 sm:px-4 md:px-6"
         )}>
           

@@ -113,6 +113,43 @@
   }
 }
 
+/* iPhone Pro Max & Plus (6.7" - 6.9") - viewport 430-440px */
+@media (min-width: 430px) and (max-width: 768px) and (-webkit-min-device-pixel-ratio: 3) {
+  :root {
+    font-size: 19px !important;
+  }
+  
+  h1 { 
+    font-size: 2.5rem !important;
+    font-weight: 800 !important;
+  }
+  h2 { 
+    font-size: 2rem !important;
+    font-weight: 700 !important;
+  }
+  h3 { 
+    font-size: 1.625rem !important;
+    font-weight: 700 !important;
+  }
+  
+  /* Arabic: أثقل */
+  [dir="rtl"] {
+    font-weight: 550 !important;
+  }
+  
+  [dir="rtl"] h1,
+  [dir="rtl"] h2,
+  [dir="rtl"] h3 {
+    font-weight: 850 !important;
+  }
+  
+  /* Touch targets أكبر */
+  button, a {
+    min-height: 56px !important;
+    min-width: 56px !important;
+  }
+}
+
 /* Samsung specific fixes (large screens like S24 Ultra) */
 @media (min-width: 400px) and (max-width: 768px) {
   :root {

@@ -55,53 +55,65 @@ export const StatRing = React.memo(function StatRing({
   // Responsive sizing based on device info
   const sizes = {
     sm: { 
-      width: deviceInfo.size === 'xlarge' ? 140 : 
-             deviceInfo.size === 'large' ? 120 : 
-             isMobile ? 110 : 100,
+      width: deviceInfo.size === 'xlarge' ? 150 : 
+             deviceInfo.size === 'large' ? 130 : 
+             isMobile ? 115 : 100,
       strokeWidth: deviceInfo.density === 'xxxhdpi' ? 7 : 
                    deviceInfo.density === 'xxhdpi' ? 6 : 5,
-      fontSize: deviceInfo.size === 'xlarge' ? '1.125rem' : '0.875rem',
+      fontSize: deviceInfo.size === 'xlarge' ? '1.125rem' : 
+                deviceInfo.size === 'large' ? '1rem' : '0.875rem',
       iconSize: deviceInfo.size === 'xlarge' ? 20 : 
                 deviceInfo.size === 'large' ? 18 : 16,
       labelSize: deviceInfo.size === 'xlarge' ? 'text-sm' : 
+                 deviceInfo.size === 'large' ? 'text-sm' :
                  isMobile ? 'text-xs' : 'text-[10px]',
       subtitleSize: deviceInfo.size === 'xlarge' ? 'text-xs' : 
+                    deviceInfo.size === 'large' ? 'text-xs' :
                     isMobile ? 'text-[10px]' : 'text-[9px]',
       valueSize: deviceInfo.size === 'xlarge' ? 'text-lg' : 
+                 deviceInfo.size === 'large' ? 'text-base' :
                  isMobile ? 'text-base' : 'text-sm',
       padding: 'p-2'
     },
     md: { 
-      width: deviceInfo.size === 'xlarge' ? 160 : 
-             deviceInfo.size === 'large' ? 140 : 
-             isMobile ? 120 : 140,
-      strokeWidth: deviceInfo.density === 'xxxhdpi' ? 8 : 
-                   deviceInfo.density === 'xxhdpi' ? 7 : 6,
-      fontSize: deviceInfo.size === 'xlarge' ? '1.5rem' : '1rem',
-      iconSize: deviceInfo.size === 'xlarge' ? 22 : 
-                deviceInfo.size === 'large' ? 20 : 18,
+      width: deviceInfo.size === 'xlarge' ? 170 : 
+             deviceInfo.size === 'large' ? 150 : 
+             isMobile ? 130 : 140,
+      strokeWidth: deviceInfo.density === 'xxxhdpi' ? 9 : 
+                   deviceInfo.density === 'xxhdpi' ? 8 : 6,
+      fontSize: deviceInfo.size === 'xlarge' ? '1.75rem' : 
+                deviceInfo.size === 'large' ? '1.375rem' : '1rem',
+      iconSize: deviceInfo.size === 'xlarge' ? 28 : 
+                deviceInfo.size === 'large' ? 26 : 20,
       labelSize: deviceInfo.size === 'xlarge' ? 'text-base' : 
+                 deviceInfo.size === 'large' ? 'text-base' : 
                  isMobile ? 'text-sm' : 'text-xs',
       subtitleSize: deviceInfo.size === 'xlarge' ? 'text-sm' : 
+                    deviceInfo.size === 'large' ? 'text-sm' :
                     isMobile ? 'text-xs' : 'text-[10px]',
-      valueSize: deviceInfo.size === 'xlarge' ? 'text-xl' : 
+      valueSize: deviceInfo.size === 'xlarge' ? 'text-2xl' : 
+                 deviceInfo.size === 'large' ? 'text-xl' : 
                  isMobile ? 'text-lg' : 'text-base',
       padding: 'p-3'
     },
     lg: { 
-      width: deviceInfo.size === 'xlarge' ? 200 : 
-             deviceInfo.size === 'large' ? 170 : 
-             isMobile ? 140 : 180,
-      strokeWidth: deviceInfo.density === 'xxxhdpi' ? 10 : 
-                   deviceInfo.density === 'xxhdpi' ? 9 : 7,
-      fontSize: deviceInfo.size === 'xlarge' ? '2rem' : '1.25rem',
-      iconSize: deviceInfo.size === 'xlarge' ? 28 : 
-                deviceInfo.size === 'large' ? 24 : 20,
+      width: deviceInfo.size === 'xlarge' ? 210 : 
+             deviceInfo.size === 'large' ? 180 : 
+             isMobile ? 150 : 180,
+      strokeWidth: deviceInfo.density === 'xxxhdpi' ? 11 : 
+                   deviceInfo.density === 'xxhdpi' ? 10 : 8,
+      fontSize: deviceInfo.size === 'xlarge' ? '2.25rem' : 
+                deviceInfo.size === 'large' ? '1.75rem' : '1.25rem',
+      iconSize: deviceInfo.size === 'xlarge' ? 36 : 
+                deviceInfo.size === 'large' ? 34 : 28,
       labelSize: deviceInfo.size === 'xlarge' ? 'text-lg' : 
+                 deviceInfo.size === 'large' ? 'text-base' : 
                  isMobile ? 'text-base' : 'text-sm',
       subtitleSize: deviceInfo.size === 'xlarge' ? 'text-base' : 
+                    deviceInfo.size === 'large' ? 'text-sm' :
                     isMobile ? 'text-sm' : 'text-xs',
-      valueSize: deviceInfo.size === 'xlarge' ? 'text-2xl' : 
+      valueSize: deviceInfo.size === 'xlarge' ? 'text-3xl' : 
+                 deviceInfo.size === 'large' ? 'text-2xl' : 
                  isMobile ? 'text-xl' : 'text-lg',
       padding: 'p-4'
     },

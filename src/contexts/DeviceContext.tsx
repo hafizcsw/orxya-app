@@ -48,14 +48,41 @@ function detectDeviceInfo(): DeviceInfo {
   if (width < 768) type = 'mobile';
   else if (width >= 768 && width < 1024) type = 'tablet';
 
-  // Detect device size based on physical pixels
-  // S24 Ultra: 1440px × 3.0 DPR = 4320 physical pixels
-  // iPhone 15 Pro Max: 430px × 3.0 DPR = 1290 physical pixels
+  // Enhanced size detection with viewport-based approach
   let size: DeviceSize = 'medium';
-  if (physicalWidth >= 4000) size = 'xlarge'; // S24 Ultra, Fold, etc.
-  else if (physicalWidth >= 2500) size = 'large'; // iPhone Pro Max, S23 Ultra
-  else if (physicalWidth >= 1800) size = 'medium'; // Standard flagship phones
-  else size = 'small'; // Budget/older phones
+  
+  // Apple devices detection (based on viewport + DPR)
+  if (type === 'mobile' && dpr === 3) {
+    // iPhone Pro Max models (430-440px viewport)
+    if (width >= 430) {
+      size = 'large'; // iPhone 14/15/16 Pro Max
+    }
+    // iPhone Plus models (428px viewport)  
+    else if (width >= 420) {
+      size = 'large'; // iPhone Plus series
+    }
+    // iPhone Pro & Standard models (390-402px viewport)
+    else if (width >= 390) {
+      size = 'medium'; // iPhone 14/15/16 Pro, Standard
+    }
+    // Smaller iPhones (375px and below)
+    else if (width >= 360) {
+      size = 'medium';
+    }
+    else {
+      size = 'small';
+    }
+  }
+  // Samsung & Android flagship detection
+  else if (type === 'mobile' && physicalWidth >= 4000) {
+    size = 'xlarge'; // S24 Ultra, Fold
+  }
+  else if (type === 'mobile' && physicalWidth >= 2500) {
+    size = 'large'; // S23 Ultra, other large Androids
+  }
+  else if (type === 'mobile') {
+    size = width >= 380 ? 'medium' : 'small';
+  }
 
   // Detect screen density
   let density: ScreenDensity = 'mdpi';
@@ -77,8 +104,22 @@ export const DeviceTypeProvider: React.FC<React.PropsWithChildren> = ({ children
 
   useEffect(() => {
     const update = () => {
-      setDevice(detectDevice());
-      setDeviceInfo(detectDeviceInfo());
+      const newDeviceInfo = detectDeviceInfo();
+      setDevice(newDeviceInfo.type);
+      setDeviceInfo(newDeviceInfo);
+      
+      // Debug logging for development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📱 Device Info:', {
+          type: newDeviceInfo.type,
+          size: newDeviceInfo.size,
+          density: newDeviceInfo.density,
+          viewport: `${newDeviceInfo.width}×${newDeviceInfo.height}`,
+          physical: `${newDeviceInfo.physicalWidth}×${newDeviceInfo.height * newDeviceInfo.dpr}`,
+          dpr: newDeviceInfo.dpr,
+          userAgent: navigator.userAgent.includes('iPhone') ? 'iPhone' : 'Other'
+        });
+      }
     };
     update();
     window.addEventListener('resize', update, { passive: true });
