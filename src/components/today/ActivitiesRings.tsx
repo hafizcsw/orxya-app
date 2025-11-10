@@ -28,12 +28,7 @@ export function ActivitiesRings({ date, onGoalClick }: ActivitiesRingsProps) {
   const deviceType = useDeviceTypeCtx();
   const columns = deviceType === 'mobile' ? 1 : 3;
   const { data: activities, loading } = useTodayActivities(date);
-  const { goals, loading: goalsLoading } = useUserGoals();
-
-  const getGoal = (type: string) => {
-    const goal = goals?.find(g => g.goal_type === type);
-    return goal?.target_value || 0;
-  };
+  const { getGoal, loading: goalsLoading } = useUserGoals();
 
   const rings = useMemo(() => {
     if (!activities) return [];
@@ -92,7 +87,7 @@ export function ActivitiesRings({ date, onGoalClick }: ActivitiesRingsProps) {
         onTargetClick: () => onGoalClick?.('mma_hours'),
       },
     ];
-  }, [activities, goals, deviceType, t, onGoalClick]);
+  }, [activities, getGoal, deviceType, t, onGoalClick]);
 
   return (
     <StatRingSection
