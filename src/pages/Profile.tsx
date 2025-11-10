@@ -6,14 +6,17 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
-import { CheckCircle2, ListTodo, TrendingUp, CalendarIcon, User, Mail } from 'lucide-react';
+import { CheckCircle2, ListTodo, TrendingUp, CalendarIcon, User, Mail, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PullToRefresh from 'react-simple-pull-to-refresh';
+import { useNavigate } from 'react-router-dom';
 
 export default function Profile() {
   const { user } = useUser();
   const { t } = useTranslation(['profile']);
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const [fullName, setFullName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [accountCreated, setAccountCreated] = useState<string>('');
@@ -129,6 +132,22 @@ export default function Profile() {
     }).format(date);
   };
 
+  const handleSignOut = async () => {
+    if (isSigningOut) return;
+    
+    setIsSigningOut(true);
+    try {
+      await supabase.auth.signOut({ scope: 'global' });
+      toast.success('تم تسجيل الخروج بنجاح');
+      setTimeout(() => {
+        navigate('/auth', { replace: true });
+      }, 300);
+    } catch (error) {
+      console.error('[Profile] Sign out error:', error);
+      toast.error('فشل تسجيل الخروج');
+      setIsSigningOut(false);
+    }
+  };
   if (!user) {
     return (
       <div className="container mx-auto p-4">
@@ -273,6 +292,23 @@ export default function Profile() {
           </Card>
         </motion.div>
       )}
+
+      {/* Logout Button */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+      >
+        <Button
+          onClick={handleSignOut}
+          disabled={isSigningOut}
+          variant="destructive"
+          className="w-full flex items-center justify-center gap-2"
+        >
+          <LogOut className="w-4 h-4" />
+          {isSigningOut ? 'جاري تسجيل الخروج...' : 'تسجيل الخروج'}
+        </Button>
+      </motion.div>
       </div>
     </PullToRefresh>
   );
