@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export type GoalType = 
@@ -57,10 +57,19 @@ export function useUserGoals() {
     }
   };
 
-  const getGoal = useCallback((goalType: GoalType): number => {
-    const goal = goals.find(g => g.goal_type === goalType);
-    return goal?.target_value || DEFAULT_GOALS[goalType];
+  // ✅ قاموس أهداف ثابت المرجع ما دام goals لم تتغير
+  const targetsMemo = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const g of goals) m[g.goal_type] = g.target_value;
+    return m;
   }, [goals]);
+
+  // ✅ getGoal مستقر ويفتح من القاموس فقط
+  const getGoal = useCallback(
+    (goalType: GoalType): number =>
+      targetsMemo[goalType] ?? DEFAULT_GOALS[goalType] ?? 0,
+    [targetsMemo]
+  );
 
   const updateGoal = async (goalType: GoalType, targetValue: number) => {
     try {

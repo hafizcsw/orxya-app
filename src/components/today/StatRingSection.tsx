@@ -3,8 +3,15 @@ import { motion } from 'framer-motion';
 import { DashboardGrid, DashboardSection } from '@/components/dashboard/DataDashboard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatRing } from '@/components/oryxa/StatRing';
-import { ringAnimations } from '@/lib/animations';
 import { ReactNode } from 'react';
+
+type RingAnim = { initial: any; animate: any; transition: any };
+
+const createStaggerAnim = (i: number): RingAnim => ({
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { delay: i * 0.05, duration: 0.35 }
+});
 
 interface StatRingData {
   id: string;
@@ -40,20 +47,27 @@ export const StatRingSection = React.memo(function StatRingSection({
   action,
   columns = 4 
 }: StatRingSectionProps) {
-  // rings is now stable from parent useMemo, no need to memoize again
+  const count = rings?.length ?? 0;
+  const placeholderCount = Math.max(count, columns); // ✅ طول ثابت عند التحميل
+
+  // ✅ حساب أنيميشن بطول ثابت (قيم عادية)
+  const anims = useMemo(() => 
+    Array.from({ length: placeholderCount }, (_, i) => createStaggerAnim(i)), 
+    [placeholderCount]
+  );
 
   return (
     <DashboardSection title={title} action={action}>
       {loading ? (
         <DashboardGrid columns={columns} gap="md">
-          {rings.map((_, i) => (
-            <Skeleton key={i} className="h-48 w-full rounded-2xl animate-pulse" />
+          {anims.map((_, i) => (
+            <Skeleton key={`ph-${i}`} className="h-48 w-full rounded-2xl animate-pulse" />
           ))}
         </DashboardGrid>
       ) : (
         <DashboardGrid columns={columns} gap="md">
           {rings.map((ring, i) => {
-            const anim = ringAnimations.stagger(i);
+            const anim = anims[i] ?? createStaggerAnim(i);
             return (
               <motion.div
                 key={ring.id}

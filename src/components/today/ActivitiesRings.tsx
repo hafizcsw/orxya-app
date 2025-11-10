@@ -42,12 +42,17 @@ export function ActivitiesRings({ date, onGoalClick }: ActivitiesRingsProps) {
     );
   }
 
-  const rings = useMemo(() => {
-    if (!activities) return [];
+  // ✅ Safe fallback values
+  const safeActivities = activities || {
+    work_hours: 0,
+    study_hours: 0,
+    sports_hours: 0,
+  };
 
-    const work = activities.work_hours || 0;
-    const study = activities.study_hours || 0;
-    const sports = activities.sports_hours || 0;
+  const rings = useMemo(() => {
+    const work = safeActivities.work_hours;
+    const study = safeActivities.study_hours;
+    const sports = safeActivities.sports_hours;
 
     return [
       {
@@ -99,7 +104,7 @@ export function ActivitiesRings({ date, onGoalClick }: ActivitiesRingsProps) {
         onTargetClick: () => onGoalClick?.('mma_hours'),
       },
     ];
-  }, [activities, getGoal, deviceType, t, onGoalClick]);
+  }, [safeActivities, getGoal, deviceType, t, onGoalClick]);
 
   return (
     <StatRingSection

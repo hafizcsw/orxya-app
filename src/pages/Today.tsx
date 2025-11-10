@@ -112,129 +112,154 @@ export default function Today() {
     setGoalDialogOpen(true);
   }, []);
 
+  // ✅ Safe fallback values لمنع تغيّر طول arrays
+  const safeHealthData = healthData || {
+    recovery: 0,
+    sleep: 0,
+    strain: 0,
+    meters: 0,
+    sleepMinutes: 0,
+    recoveryTrend: { direction: 'neutral' as const, percentage: 0 },
+    sleepTrend: { direction: 'neutral' as const, percentage: 0 },
+    strainTrend: { direction: 'neutral' as const, percentage: 0 },
+    activityTrend: { direction: 'neutral' as const, percentage: 0 },
+    baseline_days_collected: 0,
+  };
+
   // Stable health rings array with useMemo
   const healthRings = useMemo(() => {
-    if (!healthData) return [];
-    
     return [
       {
         id: 'recovery',
-        value: healthData.recovery,
+        value: safeHealthData.recovery,
         label: t('health.recovery'),
         color: "hsl(142, 76%, 36%)",
         gradientColors: ["hsl(142, 76%, 36%)", "hsl(142, 76%, 50%)"] as [string, string],
         icon: <Heart className="w-6 h-6" />,
-        trend: healthData.recoveryTrend.direction,
-        trendValue: healthData.recoveryTrend.percentage,
-        status: getRecoveryStatus(healthData.recovery),
+        trend: safeHealthData.recoveryTrend.direction,
+        trendValue: safeHealthData.recoveryTrend.percentage,
+        status: getRecoveryStatus(safeHealthData.recovery),
         size: device === 'mobile' ? "sm" as const : "lg" as const,
         targetValue: 100,
-        currentValue: healthData.recovery,
+        currentValue: safeHealthData.recovery,
       },
       {
         id: 'sleep',
-        value: healthData.sleep,
+        value: safeHealthData.sleep,
         label: t('health.sleep'),
         color: "hsl(217, 91%, 60%)",
         gradientColors: ["hsl(217, 91%, 60%)", "hsl(217, 91%, 75%)"] as [string, string],
         icon: <Moon className="w-6 h-6" />,
-        trend: healthData.sleepTrend.direction,
-        trendValue: healthData.sleepTrend.percentage,
-        status: getSleepStatus(healthData.sleep),
-        customDisplay: formatSleepTime(healthData.sleepMinutes),
+        trend: safeHealthData.sleepTrend.direction,
+        trendValue: safeHealthData.sleepTrend.percentage,
+        status: getSleepStatus(safeHealthData.sleep),
+        customDisplay: formatSleepTime(safeHealthData.sleepMinutes),
         size: device === 'mobile' ? "sm" as const : "lg" as const,
         targetValue: 100,
-        currentValue: healthData.sleep,
+        currentValue: safeHealthData.sleep,
       },
       {
         id: 'strain',
-        value: (healthData.strain / 21) * 100,
+        value: (safeHealthData.strain / 21) * 100,
         label: t('health.strain'),
         color: "hsl(38, 92%, 50%)",
         gradientColors: ["hsl(38, 92%, 50%)", "hsl(38, 92%, 70%)"] as [string, string],
         icon: <Zap className="w-6 h-6" />,
-        trend: healthData.strainTrend.direction,
-        trendValue: healthData.strainTrend.percentage,
-        status: getStrainStatus(healthData.strain),
-        customDisplay: `${healthData.strain.toFixed(1)}`,
+        trend: safeHealthData.strainTrend.direction,
+        trendValue: safeHealthData.strainTrend.percentage,
+        status: getStrainStatus(safeHealthData.strain),
+        customDisplay: `${safeHealthData.strain.toFixed(1)}`,
         size: device === 'mobile' ? "sm" as const : "lg" as const,
         targetValue: 21,
-        currentValue: healthData.strain,
+        currentValue: safeHealthData.strain,
       },
       {
         id: 'walk',
-        value: (healthData?.meters || 0) / 1000,
+        value: safeHealthData.meters / 1000,
         targetValue: getGoal('walk_km'),
-        currentValue: (healthData?.meters || 0) / 1000,
+        currentValue: safeHealthData.meters / 1000,
         label: t('activities.walk'),
         unit: "km",
         showTarget: true,
         color: "hsl(142, 76%, 36%)",
         gradientColors: ["hsl(142, 76%, 36%)", "hsl(142, 76%, 50%)"] as [string, string],
         icon: <Footprints className="w-5 h-5" />,
-        trend: healthData?.activityTrend?.direction,
-        trendValue: healthData?.activityTrend?.percentage,
-        status: getWalkStatus((healthData?.meters || 0) / 1000, getGoal('walk_km')),
-        customDisplay: healthData?.meters ? formatDistance(healthData.meters) : '0 km',
+        trend: safeHealthData.activityTrend.direction,
+        trendValue: safeHealthData.activityTrend.percentage,
+        status: getWalkStatus(safeHealthData.meters / 1000, getGoal('walk_km')),
+        customDisplay: safeHealthData.meters ? formatDistance(safeHealthData.meters) : '0 km',
         size: device === 'mobile' ? "sm" as const : "lg" as const,
         onTargetClick: () => openGoalDialog('walk_km'),
       },
     ];
-  }, [healthData, getGoal, device, t, openGoalDialog]);
+  }, [safeHealthData, getGoal, device, t, openGoalDialog]);
+
+  // ✅ Safe fallback for financial data
+  const safeReport = report || {
+    income: 0,
+    expenses: 0,
+    balance: 0,
+    work_hours: 0,
+    study_hours: 0,
+    sports_hours: 0,
+    incomeTrend: { direction: 'neutral' as const, percentage: 0 },
+    expensesTrend: { direction: 'neutral' as const, percentage: 0 },
+    balanceTrend: { direction: 'neutral' as const, percentage: 0 },
+  };
 
   // Stable financial rings array with useMemo
   const financialRings = useMemo(() => [
     {
       id: 'income',
-      value: report?.income || 0,
+      value: safeReport.income,
       targetValue: getGoal('income_monthly'),
-      currentValue: report?.income || 0,
+      currentValue: safeReport.income,
       label: t("financial.income"),
       unit: "USD",
       showTarget: true,
       color: "hsl(142, 76%, 36%)",
       gradientColors: ["hsl(142, 76%, 36%)", "hsl(142, 76%, 50%)"] as [string, string],
       icon: <DollarSign className="w-6 h-6" />,
-      trend: report?.incomeTrend?.direction,
-      trendValue: report?.incomeTrend?.percentage,
-      status: getIncomeStatus(report?.income || 0, getGoal('income_monthly')),
+      trend: safeReport.incomeTrend.direction,
+      trendValue: safeReport.incomeTrend.percentage,
+      status: getIncomeStatus(safeReport.income, getGoal('income_monthly')),
       size: device === 'mobile' ? "sm" as const : "lg" as const,
-      customDisplay: `$${report?.income || 0}`,
+      customDisplay: `$${safeReport.income}`,
       onTargetClick: () => openGoalDialog('income_monthly'),
     },
     {
       id: 'expenses',
-      value: report?.expenses || 0,
+      value: safeReport.expenses,
       targetValue: getGoal('expenses_daily'),
-      currentValue: report?.expenses || 0,
+      currentValue: safeReport.expenses,
       label: t("financial.expenses"),
       unit: "USD",
       showTarget: true,
       color: "hsl(0, 84%, 60%)",
       gradientColors: ["hsl(0, 84%, 60%)", "hsl(0, 84%, 75%)"] as [string, string],
       icon: <TrendingDown className="w-6 h-6" />,
-      trend: report?.expensesTrend?.direction,
-      trendValue: report?.expensesTrend?.percentage,
-      status: getExpensesStatus(report?.expenses || 0, getGoal('expenses_daily')),
+      trend: safeReport.expensesTrend.direction,
+      trendValue: safeReport.expensesTrend.percentage,
+      status: getExpensesStatus(safeReport.expenses, getGoal('expenses_daily')),
       size: device === 'mobile' ? "sm" as const : "lg" as const,
-      customDisplay: `$${report?.expenses || 0}`,
+      customDisplay: `$${safeReport.expenses}`,
       onTargetClick: () => openGoalDialog('expenses_daily'),
     },
     {
       id: 'balance',
-      value: Math.abs(report?.balance || 0),
+      value: Math.abs(safeReport.balance),
       label: t("financial.balance"),
       unit: "USD",
       color: "hsl(217, 91%, 60%)",
       gradientColors: ["hsl(217, 91%, 60%)", "hsl(217, 91%, 75%)"] as [string, string],
       icon: <Wallet className="w-6 h-6" />,
-      trend: report?.balanceTrend?.direction,
-      trendValue: report?.balanceTrend?.percentage,
-      status: getBalanceStatus(report?.balance || 0),
+      trend: safeReport.balanceTrend.direction,
+      trendValue: safeReport.balanceTrend.percentage,
+      status: getBalanceStatus(safeReport.balance),
       size: device === 'mobile' ? "sm" as const : "lg" as const,
-      customDisplay: `$${report?.balance || 0}`,
+      customDisplay: `$${safeReport.balance}`,
     },
-  ], [report, getGoal, device, t, openGoalDialog]);
+  ], [safeReport, getGoal, device, t, openGoalDialog]);
 
   const { data: plans, isLoading: plansLoading, refetch: refetchPlans } = useQuery({
     queryKey: ["business-plans"],
@@ -364,8 +389,6 @@ export default function Today() {
 
   // Calculate daily progress with stable dependencies
   const calculateDailyProgress = useCallback(() => {
-    if (!report || !healthData) return 0;
-    
     const goals = {
       work: getGoal('work_hours'),
       study: getGoal('study_hours'),
@@ -376,17 +399,17 @@ export default function Today() {
     };
 
     const achievements = {
-      work: Math.min(100, ((report.work_hours || 0) / goals.work) * 100),
-      study: Math.min(100, ((report.study_hours || 0) / goals.study) * 100),
-      mma: Math.min(100, ((report.sports_hours || 0) / goals.mma) * 100),
-      walk: Math.min(100, (((healthData.meters || 0) / 1000) / goals.walk) * 100),
-      recovery: healthData.recovery || 0,
-      sleep: healthData.sleep || 0
+      work: Math.min(100, (safeReport.work_hours / goals.work) * 100),
+      study: Math.min(100, (safeReport.study_hours / goals.study) * 100),
+      mma: Math.min(100, (safeReport.sports_hours / goals.mma) * 100),
+      walk: Math.min(100, ((safeHealthData.meters / 1000) / goals.walk) * 100),
+      recovery: safeHealthData.recovery,
+      sleep: safeHealthData.sleep
     };
 
     const totalProgress = Object.values(achievements).reduce((sum, val) => sum + val, 0);
     return Math.round(totalProgress / Object.keys(achievements).length);
-  }, [report, healthData, getGoal]);
+  }, [safeReport, safeHealthData, getGoal]);
 
   // Determine responsive columns based on device info
   const getResponsiveColumns = (): 1 | 2 | 3 | 4 | 5 => {
@@ -431,7 +454,7 @@ export default function Today() {
           />
 
           {/* NEW: Baseline Banner - shows only if < 14 days */}
-          {healthData?.baseline_days_collected !== undefined && healthData.baseline_days_collected < 14 && (
+          {safeHealthData.baseline_days_collected < 14 && (
             <BaselineBanner date={selectedDate.toISOString().split('T')[0]} />
           )}
 
