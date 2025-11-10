@@ -10,6 +10,7 @@ import { HooksErrorBoundary } from "./components/HooksErrorBoundary";
 import { ThemeProvider } from "next-themes";
 import { DateProvider } from "./contexts/DateContext";
 import { AIProvider } from "./contexts/AIContext";
+import { AuthProvider } from "./contexts/AuthContext";
 import { SettingsProvider } from "./contexts/SettingsContext";
 import { LoadingFallback } from "./components/ui/loading-fallback";
 import { useUser } from "./lib/auth";
@@ -84,7 +85,7 @@ const GenerateAssets = lazy(() => import("./pages/GenerateAssets"));
 const queryClient = new QueryClient();
 
 function AppContent() {
-  const { user } = useUser(); // ✅ Call useUser once at AppContent level
+  const { user, loading } = useUser(); // ✅ Call useUser ONCE at top level
   
   useAutopilotNotifications(user); // Pass user as prop
   useWidgetTokenSync(); // Auto-sync JWT token for widgets
@@ -119,7 +120,7 @@ function AppContent() {
   const isAuthPage = location.pathname === '/auth' || location.pathname === '/auth/callback';
   
   return (
-    <>
+    <AuthProvider user={user} loading={loading}>
       <PWAUpdateNotification />
       <PWAUpdateToast />
       {!isAuthPage && <MobileDownloadBanner />}
@@ -171,7 +172,7 @@ function AppContent() {
       </div>
       {!isAuthPage && <BottomNav />}
       {!isAuthPage && <AIDock />}
-    </>
+    </AuthProvider>
   );
 }
 

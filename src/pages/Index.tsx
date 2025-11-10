@@ -1,13 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useUser } from '@/lib/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, LogIn, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Index = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { user, loading } = useUser();
+  const { user, loading } = useAuth();
   const hasNavigated = useRef(false);
 
   useEffect(() => {

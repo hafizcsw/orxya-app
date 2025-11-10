@@ -1,9 +1,9 @@
 import { PropsWithChildren, useEffect, useState } from 'react'
-import { useUser } from '@/lib/auth'
+import { useAuth } from '@/contexts/AuthContext'
 import { Link } from 'react-router-dom'
 
 export function Protected({ children }: PropsWithChildren) {
-  const { user, loading } = useUser()
+  const { user, loading } = useAuth()
   const [showError, setShowError] = useState(false)
   
   // Timeout to prevent eternal spinning
