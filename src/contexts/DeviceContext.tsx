@@ -103,27 +103,37 @@ export const DeviceTypeProvider: React.FC<React.PropsWithChildren> = ({ children
   const [deviceInfo, setDeviceInfo] = useState<DeviceInfo>(detectDeviceInfo());
 
   useEffect(() => {
-    const update = () => {
-      const newDeviceInfo = detectDeviceInfo();
-      setDevice(newDeviceInfo.type);
-      setDeviceInfo(newDeviceInfo);
-      
-      // Debug logging for development
-      if (process.env.NODE_ENV === 'development') {
-        console.log('📱 Device Info:', {
-          type: newDeviceInfo.type,
-          size: newDeviceInfo.size,
-          density: newDeviceInfo.density,
-          viewport: `${newDeviceInfo.width}×${newDeviceInfo.height}`,
-          physical: `${newDeviceInfo.physicalWidth}×${newDeviceInfo.height * newDeviceInfo.dpr}`,
-          dpr: newDeviceInfo.dpr,
-          userAgent: navigator.userAgent.includes('iPhone') ? 'iPhone' : 'Other'
-        });
-      }
+    let timeoutId: number | null = null;
+
+    const debouncedUpdate = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(() => {
+        const newDeviceInfo = detectDeviceInfo();
+        setDevice(newDeviceInfo.type);
+        setDeviceInfo(newDeviceInfo);
+        
+        // Debug logging for development
+        if (process.env.NODE_ENV === 'development') {
+          console.log('📱 Device Info:', {
+            type: newDeviceInfo.type,
+            size: newDeviceInfo.size,
+            density: newDeviceInfo.density,
+            viewport: `${newDeviceInfo.width}×${newDeviceInfo.height}`,
+            physical: `${newDeviceInfo.physicalWidth}×${newDeviceInfo.height * newDeviceInfo.dpr}`,
+            dpr: newDeviceInfo.dpr,
+            userAgent: navigator.userAgent.includes('iPhone') ? 'iPhone' : 'Other'
+          });
+        }
+      }, 150); // 150ms debounce
     };
-    update();
-    window.addEventListener('resize', update, { passive: true });
-    return () => window.removeEventListener('resize', update);
+
+    debouncedUpdate();
+    window.addEventListener('resize', debouncedUpdate, { passive: true });
+    
+    return () => {
+      window.removeEventListener('resize', debouncedUpdate);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, []);
 
   const deviceValue = useMemo(() => device, [device]);

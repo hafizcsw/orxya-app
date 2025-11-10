@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useEffect, lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { HooksErrorBoundary } from "./components/HooksErrorBoundary";
 import { ThemeProvider } from "next-themes";
 import { DateProvider } from "./contexts/DateContext";
 import { AIProvider } from "./contexts/AIContext";
@@ -124,7 +125,7 @@ function AppContent() {
         <Suspense fallback={<LoadingFallback />}>
           <Routes location={location}>
             <Route path="/" element={<Index />} />
-            <Route path="/today" element={<Protected><Today /></Protected>} />
+            <Route path="/today" element={<Protected><HooksErrorBoundary><Today /></HooksErrorBoundary></Protected>} />
             <Route path="/today-whoop" element={<Protected><TodayWHOOP /></Protected>} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/reports" element={<Protected><Reports /></Protected>} />
