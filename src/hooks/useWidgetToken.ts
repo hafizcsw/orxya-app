@@ -5,143 +5,139 @@ import { isNative } from '@/native/platform';
 import { toast } from '@/hooks/use-toast';
 
 /**
- * Hook to automatically sync JWT token with native storage for widgets
+ * Initialize widget token sync (call once at app startup)
+ * No longer a hook - runs directly in main.tsx
  */
-export function useWidgetTokenSync() {
-  useEffect(() => {
-    // Only run on native platforms
-    if (!isNative()) {
-      console.log('[WidgetToken] Running on web platform, skipping native sync');
-      return;
-    }
+export function initWidgetTokenSync() {
+  // Only run on native platforms
+  if (!isNative()) {
+    console.log('[WidgetToken] Running on web platform, skipping native sync');
+    return;
+  }
 
-    console.log('[WidgetToken] 🚀 Initializing widget token sync...');
+  console.log('[WidgetToken] 🚀 Initializing widget token sync...');
 
-    // Save token on auth state change
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        try {
-          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-            if (session?.access_token) {
-              console.log('[WidgetToken] 📝 Saving token for widgets...', {
-                event,
-                tokenLength: session.access_token.length,
-                expiresAt: session.expires_at
-              });
+  // Save token on auth state change
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    async (event, session) => {
+      try {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          if (session?.access_token) {
+            console.log('[WidgetToken] 📝 Saving token for widgets...', {
+              event,
+              tokenLength: session.access_token.length,
+              expiresAt: session.expires_at
+            });
+            
+            const result = await WidgetToken.saveToken({ 
+              token: session.access_token 
+            });
+            
+            if (result.success) {
+              console.log('[WidgetToken] ✅ Token saved successfully');
               
-              const result = await WidgetToken.saveToken({ 
-                token: session.access_token 
-              });
-              
-              if (result.success) {
-                console.log('[WidgetToken] ✅ Token saved successfully');
-                
-                // Only show toast on sign in, not on refresh
-                if (event === 'SIGNED_IN') {
-                  toast({
-                    title: "Widget جاهز",
-                    description: "تم تفعيل الـ Widget للشاشة الرئيسية",
-                    duration: 3000,
-                  });
-                }
-              } else {
-                console.error('[WidgetToken] ❌ Failed to save token');
+              // Only show toast on sign in, not on refresh
+              if (event === 'SIGNED_IN') {
                 toast({
-                  title: "خطأ في تفعيل Widget",
-                  description: "فشل حفظ البيانات للـ Widget",
-                  variant: "destructive",
-                  duration: 5000,
+                  title: "Widget جاهز",
+                  description: "تم تفعيل الـ Widget للشاشة الرئيسية",
+                  duration: 3000,
                 });
               }
             } else {
-              console.warn('[WidgetToken] ⚠️ No access token in session');
+              console.error('[WidgetToken] ❌ Failed to save token');
+              toast({
+                title: "خطأ في تفعيل Widget",
+                description: "فشل حفظ البيانات للـ Widget",
+                variant: "destructive",
+                duration: 5000,
+              });
             }
-          } else if (event === 'SIGNED_OUT') {
-            console.log('[WidgetToken] 🗑️ Removing token...');
-            const result = await WidgetToken.removeToken();
-            
-            if (result.success) {
-              console.log('[WidgetToken] ✅ Token removed successfully');
-            } else {
-              console.error('[WidgetToken] ❌ Failed to remove token');
-            }
+          } else {
+            console.warn('[WidgetToken] ⚠️ No access token in session');
           }
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          console.error('[WidgetToken] ❌ Error syncing token:', {
-            error: errorMessage,
-            event,
-            stack: error instanceof Error ? error.stack : undefined
-          });
-          
-          toast({
-            title: "خطأ في Widget",
-            description: `فشل مزامنة البيانات: ${errorMessage}`,
-            variant: "destructive",
-            duration: 5000,
-          });
-        }
-      }
-    );
-
-    // Initial token save if user is already logged in
-    const saveInitialToken = async () => {
-      try {
-        console.log('[WidgetToken] 🔍 Checking for existing session...');
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('[WidgetToken] ❌ Error getting session:', error);
-          return;
-        }
-        
-        if (session?.access_token) {
-          console.log('[WidgetToken] 📝 Saving initial token...', {
-            tokenLength: session.access_token.length,
-            expiresAt: session.expires_at
-          });
-          
-          const result = await WidgetToken.saveToken({ 
-            token: session.access_token 
-          });
+        } else if (event === 'SIGNED_OUT') {
+          console.log('[WidgetToken] 🗑️ Removing token...');
+          const result = await WidgetToken.removeToken();
           
           if (result.success) {
-            console.log('[WidgetToken] ✅ Initial token saved');
+            console.log('[WidgetToken] ✅ Token removed successfully');
           } else {
-            console.error('[WidgetToken] ❌ Failed to save initial token');
-            toast({
-              title: "تحذير Widget",
-              description: "قد لا يعمل الـ Widget بشكل صحيح. جرب تسجيل الخروج والدخول مرة أخرى.",
-              variant: "destructive",
-              duration: 7000,
-            });
+            console.error('[WidgetToken] ❌ Failed to remove token');
           }
-        } else {
-          console.log('[WidgetToken] ℹ️ No active session found');
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        console.error('[WidgetToken] ❌ Error saving initial token:', {
+        console.error('[WidgetToken] ❌ Error syncing token:', {
           error: errorMessage,
+          event,
           stack: error instanceof Error ? error.stack : undefined
         });
         
         toast({
-          title: "خطأ في تهيئة Widget",
-          description: `فشل حفظ البيانات الأولية: ${errorMessage}`,
+          title: "خطأ في Widget",
+          description: `فشل مزامنة البيانات: ${errorMessage}`,
           variant: "destructive",
           duration: 5000,
         });
       }
-    };
+    }
+  );
 
-    saveInitialToken();
+  // Initial token save if user is already logged in
+  const saveInitialToken = async () => {
+    try {
+      console.log('[WidgetToken] 🔍 Checking for existing session...');
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('[WidgetToken] ❌ Error getting session:', error);
+        return;
+      }
+      
+      if (session?.access_token) {
+        console.log('[WidgetToken] 📝 Saving initial token...', {
+          tokenLength: session.access_token.length,
+          expiresAt: session.expires_at
+        });
+        
+        const result = await WidgetToken.saveToken({ 
+          token: session.access_token 
+        });
+        
+        if (result.success) {
+          console.log('[WidgetToken] ✅ Initial token saved');
+        } else {
+          console.error('[WidgetToken] ❌ Failed to save initial token');
+          toast({
+            title: "تحذير Widget",
+            description: "قد لا يعمل الـ Widget بشكل صحيح. جرب تسجيل الخروج والدخول مرة أخرى.",
+            variant: "destructive",
+            duration: 7000,
+          });
+        }
+      } else {
+        console.log('[WidgetToken] ℹ️ No active session found');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[WidgetToken] ❌ Error saving initial token:', {
+        error: errorMessage,
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      
+      toast({
+        title: "خطأ في تهيئة Widget",
+        description: `فشل حفظ البيانات الأولية: ${errorMessage}`,
+        variant: "destructive",
+        duration: 5000,
+      });
+    }
+  };
 
-    return () => {
-      console.log('[WidgetToken] 🔌 Unsubscribing from auth state changes');
-      subscription.unsubscribe();
-    };
-  }, []);
+  saveInitialToken();
+  
+  // Subscription will live for app lifetime - no cleanup needed
 }
 
 /**

@@ -15,7 +15,7 @@ import { SettingsProvider } from "./contexts/SettingsContext";
 import { LoadingFallback } from "./components/ui/loading-fallback";
 import { useUser } from "./lib/auth";
 import { useAutopilotNotifications } from "./hooks/useAutopilotNotifications";
-import { useWidgetTokenSync } from "./hooks/useWidgetToken";
+// Widget token sync moved to main.tsx - no longer using hook
 import { usePreloadPages } from "./hooks/usePreloadPages";
 import { usePrefetchData } from "./hooks/usePrefetchData";
 
@@ -88,7 +88,7 @@ function AppContent() {
   const { user, loading } = useUser(); // ✅ Call useUser ONCE at top level
   
   useAutopilotNotifications(user); // Pass user as prop
-  useWidgetTokenSync(); // Auto-sync JWT token for widgets
+  // Widget token sync moved to main.tsx as initWidgetTokenSync()
   usePreloadPages(); // Preload commonly used pages in background
   usePrefetchData(user); // Pass user as prop
   const location = useLocation();

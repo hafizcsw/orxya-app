@@ -16,9 +16,11 @@ import { initPWAUpdate } from "@/lib/pwa-update";
 import { initLiveUpdate } from "@/lib/live-update";
 import { initUpdateNotifications, setupNotificationHandlers } from "@/lib/update-notifications";
 import { autoSyncManager } from "@/lib/auto-sync";
+import { initWidgetTokenSync } from "@/hooks/useWidgetToken";
 
 initOnlineSync();
 void initTelemetry();
+initWidgetTokenSync(); // Initialize widget token sync once at app startup
 startDailyRescheduler();
 startPrayerDailyScheduler();
 startCalendarAutoSync(60);
