@@ -404,7 +404,7 @@ export default function Today() {
   return (
     <SimplePullToRefresh onRefresh={handleRefresh}>
       <div className="min-h-screen bg-background pb-20">
-        <div className="container mx-auto p-2 md:p-6 max-w-7xl space-y-2 md:space-y-6">
+        <div className="container mx-auto px-3 sm:px-4 md:px-6 max-w-7xl space-y-3 sm:space-y-4 md:space-y-6">
           
           {/* Header with Greeting */}
           <TodayHeader selectedDate={selectedDate} />
@@ -516,7 +516,7 @@ export default function Today() {
           defaultOpen={false}
         >
           {plansLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {[...Array(3)].map((_, i) => (
                 <Skeleton key={i} className="h-48 w-full rounded-2xl animate-pulse" />
               ))}
@@ -524,7 +524,7 @@ export default function Today() {
           ) : plans && plans.length > 0 ? (
             <div className="relative">
               {/* Desktop Grid View */}
-              <div className="hidden md:grid md:grid-cols-3 gap-4">
+              <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {plans.map((plan: BusinessPlan) => (
                   <PlanCard
                     key={plan.plan_id}
@@ -539,7 +539,7 @@ export default function Today() {
               </div>
 
               {/* Mobile Carousel View */}
-              <div className="md:hidden">
+              <div className="sm:hidden">
                 <div className="overflow-hidden -mx-3 px-3" ref={emblaRef}>
                   <div className="flex gap-3 touch-pan-y">
                     {plans.map((plan: BusinessPlan) => (
