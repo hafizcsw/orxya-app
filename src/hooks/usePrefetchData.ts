@@ -1,13 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useUser } from '@/lib/auth';
+import type { User } from '@supabase/supabase-js';
 
 /**
  * Hook to prefetch API data in the background for better UX
  * Prefetches data for Today and Calendar pages
  */
-export function usePrefetchData() {
-  const { user } = useUser();
+export function usePrefetchData(user: User | null) {
   const hasPrefetched = useRef(false);
 
   useEffect(() => {

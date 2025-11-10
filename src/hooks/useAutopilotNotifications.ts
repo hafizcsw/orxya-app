@@ -1,11 +1,9 @@
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useUser } from '@/lib/auth';
+import type { User } from '@supabase/supabase-js';
 import { showAutopilotToast } from '@/components/AutopilotToast';
 
-export function useAutopilotNotifications() {
-  const { user } = useUser();
-
+export function useAutopilotNotifications(user: User | null) {
   useEffect(() => {
     if (!user) return;
 

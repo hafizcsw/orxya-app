@@ -12,6 +12,7 @@ import { DateProvider } from "./contexts/DateContext";
 import { AIProvider } from "./contexts/AIContext";
 import { SettingsProvider } from "./contexts/SettingsContext";
 import { LoadingFallback } from "./components/ui/loading-fallback";
+import { useUser } from "./lib/auth";
 import { useAutopilotNotifications } from "./hooks/useAutopilotNotifications";
 import { useWidgetTokenSync } from "./hooks/useWidgetToken";
 import { usePreloadPages } from "./hooks/usePreloadPages";
@@ -83,10 +84,12 @@ const GenerateAssets = lazy(() => import("./pages/GenerateAssets"));
 const queryClient = new QueryClient();
 
 function AppContent() {
-  useAutopilotNotifications();
+  const { user } = useUser(); // ✅ Call useUser once at AppContent level
+  
+  useAutopilotNotifications(user); // Pass user as prop
   useWidgetTokenSync(); // Auto-sync JWT token for widgets
   usePreloadPages(); // Preload commonly used pages in background
-  usePrefetchData(); // Prefetch API data for Today & Calendar
+  usePrefetchData(user); // Pass user as prop
   useAutoSync(); // Auto-sync all connected integrations every hour
   const location = useLocation();
   const { i18n } = useTranslation();
