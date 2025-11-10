@@ -56,6 +56,7 @@ export function UpdateSettings() {
         return;
       }
       
+      const currentVer = await getCurrentVersion();
       const success = await downloadAndApplyUpdate(result.manifest, (progress) => {
         setDownloadProgress(progress);
       });

@@ -12,6 +12,7 @@ import { PrivacySettings } from './components/PrivacySettings';
 import { CalendarParitySettings } from '@/components/calendar/CalendarParitySettings';
 import { AdvancedSettings } from './components/AdvancedSettings';
 import { UpdateSettings } from './components/UpdateSettings';
+import { UpdateHistory } from './components/UpdateHistory';
 import { SettingsSection } from '@/types/settings';
 import PullToRefresh from 'react-simple-pull-to-refresh';
 import { toast } from 'sonner';

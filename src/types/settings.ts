@@ -68,4 +68,5 @@ export type SettingsSection =
   | 'privacy'
   | 'calendar-parity'
   | 'advanced'
-  | 'updates';
+  | 'updates'
+  | 'update-history';

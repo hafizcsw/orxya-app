@@ -6,7 +6,9 @@
     "prayer": "Prayer",
     "calendar": "Calendar",
     "privacy": "Privacy",
-    "integrations": "Integrations"
+    "integrations": "Integrations",
+    "updates": "Updates",
+    "updateHistory": "Update History"
   },
   "general": {
     "language": "Language",

@@ -5,6 +5,7 @@
 
 import { Capacitor } from '@capacitor/core';
 import { CapacitorUpdater } from '@capgo/capacitor-updater';
+import { addUpdateRecord } from './update-history';
 
 // Check if running on native platform
 export const isNativePlatform = () => {

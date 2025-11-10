@@ -1,5 +1,6 @@
 // @ts-ignore - virtual module from vite-plugin-pwa
 import { registerSW } from 'virtual:pwa-register';
+import { addUpdateRecord } from './update-history';
 
 let notified = false;
 
