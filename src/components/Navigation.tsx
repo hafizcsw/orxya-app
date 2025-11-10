@@ -86,7 +86,7 @@ const Navigation = () => {
     const compareDate = new Date(date);
     compareDate.setHours(0, 0, 0, 0);
     if (compareDate.getTime() === today.getTime()) {
-      return t('common:common.today').toUpperCase();
+      return t('time.today', { ns: 'common' }).toUpperCase();
     }
     const locale = i18n.language === 'ar' ? 'ar-EG' : i18n.language === 'es' ? 'es-ES' : 'en-US';
     return date.toLocaleDateString(locale, {

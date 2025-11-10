@@ -16,13 +16,18 @@ export function useUser() {
   useEffect(() => {
     let mounted = true;
 
-    // Initial session check
+    // Initial session check - set loading=false IMMEDIATELY
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!mounted) return;
       const u = session?.user ?? null;
       setUser(u);
-      setLoading(false);
+      setLoading(false); // ✅ فوراً - لا ننتظر background tasks
       identifyUser(u?.id ?? null, u ? { email: u.email } : undefined);
+      
+      // Run background tasks without blocking
+      if (u) {
+        runPostLoginTasks();
+      }
     }).catch((err) => {
       console.error('[useUser] Session error:', err);
       if (mounted) {
@@ -36,27 +41,14 @@ export function useUser() {
       if (!mounted) return;
       const u = session?.user ?? null;
       setUser(u);
-      setLoading(false);
+      setLoading(false); // ✅ فوراً أيضاً
       identifyUser(u?.id ?? null, u ? { email: u.email } : undefined);
       
       console.log('[useUser] Auth state changed:', event, u ? 'User present' : 'No user');
       
       // Post-login tasks (non-blocking) - only on SIGNED_IN
       if (u && event === 'SIGNED_IN') {
-        setTimeout(() => {
-          Promise.all([
-            flushQueueOnce().catch(e => console.error('Flush failed:', e)),
-            rescheduleAllFromDB().catch(e => console.error('Reschedule failed:', e)),
-            captureAndSendLocation().then(() => conflictCheckToday()).catch(e => console.error('Location/Conflicts failed:', e)),
-          ]);
-          
-          // Prayer sync
-          const today = new Date().toISOString().slice(0, 10);
-          syncPrayers(today).then(() => schedulePrayersFor(today)).catch(e => console.error('Prayer sync failed:', e));
-          
-          // Calendar sync - returns Promise
-          Promise.resolve(startCalendarAutoSync(30)).catch(e => console.error('Calendar sync failed:', e));
-        }, 100);
+        runPostLoginTasks();
       }
     });
 
@@ -65,6 +57,21 @@ export function useUser() {
       subscription.unsubscribe();
     };
   }, []);
+
+  // ✅ دالة منفصلة للـbackground tasks
+  function runPostLoginTasks() {
+    setTimeout(() => {
+      Promise.all([
+        flushQueueOnce().catch(e => console.error('Flush failed:', e)),
+        rescheduleAllFromDB().catch(e => console.error('Reschedule failed:', e)),
+        captureAndSendLocation().then(() => conflictCheckToday()).catch(e => console.error('Location/Conflicts failed:', e)),
+      ]);
+      
+      const today = new Date().toISOString().slice(0, 10);
+      syncPrayers(today).then(() => schedulePrayersFor(today)).catch(e => console.error('Prayer sync failed:', e));
+      Promise.resolve(startCalendarAutoSync(30)).catch(e => console.error('Calendar sync failed:', e));
+    }, 0);
+  }
 
   return { user, loading }
 }

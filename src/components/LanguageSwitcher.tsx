@@ -53,11 +53,6 @@ export function LanguageSwitcher() {
       // 5. Dispatch event for components to re-render
       window.dispatchEvent(new Event('languagechange'));
       
-      // 6. Force full re-render with reload (needed for proper RTL/LTR application)
-      setTimeout(() => {
-        window.location.reload();
-      }, 300);
-      
       toast.success('تم تغيير اللغة / Language changed');
       
     } catch (error) {
