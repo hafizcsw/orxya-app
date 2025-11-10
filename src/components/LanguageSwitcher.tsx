@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useSettings } from '@/contexts/SettingsContext';
 import { toast } from 'sonner';
+import { setStorageItem } from '@/lib/capacitor-storage';
 
 const languages = [
   { code: 'ar', name: 'العربية', flag: '🇸🇦' },
@@ -32,8 +33,8 @@ export function LanguageSwitcher() {
     try {
       console.log('[LanguageSwitcher] Changing language to:', langCode);
       
-      // 1. Save to localStorage first
-      localStorage.setItem('i18nextLng', langCode);
+      // 1. Save to Capacitor Storage (works for both web and native)
+      await setStorageItem('i18nextLng', langCode);
       
       // 2. Change i18n language
       await i18n.changeLanguage(langCode);
@@ -49,10 +50,13 @@ export function LanguageSwitcher() {
         console.error('[LanguageSwitcher] Failed to save to DB:', err);
       });
       
-      // 5. Force reload to apply direction changes properly
+      // 5. Dispatch event for components to re-render
+      window.dispatchEvent(new Event('languagechange'));
+      
+      // 6. Force full re-render with reload (needed for proper RTL/LTR application)
       setTimeout(() => {
         window.location.reload();
-      }, 500);
+      }, 300);
       
       toast.success('تم تغيير اللغة / Language changed');
       

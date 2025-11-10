@@ -48,6 +48,7 @@ import {
   Watch
 } from "lucide-react";
 import { useDeviceType } from "@/hooks/useDeviceType";
+import { useDeviceInfo } from "@/contexts/DeviceContext";
 import { cn } from "@/lib/utils";
 import { 
   getRecoveryStatus, 
@@ -73,6 +74,7 @@ export default function Today() {
   const { t } = useTranslation("today");
   const navigate = useNavigate();
   const device = useDeviceType();
+  const deviceInfo = useDeviceInfo();
   const [period, setPeriod] = useState<Period>("daily");
   const [selectedDate] = useState(new Date());
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -396,15 +398,32 @@ export default function Today() {
     return Math.round(totalProgress / Object.keys(achievements).length);
   }, [report, healthData, goalValues]);
 
-  // Determine responsive columns
-  const healthColumns = device === 'mobile' ? 2 : device === 'tablet' ? 3 : 4;
-  const activityColumns = 3; // Always 3 columns in a row
-  const financialColumns = 3; // Always 3 columns in a row
+  // Determine responsive columns based on device info
+  const getResponsiveColumns = (): 1 | 2 | 3 | 4 | 5 => {
+    if (device === 'mobile') {
+      // Large phones (S24 Ultra, iPhone Pro Max) can show more columns
+      if (deviceInfo.size === 'xlarge') return 3;
+      if (deviceInfo.size === 'large') return 2;
+      return 2; // Standard/small phones
+    }
+    if (device === 'tablet') return 4;
+    return 5; // Desktop
+  };
+  
+  const responsiveColumns = getResponsiveColumns();
+  const healthColumns = responsiveColumns as 1 | 2 | 3 | 4;
+  const activityColumns = responsiveColumns as 1 | 2 | 3 | 4;
+  const financialColumns = responsiveColumns as 1 | 2 | 3 | 4;
 
   return (
     <SimplePullToRefresh onRefresh={handleRefresh}>
       <div className="min-h-screen bg-background pb-20">
-        <div className="container mx-auto px-3 sm:px-4 md:px-6 max-w-7xl space-y-3 sm:space-y-4 md:space-y-6">
+        <div className={cn(
+          "container mx-auto max-w-7xl space-y-3 sm:space-y-4 md:space-y-6",
+          deviceInfo.size === 'xlarge' ? "px-6" :
+          deviceInfo.size === 'large' ? "px-5" :
+          "px-3 sm:px-4 md:px-6"
+        )}>
           
           {/* Header with Greeting */}
           <TodayHeader selectedDate={selectedDate} />

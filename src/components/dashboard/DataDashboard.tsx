@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
+import { useDeviceInfo } from '@/contexts/DeviceContext';
 
 interface DashboardGridProps {
   children: ReactNode;
@@ -14,24 +15,35 @@ export function DashboardGrid({
   gap = 'md',
   className 
 }: DashboardGridProps) {
-  const columnStyles = {
-    1: 'grid-cols-1',
-    2: 'grid-cols-2',
-    3: 'grid-cols-2 lg:grid-cols-3',
-    4: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4',
-    5: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'
+  const deviceInfo = useDeviceInfo();
+  
+  // Smarter column styles based on device info
+  const getColumnStyles = () => {
+    const baseStyles = {
+      1: 'grid-cols-1',
+      2: deviceInfo.size === 'xlarge' ? 'grid-cols-2 lg:grid-cols-2' : 'grid-cols-2',
+      3: deviceInfo.size === 'xlarge' ? 'grid-cols-3 lg:grid-cols-3' : 
+         deviceInfo.size === 'large' ? 'grid-cols-2 lg:grid-cols-3' : 
+         'grid-cols-2 lg:grid-cols-3',
+      4: deviceInfo.size === 'xlarge' ? 'grid-cols-3 lg:grid-cols-4' :
+         deviceInfo.size === 'large' ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4' :
+         'grid-cols-2 md:grid-cols-3 lg:grid-cols-4',
+      5: deviceInfo.size === 'xlarge' ? 'grid-cols-3 md:grid-cols-4 lg:grid-cols-5' :
+         'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'
+    };
+    return baseStyles[columns];
   };
   
   const gapStyles = {
-    sm: 'gap-3 sm:gap-4',
-    md: 'gap-4 sm:gap-5 md:gap-6',
-    lg: 'gap-5 sm:gap-6 md:gap-8'
+    sm: deviceInfo.size === 'xlarge' ? 'gap-4 sm:gap-5' : 'gap-3 sm:gap-4',
+    md: deviceInfo.size === 'xlarge' ? 'gap-5 sm:gap-6 md:gap-7' : 'gap-4 sm:gap-5 md:gap-6',
+    lg: deviceInfo.size === 'xlarge' ? 'gap-6 sm:gap-7 md:gap-9' : 'gap-5 sm:gap-6 md:gap-8'
   };
   
   return (
     <div className={cn(
       'grid w-full',
-      columnStyles[columns],
+      getColumnStyles(),
       gapStyles[gap],
       'auto-rows-fr', // Equal height rows
       className

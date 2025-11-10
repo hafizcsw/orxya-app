@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { ArrowUp, ArrowDown, Minus } from 'lucide-react';
 import { hslToRgba, getGlowIntensity, ringAnimations } from '@/lib/animations';
-import { useDeviceTypeCtx } from '@/contexts/DeviceContext';
+import { useDeviceInfo } from '@/contexts/DeviceContext';
 
 interface StatRingProps {
   value: number; // 0-100
@@ -46,41 +46,63 @@ export const StatRing = React.memo(function StatRing({
   showTarget,
   onTargetClick,
 }: StatRingProps) {
-  const deviceType = useDeviceTypeCtx();
-  const isMobile = deviceType === 'mobile';
+  const deviceInfo = useDeviceInfo();
+  const isMobile = deviceInfo.type === 'mobile';
   
   // Animation delay based on component mount
   const animDelay = 0;
 
+  // Responsive sizing based on device info
   const sizes = {
     sm: { 
-      width: isMobile ? 100 : 100, 
-      strokeWidth: isMobile ? 5 : 5, 
-      fontSize: isMobile ? '0.875rem' : '1.125rem', 
-      iconSize: isMobile ? 16 : 16,
-      labelSize: isMobile ? 'text-xs' : 'text-[10px]',
-      subtitleSize: isMobile ? 'text-[10px]' : 'text-[9px]',
-      valueSize: isMobile ? 'text-sm' : 'text-base',
+      width: deviceInfo.size === 'xlarge' ? 140 : 
+             deviceInfo.size === 'large' ? 120 : 
+             isMobile ? 110 : 100,
+      strokeWidth: deviceInfo.density === 'xxxhdpi' ? 7 : 
+                   deviceInfo.density === 'xxhdpi' ? 6 : 5,
+      fontSize: deviceInfo.size === 'xlarge' ? '1.125rem' : '0.875rem',
+      iconSize: deviceInfo.size === 'xlarge' ? 20 : 
+                deviceInfo.size === 'large' ? 18 : 16,
+      labelSize: deviceInfo.size === 'xlarge' ? 'text-sm' : 
+                 isMobile ? 'text-xs' : 'text-[10px]',
+      subtitleSize: deviceInfo.size === 'xlarge' ? 'text-xs' : 
+                    isMobile ? 'text-[10px]' : 'text-[9px]',
+      valueSize: deviceInfo.size === 'xlarge' ? 'text-lg' : 
+                 isMobile ? 'text-base' : 'text-sm',
       padding: 'p-2'
     },
     md: { 
-      width: isMobile ? 110 : 140, 
-      strokeWidth: isMobile ? 6 : 7, 
-      fontSize: isMobile ? '1rem' : '1.5rem', 
-      iconSize: isMobile ? 18 : 20,
-      labelSize: isMobile ? 'text-xs' : 'text-xs',
-      subtitleSize: isMobile ? 'text-[10px]' : 'text-[10px]',
-      valueSize: isMobile ? 'text-sm' : 'text-lg',
+      width: deviceInfo.size === 'xlarge' ? 160 : 
+             deviceInfo.size === 'large' ? 140 : 
+             isMobile ? 120 : 140,
+      strokeWidth: deviceInfo.density === 'xxxhdpi' ? 8 : 
+                   deviceInfo.density === 'xxhdpi' ? 7 : 6,
+      fontSize: deviceInfo.size === 'xlarge' ? '1.5rem' : '1rem',
+      iconSize: deviceInfo.size === 'xlarge' ? 22 : 
+                deviceInfo.size === 'large' ? 20 : 18,
+      labelSize: deviceInfo.size === 'xlarge' ? 'text-base' : 
+                 isMobile ? 'text-sm' : 'text-xs',
+      subtitleSize: deviceInfo.size === 'xlarge' ? 'text-sm' : 
+                    isMobile ? 'text-xs' : 'text-[10px]',
+      valueSize: deviceInfo.size === 'xlarge' ? 'text-xl' : 
+                 isMobile ? 'text-lg' : 'text-base',
       padding: 'p-3'
     },
     lg: { 
-      width: isMobile ? 120 : 180, 
-      strokeWidth: isMobile ? 6 : 9, 
-      fontSize: isMobile ? '1rem' : '2rem', 
-      iconSize: isMobile ? 18 : 24,
-      labelSize: isMobile ? 'text-sm' : 'text-sm',
-      subtitleSize: isMobile ? 'text-xs' : 'text-xs',
-      valueSize: isMobile ? 'text-base' : 'text-xl',
+      width: deviceInfo.size === 'xlarge' ? 200 : 
+             deviceInfo.size === 'large' ? 170 : 
+             isMobile ? 140 : 180,
+      strokeWidth: deviceInfo.density === 'xxxhdpi' ? 10 : 
+                   deviceInfo.density === 'xxhdpi' ? 9 : 7,
+      fontSize: deviceInfo.size === 'xlarge' ? '2rem' : '1.25rem',
+      iconSize: deviceInfo.size === 'xlarge' ? 28 : 
+                deviceInfo.size === 'large' ? 24 : 20,
+      labelSize: deviceInfo.size === 'xlarge' ? 'text-lg' : 
+                 isMobile ? 'text-base' : 'text-sm',
+      subtitleSize: deviceInfo.size === 'xlarge' ? 'text-base' : 
+                    isMobile ? 'text-sm' : 'text-xs',
+      valueSize: deviceInfo.size === 'xlarge' ? 'text-2xl' : 
+                 isMobile ? 'text-xl' : 'text-lg',
       padding: 'p-4'
     },
   }
@@ -308,7 +330,12 @@ export const StatRing = React.memo(function StatRing({
           
           {/* Main value */}
           <motion.div 
-            className={cn("font-bold leading-none", valueSize)}
+            className={cn(
+              "leading-none",
+              deviceInfo.size === 'xlarge' || deviceInfo.size === 'large' ? 'font-extrabold' : 'font-bold',
+              "[dir=rtl]:font-extrabold",
+              valueSize
+            )}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{
@@ -324,7 +351,9 @@ export const StatRing = React.memo(function StatRing({
           {status && (
             <motion.div
               className={cn(
-                "font-semibold",
+                "font-bold",
+                "[dir=rtl]:font-extrabold",
+                deviceInfo.size === 'xlarge' ? 'text-sm' : 
                 size === 'sm' ? 'text-[11px]' : size === 'md' ? 'text-xs' : 'text-sm',
                 statusColors[status]
               )}
@@ -354,7 +383,8 @@ export const StatRing = React.memo(function StatRing({
         }}
       >
         <div className={cn(
-          "font-semibold text-foreground group-hover:text-primary transition-colors",
+          "font-bold text-foreground group-hover:text-primary transition-colors",
+          "[dir=rtl]:font-extrabold",
           labelSize
         )}>
           {label}

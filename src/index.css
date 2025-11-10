@@ -30,34 +30,86 @@
 @media (max-width: 768px) {
   :root {
     /* Increase base font size for mobile */
-    font-size: 16px;
+    font-size: 17px;
   }
   
   body {
     /* Better text rendering on mobile */
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
     font-weight: 400;
   }
   
   /* Make all text slightly larger and bolder on mobile */
   * {
-    letter-spacing: 0.01em;
+    letter-spacing: 0.015em;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    font-weight: 600 !important;
-    letter-spacing: -0.01em;
+    font-weight: 700 !important;
+    letter-spacing: -0.005em;
   }
   
   p, span, div {
-    font-weight: 400;
+    font-weight: 450;
   }
   
   /* Increase clickable area for mobile */
   button, a {
-    min-height: 44px;
-    min-width: 44px;
+    min-height: 48px !important;
+    min-width: 48px !important;
+  }
+  
+  /* Better button padding */
+  button {
+    padding: 0.75rem 1.25rem !important;
+  }
+}
+
+/* High-DPI mobile devices (S24 Ultra, iPhone Pro Max, etc.) */
+@media (max-width: 768px) and (-webkit-min-device-pixel-ratio: 3),
+       (max-width: 768px) and (min-resolution: 3dppx) {
+  :root {
+    /* Even larger font for high-DPI screens */
+    font-size: 18px !important;
+  }
+  
+  h1 { 
+    font-size: 2.25rem !important;
+    font-weight: 800 !important;
+  }
+  h2 { 
+    font-size: 1.875rem !important;
+    font-weight: 700 !important;
+  }
+  h3 { 
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+  }
+  
+  /* Arabic font needs higher weight */
+  [dir="rtl"] {
+    font-weight: 500 !important;
+    letter-spacing: 0.025em;
+    line-height: 1.7;
+  }
+  
+  [dir="rtl"] h1,
+  [dir="rtl"] h2,
+  [dir="rtl"] h3,
+  [dir="rtl"] h4 {
+    font-weight: 800 !important;
+    letter-spacing: 0.01em;
+    line-height: 1.4;
+  }
+  
+  /* Larger touch targets for high-DPI */
+  button, a {
+    min-height: 52px !important;
+    min-width: 52px !important;
   }
 }
 
@@ -65,7 +117,7 @@
 @media (min-width: 400px) and (max-width: 768px) {
   :root {
     /* Larger base font for big mobile screens */
-    font-size: 17px;
+    font-size: 18px;
   }
 }
 
