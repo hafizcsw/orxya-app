@@ -12,6 +12,8 @@ import { startLocationTracking, captureAndSendLocation } from "./native/location
 import { conflictCheckToday } from "./lib/conflicts";
 import { supabase } from "@/integrations/supabase/client";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { initPWAUpdate } from "@/lib/pwa-update";
+import { initLiveUpdate } from "@/lib/live-update";
 
 initOnlineSync();
 void initTelemetry();
@@ -57,6 +59,28 @@ startLocationTracking(15); // Capture location every 15 minutes on native
     });
   }
 })();
+
+// PWA Update System - Show toast when update available
+initPWAUpdate({
+  onNeedRefresh: (updateSW) => {
+    // Store the update function globally for the toast to access
+    (window as any).pwaUpdateCallback = updateSW;
+    // Dispatch event for React components to listen
+    window.dispatchEvent(new CustomEvent('pwa-update-available'));
+  },
+  onOfflineReady: () => {
+    console.log('✅ [PWA] App ready for offline use');
+  }
+});
+
+// Capacitor Live Update System - Check for native app updates
+initLiveUpdate((version) => {
+  console.log(`📦 [LiveUpdate] Update available: ${version}`);
+  // Dispatch event for React components to listen
+  window.dispatchEvent(new CustomEvent('native-update-available', { 
+    detail: { version } 
+  }));
+});
 
 // PWA Installation - VitePWA handles service worker automatically
 if ('serviceWorker' in navigator) {

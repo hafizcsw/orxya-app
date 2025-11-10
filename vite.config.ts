@@ -67,6 +67,9 @@ export default defineConfig(({ mode }) => ({
         ]
       },
       workbox: {
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4MB limit
         runtimeCaching: [
@@ -101,7 +104,7 @@ export default defineConfig(({ mode }) => ({
         ]
       },
       devOptions: {
-        enabled: true, // Enable in dev to test PWA
+        enabled: false, // Disable in dev to avoid confusion
         type: 'module'
       },
       injectRegister: 'auto'
@@ -112,6 +115,9 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
     dedupe: ["react", "react-dom"],
+  },
+  define: {
+    __APP_BUILD__: JSON.stringify(new Date().toISOString()),
   },
   optimizeDeps: {
     include: ["react", "react-dom"],

@@ -11,6 +11,7 @@ import { IntegrationSettings } from './components/IntegrationSettings';
 import { PrivacySettings } from './components/PrivacySettings';
 import { CalendarParitySettings } from '@/components/calendar/CalendarParitySettings';
 import { AdvancedSettings } from './components/AdvancedSettings';
+import { UpdateSettings } from './components/UpdateSettings';
 import { SettingsSection } from '@/types/settings';
 import PullToRefresh from 'react-simple-pull-to-refresh';
 import { toast } from 'sonner';
@@ -50,6 +51,8 @@ export default function Settings() {
         return <CalendarParitySettings />;
       case 'advanced':
         return <AdvancedSettings />;
+      case 'updates':
+        return <UpdateSettings />;
       default:
         return <GeneralSettings />;
     }
