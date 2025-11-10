@@ -18,7 +18,7 @@ import { useAutopilotNotifications } from "./hooks/useAutopilotNotifications";
 import { useWidgetTokenSync } from "./hooks/useWidgetToken";
 import { usePreloadPages } from "./hooks/usePreloadPages";
 import { usePrefetchData } from "./hooks/usePrefetchData";
-import { useAutoSync } from "./hooks/useAutoSync";
+
 import { PWAUpdateNotification } from "./components/PWAUpdateNotification";
 import { PWAUpdateToast } from "./components/PWAUpdateToast";
 
@@ -91,7 +91,6 @@ function AppContent() {
   useWidgetTokenSync(); // Auto-sync JWT token for widgets
   usePreloadPages(); // Preload commonly used pages in background
   usePrefetchData(user); // Pass user as prop
-  useAutoSync(); // Auto-sync all connected integrations every hour
   const location = useLocation();
   const { i18n } = useTranslation();
   

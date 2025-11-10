@@ -15,6 +15,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { initPWAUpdate } from "@/lib/pwa-update";
 import { initLiveUpdate } from "@/lib/live-update";
 import { initUpdateNotifications, setupNotificationHandlers } from "@/lib/update-notifications";
+import { autoSyncManager } from "@/lib/auto-sync";
 
 initOnlineSync();
 void initTelemetry();
@@ -23,6 +24,7 @@ startPrayerDailyScheduler();
 startCalendarAutoSync(60);
 startCalendarDailyScheduler();
 startLocationTracking(15); // Capture location every 15 minutes on native
+autoSyncManager.startAutoSync(); // Start auto-sync for all integrations every hour
 
 // Bootstrap: location + conflicts on visibility change (for web only, when user is logged in)
 // Can be enabled/disabled from Automation settings
