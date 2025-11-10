@@ -1,14 +1,10 @@
 /**
  * Capacitor Live Update System
  * Allows updating web assets without rebuilding native app
- * 
- * Setup required:
- * 1. npm i @capgo/capacitor-updater
- * 2. npx cap sync
- * 3. Setup update server with manifest.json
  */
 
 import { Capacitor } from '@capacitor/core';
+import { CapacitorUpdater } from '@capgo/capacitor-updater';
 
 // Check if running on native platform
 export const isNativePlatform = () => {
@@ -33,8 +29,9 @@ interface UpdateCheckResult {
  * Configuration for live updates
  */
 export const LIVE_UPDATE_CONFIG = {
-  // Replace with your actual update server URL
-  manifestUrl: 'https://your-server.com/updates/manifest.json',
+  // For development: use your local/staging server
+  // For production: use your CDN or production server
+  manifestUrl: import.meta.env.VITE_UPDATE_SERVER_URL || 'https://57dc7576-1990-4872-a4c0-f7cfc474f0d0.lovableproject.com/updates/manifest.json',
   enabled: isNativePlatform(),
   checkOnStartup: true,
   checkInterval: 60 * 60 * 1000, // 1 hour
@@ -49,26 +46,31 @@ export async function checkForUpdates(): Promise<UpdateCheckResult> {
   }
 
   try {
-    // This is a placeholder - actual implementation requires @capgo/capacitor-updater
-    console.log('[LiveUpdate] Checking for updates...');
+    console.log('[LiveUpdate] Checking for updates from:', LIVE_UPDATE_CONFIG.manifestUrl);
     
-    // Example implementation with capgo:
-    /*
-    const { CapacitorUpdater } = await import('@capgo/capacitor-updater');
     const current = await CapacitorUpdater.current();
-    const latest = await CapacitorUpdater.getLatest();
+    console.log('[LiveUpdate] Current bundle:', current);
     
-    if (latest.version !== current.version) {
+    // Fetch manifest from server
+    const response = await fetch(LIVE_UPDATE_CONFIG.manifestUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch manifest: ${response.status}`);
+    }
+    
+    const manifest: UpdateManifest = await response.json();
+    console.log('[LiveUpdate] Latest manifest:', manifest);
+    
+    // Compare versions
+    if (manifest.version !== current.bundle.version) {
       return {
         available: true,
-        version: latest.version,
-        currentVersion: current.version,
-        manifest: latest
+        version: manifest.version,
+        currentVersion: current.bundle.version,
+        manifest
       };
     }
-    */
     
-    return { available: false };
+    return { available: false, currentVersion: current.bundle.version };
   } catch (error) {
     console.error('[LiveUpdate] Check failed:', error);
     return { available: false };
@@ -79,6 +81,7 @@ export async function checkForUpdates(): Promise<UpdateCheckResult> {
  * Download and apply update
  */
 export async function downloadAndApplyUpdate(
+  manifest: UpdateManifest,
   onProgress?: (progress: number) => void
 ): Promise<boolean> {
   if (!LIVE_UPDATE_CONFIG.enabled) {
@@ -86,29 +89,26 @@ export async function downloadAndApplyUpdate(
   }
 
   try {
-    console.log('[LiveUpdate] Downloading update...');
-    onProgress?.(0);
+    console.log('[LiveUpdate] Downloading update:', manifest.version);
+    onProgress?.(10);
     
-    // Example implementation with capgo:
-    /*
-    const { CapacitorUpdater } = await import('@capgo/capacitor-updater');
-    
-    // Download
-    const download = await CapacitorUpdater.download({
+    // Download the bundle
+    const downloadResult = await CapacitorUpdater.download({
       url: manifest.url,
       version: manifest.version,
     });
     
-    onProgress?.(50);
+    console.log('[LiveUpdate] Download completed:', downloadResult);
+    onProgress?.(60);
     
-    // Set as next version
-    await CapacitorUpdater.set({ id: download.id });
+    // Set as the next active bundle
+    await CapacitorUpdater.set({ id: downloadResult.id });
+    console.log('[LiveUpdate] Bundle set as next version');
+    onProgress?.(90);
     
-    onProgress?.(100);
-    
-    // Reload app
+    // Reload the app to apply the update
     await CapacitorUpdater.reload();
-    */
+    onProgress?.(100);
     
     return true;
   } catch (error) {
@@ -156,14 +156,8 @@ export async function getCurrentVersion(): Promise<string> {
   }
 
   try {
-    // Example with capgo:
-    /*
-    const { CapacitorUpdater } = await import('@capgo/capacitor-updater');
     const current = await CapacitorUpdater.current();
-    return current.version;
-    */
-    
-    return 'native-1.0.0';
+    return current.bundle.version || 'builtin';
   } catch (error) {
     console.error('[LiveUpdate] Get version failed:', error);
     return 'unknown';

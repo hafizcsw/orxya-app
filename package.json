@@ -17,6 +17,7 @@
     "@capacitor/local-notifications": "^7.0.3",
     "@capacitor/preferences": "^7.0.2",
     "@capawesome/capacitor-posthog": "^7.2.0",
+    "@capgo/capacitor-updater": "^7.27.3",
     "@fullcalendar/core": "^6.1.19",
     "@fullcalendar/daygrid": "^6.1.19",
     "@fullcalendar/interaction": "^6.1.19",

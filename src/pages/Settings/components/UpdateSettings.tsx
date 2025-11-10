@@ -48,7 +48,15 @@ export function UpdateSettings() {
     setDownloadProgress(0);
     
     try {
-      const success = await downloadAndApplyUpdate((progress) => {
+      // Re-check to get the latest manifest
+      const result = await checkForUpdates();
+      if (!result.available || !result.manifest) {
+        toast.error('لا يوجد تحديث متاح');
+        setDownloading(false);
+        return;
+      }
+      
+      const success = await downloadAndApplyUpdate(result.manifest, (progress) => {
         setDownloadProgress(progress);
       });
       
