@@ -14,11 +14,59 @@
 :root {
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
+  
+  /* Enhanced font rendering for mobile */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 /* Fix for mobile Safari 100vh issue */
 .min-h-screen {
   min-height: 100svh;
+}
+
+/* Mobile-specific font improvements */
+@media (max-width: 768px) {
+  :root {
+    /* Increase base font size for mobile */
+    font-size: 16px;
+  }
+  
+  body {
+    /* Better text rendering on mobile */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    font-weight: 400;
+  }
+  
+  /* Make all text slightly larger and bolder on mobile */
+  * {
+    letter-spacing: 0.01em;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600 !important;
+    letter-spacing: -0.01em;
+  }
+  
+  p, span, div {
+    font-weight: 400;
+  }
+  
+  /* Increase clickable area for mobile */
+  button, a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Samsung specific fixes (large screens like S24 Ultra) */
+@media (min-width: 400px) and (max-width: 768px) {
+  :root {
+    /* Larger base font for big mobile screens */
+    font-size: 17px;
+  }
 }
 
 /* RTL/LTR Support */

@@ -30,19 +30,34 @@ export function LanguageSwitcher() {
     setIsChanging(true);
     
     try {
-      // Save to localStorage first for immediate persistence
+      console.log('[LanguageSwitcher] Changing language to:', langCode);
+      
+      // 1. Save to localStorage first
       localStorage.setItem('i18nextLng', langCode);
       
-      // Change i18n language first
+      // 2. Change i18n language
       await i18n.changeLanguage(langCode);
       
-      // Then update settings in database
-      await updateSettings({ language: langCode });
+      // 3. Update HTML attributes immediately
+      const dir = langCode === 'ar' ? 'rtl' : 'ltr';
+      document.documentElement.setAttribute('lang', langCode);
+      document.documentElement.setAttribute('dir', dir);
+      document.body.setAttribute('dir', dir);
       
-      toast.success('تم تغيير اللغة بنجاح / Language changed successfully');
+      // 4. Update settings in database (non-blocking)
+      updateSettings({ language: langCode }).catch(err => {
+        console.error('[LanguageSwitcher] Failed to save to DB:', err);
+      });
+      
+      // 5. Force reload to apply direction changes properly
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+      
+      toast.success('تم تغيير اللغة / Language changed');
       
     } catch (error) {
-      console.error('Failed to change language:', error);
+      console.error('[LanguageSwitcher] Failed to change language:', error);
       toast.error('فشل تغيير اللغة / Failed to change language');
     } finally {
       setIsChanging(false);

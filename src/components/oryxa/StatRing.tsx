@@ -54,33 +54,33 @@ export const StatRing = React.memo(function StatRing({
 
   const sizes = {
     sm: { 
-      width: isMobile ? 85 : 100, 
-      strokeWidth: isMobile ? 4 : 5, 
-      fontSize: isMobile ? '0.75rem' : '1.125rem', 
-      iconSize: isMobile ? 12 : 16,
-      labelSize: isMobile ? 'text-[9px]' : 'text-[10px]',
-      subtitleSize: isMobile ? 'text-[7px]' : 'text-[9px]',
-      valueSize: isMobile ? 'text-xs' : 'text-base',
+      width: isMobile ? 100 : 100, 
+      strokeWidth: isMobile ? 5 : 5, 
+      fontSize: isMobile ? '0.875rem' : '1.125rem', 
+      iconSize: isMobile ? 16 : 16,
+      labelSize: isMobile ? 'text-xs' : 'text-[10px]',
+      subtitleSize: isMobile ? 'text-[10px]' : 'text-[9px]',
+      valueSize: isMobile ? 'text-sm' : 'text-base',
       padding: 'p-2'
     },
     md: { 
-      width: isMobile ? 90 : 140, 
-      strokeWidth: isMobile ? 5 : 7, 
-      fontSize: isMobile ? '0.75rem' : '1.5rem', 
-      iconSize: isMobile ? 13 : 20,
-      labelSize: isMobile ? 'text-[9px]' : 'text-xs',
-      subtitleSize: isMobile ? 'text-[7px]' : 'text-[10px]',
-      valueSize: isMobile ? 'text-xs' : 'text-lg',
+      width: isMobile ? 110 : 140, 
+      strokeWidth: isMobile ? 6 : 7, 
+      fontSize: isMobile ? '1rem' : '1.5rem', 
+      iconSize: isMobile ? 18 : 20,
+      labelSize: isMobile ? 'text-xs' : 'text-xs',
+      subtitleSize: isMobile ? 'text-[10px]' : 'text-[10px]',
+      valueSize: isMobile ? 'text-sm' : 'text-lg',
       padding: 'p-3'
     },
     lg: { 
-      width: isMobile ? 95 : 180, 
-      strokeWidth: isMobile ? 5 : 9, 
-      fontSize: isMobile ? '0.75rem' : '2rem', 
-      iconSize: isMobile ? 13 : 24,
-      labelSize: isMobile ? 'text-[9px]' : 'text-sm',
-      subtitleSize: isMobile ? 'text-[7px]' : 'text-xs',
-      valueSize: isMobile ? 'text-xs' : 'text-xl',
+      width: isMobile ? 120 : 180, 
+      strokeWidth: isMobile ? 6 : 9, 
+      fontSize: isMobile ? '1rem' : '2rem', 
+      iconSize: isMobile ? 18 : 24,
+      labelSize: isMobile ? 'text-sm' : 'text-sm',
+      subtitleSize: isMobile ? 'text-xs' : 'text-xs',
+      valueSize: isMobile ? 'text-base' : 'text-xl',
       padding: 'p-4'
     },
   }
@@ -324,8 +324,8 @@ export const StatRing = React.memo(function StatRing({
           {status && (
             <motion.div
               className={cn(
-                "font-medium",
-                size === 'sm' ? 'text-[9px]' : size === 'md' ? 'text-[10px]' : 'text-xs',
+                "font-semibold",
+                size === 'sm' ? 'text-[11px]' : size === 'md' ? 'text-xs' : 'text-sm',
                 statusColors[status]
               )}
               initial={{ opacity: 0, y: 5 }}
@@ -354,7 +354,7 @@ export const StatRing = React.memo(function StatRing({
         }}
       >
         <div className={cn(
-          "font-medium text-foreground group-hover:text-primary transition-colors",
+          "font-semibold text-foreground group-hover:text-primary transition-colors",
           labelSize
         )}>
           {label}
@@ -364,24 +364,24 @@ export const StatRing = React.memo(function StatRing({
         {trend && trendValue !== undefined && trendValue > 0 && (
           <div
             className={cn(
-              "flex items-center justify-center gap-0.5 font-medium",
-              isMobile ? 'text-[8px]' : (size === 'sm' ? 'text-[9px]' : size === 'md' ? 'text-[10px]' : 'text-xs'),
+              "flex items-center justify-center gap-0.5 font-semibold",
+              isMobile ? 'text-[10px]' : (size === 'sm' ? 'text-[10px]' : size === 'md' ? 'text-xs' : 'text-sm'),
               trend === 'up' ? 'text-green-500' : trend === 'down' ? 'text-red-500' : 'text-muted-foreground'
             )}
           >
-            {trend === 'up' && <ArrowUp className={isMobile ? 'w-2 h-2' : (size === 'sm' ? 'w-2 h-2' : 'w-3 h-3')} />}
-            {trend === 'down' && <ArrowDown className={isMobile ? 'w-2 h-2' : (size === 'sm' ? 'w-2 h-2' : 'w-3 h-3')} />}
-            {trend === 'neutral' && <Minus className={isMobile ? 'w-2 h-2' : (size === 'sm' ? 'w-2 h-2' : 'w-3 h-3')} />}
+            {trend === 'up' && <ArrowUp className={isMobile ? 'w-2.5 h-2.5' : (size === 'sm' ? 'w-2.5 h-2.5' : 'w-3 h-3')} />}
+            {trend === 'down' && <ArrowDown className={isMobile ? 'w-2.5 h-2.5' : (size === 'sm' ? 'w-2.5 h-2.5' : 'w-3 h-3')} />}
+            {trend === 'neutral' && <Minus className={isMobile ? 'w-2.5 h-2.5' : (size === 'sm' ? 'w-2.5 h-2.5' : 'w-3 h-3')} />}
             <span>{trendValue}%</span>
           </div>
         )}
         
         {showTarget && targetValue && currentValue !== undefined ? (
-          <div className={cn("text-muted-foreground", subtitleSize)}>
+          <div className={cn("text-muted-foreground font-medium", subtitleSize)}>
             {currentValue.toFixed(1)} / {targetValue} {unit}
           </div>
         ) : subtitle && !trend ? (
-          <div className={cn("text-muted-foreground", subtitleSize)}>
+          <div className={cn("text-muted-foreground font-medium", subtitleSize)}>
             {subtitle}
           </div>
         ) : null}
