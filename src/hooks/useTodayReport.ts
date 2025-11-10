@@ -159,7 +159,8 @@ export function useTodayReport(period: Period, selectedDate: Date) {
 
   useEffect(() => {
     fetchReport();
-  }, [period, selectedDate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [period, selectedDate.toISOString()]);
 
   return { report, loading, error, refetch: fetchReport };
 }

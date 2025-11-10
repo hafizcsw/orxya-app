@@ -131,7 +131,8 @@ export function useHealthData(period: Period, selectedDate: Date) {
 
   useEffect(() => {
     fetchHealthData();
-  }, [period, selectedDate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [period, selectedDate.toISOString()]);
 
   return { healthData, loading, error, refetch: fetchHealthData };
 }
