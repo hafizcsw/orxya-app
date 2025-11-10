@@ -1,26 +1,60 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { useUser } from '@/lib/auth'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { cn } from '@/lib/utils'
-import { Mail, ArrowRight } from 'lucide-react'
+import { Mail, ArrowRight, Eye, EyeOff, AlertCircle } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { toast } from '@/hooks/use-toast'
 import { useTranslation } from 'react-i18next'
+import { z } from 'zod'
 
 const SITE_URL = import.meta.env.VITE_SITE_URL ?? 'https://can-you-build-me.lovable.app'
 const redirectTo = `${SITE_URL}/auth/callback`
 
+// Validation schemas
+const emailSchema = z.string()
+  .trim()
+  .min(1, 'البريد الإلكتروني مطلوب')
+  .email('البريد الإلكتروني غير صحيح')
+  .max(255, 'البريد الإلكتروني طويل جداً');
+
+const passwordSchema = z.string()
+  .min(6, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل')
+  .max(72, 'كلمة المرور طويلة جداً')
+  .regex(/^(?=.*[a-z])/, 'يجب أن تحتوي على حرف صغير واحد على الأقل')
+  .regex(/^(?=.*[A-Z])/, 'يجب أن تحتوي على حرف كبير واحد على الأقل')
+  .regex(/^(?=.*\d)/, 'يجب أن تحتوي على رقم واحد على الأقل');
+
+const signInSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(1, 'كلمة المرور مطلوبة'),
+});
+
+const signUpSchema = z.object({
+  email: emailSchema,
+  password: passwordSchema,
+  confirmPassword: z.string().min(1, 'تأكيد كلمة المرور مطلوب'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'كلمات المرور غير متطابقة',
+  path: ['confirmPassword'],
+});
+
 export default function Auth() {
   const { user } = useUser()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { t } = useTranslation('auth')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [msg, setMsg] = useState<string | null>(null)
-  const [err, setErr] = useState<string | null>(null)
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [errors, setErrors] = useState<{ email?: string; password?: string; confirmPassword?: string }>({})
+  const [mode, setMode] = useState<'signin' | 'signup'>(
+    searchParams.get('mode') === 'signup' ? 'signup' : 'signin'
+  )
   const [hasNavigated, setHasNavigated] = useState(false)
   const [showEmailDialog, setShowEmailDialog] = useState(false)
 
@@ -46,57 +80,114 @@ export default function Auth() {
     }
   }, [user, navigate, hasNavigated, loading])
 
+  const validateForm = (): boolean => {
+    setErrors({});
+    
+    try {
+      if (mode === 'signin') {
+        signInSchema.parse({ email, password });
+      } else {
+        signUpSchema.parse({ email, password, confirmPassword });
+      }
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const fieldErrors: { email?: string; password?: string; confirmPassword?: string } = {};
+        error.issues.forEach((issue) => {
+          const path = issue.path[0] as 'email' | 'password' | 'confirmPassword';
+          if (!fieldErrors[path]) {
+            fieldErrors[path] = issue.message;
+          }
+        });
+        setErrors(fieldErrors);
+        
+        // Show toast with first error
+        const firstError = error.issues[0];
+        toast({
+          title: 'خطأ في البيانات المدخلة',
+          description: firstError.message,
+          variant: 'destructive',
+        });
+      }
+      return false;
+    }
+  };
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setLoading(true); setErr(null); setMsg(null)
     
+    if (!validateForm()) {
+      return;
+    }
+    
+    setLoading(true)
     console.log('[Auth] Submitting form:', { mode, email })
     
     try {
       if (mode === 'signin') {
         console.log('[Auth] Signing in with password...')
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        const { error } = await supabase.auth.signInWithPassword({ 
+          email: email.trim(), 
+          password 
+        })
         if (error) throw error
         
         console.log('[Auth] ✅ Sign in successful')
-        toast({ title: t('login.submit') + ' ✅' })
+        toast({ title: 'تم تسجيل الدخول بنجاح ✅' })
         
-        // Wait for toast to show before closing dialog
         await new Promise(resolve => setTimeout(resolve, 300))
         setShowEmailDialog(false)
       } else {
         console.log('[Auth] Signing up...')
         const { error } = await supabase.auth.signUp({ 
-          email, 
+          email: email.trim(), 
           password,
-          options: { emailRedirectTo: redirectTo }
+          options: { 
+            emailRedirectTo: redirectTo,
+            data: {
+              email_confirmed: true // Auto-confirm for development
+            }
+          }
         })
         if (error) throw error
         
         console.log('[Auth] ✅ Sign up successful')
-        toast({ title: t('signup.submit') + ' ✅' })
+        toast({ 
+          title: 'تم إنشاء الحساب بنجاح ✅',
+          description: 'يمكنك الآن تسجيل الدخول'
+        })
         
-        // Wait for toast to show before closing dialog
         await new Promise(resolve => setTimeout(resolve, 300))
         setShowEmailDialog(false)
+        setMode('signin')
       }
     } catch (e: any) {
       console.error('[Auth] ❌ Error:', e);
       
       // User-friendly error messages
-      let errorMessage = t('errors.loginFailed');
+      let errorMessage = 'حدث خطأ غير متوقع';
+      let errorTitle = mode === 'signin' ? 'فشل تسجيل الدخول' : 'فشل إنشاء الحساب';
+      
       if (e?.message?.includes('Invalid login credentials')) {
         errorMessage = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
       } else if (e?.message?.includes('Email not confirmed')) {
         errorMessage = 'يرجى تأكيد بريدك الإلكتروني أولاً';
+        errorTitle = 'البريد الإلكتروني غير مؤكد';
       } else if (e?.message?.includes('User already registered')) {
-        errorMessage = 'البريد الإلكتروني مستخدم بالفعل';
+        errorMessage = 'البريد الإلكتروني مستخدم بالفعل. جرب تسجيل الدخول';
       } else if (e?.message?.includes('Password should be')) {
         errorMessage = 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+      } else if (e?.message?.includes('Invalid email')) {
+        errorMessage = 'البريد الإلكتروني غير صحيح';
+      } else if (e?.message?.includes('Network')) {
+        errorMessage = 'خطأ في الاتصال بالإنترنت';
+        errorTitle = 'مشكلة في الاتصال';
+      } else if (e?.message) {
+        errorMessage = e.message;
       }
       
       toast({ 
-        title: mode === 'signin' ? 'فشل تسجيل الدخول' : 'فشل إنشاء الحساب', 
+        title: errorTitle, 
         description: errorMessage, 
         variant: "destructive" 
       });
@@ -251,33 +342,161 @@ export default function Auth() {
           </DialogHeader>
           
           <form onSubmit={handleSubmit} className="space-y-5 mt-4">
+            {/* Email Field */}
             <div className="space-y-2">
               <label className="text-sm text-zinc-400">{t('login.email')}</label>
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-black/50 border border-zinc-700 text-white focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20 transition-all outline-none"
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setErrors(prev => ({ ...prev, email: undefined }));
+                }}
+                className={cn(
+                  "w-full px-4 py-3 rounded-xl bg-black/50 border text-white transition-all outline-none",
+                  errors.email 
+                    ? "border-red-500 focus:border-red-400 focus:ring-2 focus:ring-red-500/20" 
+                    : "border-zinc-700 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20"
+                )}
                 required
                 dir="ltr"
                 autoFocus
+                autoComplete="email"
                 placeholder="you@example.com"
               />
+              {errors.email && (
+                <div className="flex items-center gap-2 text-red-400 text-sm">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>{errors.email}</span>
+                </div>
+              )}
             </div>
             
+            {/* Password Field */}
             <div className="space-y-2">
               <label className="text-sm text-zinc-400">{t('login.password')}</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-black/50 border border-zinc-700 text-white focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20 transition-all outline-none"
-                required
-                dir="ltr"
-                minLength={6}
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setErrors(prev => ({ ...prev, password: undefined }));
+                  }}
+                  className={cn(
+                    "w-full px-4 py-3 pr-12 rounded-xl bg-black/50 border text-white transition-all outline-none",
+                    errors.password 
+                      ? "border-red-500 focus:border-red-400 focus:ring-2 focus:ring-red-500/20" 
+                      : "border-zinc-700 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20"
+                  )}
+                  required
+                  dir="ltr"
+                  autoComplete={mode === 'signin' ? "current-password" : "new-password"}
+                  minLength={6}
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-300 transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              {errors.password && (
+                <div className="flex items-center gap-2 text-red-400 text-sm">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>{errors.password}</span>
+                </div>
+              )}
+              {mode === 'signup' && !errors.password && password && (
+                <div className="space-y-1 text-xs">
+                  <div className={cn(
+                    "flex items-center gap-2",
+                    password.length >= 6 ? "text-green-400" : "text-zinc-500"
+                  )}>
+                    <div className={cn(
+                      "w-1.5 h-1.5 rounded-full",
+                      password.length >= 6 ? "bg-green-400" : "bg-zinc-600"
+                    )} />
+                    <span>6 أحرف على الأقل</span>
+                  </div>
+                  <div className={cn(
+                    "flex items-center gap-2",
+                    /[a-z]/.test(password) ? "text-green-400" : "text-zinc-500"
+                  )}>
+                    <div className={cn(
+                      "w-1.5 h-1.5 rounded-full",
+                      /[a-z]/.test(password) ? "bg-green-400" : "bg-zinc-600"
+                    )} />
+                    <span>حرف صغير واحد على الأقل</span>
+                  </div>
+                  <div className={cn(
+                    "flex items-center gap-2",
+                    /[A-Z]/.test(password) ? "text-green-400" : "text-zinc-500"
+                  )}>
+                    <div className={cn(
+                      "w-1.5 h-1.5 rounded-full",
+                      /[A-Z]/.test(password) ? "bg-green-400" : "bg-zinc-600"
+                    )} />
+                    <span>حرف كبير واحد على الأقل</span>
+                  </div>
+                  <div className={cn(
+                    "flex items-center gap-2",
+                    /\d/.test(password) ? "text-green-400" : "text-zinc-500"
+                  )}>
+                    <div className={cn(
+                      "w-1.5 h-1.5 rounded-full",
+                      /\d/.test(password) ? "bg-green-400" : "bg-zinc-600"
+                    )} />
+                    <span>رقم واحد على الأقل</span>
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* Confirm Password Field (Signup only) */}
+            {mode === 'signup' && (
+              <div className="space-y-2">
+                <label className="text-sm text-zinc-400">{t('signup.confirmPassword')}</label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      setErrors(prev => ({ ...prev, confirmPassword: undefined }));
+                    }}
+                    className={cn(
+                      "w-full px-4 py-3 pr-12 rounded-xl bg-black/50 border text-white transition-all outline-none",
+                      errors.confirmPassword 
+                        ? "border-red-500 focus:border-red-400 focus:ring-2 focus:ring-red-500/20" 
+                        : "border-zinc-700 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20"
+                    )}
+                    required
+                    dir="ltr"
+                    autoComplete="new-password"
+                    minLength={6}
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-300 transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                {errors.confirmPassword && (
+                  <div className="flex items-center gap-2 text-red-400 text-sm">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>{errors.confirmPassword}</span>
+                  </div>
+                )}
+              </div>
+            )}
             
             <button 
               type="submit" 
