@@ -12,12 +12,14 @@ type Activities = {
 export function useTodayActivities(date?: string) {
   const [data, setData] = useState<Activities | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const day = date ?? dayjs().format('YYYY-MM-DD');
 
   useEffect(() => {
     let alive = true;
     (async () => {
       setLoading(true);
+      setError(null);
       try {
         const { data: rows, error } = await supabase
           .from('vw_today_activities')
@@ -25,12 +27,24 @@ export function useTodayActivities(date?: string) {
           .eq('day', day)
           .limit(1);
 
-        if (error) throw error;
+        if (error) {
+          console.error('[useTodayActivities] error', error);
+          if (alive) {
+            setError(error.message);
+            setData({ work_hours: 0, study_hours: 0, sports_hours: 0, walk_minutes: 0 });
+          }
+          return;
+        }
 
-        setData(rows?.[0] ?? { work_hours: 0, study_hours: 0, sports_hours: 0, walk_minutes: 0 });
+        if (alive) {
+          setData(rows?.[0] ?? { work_hours: 0, study_hours: 0, sports_hours: 0, walk_minutes: 0 });
+        }
       } catch (err) {
         console.error('[useTodayActivities] error', err);
-        if (alive) setData({ work_hours: 0, study_hours: 0, sports_hours: 0, walk_minutes: 0 });
+        if (alive) {
+          setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
+          setData({ work_hours: 0, study_hours: 0, sports_hours: 0, walk_minutes: 0 });
+        }
       } finally {
         if (alive) setLoading(false);
       }
@@ -38,5 +52,5 @@ export function useTodayActivities(date?: string) {
     return () => { alive = false; };
   }, [day]);
 
-  return { data, loading };
+  return { data, loading, error };
 }

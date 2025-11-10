@@ -27,8 +27,20 @@ export function ActivitiesRings({ date, onGoalClick }: ActivitiesRingsProps) {
   const navigate = useNavigate();
   const deviceType = useDeviceTypeCtx();
   const columns = deviceType === 'mobile' ? 1 : 3;
-  const { data: activities, loading } = useTodayActivities(date);
+  const { data: activities, loading, error } = useTodayActivities(date);
   const { getGoal, loading: goalsLoading } = useUserGoals();
+
+  // Handle empty or error state
+  if (!loading && !activities) {
+    return (
+      <div className="card p-6 text-center space-y-3">
+        <div className="text-muted-foreground">
+          <Briefcase className="w-12 h-12 mx-auto mb-2 opacity-50" />
+          <p className="text-sm">{error || t('errors.noActivitiesData')}</p>
+        </div>
+      </div>
+    );
+  }
 
   const rings = useMemo(() => {
     if (!activities) return [];
