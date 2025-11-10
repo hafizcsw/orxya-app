@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
-import { useUser } from '@/lib/auth'
+import { useAuth } from '@/contexts/AuthContext'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { Mail, ArrowRight, Eye, EyeOff, AlertCircle } from 'lucide-react'
@@ -41,7 +41,7 @@ const signUpSchema = z.object({
 });
 
 export default function Auth() {
-  const { user } = useUser()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { t } = useTranslation('auth')

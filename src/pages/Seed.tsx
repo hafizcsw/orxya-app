@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useUser } from '@/lib/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { Protected } from '@/components/Protected';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -136,7 +136,7 @@ const tasks: TaskSeed[] = [
 ];
 
 const Seed = () => {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [log, setLog] = useState<string[]>([]);
   const [oryxaResult, setOryxaResult] = useState<any>(null);

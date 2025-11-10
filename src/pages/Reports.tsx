@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
-import { useUser } from '@/lib/auth'
+import { useAuth } from '@/contexts/AuthContext'
 import { Protected } from '@/components/Protected'
 import { StatCard } from '@/components/StatCard'
 import { Sparkline } from '@/components/Sparkline'
@@ -51,7 +51,7 @@ function subDays(d: Date, n: number) {
 }
 
 export default function Reports() {
-  const { user } = useUser();
+  const { user } = useAuth();
   const { t } = useTranslation('reports');
   const [date, setDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [loading, setLoading] = useState(false);

@@ -3,7 +3,7 @@ import { X, Save, Trash2, AlertTriangle } from 'lucide-react';
 import { NeonButton } from '@/components/ui/NeonButton';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { supabase } from '@/integrations/supabase/client';
-import { useUser } from '@/lib/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { track } from '@/lib/telemetry';
 import { cn } from '@/lib/utils';
 
@@ -15,7 +15,7 @@ interface EventFormProps {
 }
 
 export function EventForm({ event, initialDate, onClose, onSave }: EventFormProps) {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [title, setTitle] = useState(event?.title || '');
   const [startsAt, setStartsAt] = useState(
     event?.starts_at 

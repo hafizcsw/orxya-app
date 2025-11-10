@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useUser } from '@/lib/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { track } from '@/lib/telemetry';
 import { Card } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
@@ -21,7 +21,7 @@ type Daily = { day: string; applied: number; undone: number; total_actions: numb
 type Reason = { reason: string | null; cnt: number; };
 
 export default function AdminAutopilot() {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [kpis, setKpis] = useState<Kpis | null>(null);
   const [daily, setDaily] = useState<Daily[]>([]);

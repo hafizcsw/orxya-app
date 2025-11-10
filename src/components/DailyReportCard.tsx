@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useUser } from "@/lib/auth";
+import { useAuth } from '@/contexts/AuthContext';
 import { Card } from "./ui/card";
 import { Loader2, DollarSign, TrendingUp, TrendingDown, Clock, BookOpen, Dumbbell, Footprints, Award, Building } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,7 +20,7 @@ interface DailyReport {
 }
 
 export const DailyReportCard = ({ date }: { date?: string }) => {
-  const { user, loading: authLoading } = useUser();
+  const { user, loading: authLoading } = useAuth();
   const [report, setReport] = useState<DailyReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

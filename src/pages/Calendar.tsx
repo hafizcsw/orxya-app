@@ -8,7 +8,7 @@ import MonthGrid from "@/components/calendar/MonthGrid";
 import { CalendarWeekErrorBoundary } from "@/components/calendar/CalendarWeekErrorBoundary";
 import { startOfMonth, endOfMonth, toISODate } from "@/lib/dates";
 import { supabase } from "@/integrations/supabase/client";
-import { useUser } from "@/lib/auth";
+import { useAuth } from '@/contexts/AuthContext';
 import { cn } from "@/lib/utils";
 import CalendarSidebar from "@/components/calendar/CalendarSidebar";
 import QuickAddDialog from "@/components/calendar/QuickAddDialog";
@@ -42,7 +42,7 @@ type PT = {
 
 export default function CalendarPage() {
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user } = useAuth();
   const { t } = useTranslation('calendar');
   const { selectedDate: globalDate, setSelectedDate: setGlobalDate } = useSelectedDate();
   const [mode, setMode] = useState<"day" | "week" | "month">("day");

@@ -1,7 +1,7 @@
-import { useUser } from "@/lib/auth";
+import { useAuth } from '@/contexts/AuthContext';
 
 export function SessionBanner() {
-  const { user } = useUser();
+  const { user } = useAuth();
   if (user) return null;
   
   return (

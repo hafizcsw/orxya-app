@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import AuthSheet from "@/components/AuthSheet";
-import { useUser } from "@/lib/auth";
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/telemetry";
 import { User, ChevronLeft, ChevronRight } from "lucide-react";
@@ -18,7 +18,7 @@ const Navigation = () => {
   const navigate = useNavigate();
   const {
     user
-  } = useUser();
+  } = useAuth();
   const { t, i18n } = useTranslation(['navigation', 'common']);
   const [authOpen, setAuthOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

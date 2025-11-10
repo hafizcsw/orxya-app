@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useUser } from '@/lib/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { track } from '@/lib/telemetry';
 import { toast } from '@/hooks/use-toast';
 
@@ -44,7 +44,7 @@ function combineLocal(dateStr: string, timeStr: string) {
 export default function CalendarEventModal({
   open, onClose, initial, defaultDate, onSaved, onDeleted
 }: Props) {
-  const { user } = useUser();
+  const { user } = useAuth();
   const creating = !initial?.id;
 
   const [title, setTitle] = useState(initial?.title ?? '');

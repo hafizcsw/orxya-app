@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useUser } from '@/lib/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { track } from '@/lib/telemetry';
 import { Button } from '@/components/ui/button';
 import CalendarEventModal from '@/components/CalendarEventModal';
@@ -32,7 +32,7 @@ function toLocalHM(iso: string) {
 }
 
 export default function CalendarSimplePage() {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [view, setView] = useState<'day' | 'week'>('day');
   const [cursor, setCursor] = useState<Date>(new Date());
   const [events, setEvents] = useState<Ev[]>([]);

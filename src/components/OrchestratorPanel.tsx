@@ -3,11 +3,11 @@ import { Brain, Calendar, TrendingUp, Sparkles, CheckCircle2 } from 'lucide-reac
 import { NeonButton } from '@/components/ui/NeonButton';
 import { HolographicCard } from '@/components/ui/HolographicCard';
 import { supabase } from '@/integrations/supabase/client';
-import { useUser } from '@/lib/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { track } from '@/lib/telemetry';
 
 export function OrchestratorPanel() {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [plan, setPlan] = useState<any>(null);
 

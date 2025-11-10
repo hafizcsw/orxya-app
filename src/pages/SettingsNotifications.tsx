@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useUser } from '@/lib/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { track } from '@/lib/telemetry';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 
 export default function SettingsNotifications() {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   
   const [dndEnabled, setDndEnabled] = useState(false);

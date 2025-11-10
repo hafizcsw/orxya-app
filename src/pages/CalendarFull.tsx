@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { throttle } from '@/lib/throttle';
 import { track } from '@/lib/telemetry';
 import { buildPrayerWindowsForDay } from '@/lib/calendar';
-import { useUser } from '@/lib/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Loader2, Calendar as CalendarIcon } from 'lucide-react';
@@ -28,7 +28,7 @@ type Row = {
 };
 
 export default function CalendarFullPage() {
-  const { user } = useUser();
+  const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation('calendar');
   const calRef = useRef<FullCalendar | null>(null);

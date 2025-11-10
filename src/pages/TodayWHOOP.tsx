@@ -7,7 +7,7 @@ import { useEdgeActions } from "@/hooks/useEdgeActions";
 import { format } from "date-fns";
 import { LegacyToday } from "@/components/LegacyToday";
 import { supabase } from "@/integrations/supabase/client";
-import { useUser } from "@/lib/auth";
+import { useAuth } from '@/contexts/AuthContext';
 import NaturalInput from "@/components/calendar/NaturalInput";
 import { useCalendarInstances } from "@/hooks/useCalendarInstances";
 
@@ -325,7 +325,7 @@ function PermissionsInline({ missing }: { missing: Array<{ key: string; label: s
 export default function TodayWHOOP() {
   const ff = useFlags();
   const { fetchConflicts, resolveConflict } = useEdgeActions();
-  const { user } = useUser();
+  const { user } = useAuth();
 
   // حالة التقرير - نفس منطق `/today`
   const [report, setReport] = useState<any | null>(null);

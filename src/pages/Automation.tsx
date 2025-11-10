@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { genIdem } from '@/lib/sync'
-import { useUser } from '@/lib/auth'
+import { useAuth } from '@/contexts/AuthContext'
 import { Toast } from '@/components/Toast'
 import { track } from '@/lib/telemetry'
 import { SessionBanner } from '@/components/SessionBanner'
@@ -13,7 +13,7 @@ import { throttle } from '@/lib/throttle'
 import { OrchestratorPanel } from '@/components/OrchestratorPanel'
 
 const Automation = () => {
-  const { user } = useUser()
+  const { user } = useAuth()
   const [rows, setRows] = useState<any[]>([])
   const [toast, setToast] = useState<string | null>(null)
   const [aiBusy, setAiBusy] = useState(false)

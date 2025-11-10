@@ -3,7 +3,7 @@ import { Brain, TrendingUp, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { useUser } from '@/lib/auth';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface LearningStats {
   total_decisions: number;
@@ -14,7 +14,7 @@ interface LearningStats {
 }
 
 export function AutopilotLearningCard() {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [stats, setStats] = useState<LearningStats | null>(null);
   const [loading, setLoading] = useState(true);
 

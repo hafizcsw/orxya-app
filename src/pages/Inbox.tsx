@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useUser } from "@/lib/auth";
+import { useAuth } from '@/contexts/AuthContext';
 import { Bell, Mail, MessageCircle, Check, X } from "lucide-react";
 import { Toast } from "@/components/Toast";
 import { useTranslation } from "react-i18next";
@@ -19,7 +19,7 @@ type Notification = {
 };
 
 const Inbox = () => {
-  const { user } = useUser();
+  const { user } = useAuth();
   const { t } = useTranslation('inbox');
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [toast, setToast] = useState<string | null>(null);

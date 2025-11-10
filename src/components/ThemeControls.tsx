@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { applyTheme, applyDensity, getSystemTheme, isSystemDarkMode } from '@/lib/theme';
 import { track } from '@/lib/telemetry';
-import { useUser } from '@/lib/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { Moon, Sun, Monitor } from 'lucide-react';
 
 export default function ThemeControls() {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
   const [density, setDensity] = useState<'comfortable' | 'compact'>('comfortable');
   const [accent, setAccent] = useState('#0ea5e9');

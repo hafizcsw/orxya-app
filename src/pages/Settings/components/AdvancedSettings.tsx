@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useUser } from '@/lib/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { getDeviceLocation } from '@/native/geo';
 import { setTelemetryOn } from '@/lib/telemetry';
 import { toast } from 'sonner';
@@ -12,7 +12,7 @@ import { motion } from 'framer-motion';
 const tzGuess = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Dubai';
 
 export function AdvancedSettings() {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [currency, setCurrency] = useState('USD');
   const [timezone, setTimezone] = useState(tzGuess);

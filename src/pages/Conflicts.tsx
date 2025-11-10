@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useUser } from "@/lib/auth";
+import { useAuth } from '@/contexts/AuthContext';
 import { track } from "@/lib/telemetry";
 import { throttle } from "@/lib/throttle";
 import { Protected } from "@/components/Protected";
@@ -37,7 +37,7 @@ type EventRow = {
 };
 
 export default function ConflictsPage() {
-  const { user } = useUser();
+  const { user } = useAuth();
   const { t } = useTranslation('conflicts');
   const [items, setItems] = useState<Conflict[]>([]);
   const [events, setEvents] = useState<Record<string, EventRow>>({});

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useUser } from '@/lib/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { enqueueCommand } from '@/lib/offline-actions';
 import { genIdem } from '@/lib/sync';
 import { track } from '@/lib/telemetry';
@@ -30,7 +30,7 @@ const statusCols: Array<Task['status']> = ['todo', 'doing', 'done'];
 type PendingOp = { snapshot: Task[]; desc: string };
 
 export default function Projects() {
-  const { user } = useUser();
+  const { user } = useAuth();
   const isMobile = useIsMobile();
   const notify = useNotify();
   const { t } = useTranslation(['projects']);

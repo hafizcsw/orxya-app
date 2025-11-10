@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Bell, Video, Clock, X, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { useUser } from "@/lib/auth";
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from "./ui/button";
 import { toast } from "sonner";
 
@@ -13,7 +13,7 @@ interface SmartLampProps {
 }
 
 export function SmartLamp({ className }: SmartLampProps) {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [status, setStatus] = useState<LampStatus>("idle");
   const [nextEvent, setNextEvent] = useState<any>(null);
   const [nextPrayer, setNextPrayer] = useState<any>(null);

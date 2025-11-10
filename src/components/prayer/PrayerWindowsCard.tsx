@@ -3,7 +3,7 @@ import { Sun, Sunset, Moon, Clock, Zap, Users, Coffee } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { useUser } from '@/lib/auth';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface PrayerWindow {
   window_name: string;
@@ -15,7 +15,7 @@ interface PrayerWindow {
 }
 
 export function PrayerWindowsCard() {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [windows, setWindows] = useState<PrayerWindow[]>([]);
   const [loading, setLoading] = useState(true);
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { track } from '@/lib/telemetry';
-import { useUser } from '@/lib/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 
 type ExtAcc = {
@@ -14,7 +14,7 @@ type ExtAcc = {
 };
 
 export default function SettingsExternal() {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [acc, setAcc] = useState<ExtAcc | null>(null);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);

@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useUser } from '@/lib/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { Camera, Loader2, User, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -19,7 +19,7 @@ export function AvatarUpload({
   size = 'md',
   showUploadButton = true 
 }: AvatarUploadProps) {
-  const { user } = useUser();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(currentAvatarUrl || null);

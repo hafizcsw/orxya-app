@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
-import { useUser } from '@/lib/auth'
+import { useAuth } from '@/contexts/AuthContext'
 import { getQueued } from '@/lib/localdb/dexie'
 import { flushQueueOnce } from '@/lib/sync'
 import { captureAndSendLocation } from '@/native/location'
@@ -9,7 +9,7 @@ import { track } from '@/lib/telemetry'
 import type { ConflictRow, LocationSample } from '@/types/conflicts'
 
 const Diagnostics = () => {
-  const { user } = useUser()
+  const { user } = useAuth()
   const [audit, setAudit] = useState<any[]>([])
   const [queuedItems, setQueuedItems] = useState<any[]>([])
   const [ping, setPing] = useState<'ok' | 'fail' | 'idle'>('idle')

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useUser } from '@/lib/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { AvatarUpload } from '@/components/AvatarUpload';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -12,7 +12,7 @@ import PullToRefresh from 'react-simple-pull-to-refresh';
 import { useNavigate } from 'react-router-dom';
 
 export default function Profile() {
-  const { user } = useUser();
+  const { user } = useAuth();
   const { t } = useTranslation(['profile']);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);

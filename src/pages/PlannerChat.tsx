@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useUser } from "@/lib/auth";
+import { useAuth } from '@/contexts/AuthContext';
 import { track } from "@/lib/telemetry";
 import { throttle } from "@/lib/throttle";
 import { Bot, Send, Sparkles, Calendar, Clock, MessageSquare } from "lucide-react";
@@ -15,7 +15,7 @@ type AgentMsg = {
 };
 
 export default function PlannerChat() {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [threadId, setThreadId] = useState<string | null>(null);
   const [messages, setMessages] = useState<AgentMsg[]>([]);

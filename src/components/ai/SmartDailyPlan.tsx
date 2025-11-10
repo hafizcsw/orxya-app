@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { useUser } from '@/lib/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 interface DailyPlan {
@@ -32,7 +32,7 @@ interface DailyPlan {
 }
 
 export function SmartDailyPlan() {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [plan, setPlan] = useState<DailyPlan | null>(null);
 
