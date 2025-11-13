@@ -104,13 +104,14 @@ export default function Today() {
   const { healthData, loading: healthLoading, refetch: refetchHealth } = useHealthData(period, selectedDate);
   const { getGoal, updateGoal } = useUserGoals();
   
-  // Live data hooks
-  const { currentTask, nextTask, timeRemaining, progress, loading: taskLoading } = useLiveToday(selectedDate);
-
+  // ✅ ALL hooks BEFORE any conditional logic
   const openGoalDialog = useCallback((goalType: GoalType) => {
     setEditingGoalType(goalType);
     setGoalDialogOpen(true);
   }, []);
+
+  // Live data hooks - MUST be before any conditional returns
+  const { currentTask, nextTask, timeRemaining, progress, loading: taskLoading } = useLiveToday(selectedDate);
 
   // ✅ Safe fallback values لمنع تغيّر طول arrays
   const safeHealthData = healthData || {
