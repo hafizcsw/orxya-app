@@ -8,14 +8,13 @@ const Index = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { user, loading } = useAuth();
-  const hasNavigated = useRef(false);
 
-  // ✅ Navigation في render phase (قبل return) - يمنع hook count conflicts
-  if (user && !loading && pathname === '/' && !hasNavigated.current) {
-    hasNavigated.current = true;
-    navigate('/today', { replace: true });
-    return null; // منع render أثناء navigation
-  }
+  // ✅ Navigation في useEffect - يمنع hook count conflicts
+  useEffect(() => {
+    if (user && !loading && pathname === '/') {
+      navigate('/today', { replace: true });
+    }
+  }, [user, loading, pathname, navigate]);
 
   // ✅ Single return with conditional rendering for consistent hook count
   return (
